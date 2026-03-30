@@ -120,9 +120,24 @@ class OpenAICompatibleClient(BaseLLMClient):
                 body = exc.fp.read().decode("utf-8", errors="replace")[:1000]
             raise ValueError(f"Provider HTTP error {exc.code}: {exc.reason}. {body}") from exc
         try:
-            return data["choices"][0]["message"]["content"]
+            content = data["choices"][0]["message"]["content"]
         except (KeyError, IndexError) as exc:
             raise ValueError(f"Unexpected LLM response: {json.dumps(data)[:1000]}") from exc
+
+        if isinstance(content, list):
+            text_parts: list[str] = []
+            for part in content:
+                if isinstance(part, dict) and part.get("type") == "text":
+                    text_parts.append(str(part.get("text", "")))
+            content = "\n".join(text_parts)
+
+        if not isinstance(content, str) or not content.strip():
+            raise ValueError(
+                f"Provider returned empty content for model '{request.model}'. "
+                f"Response snippet: {json.dumps(data)[:1000]}"
+            )
+
+        return content
 
 
 def _resolve_api_key(api_key_env_or_value: str) -> str:

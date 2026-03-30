@@ -16,13 +16,13 @@ runtime:
 bots:
   author:
     provider: poe
-    model: qwen3.5-397b-a17b-t
+    model: qwen3.5-plus
     prompt_file: config/prompts/author_prompt.md
     temperature: 0.2
   reviewer:
     provider: poe
-    model: qwen3.5-397b-a17b-t
-#    model: gemini-3-flash
+#    model: qwen3.5-397b-a17b-t
+    model: gemini-3-flash
     prompt_file: config/prompts/reviewer_prompt.md
     temperature: 0.1
 
