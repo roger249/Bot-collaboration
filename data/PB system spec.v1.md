@@ -28,8 +28,17 @@ Portfolio Health Check & Growth Opportunity Analysis
 | Lead generation | *   RM crossell outreach cheatsheet<br>    <br>*   Product-investor matcher<br>    <br>*   Hidden need finder<br>    <br>*   Clients with increase of available fund near term finder (matured bond, etc.)<br>    <br>*   Potential risk reassesment finder |
 | Qualifying | *   RM client 360 cheatsheet |
 | Proposal | *   Chatbot to tailer made the needs<br>    <br>*   Personalized Investment Proposal<br>    <br>*   Portfolio health check and growth opportunity analysis |
-| Closing | *   Term sheet generation |
+| Closing | *   RFQ (external)<br>    <br>*   Term sheet generation<br>    <br>*   Term sheet reconciliation with couterparty |
 | Retention and upsell | *   Portfolio health check and growth opportunity analysis<br>    <br>*   Portfolio expiry report <br>    <br>*   Potential KO/barrier breach report |
+
+## Out of scope items
+
+The following times are out-of-scope as they are either covered in an existing module or they are low value for license sales.
+
+*   Most back office operation such as accounting and trade reconcilation
+    
+*   RFQ
+    
 
 # Lead generation
 

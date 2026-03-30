@@ -1,0 +1,41 @@
+workflow:
+  name: pb_author_reviewer_phase1
+  spec_file: data/PB system spec.v1.md
+  guideline_file: config/prompts/guideline_to_spec.md
+  output_root: runs
+  max_rounds: 1
+  stop_on_no_blockers: true
+
+logging:
+  level: INFO
+  config_file: config/logging_config.ini
+
+runtime:
+  default_timeout_seconds: 120
+
+bots:
+  author:
+    provider: poe
+    model: qwen3.5-397b-a17b-t
+    prompt_file: config/prompts/author_prompt.md
+    temperature: 0.2
+  reviewer:
+    provider: poe
+    model: qwen3.5-397b-a17b-t
+#    model: gemini-3-flash
+    prompt_file: config/prompts/reviewer_prompt.md
+    temperature: 0.1
+
+providers:
+  openai_compatible:
+    api_key_env: OPENAI_API_KEY
+    base_url: https://api.openai.com/v1
+    timeout_seconds: 120
+  deepseek:
+    api_key_env: sk-0982045e471d480e84dad2be4700321b
+    base_url: https://api.deepseek.com
+    timeout_seconds: 120
+  poe:
+    api_key_env: sk-poe-IoV3b2rj5pRN1iLG5ZNg7NFf0KWlExlwNfE7sxL_UDo
+    base_url: https://api.poe.com/v1
+    timeout_seconds: 240
