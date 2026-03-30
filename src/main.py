@@ -5,12 +5,21 @@ import json
 from pathlib import Path
 import sys
 
+from dotenv import load_dotenv
+
 # Support direct execution: `python src/main.py`
 if __package__ is None or __package__ == "":
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.config_loader import load_config
 from src.workflow import run_workflow
+
+
+def _load_local_dotenv() -> None:
+    project_root = Path(__file__).resolve().parents[1]
+    dotenv_path = project_root / ".env"
+    if dotenv_path.exists():
+        load_dotenv(dotenv_path=dotenv_path, override=False)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -23,6 +32,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    _load_local_dotenv()
     parser = build_parser()
     argv = sys.argv[1:]
     if not argv:

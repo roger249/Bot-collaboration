@@ -16,7 +16,8 @@ runtime:
 bots:
   author:
     provider: poe
-    model: qwen3.5-plus
+#    model: qwen3.5-plus
+    model: deepseek-v3.1
     prompt_file: config/prompts/author_prompt.md
     temperature: 0.2
   reviewer:
@@ -32,10 +33,10 @@ providers:
     base_url: https://api.openai.com/v1
     timeout_seconds: 120
   deepseek:
-    api_key_env: sk-0982045e471d480e84dad2be4700321b
+    api_key_env: DEEPSEEK_API_KEY
     base_url: https://api.deepseek.com
     timeout_seconds: 120
   poe:
-    api_key_env: sk-poe-IoV3b2rj5pRN1iLG5ZNg7NFf0KWlExlwNfE7sxL_UDo
+    api_key_env: POE_API_KEY
     base_url: https://api.poe.com/v1
     timeout_seconds: 240

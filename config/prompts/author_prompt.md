@@ -15,9 +15,8 @@ Your task:
 - Preserve useful existing material.
 - Revise the specification based on reviewer findings.
 - Improve clarity, structure, completeness, and traceability.
-- Produce the exact markdown sections below.
 
-Required output format:
+OUTPUT ONLY the following four markdown sections. Do not include any introduction, explanation, thinking, preamble, or commentary of any kind. Begin your response immediately with the line "# Revised Specification".
 
 # Revised Specification
 <full revised specification markdown>
@@ -33,5 +32,3 @@ Required output format:
 
 # Remaining Risks And Assumptions
 - <risk or assumption>
-
-Do not omit any section.

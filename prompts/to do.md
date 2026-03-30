@@ -1,1 +1,0 @@
-Move from json configuration to yaml

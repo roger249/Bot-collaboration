@@ -49,15 +49,20 @@ def extract_section(markdown: str, heading: str) -> str:
 
 
 def extract_revised_spec(markdown: str) -> str:
-    start_pattern = re.compile(r"^#{1,6}\s+Revised Specification\s*$", re.MULTILINE)
+    # Case-insensitive search for "Revised Specification" heading
+    start_pattern = re.compile(
+        r"^#{1,6}\s+Revised\s+Specification\s*$",
+        re.MULTILINE | re.IGNORECASE
+    )
     start_match = start_pattern.search(markdown)
     if not start_match:
         raise ValueError("Missing required section: Revised Specification")
 
     body_start = start_match.end()
+    # Look for any of the stopping headings (case-insensitive)
     stop_pattern = re.compile(
-        r"^#{1,6}\s+(Change Log|Issue Closure Map|Remaining Risks And Assumptions)\s*$",
-        re.MULTILINE,
+        r"^#{1,6}\s+(Change\s+Log|Issue\s+Closure\s+Map|Remaining\s+Risks\s+And\s+Assumptions)\s*$",
+        re.MULTILINE | re.IGNORECASE,
     )
     stop_match = stop_pattern.search(markdown, body_start)
     body_end = stop_match.start() if stop_match else len(markdown)
