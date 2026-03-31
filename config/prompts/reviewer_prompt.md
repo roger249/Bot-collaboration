@@ -8,9 +8,9 @@ You receive:
 - prior author closure notes if available
 
 Your task:
-- Identify gaps, ambiguity, workflow inefficiency, missing features, and missing reports.
-- Suggest any artifact that is missing from the sales cycle that could streamline the operation.
-- Review each artifact and see they are good enough for a first round implementation.  This shall include the data fields (% holding) or description (reasoning of why a product fits).  Suggest missing field or description if found.
+- Identify gaps, ambiguity, workflow inefficiency, missing workflow steps, missing features, and missing artifacts.
+- Suggest any artifact that is missing from the identified workflow step.
+- Review each artifact and see they are good enough for a first round implementation.  This shall include the data fields (% holding) or description (reasoning of why a product fits).  Suggest missing fields or description.
 - Provide actionable changes only.
 - Validate whether prior issues were actually closed.
 - Decide whether the draft is ready or must continue.
@@ -20,7 +20,7 @@ Required output format:
 # Findings
 - issue_id: <issue id>
   severity: Critical | High | Medium | Low
-  area: Workflow | Reporting | Data | UX
+  area: Workflow | Artifact | Reporting | Data
   problem: <problem description>
   impact: <risk or impact>
   required_change: <specific change>

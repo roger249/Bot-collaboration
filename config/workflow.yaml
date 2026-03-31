@@ -1,9 +1,9 @@
 workflow:
   name: pb_author_reviewer_phase1
   spec_file: data/PB system spec.v1.md
-  guideline_file: config/prompts/guideline_to_spec.md
+  guideline_file: config/prompts/system_prompt.md
   output_root: runs
-  max_rounds: 1
+  max_rounds: 2
   stop_on_no_blockers: true
 
 logging:
@@ -16,15 +16,16 @@ runtime:
 bots:
   author:
     provider: poe
+#    model: deepseek-v3.1
 #    model: qwen3.5-plus
     model: claude-sonnet-4.6
-#    model: deepseek-v3.1
     prompt_file: config/prompts/author_prompt.md
     temperature: 0.2
   reviewer:
     provider: poe
-    model: gemini-3-flash
-#    model: claude-sonnet-4.6
+    model: grok-4
+#    model: claude-sonnet-4.5
+#    model: deepseek-v3.1
     prompt_file: config/prompts/reviewer_prompt.md
     temperature: 0.1
 
@@ -40,4 +41,4 @@ providers:
   poe:
     api_key_env: POE_API_KEY
     base_url: https://api.poe.com/v1
-    timeout_seconds: 1000
+    timeout_seconds: 1800

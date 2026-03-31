@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 from pathlib import Path
 import sys
 
@@ -13,6 +14,9 @@ if __package__ is None or __package__ == "":
 
 from src.config_loader import load_config
 from src.workflow import run_workflow
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _load_local_dotenv() -> None:
@@ -58,6 +62,7 @@ def main() -> None:
                 )
             )
         except Exception as exc:
+            LOGGER.exception("Workflow execution failed")
             print(f"Workflow failed: {exc}")
             raise SystemExit(1) from exc
 

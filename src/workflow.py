@@ -37,21 +37,31 @@ def _load_prompt(path: Path) -> str:
     return read_text(path)
 
 
-def _compose_system_prompt(base_prompt: str, guideline_text: str | None) -> str:
+def _compose_system_prompt(base_prompt: str) -> str:
+    return base_prompt
+
+
+def _append_guideline(parts: list[str], guideline_text: str | None) -> None:
     if not guideline_text or not guideline_text.strip():
-        return base_prompt
-    return (
-        f"{base_prompt.rstrip()}\n\n"
-        "General Specification Guideline:\n"
-        f"{guideline_text.strip()}\n"
-    )
+        return
+    parts.extend([
+        "",
+        "Specification guideline:",
+        guideline_text.strip(),
+    ])
 
 
-def _build_reviewer_input(spec: str, previous_review: str | None, previous_author: str | None) -> str:
+def _build_reviewer_input(
+    spec: str,
+    previous_review: str | None,
+    previous_author: str | None,
+    guideline_text: str | None,
+) -> str:
     parts = [
         "Current specification:",
         spec,
     ]
+    _append_guideline(parts, guideline_text)
     if previous_review:
         parts.extend(["", "Previous reviewer output:", previous_review])
     if previous_author:
@@ -63,11 +73,13 @@ def _build_author_input(
     spec: str,
     review: str | None,
     previous_author: str | None,
+    guideline_text: str | None,
 ) -> str:
     parts = [
         "Current specification:",
         spec,
     ]
+    _append_guideline(parts, guideline_text)
     if review:
         parts.extend(["", "Latest reviewer comments:", review])
     if previous_author:
@@ -78,7 +90,13 @@ def _build_author_input(
 def run_workflow(app_config: AppConfig) -> WorkflowResult:
     run_paths: RunPaths = create_run_paths(app_config.workflow.output_root, app_config.workflow.name)
     log_path = run_paths.logs_dir / "workflow.log"
-    configure_logging(app_config.logging_level, log_path, app_config.logging_config_file)
+    chat_history_log_path = run_paths.logs_dir / "chat_history.log"
+    configure_logging(
+        app_config.logging_level,
+        log_path,
+        chat_history_log_path,
+        app_config.logging_config_file,
+    )
 
     current_spec_name = app_config.workflow.spec_file.name
     current_spec_text = read_text(app_config.workflow.spec_file)
@@ -90,8 +108,8 @@ def run_workflow(app_config: AppConfig) -> WorkflowResult:
     if app_config.workflow.guideline_file is not None:
         guideline_text = read_text(app_config.workflow.guideline_file)
 
-    author_prompt = _compose_system_prompt(_load_prompt(app_config.author.prompt_file), guideline_text)
-    reviewer_prompt = _compose_system_prompt(_load_prompt(app_config.reviewer.prompt_file), guideline_text)
+    author_prompt = _compose_system_prompt(_load_prompt(app_config.author.prompt_file))
+    reviewer_prompt = _compose_system_prompt(_load_prompt(app_config.reviewer.prompt_file))
 
     author_client = build_client(app_config, "author", app_config.author)
     reviewer_client = build_client(app_config, "reviewer", app_config.reviewer)
@@ -106,19 +124,20 @@ def run_workflow(app_config: AppConfig) -> WorkflowResult:
         LOGGER.info("Starting round %s", round_number)
         rounds_completed = round_number
 
+        author_request = LLMRequest(
+            system_prompt=author_prompt,
+            user_prompt=_build_author_input(
+                spec=current_spec_text,
+                review=previous_review,
+                previous_author=previous_author,
+                guideline_text=guideline_text,
+            ),
+            model=app_config.author.model,
+            temperature=app_config.author.temperature,
+        )
+
         try:
-            author_output = author_client.generate(
-                LLMRequest(
-                    system_prompt=author_prompt,
-                    user_prompt=_build_author_input(
-                        spec=current_spec_text,
-                        review=previous_review,
-                        previous_author=previous_author,
-                    ),
-                    model=app_config.author.model,
-                    temperature=app_config.author.temperature,
-                )
-            )
+            author_output = author_client.generate(author_request)
         except PromptTimeoutError:
             stopped_reason = "prompt timeout"
             LOGGER.error("Author prompt timed out in round %s", round_number)
@@ -129,6 +148,9 @@ def run_workflow(app_config: AppConfig) -> WorkflowResult:
                 total_rounds=rounds_completed,
                 stopped_reason=stopped_reason,
             )
+        except Exception:
+            LOGGER.exception("Author generation failed in round %s", round_number)
+            raise
 
         next_spec_name = next_version_filename(current_spec_name)
         author_path = run_paths.author_dir / author_filename(next_spec_name)
@@ -152,19 +174,20 @@ def run_workflow(app_config: AppConfig) -> WorkflowResult:
         next_spec_path = run_paths.specs_dir / next_spec_name
         write_text(next_spec_path, revised_spec)
 
+        reviewer_request = LLMRequest(
+            system_prompt=reviewer_prompt,
+            user_prompt=_build_reviewer_input(
+                spec=revised_spec,
+                previous_review=previous_review,
+                previous_author=author_output,
+                guideline_text=guideline_text,
+            ),
+            model=app_config.reviewer.model,
+            temperature=app_config.reviewer.temperature,
+        )
+
         try:
-            reviewer_output = reviewer_client.generate(
-                LLMRequest(
-                    system_prompt=reviewer_prompt,
-                    user_prompt=_build_reviewer_input(
-                        spec=revised_spec,
-                        previous_review=previous_review,
-                        previous_author=author_output,
-                    ),
-                    model=app_config.reviewer.model,
-                    temperature=app_config.reviewer.temperature,
-                )
-            )
+            reviewer_output = reviewer_client.generate(reviewer_request)
         except PromptTimeoutError:
             stopped_reason = "prompt timeout"
             LOGGER.error("Reviewer prompt timed out in round %s", round_number)
@@ -175,6 +198,9 @@ def run_workflow(app_config: AppConfig) -> WorkflowResult:
                 total_rounds=rounds_completed,
                 stopped_reason=stopped_reason,
             )
+        except Exception:
+            LOGGER.exception("Reviewer generation failed in round %s", round_number)
+            raise
         review_path = run_paths.comments_dir / comment_filename(next_spec_name)
         write_text(review_path, reviewer_output)
 

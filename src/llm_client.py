@@ -1,14 +1,20 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import socket
 from dataclasses import dataclass
+from json import JSONDecodeError
 from urllib.error import HTTPError
 from urllib.error import URLError
 from urllib import request as urllib_request
 
 from src.config_loader import AppConfig, BotConfig
+
+
+LOGGER = logging.getLogger(__name__)
+CHAT_HISTORY_TRANSPORT_LOGGER = logging.getLogger("chat_history.transport")
 
 
 @dataclass
@@ -99,7 +105,7 @@ class OpenAICompatibleClient(BaseLLMClient):
         self.timeout_seconds = timeout_seconds
 
     def generate(self, request: LLMRequest) -> str:
-        payload = json.dumps(
+        payload_text = json.dumps(
             {
                 "model": request.model,
                 "temperature": request.temperature,
@@ -108,7 +114,13 @@ class OpenAICompatibleClient(BaseLLMClient):
                     {"role": "user", "content": request.user_prompt},
                 ],
             }
-        ).encode("utf-8")
+        )
+        CHAT_HISTORY_TRANSPORT_LOGGER.info(
+            "transport request\n=== url ===\n%s\n=== body ===\n%s",
+            self.base_url,
+            payload_text,
+        )
+        payload = payload_text.encode("utf-8")
         http_request = urllib_request.Request(
             self.base_url,
             data=payload,
@@ -119,25 +131,75 @@ class OpenAICompatibleClient(BaseLLMClient):
         )
         try:
             with urllib_request.urlopen(http_request, timeout=self.timeout_seconds) as response:
-                data = json.loads(response.read().decode("utf-8"))
+                response_text = response.read().decode("utf-8")
+                CHAT_HISTORY_TRANSPORT_LOGGER.info(
+                    "transport response\n=== status ===\n%s\n=== body ===\n%s",
+                    getattr(response, "status", "unknown"),
+                    response_text,
+                )
+                data = json.loads(response_text)
         except (TimeoutError, socket.timeout) as exc:
+            LOGGER.error(
+                "Prompt timed out for model '%s' after %s seconds against %s",
+                request.model,
+                self.timeout_seconds,
+                self.base_url,
+            )
             raise PromptTimeoutError(
                 f"Prompt timed out for model '{request.model}' after {self.timeout_seconds} seconds."
             ) from exc
         except URLError as exc:
             if isinstance(exc.reason, TimeoutError | socket.timeout):
+                LOGGER.error(
+                    "Prompt timed out for model '%s' after %s seconds against %s",
+                    request.model,
+                    self.timeout_seconds,
+                    self.base_url,
+                )
                 raise PromptTimeoutError(
                     f"Prompt timed out for model '{request.model}' after {self.timeout_seconds} seconds."
                 ) from exc
+            LOGGER.error(
+                "Provider connection error for model '%s' against %s: %s",
+                request.model,
+                self.base_url,
+                exc.reason,
+            )
             raise ValueError(f"Provider connection error for model '{request.model}': {exc.reason}") from exc
         except HTTPError as exc:
             body = ""
             if exc.fp is not None:
                 body = exc.fp.read().decode("utf-8", errors="replace")[:1000]
+            CHAT_HISTORY_TRANSPORT_LOGGER.info(
+                "transport response\n=== status ===\n%s\n=== body ===\n%s",
+                exc.code,
+                body,
+            )
+            LOGGER.error(
+                "Provider HTTP error for model '%s' against %s: %s %s %s",
+                request.model,
+                self.base_url,
+                exc.code,
+                exc.reason,
+                body,
+            )
             raise ValueError(f"Provider HTTP error {exc.code}: {exc.reason}. {body}") from exc
+        except JSONDecodeError as exc:
+            LOGGER.error(
+                "Provider returned invalid JSON for model '%s' against %s: %s",
+                request.model,
+                self.base_url,
+                exc,
+            )
+            raise ValueError(f"Provider returned invalid JSON for model '{request.model}'.") from exc
         try:
             content = data["choices"][0]["message"]["content"]
         except (KeyError, IndexError) as exc:
+            LOGGER.error(
+                "Unexpected LLM response shape for model '%s': %s",
+                request.model,
+                json.dumps(data)[:1000],
+            )
             raise ValueError(f"Unexpected LLM response: {json.dumps(data)[:1000]}") from exc
 
         if isinstance(content, list):
@@ -148,6 +210,11 @@ class OpenAICompatibleClient(BaseLLMClient):
             content = "\n".join(text_parts)
 
         if not isinstance(content, str) or not content.strip():
+            LOGGER.error(
+                "Provider returned empty content for model '%s': %s",
+                request.model,
+                json.dumps(data)[:1000],
+            )
             raise ValueError(
                 f"Provider returned empty content for model '{request.model}'. "
                 f"Response snippet: {json.dumps(data)[:1000]}"
@@ -163,6 +230,7 @@ def _resolve_api_key(api_key_env_or_value: str) -> str:
     if env_value:
         return env_value
     if api_key_env_or_value.startswith("sk-"):
+        LOGGER.warning("Using direct API key value from config. Prefer environment variables instead.")
         return api_key_env_or_value
     raise ValueError(
         f"Environment variable {api_key_env_or_value} is not set for configured provider."
@@ -192,4 +260,5 @@ def build_client(app_config: AppConfig, bot_name: str, bot_config: BotConfig) ->
             timeout_seconds=provider.timeout_seconds,
         )
 
+    LOGGER.error("Unsupported provider configured for bot '%s': %s", bot_name, bot_config.provider)
     raise ValueError(f"Unsupported provider: {bot_config.provider}")
