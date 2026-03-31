@@ -1,5 +1,7 @@
 base_url *       	https://api.deepseek.com
-API key: sk-0982045e471d480e84dad2be4700321b
 
+# Note on models
 
-poe key: sk-poe-IoV3b2rj5pRN1iLG5ZNg7NFf0KWlExlwNfE7sxL_UDo
+# qwen3.5-plus
+Couldn't follow the instruction completely.  Not sure it's how prompt sending corrupted or the model itself.
+

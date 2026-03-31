@@ -15,7 +15,7 @@ from src.file_ops import (
     read_text,
     write_text,
 )
-from src.llm_client import LLMRequest, build_client
+from src.llm_client import LLMRequest, PromptTimeoutError, build_client
 from src.logging_utils import configure_logging
 from src.parsing import extract_revised_spec, summarize_review
 from src.progress import build_progress_markdown
@@ -106,18 +106,29 @@ def run_workflow(app_config: AppConfig) -> WorkflowResult:
         LOGGER.info("Starting round %s", round_number)
         rounds_completed = round_number
 
-        author_output = author_client.generate(
-            LLMRequest(
-                system_prompt=author_prompt,
-                user_prompt=_build_author_input(
-                    spec=current_spec_text,
-                    review=previous_review,
-                    previous_author=previous_author,
-                ),
-                model=app_config.author.model,
-                temperature=app_config.author.temperature,
+        try:
+            author_output = author_client.generate(
+                LLMRequest(
+                    system_prompt=author_prompt,
+                    user_prompt=_build_author_input(
+                        spec=current_spec_text,
+                        review=previous_review,
+                        previous_author=previous_author,
+                    ),
+                    model=app_config.author.model,
+                    temperature=app_config.author.temperature,
+                )
             )
-        )
+        except PromptTimeoutError:
+            stopped_reason = "prompt timeout"
+            LOGGER.error("Author prompt timed out in round %s", round_number)
+            return WorkflowResult(
+                run_root=run_paths.root,
+                log_path=log_path,
+                final_spec_path=last_spec_path,
+                total_rounds=rounds_completed,
+                stopped_reason=stopped_reason,
+            )
 
         next_spec_name = next_version_filename(current_spec_name)
         author_path = run_paths.author_dir / author_filename(next_spec_name)
@@ -141,18 +152,29 @@ def run_workflow(app_config: AppConfig) -> WorkflowResult:
         next_spec_path = run_paths.specs_dir / next_spec_name
         write_text(next_spec_path, revised_spec)
 
-        reviewer_output = reviewer_client.generate(
-            LLMRequest(
-                system_prompt=reviewer_prompt,
-                user_prompt=_build_reviewer_input(
-                    spec=revised_spec,
-                    previous_review=previous_review,
-                    previous_author=author_output,
-                ),
-                model=app_config.reviewer.model,
-                temperature=app_config.reviewer.temperature,
+        try:
+            reviewer_output = reviewer_client.generate(
+                LLMRequest(
+                    system_prompt=reviewer_prompt,
+                    user_prompt=_build_reviewer_input(
+                        spec=revised_spec,
+                        previous_review=previous_review,
+                        previous_author=author_output,
+                    ),
+                    model=app_config.reviewer.model,
+                    temperature=app_config.reviewer.temperature,
+                )
             )
-        )
+        except PromptTimeoutError:
+            stopped_reason = "prompt timeout"
+            LOGGER.error("Reviewer prompt timed out in round %s", round_number)
+            return WorkflowResult(
+                run_root=run_paths.root,
+                log_path=log_path,
+                final_spec_path=last_spec_path,
+                total_rounds=rounds_completed,
+                stopped_reason=stopped_reason,
+            )
         review_path = run_paths.comments_dir / comment_filename(next_spec_name)
         write_text(review_path, reviewer_output)
 

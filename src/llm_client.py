@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import json
 import os
+import socket
 from dataclasses import dataclass
 from urllib.error import HTTPError
+from urllib.error import URLError
 from urllib import request as urllib_request
 
 from src.config_loader import AppConfig, BotConfig
@@ -20,6 +22,10 @@ class LLMRequest:
 class BaseLLMClient:
     def generate(self, request: LLMRequest) -> str:
         raise NotImplementedError
+
+
+class PromptTimeoutError(TimeoutError):
+    pass
 
 
 class MockLLMClient(BaseLLMClient):
@@ -114,6 +120,16 @@ class OpenAICompatibleClient(BaseLLMClient):
         try:
             with urllib_request.urlopen(http_request, timeout=self.timeout_seconds) as response:
                 data = json.loads(response.read().decode("utf-8"))
+        except (TimeoutError, socket.timeout) as exc:
+            raise PromptTimeoutError(
+                f"Prompt timed out for model '{request.model}' after {self.timeout_seconds} seconds."
+            ) from exc
+        except URLError as exc:
+            if isinstance(exc.reason, TimeoutError | socket.timeout):
+                raise PromptTimeoutError(
+                    f"Prompt timed out for model '{request.model}' after {self.timeout_seconds} seconds."
+                ) from exc
+            raise ValueError(f"Provider connection error for model '{request.model}': {exc.reason}") from exc
         except HTTPError as exc:
             body = ""
             if exc.fp is not None:
