@@ -14,10 +14,11 @@ from src.planbot.input_loader import (
     load_markdown_references,
 )
 from src.shared.io_utils import read_text, write_text
-from src.shared.run_utils import create_timestamped_run_root
+from src.shared.run_utils import create_run_root
 
 
 LOGGER = logging.getLogger(__name__)
+OUTPUT_START_MARKER = "---** Output of suggestion as below **---"
 
 
 @dataclass
@@ -51,10 +52,18 @@ def _build_user_prompt(
     return "\n".join(parts)
 
 
+def _normalize_planbot_output(output: str) -> str:
+    lines = output.splitlines()
+    for index, line in enumerate(lines):
+        if line.strip() == OUTPUT_START_MARKER:
+            return "\n".join(lines[index:]).strip() + "\n"
+    return output
+
+
 def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult:
     cfg = load_planbot_config(config_path, app_config.root_dir)
 
-    run_root = create_timestamped_run_root(cfg.output_root, cfg.name)
+    run_root = create_run_root(cfg.output_root, cfg.name, cfg.overwrite_output_folder)
     logs_dir = run_root / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
 
@@ -113,6 +122,8 @@ def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult
     except PromptTimeoutError:
         LOGGER.error("PlanBot prompt timed out")
         raise
+
+    output = _normalize_planbot_output(output)
 
     output_path = run_root / cfg.output_filename
     write_text(output_path, output)

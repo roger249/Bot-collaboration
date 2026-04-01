@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
+
+from src.shared.run_utils import create_run_root
 
 
 @dataclass
@@ -16,9 +17,9 @@ class RunPaths:
     logs_dir: Path
 
 
-def create_run_paths(output_root: Path, workflow_name: str) -> RunPaths:
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    root = output_root / f"{workflow_name}_{timestamp}"
+def create_run_paths(output_root: Path, workflow_name: str, overwrite_output_folder: bool = False) -> RunPaths:
+    root = create_run_root(output_root, workflow_name, overwrite_output_folder)
+
     specs_dir = root / "specs"
     comments_dir = root / "comments"
     author_dir = root / "author"

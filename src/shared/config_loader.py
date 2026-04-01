@@ -20,6 +20,7 @@ class WorkflowConfig:
     spec_file: Path
     guideline_file: Path | None
     output_root: Path
+    overwrite_output_folder: bool
     max_rounds: int
     stop_on_no_blockers: bool
 
@@ -75,6 +76,7 @@ def load_config(config_path: str | Path) -> AppConfig:
             spec_file=_resolve(root_dir, workflow["spec_file"]),
             guideline_file=_resolve(root_dir, guideline_file) if guideline_file else None,
             output_root=_resolve(root_dir, workflow["output_root"]),
+            overwrite_output_folder=bool(workflow.get("overwrite_output_folder", False)),
             max_rounds=int(workflow["max_rounds"]),
             stop_on_no_blockers=bool(workflow.get("stop_on_no_blockers", True)),
         ),

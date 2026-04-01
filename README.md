@@ -40,6 +40,10 @@ python -m src.main run-planbot --config config/config.yaml
 - `base_url`
 - `model`
 
-Outputs are written to `runs/<timestamp>/`.
+Author-reviewer outputs are written to `runs/<workflow-name>_<timestamp>/` by default.
 
-PlanBot outputs are written to `runs/planbot/<run>/`.
+If `workflow.overwrite_output_folder: true`, author-reviewer writes to `runs/<workflow-name>/` and replaces that folder on each run.
+
+PlanBot outputs are written to `runs/planbot/<planbot-name>_<timestamp>/` by default.
+
+If `planbot.overwrite_output_folder: true`, PlanBot writes to `runs/planbot/<planbot-name>/` and replaces that folder on each run.

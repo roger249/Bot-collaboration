@@ -16,7 +16,7 @@ runtime:
 
 bots:
   author:
-    provider: poe
+    provider: mock
 #    model: deepseek-v3.1
 #    model: qwen3.5-plus
     model: qwen3.5-flash
@@ -24,7 +24,7 @@ bots:
     prompt_file: config/prompts/author_reviewer/author_prompt.md
     temperature: 0.2
   reviewer:
-    provider: poe
+    provider: mock
 #    model: gpt-5.2
 #    model: claude-sonnet-4.5
 #    model: deepseek-v3.1
@@ -49,12 +49,12 @@ providers:
 planbot:
   name: planbot
   output_root: runs/planbot
+  overwrite_output_folder: true
   output_filename: output.md
   reference_glob: data/planbot/reference/*.md
   prompt_file: config/prompts/planbot/investment_prompt.md
   shared_no_web_note_file: config/prompts/shared/no_external_web_note.md
-  overwrite_output_folder: true
-  provider: poe
-  model: deepseek-v3.2-exp
+  provider: mock
+  model: mock-planbot
   temperature: 0.2
   web_access: true

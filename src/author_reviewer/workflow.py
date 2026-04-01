@@ -88,7 +88,11 @@ def _build_author_input(
 
 
 def run_workflow(app_config: AppConfig) -> WorkflowResult:
-    run_paths: RunPaths = create_run_paths(app_config.workflow.output_root, app_config.workflow.name)
+    run_paths: RunPaths = create_run_paths(
+        app_config.workflow.output_root,
+        app_config.workflow.name,
+        app_config.workflow.overwrite_output_folder,
+    )
     log_path = run_paths.logs_dir / "workflow.log"
     chat_history_log_path = run_paths.logs_dir / "chat_history.log"
     configure_logging(

@@ -11,6 +11,7 @@ import yaml
 class PlanBotConfig:
     name: str
     output_root: Path
+    overwrite_output_folder: bool
     output_filename: str
     reference_glob: str
     prompt_file: Path
@@ -39,6 +40,7 @@ def load_planbot_config(config_path: str | Path, root_dir: Path) -> PlanBotConfi
     return PlanBotConfig(
         name=str(raw_planbot.get("name", "planbot")).strip(),
         output_root=_resolve(root_dir, str(raw_planbot.get("output_root", "runs/planbot"))),
+        overwrite_output_folder=bool(raw_planbot.get("overwrite_output_folder", False)),
         output_filename=str(raw_planbot.get("output_filename", "output.md")).strip(),
         reference_glob=str(raw_planbot.get("reference_glob", "data/planbot/reference/*.md")).strip(),
         prompt_file=_resolve(root_dir, str(raw_planbot["prompt_file"])),

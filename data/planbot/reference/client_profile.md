@@ -4,6 +4,8 @@
 - Age: 42
 - Occupation: Managing Director of a KPMG
 - Risk tolerance: Moderate
+- Married
+- One children born 2010
 
 # Investment consideration
 
