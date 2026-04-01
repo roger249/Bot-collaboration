@@ -23,6 +23,7 @@ class LLMRequest:
     user_prompt: str
     model: str
     temperature: float
+    user_messages: list[str] | None = None
 
 
 class BaseLLMClient:
@@ -136,14 +137,16 @@ class OpenAICompatibleClient(BaseLLMClient):
         self.timeout_seconds = timeout_seconds
 
     def generate(self, request: LLMRequest) -> str:
+        user_messages = request.user_messages or [request.user_prompt]
+        messages = [{"role": "system", "content": request.system_prompt}]
+        for user_message in user_messages:
+            messages.append({"role": "user", "content": user_message})
+
         payload_text = json.dumps(
             {
                 "model": request.model,
                 "temperature": request.temperature,
-                "messages": [
-                    {"role": "system", "content": request.system_prompt},
-                    {"role": "user", "content": request.user_prompt},
-                ],
+                "messages": messages,
             }
         )
         CHAT_HISTORY_TRANSPORT_LOGGER.debug(

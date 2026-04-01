@@ -51,6 +51,7 @@ planbot:
   output_root: runs/planbot
   output_filename: output.md
   reference_glob: data/planbot/reference/*.md
+  system_prompt_file: config/prompts/planbot/system_prompt.md
   prompt_file: config/prompts/planbot/investment_prompt.md
   shared_no_web_note_file: config/prompts/shared/no_external_web_note.md
   overwrite_output_folder: true

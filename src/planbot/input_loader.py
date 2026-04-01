@@ -8,32 +8,75 @@ from src.shared.io_utils import read_text
 
 
 @dataclass
-class MarkdownReference:
+class ReferenceDocument:
     path: Path
     content: str
+    source_type: str
 
 
-def load_markdown_references(root_dir: Path, glob_pattern: str) -> list[MarkdownReference]:
-    paths = sorted(root_dir.glob(glob_pattern))
-    references: list[MarkdownReference] = []
+def _convert_pdf_to_text(path: Path) -> str:
+    try:
+        from markitdown import MarkItDown
+    except ImportError as exc:
+        raise RuntimeError(
+            "PDF conversion requires markitdown with PDF extras. Install dependencies with: pip install -r requirements.txt"
+        ) from exc
+
+    converter = MarkItDown()
+    result = converter.convert(str(path))
+
+    for attribute in ("text_content", "markdown", "content", "text"):
+        value = getattr(result, attribute, None)
+        if isinstance(value, str) and value.strip():
+            return value
+
+    if isinstance(result, str) and result.strip():
+        return result
+
+    raise ValueError(f"PDF conversion returned empty content for {path.name}")
+
+
+def load_references(root_dir: Path, glob_pattern: str) -> list[ReferenceDocument]:
+    paths_set: set[Path] = set(root_dir.glob(glob_pattern))
+
+    # If config is markdown-only, include sibling PDFs automatically.
+    if glob_pattern.endswith(".md"):
+        pdf_glob_pattern = glob_pattern[:-3] + ".pdf"
+        paths_set.update(root_dir.glob(pdf_glob_pattern))
+
+    paths = sorted(paths_set)
+    references: list[ReferenceDocument] = []
     for path in paths:
-        if path.is_file() and path.suffix.lower() == ".md":
-            references.append(MarkdownReference(path=path.resolve(), content=read_text(path.resolve())))
+        if not path.is_file():
+            continue
+
+        suffix = path.suffix.lower()
+        resolved = path.resolve()
+
+        if suffix == ".md":
+            references.append(
+                ReferenceDocument(path=resolved, content=read_text(resolved), source_type="markdown")
+            )
+        elif suffix == ".pdf":
+            references.append(
+                ReferenceDocument(path=resolved, content=_convert_pdf_to_text(resolved), source_type="pdf")
+            )
+
     return references
 
 
-def build_reference_block(references: list[MarkdownReference]) -> str:
+def build_reference_block(references: list[ReferenceDocument]) -> str:
     if not references:
-        return "No local markdown references were provided."
+        return "No local references were provided."
 
     chunks: list[str] = []
     for index, ref in enumerate(references, start=1):
-        chunks.append(f"## Reference {index}: {ref.path.name}\n\n{ref.content.strip()}")
+        chunks.append(f"## Reference {index}: {ref.path.name} ({ref.source_type})\n\n{ref.content.strip()}")
     return "\n\n".join(chunks)
 
 
 def extract_urls_from_references(
-    references: list[MarkdownReference],
+    references: list[ReferenceDocument],
     url_reference_filename: str | None = "websites.md",
 ) -> list[str]:
     url_pattern = re.compile(r"https?://[^\s<>()\]\[]+")
