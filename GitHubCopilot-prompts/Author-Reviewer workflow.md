@@ -45,7 +45,7 @@ Responsibilities:
 
 ## Configuration
 
-Source: [config/workflow.yaml](config/workflow.yaml)
+Source: [config/config.yaml](config/config.yaml)
 
 Key parameters:
 

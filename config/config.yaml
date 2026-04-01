@@ -1,9 +1,9 @@
 workflow:
   name: pb_author_reviewer_phase1
-  spec_file: data/PB system spec.v1.md
-  guideline_file: config/prompts/system_prompt.md
+  spec_file: data/author_reviewer/PB system spec.v1.md
+  guideline_file: config/prompts/author_reviewer/system_prompt.md
   output_root: runs
-  max_rounds: 2
+  max_rounds: 1
   stop_on_no_blockers: true
 
 logging:
@@ -18,15 +18,17 @@ bots:
     provider: poe
 #    model: deepseek-v3.1
 #    model: qwen3.5-plus
-    model: claude-sonnet-4.5
-    prompt_file: config/prompts/author_prompt.md
+    model: qwen3.5-flash
+#    model: claude-sonnet-4.5
+    prompt_file: config/prompts/author_reviewer/author_prompt.md
     temperature: 0.2
   reviewer:
     provider: poe
-    model: gpt-5.2
+#    model: gpt-5.2
 #    model: claude-sonnet-4.5
 #    model: deepseek-v3.1
-    prompt_file: config/prompts/reviewer_prompt.md
+    model: qwen3.5-flash
+    prompt_file: config/prompts/author_reviewer/reviewer_prompt.md
     temperature: 0.1
 
 providers:
@@ -42,3 +44,15 @@ providers:
     api_key_env: POE_API_KEY
     base_url: https://api.poe.com/v1
     timeout_seconds: 1800
+
+planbot:
+  name: planbot
+  output_root: runs/planbot
+  output_filename: output.md
+  reference_glob: data/planbot/reference/*.md
+  prompt_file: config/prompts/planbot/investment_prompt.md
+  shared_no_web_note_file: config/prompts/shared/no_external_web_note.md
+  provider: poe
+  model: deepseek-v3.2-exp
+  temperature: 0.2
+  web_access: true

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.parsing import summarize_review
+from src.author_reviewer.parsing import summarize_review
 
 
 def build_progress_markdown(round_number: int, review_markdown: str, current_spec_name: str) -> str:

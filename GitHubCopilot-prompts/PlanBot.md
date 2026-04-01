@@ -11,7 +11,6 @@ Workflow is as follows:
 - AI will consider information from Markdown files in various folders, plus external website URLs. Support for PDF, Word, and Excel is expected in the next sprint.
 - For URLs, pass them directly to the model. For models that cannot retrieve web content, include a prompt instruction requiring the model to explicitly indicate that external web sources were not consulted.
 - Markdown files are stored under `data/planbot/reference/*.md` by default, and this can be overridden in shared YAML config: `config/config.yaml`.
-- Website URLs should be listed in `data/planbot/reference/websites.md`. YAML `planbot.urls` can still be used as an optional fallback.
 - An external prompt defines how to perform the task and the required output.
 - Prompts will vary by task and include task-specific output templates.
 - A boilerplate output structure with required sections is provided to guide content.

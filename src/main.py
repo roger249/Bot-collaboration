@@ -12,8 +12,9 @@ from dotenv import load_dotenv
 if __package__ is None or __package__ == "":
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.config_loader import load_config
-from src.workflow import run_workflow
+from src.shared.config_loader import load_config
+from src.author_reviewer.workflow import run_workflow
+from src.planbot.workflow import run_planbot
 
 
 LOGGER = logging.getLogger(__name__)
@@ -32,6 +33,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     run_parser = subparsers.add_parser("run", help="Run the workflow")
     run_parser.add_argument("--config", required=True, help="Path to workflow config YAML")
+
+    planbot_parser = subparsers.add_parser("run-planbot", help="Run the PlanBot one-off workflow")
+    planbot_parser.add_argument("--config", required=True, help="Path to shared config YAML")
     return parser
 
 
@@ -40,7 +44,7 @@ def main() -> None:
     parser = build_parser()
     argv = sys.argv[1:]
     if not argv:
-        default_config = Path(__file__).resolve().parents[1] / "config" / "workflow.yaml"
+        default_config = Path(__file__).resolve().parents[1] / "config" / "config.yaml"
         if default_config.exists():
             argv = ["run", "--config", str(default_config)]
     args = parser.parse_args(argv)
@@ -64,6 +68,27 @@ def main() -> None:
         except Exception as exc:
             LOGGER.exception("Workflow execution failed")
             print(f"Workflow failed: {exc}")
+            raise SystemExit(1) from exc
+    elif args.command == "run-planbot":
+        config = load_config(args.config)
+        try:
+            result = run_planbot(config, args.config)
+            print(
+                json.dumps(
+                    {
+                        "run_root": str(result.run_root),
+                        "log_path": str(result.log_path),
+                        "output_path": str(result.output_path),
+                        "prompt_path": str(result.prompt_path),
+                        "references_used": result.references_used,
+                        "urls_used": result.urls_used,
+                    },
+                    indent=2,
+                )
+            )
+        except Exception as exc:
+            LOGGER.exception("PlanBot execution failed")
+            print(f"PlanBot failed: {exc}")
             raise SystemExit(1) from exc
 
 

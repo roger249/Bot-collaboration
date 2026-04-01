@@ -4,8 +4,8 @@ import logging
 from dataclasses import dataclass
 from pathlib import Path
 
-from src.config_loader import AppConfig
-from src.file_ops import (
+from src.shared.config_loader import AppConfig
+from src.author_reviewer.file_ops import (
     RunPaths,
     author_filename,
     comment_filename,
@@ -15,10 +15,10 @@ from src.file_ops import (
     read_text,
     write_text,
 )
-from src.llm_client import LLMRequest, PromptTimeoutError, build_client
-from src.logging_utils import configure_logging
-from src.parsing import extract_revised_spec, summarize_review
-from src.progress import build_progress_markdown
+from src.shared.llm_client import LLMRequest, PromptTimeoutError, build_client
+from src.shared.logging_utils import configure_logging
+from src.author_reviewer.parsing import extract_revised_spec, summarize_review
+from src.author_reviewer.progress import build_progress_markdown
 
 
 LOGGER = logging.getLogger(__name__)

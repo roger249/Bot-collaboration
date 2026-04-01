@@ -24,10 +24,16 @@ The app loads `.env` automatically if the file exists.
 4. Run in mock mode:
 
 ```bash
-python -m src.main run --config config/workflow.yaml
+python -m src.main run --config config/config.yaml
 ```
 
-5. To use an OpenAI-compatible API, update `config/workflow.yaml` and set:
+5. Run PlanBot in mock mode (no external provider call):
+
+```bash
+python -m src.main run-planbot --config config/config.yaml
+```
+
+5. To use an OpenAI-compatible API, update `config/config.yaml` and set:
 
 - `provider: openai_compatible`
 - `api_key_env`
@@ -35,3 +41,5 @@ python -m src.main run --config config/workflow.yaml
 - `model`
 
 Outputs are written to `runs/<timestamp>/`.
+
+PlanBot outputs are written to `runs/planbot/<run>/`.

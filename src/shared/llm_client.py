@@ -10,7 +10,7 @@ from urllib.error import HTTPError
 from urllib.error import URLError
 from urllib import request as urllib_request
 
-from src.config_loader import AppConfig, BotConfig
+from src.shared.config_loader import AppConfig, BotConfig
 
 
 LOGGER = logging.getLogger(__name__)
@@ -39,6 +39,37 @@ class MockLLMClient(BaseLLMClient):
         self.bot_name = bot_name
 
     def generate(self, request: LLMRequest) -> str:
+        if self.bot_name == "planbot":
+            return """# Pros and cons of current holding
+Pros:
+- Existing holdings are diversified across equity and bond ETFs, reducing concentration risk.
+- Current allocation has low turnover and is tax-efficient.
+
+Cons:
+- Technology overweight increases drawdown risk in risk-off periods.
+- Cash allocation is below near-term liquidity needs.
+
+# Suggestion of portfolio change, if any
+- Reduce technology exposure by 7% and reallocate to broad quality dividend and short-duration bonds.
+- Increase cash buffer from 3% to 8% for a 12-month emergency and opportunity reserve.
+- Add a 5% allocation to global infrastructure for inflation resilience.
+
+# Pros and cons of the new portfolio
+Pros:
+- Better downside resilience under rising-rate and recession scenarios.
+- Improved liquidity profile for short-term obligations.
+- Broader sector and factor diversification.
+
+Cons:
+- Potentially lower upside in strong tech-led bull markets.
+- Slightly higher tracking error versus prior benchmark-heavy allocation.
+
+# Scenario analysis of the new portfolio
+- Bull case: Expected return improves moderately with quality/dividend participation; tech upside partially retained.
+- Base case: More stable risk-adjusted return with lower volatility and improved income yield.
+- Bear case: Drawdown reduced due to higher cash, shorter duration, and infrastructure diversification.
+"""
+
         if self.bot_name == "reviewer":
             return """# Findings
 - issue_id: R1-WORKFLOW-001
@@ -115,7 +146,7 @@ class OpenAICompatibleClient(BaseLLMClient):
                 ],
             }
         )
-        CHAT_HISTORY_TRANSPORT_LOGGER.info(
+        CHAT_HISTORY_TRANSPORT_LOGGER.debug(
             "transport request\n=== url ===\n%s\n=== body ===\n%s",
             self.base_url,
             payload_text,
@@ -132,7 +163,7 @@ class OpenAICompatibleClient(BaseLLMClient):
         try:
             with urllib_request.urlopen(http_request, timeout=self.timeout_seconds) as response:
                 response_text = response.read().decode("utf-8")
-                CHAT_HISTORY_TRANSPORT_LOGGER.info(
+                CHAT_HISTORY_TRANSPORT_LOGGER.debug(
                     "transport response\n=== status ===\n%s\n=== body ===\n%s",
                     getattr(response, "status", "unknown"),
                     response_text,
@@ -170,7 +201,7 @@ class OpenAICompatibleClient(BaseLLMClient):
             body = ""
             if exc.fp is not None:
                 body = exc.fp.read().decode("utf-8", errors="replace")[:1000]
-            CHAT_HISTORY_TRANSPORT_LOGGER.info(
+            CHAT_HISTORY_TRANSPORT_LOGGER.debug(
                 "transport response\n=== status ===\n%s\n=== body ===\n%s",
                 exc.code,
                 body,

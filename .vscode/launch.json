@@ -1,0 +1,47 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "PlanBot: Run",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "src.main",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "run-planbot",
+        "--config",
+        "config/config.yaml"
+      ]
+    },
+    {
+      "name": "Author-Reviewer: Run",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "src.main",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "run",
+        "--config",
+        "config/config.yaml"
+      ]
+    },
+    {
+      "name": "PlanBot: Mock",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "src.main",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "run-planbot",
+        "--config",
+        "config/config.mocktest.yaml"
+      ]
+    }
+  ]
+}
