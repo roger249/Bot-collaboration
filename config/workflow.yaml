@@ -18,12 +18,12 @@ bots:
     provider: poe
 #    model: deepseek-v3.1
 #    model: qwen3.5-plus
-    model: claude-sonnet-4.6
+    model: claude-sonnet-4.5
     prompt_file: config/prompts/author_prompt.md
     temperature: 0.2
   reviewer:
     provider: poe
-    model: grok-4
+    model: gpt-5.2
 #    model: claude-sonnet-4.5
 #    model: deepseek-v3.1
     prompt_file: config/prompts/reviewer_prompt.md

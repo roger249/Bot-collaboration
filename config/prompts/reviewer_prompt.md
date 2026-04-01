@@ -14,6 +14,8 @@ Your task:
 - Provide actionable changes only.
 - Validate whether prior issues were actually closed.
 - Decide whether the draft is ready or must continue.
+- Any previous artifact is removed.
+- Sometimes, the specification has a leading section outling the thought of how this comes up.  If you feel the thought process is not the best, please point out and ask for revision.
 
 Required output format:
 
