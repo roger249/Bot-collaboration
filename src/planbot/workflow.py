@@ -56,7 +56,10 @@ def _normalize_planbot_output(output: str) -> str:
     lines = output.splitlines()
     for index, line in enumerate(lines):
         if line.strip() == OUTPUT_START_MARKER:
-            return "\n".join(lines[index:]).strip() + "\n"
+            trimmed = "\n".join(lines[index + 1 :]).lstrip("\n")
+            if not trimmed.strip():
+                return ""
+            return trimmed.rstrip() + "\n"
     return output
 
 
