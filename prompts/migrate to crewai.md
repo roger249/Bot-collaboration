@@ -10,7 +10,32 @@ We would like to migrate the infrastructure to use CrewAI, which have the follow
 
 The migration is to use crewai infrastructure to achieve above benefit.  Anything not related to above benefit is non-goal.
 
-Change to logging/config or other minor areas could be accepted as long as the major functionality is preserved and it provides better TCO or smaller code base.
+## Principle on migration compatibility.
+Change to logging/config or other minor areas could be accepted as long as the major 
+functionality is preserved and it provides better TCO or smaller code base.
+
+### Compatibility decision framework
+- Major functionality changes are NOT acceptable unless they improve quality and still pass phase exit criteria.
+- Minor compatibility drift is acceptable when all are true:
+	- no regression in required outputs/artifacts
+	- no regression in core stop/decision behavior
+	- operational simplicity, TCO, or code size is improved
+
+### Classification guide
+- Major functionality (must preserve):
+	- required artifacts and their semantic meaning
+	- round/decision behavior and stop conditions
+	- required output structure and non-empty required sections
+- Minor compatibility (acceptable drift):
+	- logging field names/format
+	- config shape extensions or reorganization
+	- dependency/runtime adjustments needed by CrewAI
+
+### Compatibility conclusions from current migration
+- Config compatibility: full 100% compatibility is not required; additive CrewAI config is acceptable.
+- Exception model: equivalent behavior (log + stop on failure) is sufficient for now.
+- Dependency/runtime: acceptable as migration prerequisite if documented and reproducible.
+- Output contract: mandatory to preserve as defined by each phase exit criteria.
 
 Success means preserving current artifact and decision behavior while reducing orchestration complexity and enabling schema-validated inter-agent state updates.  No need for a exact match against the version before crewai.
 
@@ -26,13 +51,18 @@ The migration is divided into two phase.
 
 - Exit criteria: Able to execute plan_bot without error and have output.md in the correct output format and no section is empty.
 
-## Phase 2
+## Phase 2 (Postponed)
 Review exception mechanism, and refine it if needed.
 - Exit criteria as Phase 1
 
 ## Phase 3
 Author-reviewer migration - Crew wrapper with same loop semantics.  Any failure just need to log to error and stop.
-- Exit criteria: Able to execute without error and have output.md in the correct output format and no section is empty.
+
+- Exit criteria: 
+-- final spec file + reviewer comments + progress file completeness
+-- correct output format and no section is empty.
+-- stop/decision behavior remains consistent with current blocker logic (Critical/High)
+-- output folder semantics remain consistent (specs/comments/author/progress/logs)
 
 ## Phase 4: Author-reviewer migration - tool-based state store, and more elegant exception handling.
 
@@ -41,7 +71,7 @@ Author-reviewer migration - Crew wrapper with same loop semantics.  Any failure 
 - Data passing between agent will mostly rely on two new tools - write/update spec, write/update comment.
 - Consider using CrewAI Flows @persist() Decorator to implement this.
 
-# New tools (for Phase 3 onwards)
+# New tools (for Phase 4)
 Read tools: get_current_spec, get_latest_comments, get_open_issues.
 Write tools: update_spec_section, append_review_finding, close_issue_with_evidence.
 

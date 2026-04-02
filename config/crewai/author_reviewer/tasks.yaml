@@ -1,0 +1,9 @@
+author_task:
+  expected_output: >
+    Updated author response in markdown with a Revised Specification section.
+    Include change rationale needed for downstream review.
+
+reviewer_task:
+  expected_output: >
+    Structured markdown review with findings, severity labels, and a decision
+    field that can be parsed by the workflow.

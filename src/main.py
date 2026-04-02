@@ -13,7 +13,7 @@ if __package__ is None or __package__ == "":
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.shared.config_loader import load_config
-from src.author_reviewer.workflow import run_workflow
+from src.author_reviewer.crew_workflow import run_crew_workflow
 from src.planbot.crew_workflow import run_crew_planbot
 
 
@@ -52,7 +52,7 @@ def main() -> None:
     if args.command == "run":
         config = load_config(args.config)
         try:
-            result = run_workflow(config)
+            result = run_crew_workflow(config)
             LOGGER.debug(
                 "%s",
                 json.dumps(

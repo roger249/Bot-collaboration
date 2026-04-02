@@ -1,10 +1,10 @@
 workflow:
   name: author_reviewer
-  spec_file: data/author_reviewer/PB system spec.v1.md
+  spec_file: data/author_reviewer/PB system spec.orig.md
   guideline_file: config/prompts/author_reviewer/system_prompt.md
   output_root: runs
   overwrite_output_folder: true
-  max_rounds: 1
+  max_rounds: 3
   stop_on_no_blockers: true
 
 logging:
