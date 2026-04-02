@@ -48,52 +48,6 @@ def extract_section(markdown: str, heading: str) -> str:
     return match.group(1).strip()
 
 
-def _strip_leading_reasoning(text: str) -> str:
-    """Remove common model reasoning blocks that can leak into final sections."""
-    cleaned = text.lstrip()
-
-    # Remove XML-like thinking tags if present at the beginning.
-    cleaned = re.sub(
-        r"^<think>[\s\S]*?</think>\s*",
-        "",
-        cleaned,
-        flags=re.IGNORECASE,
-    )
-
-    # Remove fenced reasoning blocks (```thinking ... ``` / ```reasoning ... ```).
-    cleaned = re.sub(
-        r"^```(?:thinking|reasoning|analysis)?\s*[\s\S]*?```\s*",
-        "",
-        cleaned,
-        flags=re.IGNORECASE,
-    )
-
-    # Remove markdown-style "Thinking..." preambles and quoted reasoning lines at the top.
-    lines = cleaned.splitlines()
-    index = 0
-    while index < len(lines):
-        line = lines[index].strip()
-        if not line:
-            index += 1
-            continue
-
-        lower_line = line.lower()
-        is_reasoning_line = (
-            lower_line.startswith("*thinking")
-            or lower_line.startswith("thinking")
-            or lower_line.startswith("> thinking")
-            or lower_line.startswith("analysis:")
-            or lower_line.startswith("reasoning:")
-            or line.startswith(">")
-        )
-        if is_reasoning_line:
-            index += 1
-            continue
-        break
-
-    return "\n".join(lines[index:]).lstrip()
-
-
 def extract_revised_spec(markdown: str) -> str:
     # Case-insensitive search for "Revised Specification" heading
     start_pattern = re.compile(
@@ -112,5 +66,4 @@ def extract_revised_spec(markdown: str) -> str:
     )
     stop_match = stop_pattern.search(markdown, body_start)
     body_end = stop_match.start() if stop_match else len(markdown)
-    section = markdown[body_start:body_end].strip()
-    return _strip_leading_reasoning(section).strip()
+    return markdown[body_start:body_end].strip()

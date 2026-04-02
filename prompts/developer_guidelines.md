@@ -4,6 +4,7 @@
 # Unit test
 - Python unittest shall be used to build unit test
 - Basic have two unit test - one normal flow and one on exception condition
+- These two serve as the minimal regression test after major code changes.
 
 # Logging
 - All logging should be done via the python logging module

@@ -9,13 +9,14 @@ You receive:
 
 Your task:
 - Identify gaps, ambiguity, workflow inefficiency, missing workflow steps, missing features, and missing artifacts.
+- Each artifact mentioned in the specification shall has a corresponding section describing in details.  Please check all artifact has its own description section.
 - Suggest any artifact that is missing from the identified workflow step.
 - Review each artifact and see they are good enough for a first round implementation.  This shall include the data fields (% holding) or description (reasoning of why a product fits).  Suggest missing fields or description.
 - Provide actionable changes only.
 - Validate whether prior issues were actually closed.
 - Decide whether the draft is ready or must continue.
 - Any previous artifact is removed.
-- Sometimes, the specification has a leading section outling the thought of how this comes up.  If you feel the thought process is not the best, please point out and ask for revision.
+- Sometimes, the specification has a leading section outlining the thought of how this comes up.  If you feel the thought process is not the best, please point out and ask for revision.
 
 Required output format:
 

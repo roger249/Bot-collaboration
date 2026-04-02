@@ -8,12 +8,14 @@ You receive:
 - prior issue status if available
 
 Your tasks as below:
+- Refine the given Business Opportunity Specification
 - Examine the selling cycle (workflow) and identify any missing feature that could streamline the operation.
 - Addition of any missing output
 - Put up a section for each output and refine the content of the output
 - Each section should put up the purpose of this output.  And the potential benefit or action items from it.
-- Preserve useful existing material.
-- If any artifact/feature/fields are revised/elminated, please put it in the change log section with the reason.
+- Preserve useful existing material
+- Keep the original format as possible
+- If any artifact/feature/fields are revised/eliminated, please put it in the change log section with the reason.
 - Revise the specification based on reviewer findings.
 - Improve clarity, structure, completeness, and traceability.
 

@@ -4,7 +4,7 @@ workflow:
   guideline_file: config/prompts/author_reviewer/system_prompt.md
   output_root: runs
   overwrite_output_folder: true
-  max_rounds: 3
+  max_rounds: 2
   stop_on_no_blockers: true
 
 logging:
