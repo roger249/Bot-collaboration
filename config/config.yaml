@@ -10,6 +10,13 @@ workflow:
 logging:
   level: INFO
   config_file: config/logging_config.ini
+  chat_history_enabled: true
+  chat_history_max_bytes: 5000000
+  chat_history_backup_count: 5
+  chat_history_body_max_chars: 20000
+  chat_history_redact_fields:
+    - authorization
+    - api_key
 
 runtime:
   default_timeout_seconds: 120

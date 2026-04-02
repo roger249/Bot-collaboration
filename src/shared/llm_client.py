@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import socket
 from dataclasses import dataclass
 from json import JSONDecodeError
@@ -15,6 +16,51 @@ from src.shared.config_loader import AppConfig, BotConfig
 
 LOGGER = logging.getLogger(__name__)
 CHAT_HISTORY_TRANSPORT_LOGGER = logging.getLogger("chat_history.transport")
+
+
+_TRANSPORT_LOG_BODY_MAX_CHARS = 20_000
+_TRANSPORT_LOG_REDACT_FIELDS = {"authorization", "api_key"}
+
+
+def configure_transport_logging(body_max_chars: int, redact_fields: list[str]) -> None:
+    global _TRANSPORT_LOG_BODY_MAX_CHARS
+    global _TRANSPORT_LOG_REDACT_FIELDS
+    _TRANSPORT_LOG_BODY_MAX_CHARS = max(0, int(body_max_chars))
+    _TRANSPORT_LOG_REDACT_FIELDS = {field.strip().lower() for field in redact_fields if field.strip()}
+
+
+def _truncate_for_log(text: str) -> str:
+    if _TRANSPORT_LOG_BODY_MAX_CHARS <= 0:
+        return text
+    if len(text) <= _TRANSPORT_LOG_BODY_MAX_CHARS:
+        return text
+    omitted = len(text) - _TRANSPORT_LOG_BODY_MAX_CHARS
+    return f"{text[:_TRANSPORT_LOG_BODY_MAX_CHARS]}\n...[truncated {omitted} chars]"
+
+
+def _redact_value(value: object) -> object:
+    if isinstance(value, dict):
+        redacted: dict[str, object] = {}
+        for key, nested in value.items():
+            if key.lower() in _TRANSPORT_LOG_REDACT_FIELDS:
+                redacted[key] = "<redacted>"
+            else:
+                redacted[key] = _redact_value(nested)
+        return redacted
+    if isinstance(value, list):
+        return [_redact_value(item) for item in value]
+    return value
+
+
+def _sanitize_transport_body(text: str) -> str:
+    try:
+        parsed = json.loads(text)
+    except JSONDecodeError:
+        # Best effort redaction for non-JSON payloads.
+        return _truncate_for_log(re.sub(r"Bearer\s+[A-Za-z0-9._-]+", "Bearer <redacted>", text))
+
+    redacted = _redact_value(parsed)
+    return _truncate_for_log(json.dumps(redacted, ensure_ascii=False))
 
 
 @dataclass
@@ -152,7 +198,7 @@ class OpenAICompatibleClient(BaseLLMClient):
         CHAT_HISTORY_TRANSPORT_LOGGER.debug(
             "transport request\n=== url ===\n%s\n=== body ===\n%s",
             self.base_url,
-            payload_text,
+            _sanitize_transport_body(payload_text),
         )
         payload = payload_text.encode("utf-8")
         http_request = urllib_request.Request(
@@ -169,7 +215,7 @@ class OpenAICompatibleClient(BaseLLMClient):
                 CHAT_HISTORY_TRANSPORT_LOGGER.debug(
                     "transport response\n=== status ===\n%s\n=== body ===\n%s",
                     getattr(response, "status", "unknown"),
-                    response_text,
+                    _sanitize_transport_body(response_text),
                 )
                 data = json.loads(response_text)
         except (TimeoutError, socket.timeout) as exc:
@@ -207,7 +253,7 @@ class OpenAICompatibleClient(BaseLLMClient):
             CHAT_HISTORY_TRANSPORT_LOGGER.debug(
                 "transport response\n=== status ===\n%s\n=== body ===\n%s",
                 exc.code,
-                body,
+                _sanitize_transport_body(body),
             )
             LOGGER.error(
                 "Provider HTTP error for model '%s' against %s: %s %s %s",
@@ -282,6 +328,11 @@ def _resolve_base_url(provider_name: str, base_url: str) -> str:
 
 
 def build_client(app_config: AppConfig, bot_name: str, bot_config: BotConfig) -> BaseLLMClient:
+    configure_transport_logging(
+        body_max_chars=app_config.logging_chat_history_body_max_chars,
+        redact_fields=app_config.logging_chat_history_redact_fields,
+    )
+
     if bot_config.provider == "mock":
         return MockLLMClient(bot_name=bot_name)
 

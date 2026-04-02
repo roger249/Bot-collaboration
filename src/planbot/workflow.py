@@ -115,15 +115,21 @@ def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult
         log_path,
         chat_history_log_path,
         app_config.logging_config_file,
+        chat_history_enabled=app_config.logging_chat_history_enabled,
+        chat_history_max_bytes=app_config.logging_chat_history_max_bytes,
+        chat_history_backup_count=app_config.logging_chat_history_backup_count,
     )
 
     task_prompt = read_text(cfg.prompt_file)
+    LOGGER.info("PlanBot run starting: config=%s", config_path)
     references = load_references(app_config.root_dir, cfg.reference_glob)
+    LOGGER.info("Loaded %s reference(s) using glob '%s'", len(references), cfg.reference_glob)
     urls_from_references = extract_urls_from_references(references, url_reference_filename="websites.md")
     if not urls_from_references:
         # Fallback: pick up URLs from any reference file if websites.md is absent or empty.
         urls_from_references = extract_urls_from_references(references, url_reference_filename=None)
     urls = list(dict.fromkeys([*cfg.urls, *urls_from_references]))
+    LOGGER.info("Resolved %s URL(s)", len(urls))
 
     no_web_note: str | None = None
     if cfg.shared_no_web_note_file and cfg.shared_no_web_note_file.exists():
@@ -140,6 +146,12 @@ def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult
     user_prompt = _build_user_prompt(
         task_prompt=task_prompt,
         reference_payload_json=reference_payload_json,
+    )
+    LOGGER.info(
+        "Payload composed: model=%s, references=%s, urls=%s",
+        cfg.model,
+        len(references),
+        len(urls),
     )
 
     system_prompt = DEFAULT_SYSTEM_PROMPT
@@ -161,16 +173,19 @@ def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult
         temperature=cfg.temperature,
     )
 
+    LOGGER.info("Sending request to LLM (model=%s, provider=%s)", cfg.model, cfg.provider)
     try:
         output = client.generate(request)
     except PromptTimeoutError:
         LOGGER.error("PlanBot prompt timed out")
         raise
+    LOGGER.info("Response received from LLM")
 
     output = _normalize_planbot_output(output)
 
     output_path = run_root / cfg.output_filename
     write_text(output_path, output)
+    LOGGER.info("Output written to %s", output_path)
 
     prompt_snapshot = run_root / "prompt_snapshot.md"
     write_text(
@@ -178,6 +193,12 @@ def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult
         _build_prompt_snapshot_payload(system_prompt, user_prompt, cfg.model, cfg.temperature),
     )
 
+    LOGGER.info(
+        "Run complete: references_used=%s, urls_used=%s, run_root=%s",
+        len(references),
+        len(urls),
+        run_root,
+    )
     return PlanBotResult(
         run_root=run_root,
         log_path=log_path,

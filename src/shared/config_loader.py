@@ -38,6 +38,11 @@ class AppConfig:
     workflow: WorkflowConfig
     logging_level: str
     logging_config_file: Path | None
+    logging_chat_history_enabled: bool
+    logging_chat_history_max_bytes: int
+    logging_chat_history_backup_count: int
+    logging_chat_history_body_max_chars: int
+    logging_chat_history_redact_fields: list[str]
     author: BotConfig
     reviewer: BotConfig
     providers: dict[str, ProviderConfig]
@@ -82,6 +87,15 @@ def load_config(config_path: str | Path) -> AppConfig:
         ),
         logging_level=logging_data.get("level", "INFO"),
         logging_config_file=_resolve(root_dir, logging_config_file) if logging_config_file else None,
+        logging_chat_history_enabled=bool(logging_data.get("chat_history_enabled", True)),
+        logging_chat_history_max_bytes=int(logging_data.get("chat_history_max_bytes", 5_000_000)),
+        logging_chat_history_backup_count=int(logging_data.get("chat_history_backup_count", 5)),
+        logging_chat_history_body_max_chars=int(logging_data.get("chat_history_body_max_chars", 20_000)),
+        logging_chat_history_redact_fields=[
+            str(item).strip()
+            for item in logging_data.get("chat_history_redact_fields", ["authorization", "api_key"])
+            if str(item).strip()
+        ],
         author=BotConfig(
             provider=bots["author"]["provider"].strip(),
             model=bots["author"]["model"].strip(),

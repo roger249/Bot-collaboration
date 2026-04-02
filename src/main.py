@@ -53,7 +53,8 @@ def main() -> None:
         config = load_config(args.config)
         try:
             result = run_workflow(config)
-            print(
+            LOGGER.debug(
+                "%s",
                 json.dumps(
                     {
                         "run_root": str(result.run_root),
@@ -63,17 +64,18 @@ def main() -> None:
                         "stopped_reason": result.stopped_reason,
                     },
                     indent=2,
-                )
+                ),
             )
         except Exception as exc:
             LOGGER.exception("Workflow execution failed")
-            print(f"Workflow failed: {exc}")
+            LOGGER.error("Workflow failed: %s", exc)
             raise SystemExit(1) from exc
     elif args.command == "run-planbot":
         config = load_config(args.config)
         try:
             result = run_planbot(config, args.config)
-            print(
+            LOGGER.debug(
+                "%s",
                 json.dumps(
                     {
                         "run_root": str(result.run_root),
@@ -84,11 +86,11 @@ def main() -> None:
                         "urls_used": result.urls_used,
                     },
                     indent=2,
-                )
+                ),
             )
         except Exception as exc:
             LOGGER.exception("PlanBot execution failed")
-            print(f"PlanBot failed: {exc}")
+            LOGGER.error("PlanBot failed: %s", exc)
             raise SystemExit(1) from exc
 
 
