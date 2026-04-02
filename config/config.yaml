@@ -51,7 +51,7 @@ providers:
   poe:
     api_key_env: POE_API_KEY
     base_url: https://api.poe.com/v1
-    timeout_seconds: 1800
+    timeout_seconds: 900
 
 planbot:
   name: planbot
