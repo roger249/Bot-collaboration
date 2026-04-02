@@ -1,0 +1,6 @@
+generate_proposal_task:
+  expected_output: >
+    A complete investment proposal in markdown format. The output must start with
+    the marker line exactly as specified in the task instructions. Every section
+    defined in the proposal template must be present and contain substantive content.
+    No preamble or commentary outside the template sections.

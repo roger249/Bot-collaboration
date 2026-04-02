@@ -14,7 +14,7 @@ if __package__ is None or __package__ == "":
 
 from src.shared.config_loader import load_config
 from src.author_reviewer.workflow import run_workflow
-from src.planbot.workflow import run_planbot
+from src.planbot.crew_workflow import run_crew_planbot
 
 
 LOGGER = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ def main() -> None:
     elif args.command == "run-planbot":
         config = load_config(args.config)
         try:
-            result = run_planbot(config, args.config)
+            result = run_crew_planbot(config, args.config)
             LOGGER.debug(
                 "%s",
                 json.dumps(

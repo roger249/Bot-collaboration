@@ -59,7 +59,7 @@ instructions:
 - Projected money market returns: 2%.  This was an average return for the last 5 y
 
 |Asset|Holding|Return|% return|
-|-----|-------|---|--|
+|-----|-------|------|--------|
 |Stock|100|5|5|
 |Total|100|5|5%|
 
@@ -85,5 +85,3 @@ instructions:
 Please do not list any material that are not directly referenced in the proposal to avoid any confusion.
 ```
 [Fund choices] (https://www.hsbc.com.hk/content/dam/hsbc/hk/docs/mpf/mpf_scheme_brochure.pdf)
-
-
