@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -101,6 +102,24 @@ def _build_prompt_snapshot_payload(system_prompt: str, user_prompt: str, model: 
     return json.dumps(payload, indent=2, ensure_ascii=False)
 
 
+def _sanitize_for_filename(value: str) -> str:
+    sanitized = re.sub(r"[^A-Za-z0-9._-]+", "-", value.strip())
+    return sanitized.strip(".-") or "model"
+
+
+def _resolve_output_filename(output_filename: str, model: str) -> str:
+    model_token = _sanitize_for_filename(model)
+    if "{model}" in output_filename:
+        return output_filename.replace("{model}", model_token)
+
+    path = Path(output_filename)
+    stem = path.stem
+    suffix = path.suffix
+    if suffix:
+        return f"{stem}-{model_token}{suffix}"
+    return f"{output_filename}-{model_token}"
+
+
 def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult:
     cfg = load_planbot_config(config_path, app_config.root_dir)
 
@@ -183,7 +202,7 @@ def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult
 
     output = _normalize_planbot_output(output)
 
-    output_path = run_root / cfg.output_filename
+    output_path = run_root / _resolve_output_filename(cfg.output_filename, cfg.model)
     write_text(output_path, output)
     LOGGER.info("Output written to %s", output_path)
 

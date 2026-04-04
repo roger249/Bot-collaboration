@@ -1,5 +1,15 @@
 # Investment Proposal for <client name>"
 
+# Summary
+
+```yaml
+instructions:
+Summarize in 3-4 sentences:
+- Current portfolio health (one key strength, one key weakness)
+- Recommended action (e.g., "reduce bonds by 5%, increase equities by 10%")
+- Expected outcome (e.g., "improve long-term growth while managing downside risk")
+```
+
 # Potential Client Needs
 
 ```yaml
@@ -52,6 +62,7 @@ instructions:
 - below is a illustration of the scenarios, feel free to use others that making better sense.
 - This shall include PnL and projected cashflow
 - A one level breakdown shall be given.
+- Please if the probability of the scenario if data avaialable
 ```
 
 ### Normal Market Conditions
@@ -75,7 +86,20 @@ Please show a list of selected product that the client may be interested
 Some additional suggested products based on your profile as below
 
 |Product|Expected yield & maturity|Best yield & maturity|Best yield & maturity|Risk|Remark|
+|---|---|---|---|---|---|
 |Dual currency deposit on USDCNH|
+
+# Risk Disclosure
+```yaml
+instructions:
+Include a standard risk warning block:
+- "Past performance does not guarantee future returns"
+- "Projected returns are estimates, not promises"
+- "The suggested portfolio matches your risk profile as of [date]"
+- "Structured products have risk of principal loss"
+- Statement that client should review with independent advisor if needed
+```
+
 
 # References
 ```yaml

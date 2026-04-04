@@ -18,6 +18,7 @@ from src.planbot.workflow import (
     _build_reference_payload,
     _build_user_prompt,
     _normalize_planbot_output,
+    _resolve_output_filename,
 )
 from src.shared.config_loader import AppConfig, BotConfig
 from src.shared.io_utils import read_text, write_text
@@ -173,7 +174,7 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotR
 
     output = _normalize_planbot_output(output)
 
-    output_path = run_root / cfg.output_filename
+    output_path = run_root / _resolve_output_filename(cfg.output_filename, cfg.model)
     write_text(output_path, output)
     LOGGER.info("Output written to %s", output_path)
 
