@@ -65,8 +65,8 @@ planbot:
   provider: poe
 #  model: deepseek-v3.2-exp
 #  model: qwen3.6-plus
-#  model: glm-4.7-fw
-  model: kimi-k2.5-fw
+  model: glm-4.7-fw
+#  model: kimi-k2.5-fw
 #  model: gpt-oss-120b
 #  model: minimax-m2
   temperature: 0.2
