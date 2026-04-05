@@ -25,7 +25,7 @@ For each hidden needs, attach a potential investment horizon to it.
 Name: Alex Chan
 
 |Potential Needs|Investment Horizon|Remark|
-|----------------|----------------|---|
+|---------------|----------------|---|
 |Retirement|Long-term|Client estimated to retire in 10y)
 |Children University Education|Medium-term|client has children will go into university in 10y|
 |Reduce exposure to tech| N/A | Avoid concentration risk as client's career is in tech|
@@ -74,9 +74,9 @@ instructions:
 
 |Asset|% return|Suggested Holding|Return|Current Holding|Return|
 |-----|-------:|----------------:|-----:|--------------:|-----:|
-|Stock|.     10|.              60|.    6|.            10|.  1.0|
-|Bond |.      5|.              40|.    2|.            90|.  4.5|
-|Total|.      8|.             100|.    8|.           100|.  5.5|
+|Stock|      10|               60|     6|             10|   1.0|
+|Bond |       5|               40|     2|             90|   4.5|
+|Total|       8|              100|     8|            100|   5.5|
 
 - Annual return of the suggested portfolio vs current : 8% vs 5.5%
 

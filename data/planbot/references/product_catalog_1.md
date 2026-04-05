@@ -6,13 +6,13 @@ This file contains the investment products available for the investor.
 - Money market fund denominated in USD, HKD or GBP
 - Bond fund of various duration of corporate, sovereign, and high yield.
 - Gold fund
-- Crypto fund
+- iShares Bitcoin Trust ETF (IBIT)
 
 # Stock universe
-- Stocks included in the S&P 500, Hang Seng Index, or CSI-300
-- Stock included listed in US and HKEX.
+- Constitute stocks in the S&P 500, Hang Seng Index, or CSI-300
 
 # ETF
+
 ## Select Sector SPDR ETFs (S&P 500 Components) 
 - Technology: Technology Select Sector SPDR Fund (XLK)
 - Financials: Financial Select Sector SPDR Fund (XLF)
@@ -34,6 +34,6 @@ This file contains the investment products available for the investor.
 
 ## Potential underlying for structured product
 
-FX - USDHKD, USDCNH, EURUSD, USDJPY, GBPUSD
-Stock - Stock in HSI, S&P500, or CSI-300
+- FX - USDHKD, USDCNH, EURUSD, USDJPY, GBPUSD
+- Stock - Stock in HSI, S&P500, or CSI-300
 

@@ -172,6 +172,8 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotR
 
     references = load_references(app_config.root_dir, cfg.reference_glob)
     LOGGER.info("Loaded %s reference(s) using glob '%s'", len(references), cfg.reference_glob)
+    client_profiles = load_references(app_config.root_dir, cfg.client_glob)
+    LOGGER.info("Loaded %s client profile document(s) using glob '%s'", len(client_profiles), cfg.client_glob)
 
     urls_from_references = extract_urls_from_references(references, url_reference_filename="websites.md")
     if not urls_from_references:
@@ -186,6 +188,7 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotR
     reference_payload_json = _build_reference_payload(
         root_dir=app_config.root_dir,
         references=references,
+        client_profiles=client_profiles,
         urls=urls,
         no_web_note=no_web_note,
         web_access=cfg.web_access,
@@ -201,9 +204,10 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotR
         system_prompt = read_text(cfg.system_prompt_file).strip()
 
     LOGGER.info(
-        "Payload composed: model=%s, references=%s, urls=%s",
+        "Payload composed: model=%s, references=%s, client_profiles=%s, urls=%s",
         cfg.model,
         len(references),
+        len(client_profiles),
         len(urls),
     )
 

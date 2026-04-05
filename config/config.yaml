@@ -56,18 +56,20 @@ planbot:
   name: planbot
   output_root: runs/planbot
   output_filename: output.md
-  reference_glob: data/planbot/reference/*.md
+  reference_glob: data/planbot/references/*.md
+  client_glob: data/planbot/clients/*.md
   system_prompt_file: config/prompts/planbot/system_prompt.md
   prompt_file: config/prompts/planbot/investment_prompt.md
   shared_no_web_note_file: config/prompts/shared/no_external_web_note.md
   overwrite_output_folder: true
   provider: poe
-#  model: deepseek-v3.2-exp
+  model: deepseek-v3.2-exp
 #  model: qwen3.6-plus
-  model: glm-4.7-fw
+#  model: qwen3.5-flash
+#  model: glm-4.7-fw
 #  model: kimi-k2.5-fw
-#  model: gpt-oss-120b
 #  model: minimax-m2
+#  model: gpt-oss-120b
 #  model: gpt-5.2
   temperature: 0.2
   web_access: true
