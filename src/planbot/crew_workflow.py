@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 
@@ -22,17 +23,28 @@ from src.planbot.workflow import (
 )
 from src.shared.config_loader import AppConfig, BotConfig
 from src.shared.io_utils import read_text, write_text
-from src.shared.llm_client import LLMRequest, _resolve_api_key, build_client
+from src.shared.llm_client import (
+    LLMRequest,
+    _resolve_api_key,
+    _sanitize_transport_body,
+    build_client,
+    configure_transport_logging,
+)
 from src.shared.logging_utils import configure_logging
 from src.shared.run_utils import create_run_root
 
 LOGGER = logging.getLogger(__name__)
+CHAT_HISTORY_TRANSPORT_LOGGER = logging.getLogger("chat_history.transport")
 
 _CREWAI_CONFIG_DIR = Path(__file__).resolve().parents[2] / "config" / "crewai" / "planbot"
 
 
 def _load_yaml(path: Path) -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+def _payload_sizes(text: str) -> tuple[int, int]:
+    return len(text), len(text.encode("utf-8"))
 
 
 def _build_crew_llm(app_config: AppConfig, cfg) -> LLM:
@@ -89,10 +101,47 @@ def _generate_with_crew(
         verbose=False,
     )
 
+    transport_payload = json.dumps(
+        {
+            "provider": cfg.provider,
+            "model": cfg.model,
+            "temperature": cfg.temperature,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "task_expected_output": task_def["expected_output"],
+        },
+        ensure_ascii=False,
+    )
+    request_chars, request_bytes = _payload_sizes(transport_payload)
+    CHAT_HISTORY_TRANSPORT_LOGGER.debug(
+        "transport request\n=== route ===\ncrewai.kickoff\n=== size ===\nchars=%s bytes=%s\n=== body ===\n%s",
+        request_chars,
+        request_bytes,
+        _sanitize_transport_body(transport_payload),
+    )
+
     LOGGER.info("Sending request via CrewAI (model=%s, provider=%s)", cfg.model, cfg.provider)
-    result = crew.kickoff()
+    try:
+        result = crew.kickoff()
+    except Exception as exc:
+        CHAT_HISTORY_TRANSPORT_LOGGER.debug(
+            "transport response\n=== status ===\nerror\n=== body ===\n%s",
+            str(exc),
+        )
+        raise
+
+    output = str(result.raw) if hasattr(result, "raw") else str(result)
+    response_chars, response_bytes = _payload_sizes(output)
+    CHAT_HISTORY_TRANSPORT_LOGGER.debug(
+        "transport response\n=== status ===\nsuccess\n=== size ===\nchars=%s bytes=%s\n=== body ===\n%s",
+        response_chars,
+        response_bytes,
+        _sanitize_transport_body(output),
+    )
     LOGGER.info("Response received from CrewAI crew")
-    return str(result.raw) if hasattr(result, "raw") else str(result)
+    return output
 
 
 def run_crew_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult:
@@ -112,6 +161,10 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotR
         chat_history_enabled=app_config.logging_chat_history_enabled,
         chat_history_max_bytes=app_config.logging_chat_history_max_bytes,
         chat_history_backup_count=app_config.logging_chat_history_backup_count,
+    )
+    configure_transport_logging(
+        body_max_chars=app_config.logging_chat_history_body_max_chars,
+        redact_fields=app_config.logging_chat_history_redact_fields,
     )
 
     task_prompt = read_text(cfg.prompt_file)

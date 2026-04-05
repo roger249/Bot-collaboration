@@ -1,4 +1,4 @@
-# Investment Proposal for <client name>"
+# Investment Proposal for <client name>
 
 # Summary
 
@@ -14,7 +14,7 @@ Summarize in 3-4 sentences:
 
 ```yaml
 instructions:  
-Identify hidden needs in point form such as 
+Identify hidden needs in point form such as below.  If there're more than 3 needs identified, show only the top three, and use the top three for product suggestions.
 - retirement
 - children university education, etc.
 - mortgage refinancing, etc.
@@ -30,11 +30,12 @@ Name: Alex Chan
 |Children University Education|Medium-term|client has children will go into university in 10y|
 |Reduce exposure to tech| N/A | Avoid concentration risk as client's career is in tech|
 
-# Suggested Holdings
+# Suggested Portfolio
 ```yaml
 instructions:  
-- Tabulate the current holding and the suggested holdings as show below.
-- If any products are suggested, we shall include the exact underlining and % so its executable.  For example, increase AAPL to 30%.
+- Tabulate the current portfolio and the suggested  as show below.
+- Keep suggesting a maximum of 3 new products, if any.
+- We shall suggest the exact asset and % so its executable so that it could be executed.  For example, increase AAPL to 30%.
 - Total allocation adds up to 0% for the change column.
 - Total allocation adds up to 100% for the current and suggested column.
 - No need for come up another listing of the suggested asset except the table below.
@@ -48,7 +49,7 @@ instructions:
 
 ```yaml
 instructions:  
-- Please analyze the pros and cons of the current holding
+- Please analyze the pros and cons of the suggested holding with justification from the scenario analysis
 - Any concentration risk?  If yes, please specify precise the asset that have concentration - currency, US exposure, etc.
 ```
 ## Pros and cons of suggested portfolio
@@ -77,7 +78,7 @@ instructions:
 |Bond |.      5|.              40|.    2|.            90|.  4.5|
 |Total|.      8|.             100|.    8|.           100|.  5.5|
 
-- Suggested vs current annual return: 8% vs 5.5%
+- Annual return of the suggested portfolio vs current : 8% vs 5.5%
 
 - Incremental benefit: +HKD 98,000 annually (+23% improvement)
 
