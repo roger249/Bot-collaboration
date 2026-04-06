@@ -55,6 +55,7 @@ def _build_reference_payload(
     root_dir: Path,
     references: list[ReferenceDocument],
     client_profiles: list[ReferenceDocument],
+    product_catalogs: list[ReferenceDocument],
     urls: list[str],
     no_web_note: str | None,
     web_access: bool,
@@ -88,6 +89,19 @@ def _build_reference_payload(
                 "content": profile.content.strip(),
             }
             for index, profile in enumerate(client_profiles, start=1)
+        ],
+        "product_catalogs": [
+            {
+                "index": index,
+                "name": catalog.path.name,
+                "path": str(catalog.path.relative_to(root_dir)).replace("\\", "/")
+                if catalog.path.is_relative_to(root_dir)
+                else str(catalog.path),
+                "source_type": catalog.source_type,
+                "title": catalog.path.stem,
+                "content": catalog.content.strip(),
+            }
+            for index, catalog in enumerate(product_catalogs, start=1)
         ],
     }
     return json.dumps(payload, indent=2, ensure_ascii=False)
@@ -159,6 +173,12 @@ def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult
     LOGGER.info("Loaded %s reference(s) using glob '%s'", len(references), cfg.reference_glob)
     client_profiles = load_references(app_config.root_dir, cfg.client_glob)
     LOGGER.info("Loaded %s client profile document(s) using glob '%s'", len(client_profiles), cfg.client_glob)
+    product_catalogs = load_references(app_config.root_dir, cfg.product_catalog_glob)
+    LOGGER.info(
+        "Loaded %s product catalog document(s) using glob '%s'",
+        len(product_catalogs),
+        cfg.product_catalog_glob,
+    )
     urls_from_references = extract_urls_from_references(references, url_reference_filename="websites.md")
     if not urls_from_references:
         # Fallback: pick up URLs from any reference file if websites.md is absent or empty.
@@ -174,6 +194,7 @@ def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult
         root_dir=app_config.root_dir,
         references=references,
         client_profiles=client_profiles,
+        product_catalogs=product_catalogs,
         urls=urls,
         no_web_note=no_web_note,
         web_access=cfg.web_access,
@@ -184,10 +205,11 @@ def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult
         reference_payload_json=reference_payload_json,
     )
     LOGGER.info(
-        "Payload composed: model=%s, references=%s, client_profiles=%s, urls=%s",
+        "Payload composed: model=%s, references=%s, client_profiles=%s, product_catalogs=%s, urls=%s",
         cfg.model,
         len(references),
         len(client_profiles),
+        len(product_catalogs),
         len(urls),
     )
 
@@ -231,8 +253,10 @@ def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult
     )
 
     LOGGER.info(
-        "Run complete: references_used=%s, urls_used=%s, run_root=%s",
+        "Run complete: references_used=%s, client_profiles_used=%s, product_catalogs_used=%s, urls_used=%s, run_root=%s",
         len(references),
+        len(client_profiles),
+        len(product_catalogs),
         len(urls),
         run_root,
     )

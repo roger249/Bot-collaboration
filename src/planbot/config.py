@@ -15,6 +15,7 @@ class PlanBotConfig:
     output_filename: str
     reference_glob: str
     client_glob: str
+    product_catalog_glob: str
     system_prompt_file: Path | None
     prompt_file: Path
     shared_no_web_note_file: Path | None
@@ -47,6 +48,9 @@ def load_planbot_config(config_path: str | Path, root_dir: Path) -> PlanBotConfi
         output_filename=str(raw_planbot.get("output_filename", "output.md")).strip(),
         reference_glob=str(raw_planbot.get("reference_glob", "data/planbot/references/*.md")).strip(),
         client_glob=str(raw_planbot.get("client_glob", "data/planbot/clients/*.md")).strip(),
+        product_catalog_glob=str(
+            raw_planbot.get("product_catalog_glob", "data/planbot/product_catalog/*.md")
+        ).strip(),
         system_prompt_file=_resolve(root_dir, str(system_prompt_file)) if system_prompt_file else None,
         prompt_file=_resolve(root_dir, str(raw_planbot["prompt_file"])),
         shared_no_web_note_file=(

@@ -64,7 +64,7 @@ instructions:
 - For any historical reference, go to have the time horizon and from/to year specified.
 - below is a illustration of the scenarios, feel free to use others that making better sense.
 - This shall include PnL and projected cashflow for the suggested vs the current portfolio.
-- A one level breakdown shall be given instead of the total PnL
+- The PnL shall be break down to the asset level, or the same level as the suggested portfolio.
 - Please if the probability of the scenario if data available
 ```
 

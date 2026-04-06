@@ -1,5 +1,7 @@
 - Please create an investment advice proposal using the provided references and URLs.
 
+- The investable assets are listed under the product_catalog_folder
+
 - Output format shall follow the reference - proposal_format.md
 
 - No yaml section shall be included in your response.  Please strip them if any.
