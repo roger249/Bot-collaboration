@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "PlanBot: Run",
+      "name": "Portfolio review",
       "type": "debugpy",
       "request": "launch",
       "module": "src.main",
@@ -12,7 +12,9 @@
       "args": [
         "run-planbot",
         "--config",
-        "config/config.yaml"
+        "config/config.yaml",
+        "--proposal",
+        "portfolio_review"
       ]
     },
     {
@@ -44,7 +46,7 @@
       ]
     },
     {
-      "name": "PlanBot: Client Suitability",
+      "name": "Client Suitability",
       "type": "debugpy",
       "request": "launch",
       "module": "src.main",

@@ -1,6 +1,7 @@
-# Specialize agent
+# Specialize agents
+
 - Product matching
-    - Product matching
     - Needs identification
-- Scenario analysis
+    - Product matching
+- Scenario analyst
 - Proposal writer

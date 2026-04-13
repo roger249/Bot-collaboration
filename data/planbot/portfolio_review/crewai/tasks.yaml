@@ -19,5 +19,4 @@ portfolio_review_task:
     - Begins exactly with the line: ---** Output of suggestion as below **---
     - Follow the proposal structure defined in proposal_format.md exactly.
     - Use tables where they provide a clearer and more concise view.
-    - Do not include YAML blocks, extra sections, or commentary.
-
+    - Do not include any YAML blocks that are in the proposal_format.md, those are instructions to come up the section and shall NOT be included in the final output

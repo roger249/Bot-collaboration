@@ -11,7 +11,7 @@ portfolio_review:
   output_root: runs/portfolio_review
   data_root: data/planbot/portfolio_review/data
   crewai_config_folder: crewai
-  output_filename: output.md
+  output_filename: portfolio_review.md
   reference_glob: references/*.md
   client_glob: clients/*.md
   product_catalog_glob: product_catalog/*.md
@@ -34,7 +34,7 @@ client_suitability:
   output_root: runs/client_suitability
   data_root: data/planbot/client_suitability/data
   crewai_config_folder: crewai
-  output_filename: output.md
+  output_filename: client_suitability.md
   reference_glob: references/*.md
   client_glob: 
     - clients/*.md
@@ -45,9 +45,9 @@ client_suitability:
   overwrite_output_folder: true
   provider: poe
 #  model: deepseek-v3.2-exp
-#  model: qwen3.6-plus
-  model: qwen3.5-flash
-#  model: gemeni-2.0-flash-lite
+  model: qwen3.6-plus
+#  model: qwen3.5-flash
+#  model: gemini-3-flash
 #  model: kimi-k2.5-fw
 #  model: minimax-m2
   temperature: 0.2
