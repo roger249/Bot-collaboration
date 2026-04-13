@@ -30,35 +30,58 @@ def _resolve(root_dir: Path, raw_path: str) -> Path:
     return (root_dir / raw_path).resolve()
 
 
-def load_planbot_config(config_path: str | Path, root_dir: Path) -> PlanBotConfig:
+def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: str = "portfolio_review") -> PlanBotConfig:
+    """Load PlanBot config from config_planbot.yaml.
+    
+    Args:
+        config_path: Path to config_planbot.yaml
+        root_dir: Project root directory
+        proposal_name: Name of the proposal section (e.g., 'portfolio_review', 'client_suitability')
+    """
     path = Path(config_path).resolve()
     data: dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8"))
 
-    raw_planbot = data.get("planbot")
-    if not raw_planbot:
-        raise ValueError("Missing 'planbot' section in config file.")
+    # Load common config
+    common = data.get("common", {})
+    shared_no_web_note_file = common.get("shared_no_web_note_file")
 
-    shared_no_web_note_file = raw_planbot.get("shared_no_web_note_file")
-    system_prompt_file = raw_planbot.get("system_prompt_file")
+    # Load proposal-specific config
+    raw_proposal = data.get(proposal_name)
+    if not raw_proposal:
+        raise ValueError(f"Missing '{proposal_name}' section in {config_path}")
+
+    # Resolve paths
+    prompt_root_rel = str(raw_proposal.get("prompt_root", f"data/planbot/{proposal_name}/prompts")).strip()
+    prompt_root = _resolve(root_dir, prompt_root_rel)
+
+    # Extract proposal base path from prompt_root (remove /prompts suffix)
+    # e.g., "data/planbot/portfolio_review/prompts" -> "data/planbot/portfolio_review"
+    proposal_base_path = prompt_root_rel.rsplit("/prompts", 1)[0] if prompt_root_rel.endswith("/prompts") else prompt_root_rel.rsplit("/", 1)[0]
+
+    system_prompt_file_name = raw_proposal.get("system_prompt_file") or raw_proposal.get("system_prompt")
+    prompt_file_name = raw_proposal.get("prompt_file") or raw_proposal.get("user_prompt")
+
+    # Construct glob patterns by concatenating proposal base path with relative globs from config
+    reference_glob_rel = f"{proposal_base_path}/{raw_proposal.get('reference_glob', 'references/*.md')}".strip()
+    client_glob_rel = f"{proposal_base_path}/{raw_proposal.get('client_glob', 'clients/*.md')}".strip()
+    product_catalog_glob_rel = f"{proposal_base_path}/{raw_proposal.get('product_catalog_glob', 'product_catalog/*.md')}".strip()
 
     return PlanBotConfig(
-        name=str(raw_planbot.get("name", "planbot")).strip(),
-        output_root=_resolve(root_dir, str(raw_planbot.get("output_root", "runs/planbot"))),
-        overwrite_output_folder=bool(raw_planbot.get("overwrite_output_folder", False)),
-        output_filename=str(raw_planbot.get("output_filename", "output.md")).strip(),
-        reference_glob=str(raw_planbot.get("reference_glob", "data/planbot/references/*.md")).strip(),
-        client_glob=str(raw_planbot.get("client_glob", "data/planbot/clients/*.md")).strip(),
-        product_catalog_glob=str(
-            raw_planbot.get("product_catalog_glob", "data/planbot/product_catalog/*.md")
-        ).strip(),
-        system_prompt_file=_resolve(root_dir, str(system_prompt_file)) if system_prompt_file else None,
-        prompt_file=_resolve(root_dir, str(raw_planbot["prompt_file"])),
+        name=proposal_name,
+        output_root=_resolve(root_dir, str(raw_proposal.get("output_root", f"runs/{proposal_name}"))),
+        overwrite_output_folder=bool(raw_proposal.get("overwrite_output_folder", False)),
+        output_filename=str(raw_proposal.get("output_filename", "output.md")).strip(),
+        reference_glob=reference_glob_rel,
+        client_glob=client_glob_rel,
+        product_catalog_glob=product_catalog_glob_rel,
+        system_prompt_file=(prompt_root / system_prompt_file_name).resolve() if system_prompt_file_name else None,
+        prompt_file=(prompt_root / prompt_file_name).resolve(),
         shared_no_web_note_file=(
             _resolve(root_dir, str(shared_no_web_note_file)) if shared_no_web_note_file else None
         ),
-        provider=str(raw_planbot.get("provider", "mock")).strip(),
-        model=str(raw_planbot.get("model", "gpt-5.2")).strip(),
-        temperature=float(raw_planbot.get("temperature", 0.2)),
-        web_access=bool(raw_planbot.get("web_access", False)),
-        urls=[str(item).strip() for item in raw_planbot.get("urls", []) if str(item).strip()],
+        provider=str(raw_proposal.get("provider", "mock")).strip(),
+        model=str(raw_proposal.get("model", "gpt-5.2")).strip(),
+        temperature=float(raw_proposal.get("temperature", 0.2)),
+        web_access=bool(raw_proposal.get("web_access", False)),
+        urls=[str(item).strip() for item in raw_proposal.get("urls", []) if str(item).strip()],
     )

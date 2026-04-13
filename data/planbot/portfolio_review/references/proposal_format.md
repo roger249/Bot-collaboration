@@ -94,7 +94,7 @@ Please show a list of selected product that the client may be interested
 Some additional suggested products based on your profile as below
 
 |Product|Expected yield & maturity|Best yield & maturity|Best yield & maturity|Risk|Remark|
-|---|---|---|---|---|---|
+|---|---:|---:|---:|---|---|
 |Dual currency deposit on USDCNH|
 
 # Risk Disclosure

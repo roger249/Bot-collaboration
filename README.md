@@ -53,32 +53,44 @@ Author-reviewer mock run:
 python -m src.main run --config config/config.mocktest.yaml
 ```
 
-PlanBot mock run:
+PlanBot portfolio review mock run:
 
 ```bash
-python -m src.main run-planbot --config config/config.mocktest.yaml
+python -m src.main run-planbot --proposal portfolio_review
+```
+
+PlanBot client suitability mock run:
+
+```bash
+python -m src.main run-planbot --proposal client_suitability
 ```
 
 ### 6. Run with real providers
 
-Use `config/config.yaml` and set the provider and model fields you want:
-
-- `bots.author.provider`
-- `bots.reviewer.provider`
-- `planbot.provider`
-- `planbot.model`
-
-Then run:
+Author-reviewer with real providers:
 
 ```bash
 python -m src.main run --config config/config.yaml
-python -m src.main run-planbot --config config/config.yaml
 ```
+
+Update `config/config.yaml` to set:
+
+- `bots.author.provider`
+- `bots.reviewer.provider`
+
+PlanBot with real providers:
+
+```bash
+python -m src.main run-planbot --proposal portfolio_review
+python -m src.main run-planbot --proposal client_suitability
+```
+
+Edit `config/config_planbot.yaml` to set `provider` and `model` for each proposal.
 
 Author-reviewer outputs are written to `runs/<workflow-name>_<timestamp>/` by default.
 
 If `workflow.overwrite_output_folder: true`, author-reviewer writes to `runs/<workflow-name>/` and replaces that folder on each run.
 
-PlanBot outputs are written to `runs/planbot/<planbot-name>_<timestamp>/` by default.
+PlanBot outputs are written to `runs/<proposal-name>_<timestamp>/` by default.
 
-If `planbot.overwrite_output_folder: true`, PlanBot writes to `runs/planbot/<planbot-name>/` and replaces that folder on each run.
+If `<proposal-name>.overwrite_output_folder: true` in `config/config_planbot.yaml`, PlanBot writes to `runs/<proposal-name>/` and replaces that folder on each run.

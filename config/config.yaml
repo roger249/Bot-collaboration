@@ -1,11 +1,4 @@
-workflow:
-  name: author_reviewer
-  spec_file: data/author_reviewer/PB system spec.orig.md
-  guideline_file: config/prompts/author_reviewer/system_prompt.md
-  output_root: runs
-  overwrite_output_folder: true
-  max_rounds: 2
-  stop_on_no_blockers: true
+# Global configuration for the bot collaboration framework
 
 logging:
   level: INFO
@@ -17,6 +10,29 @@ logging:
   chat_history_redact_fields:
     - authorization
     - api_key
+
+providers:
+  openai_compatible:
+    api_key_env: OPENAI_API_KEY
+    base_url: https://api.openai.com/v1
+    timeout_seconds: 120
+  deepseek:
+    api_key_env: DEEPSEEK_API_KEY
+    base_url: https://api.deepseek.com
+    timeout_seconds: 120
+  poe:
+    api_key_env: POE_API_KEY
+    base_url: https://api.poe.com/v1
+    timeout_seconds: 900
+
+workflow:
+  name: author_reviewer
+  spec_file: data/author_reviewer/PB system spec.orig.md
+  guideline_file: config/prompts/author_reviewer/system_prompt.md
+  output_root: runs
+  overwrite_output_folder: true
+  max_rounds: 2
+  stop_on_no_blockers: true
 
 runtime:
   default_timeout_seconds: 120
@@ -38,39 +54,3 @@ bots:
     prompt_file: config/prompts/author_reviewer/reviewer_prompt.md
     temperature: 0.1
 
-providers:
-  openai_compatible:
-    api_key_env: OPENAI_API_KEY
-    base_url: https://api.openai.com/v1
-    timeout_seconds: 120
-  deepseek:
-    api_key_env: DEEPSEEK_API_KEY
-    base_url: https://api.deepseek.com
-    timeout_seconds: 120
-  poe:
-    api_key_env: POE_API_KEY
-    base_url: https://api.poe.com/v1
-    timeout_seconds: 900
-
-planbot:
-  name: planbot
-  output_root: runs/planbot
-  output_filename: output.md
-  reference_glob: data/planbot/references/*.md
-  client_glob: data/planbot/clients/*.md
-  product_catalog_glob: data/planbot/product_catalog/*.md
-  system_prompt_file: config/prompts/planbot/system_prompt.md
-  prompt_file: config/prompts/planbot/investment_prompt.md
-  shared_no_web_note_file: config/prompts/shared/no_external_web_note.md
-  overwrite_output_folder: true
-  provider: poe
-  model: deepseek-v3.2-exp
-#  model: qwen3.6-plus
-#  model: qwen3.5-flash
-#  model: glm-4.7-fw
-#  model: kimi-k2.5-fw
-#  model: minimax-m2
-#  model: gpt-oss-120b
-#  model: gpt-5.2
-  temperature: 0.2
-  web_access: true

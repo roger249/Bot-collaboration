@@ -1,0 +1,47 @@
+# Configuration for PlanBot, a bot designed for portfolio review and client suitability analysis in the financial domain.
+common:
+  shared_no_web_note_file: data/shared/no_external_web_note.md
+
+portfolio_review:
+  output_root: runs/portfolio_review
+  prompt_root: data/planbot/portfolio_review/prompts
+  output_filename: output.md
+  reference_glob: references/*.md
+  client_glob: clients/*.md
+  product_catalog_glob: product_catalog/*.md
+  system_prompt_file: system_prompt.md
+  prompt_file: investment_prompt.md
+  # prompt shared between bots
+  overwrite_output_folder: true
+  provider: poe
+#  model: deepseek-v3.2-exp
+#  model: qwen3.6-plus
+#  model: qwen3.5-flash
+  model: gemma-4.31b
+#  model: glm-5.1-t
+#  model: kimi-k2.5-fw
+#  model: minimax-m2
+#  model: gpt-oss-120b
+#  model: gpt-5.2
+  temperature: 0.2
+  web_access: true
+
+client_suitability:
+  output_root: runs/client_suitability
+  prompt_root: data/planbot/client_suitability/prompts
+  output_filename: output.md
+  system_prompt: system_prompt.md
+  user_prompt: proposal_prompt.md
+  reference_glob: references/*.md
+  client_glob: clients/*.md
+  product_catalog_glob: product_catalog/*.md
+  overwrite_output_folder: true
+  provider: poe
+#  model: deepseek-v3.2-exp
+#  model: qwen3.6-plus
+  model: gemma-4.31b
+#  model: glm-5.1-t
+#  model: kimi-k2.5-fw
+#  model: minimax-m2
+  temperature: 0.2
+  web_access: true

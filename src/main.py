@@ -34,8 +34,22 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser = subparsers.add_parser("run", help="Run the workflow")
     run_parser.add_argument("--config", required=True, help="Path to workflow config YAML")
 
-    planbot_parser = subparsers.add_parser("run-planbot", help="Run the PlanBot one-off workflow")
-    planbot_parser.add_argument("--config", required=True, help="Path to shared config YAML")
+    planbot_parser = subparsers.add_parser("run-planbot", help="Run a PlanBot proposal")
+    planbot_parser.add_argument(
+        "--config",
+        default="config/config.yaml",
+        help="Path to main config YAML (for logging and LLM setup)",
+    )
+    planbot_parser.add_argument(
+        "--planbot-config",
+        default="config/config_planbot.yaml",
+        help="Path to PlanBot config YAML",
+    )
+    planbot_parser.add_argument(
+        "--proposal",
+        default="portfolio_review",
+        help="Name of the proposal to run (e.g., portfolio_review, client_suitability)",
+    )
     return parser
 
 
@@ -73,7 +87,7 @@ def main() -> None:
     elif args.command == "run-planbot":
         config = load_config(args.config)
         try:
-            result = run_crew_planbot(config, args.config)
+            result = run_crew_planbot(config, args.planbot_config, args.proposal)
             LOGGER.debug(
                 "%s",
                 json.dumps(

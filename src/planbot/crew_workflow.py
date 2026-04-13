@@ -144,8 +144,8 @@ def _generate_with_crew(
     return output
 
 
-def run_crew_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult:
-    cfg = load_planbot_config(config_path, app_config.root_dir)
+def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_name: str = "portfolio_review") -> PlanBotResult:
+    cfg = load_planbot_config(config_path, app_config.root_dir, proposal_name)
 
     run_root = create_run_root(cfg.output_root, cfg.name, cfg.overwrite_output_folder)
     logs_dir = run_root / "logs"
