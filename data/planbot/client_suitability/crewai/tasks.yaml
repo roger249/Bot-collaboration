@@ -1,0 +1,27 @@
+client_suitability_task:
+
+  agent: investment_advisor_agent
+
+  description: |
+
+    - Given a list of clients and investable products, generate suitability recommendations based on each client's financial needs and risk profile.
+    - For each client, assign a buying score from 1-5 indicating how likely the client is to buy the recommended investment product.  5 is the most likely to buy, while 1 is the least likely to buy.
+    - The list is ordered by the shows the top 10 clients with the highest buying score for the recommended product, list in the descending order of the buying score.
+    - Provide elaborate and detailed reasons to justify the needs of the client.
+    - Provide the key factors that influenced your recommendation, such as the client's financial goals, risk tolerance, and how the recommended product aligns with their needs.
+    - The reference materials are provided at the end of the user prompt as structured JSON with these sections:
+      - clients: list of client profile and existing holdings
+      - product_catalog: investable assets available for recommendation
+      - references: 
+        - common_needs:  A list of the common needs.  Feel free to put up potential needs not in the list.
+
+  expected_output: |
+
+    A client suitability report in markdown format that:
+    - Begins exactly with the line: ---** Output of suggestion as below **---
+    - Put up a title and brief summary of the overall recommendation.
+    - Includes one recommendation per client with a 1-5 suitability score and justification.
+    - Use tables where they provide a clearer and more concise view.
+    - Do not include YAML blocks, extra sections, or commentary.
+    - Put up a references section at the end that cites specific reference documents used to support the recommendations, with links to the source documents, including any local files sent.
+

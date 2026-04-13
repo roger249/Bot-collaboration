@@ -1,0 +1,23 @@
+portfolio_review_task:
+
+  agent: investment_advisor_agent
+
+  description: |
+    Generate a complete investment advice proposal using the provided reference materials.
+
+    The reference materials are provided at the end of the user prompt as structured JSON with these sections:
+    - clients: client profile and existing holdings
+    - product_catalog: Contains file about the investable assets available for recommendation
+    - references: 
+      - proposal template proposal_format.md
+      - urls: external website links for additional context
+
+    If you cannot access an external URL, state this clearly in your response.
+
+  expected_output: |
+    A complete investment proposal in markdown format that:
+    - Begins exactly with the line: ---** Output of suggestion as below **---
+    - Follow the proposal structure defined in proposal_format.md exactly.
+    - Use tables where they provide a clearer and more concise view.
+    - Do not include YAML blocks, extra sections, or commentary.
+

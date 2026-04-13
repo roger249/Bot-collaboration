@@ -3,7 +3,7 @@
 # Summary
 
 ```yaml
-instructions:
+instructions: |
 Summarize in 3-4 sentences:
 - Current portfolio health (one key strength, one key weakness)
 - Recommended action (e.g., "reduce bonds by 5%, increase equities by 10%")
@@ -13,13 +13,12 @@ Summarize in 3-4 sentences:
 # Potential Client Needs
 
 ```yaml
-instructions:  
-Identify hidden needs in point form such as below.  If there're more than 3 needs identified, show only the top three, and use the top three for product suggestions.
-- retirement
-- children university education, etc.
-- mortgage refinancing, etc.
-
-For each hidden needs, attach a potential investment horizon to it.
+instructions: |
+- Identify hidden needs in point form such as below.  If there're more than 3 needs identified, show only the top three, and use the top three for product suggestions.
+    - retirement
+    - children university education, etc.
+    - mortgage refinancing, etc.
+- For each hidden needs, attach a potential investment horizon to it.
 ```
 
 Name: Alex Chan
@@ -32,7 +31,7 @@ Name: Alex Chan
 
 # Suggested Portfolio
 ```yaml
-instructions:  
+instructions: | 
 - Tabulate the current portfolio and the suggested  as show below.
 - Keep suggesting a maximum of 3 new products, if any.
 - We shall suggest the exact asset and % so its executable so that it could be executed.  For example, increase AAPL to 30%.
@@ -48,7 +47,7 @@ instructions:
 
 
 ```yaml
-instructions:  
+instructions: |
 - Please analyze the pros and cons of the suggested holding with justification from the scenario analysis
 - Any concentration risk?  If yes, please specify precise the asset that have concentration - currency, US exposure, etc.
 ```
@@ -59,7 +58,7 @@ instructions:
 
 ## Scenario analysis of the suggested portfolio
 ```yaml
-instructions:  
+instructions: |
 - Please come up three scenarios - Normal, Upside, Downside, based on some grounds such as historical or current market sentiment.  
 - For any historical reference, go to have the time horizon and from/to year specified.
 - below is a illustration of the scenarios, feel free to use others that making better sense.
@@ -87,8 +86,8 @@ instructions:
 
 # Selected products that may be interested
 ```yaml
-instructions:  
-Please show a list of selected product that the client may be interested
+instructions: |
+Please show no more than three products that the client may be interested
 ```
 
 Some additional suggested products based on your profile as below
@@ -99,18 +98,19 @@ Some additional suggested products based on your profile as below
 
 # Risk Disclosure
 ```yaml
-instructions:
-Include a standard risk warning block:
-- "Past performance does not guarantee future returns"
-- "Projected returns are estimates, not promises"
-- "Structured products have risk of principal loss"
+instructions: |
+- Include a standard risk warning block:
+    - "Past performance does not guarantee future returns"
+    - "Projected returns are estimates, not promises"
+    - "Structured products have risk of principal loss"
 ```
 
 # References
 ```yaml
-instructions:  
-- Show any web references used.  If no web search capability, please state N/A in this section.  Below is an example only.
-
+instructions: |
+- List any local references used, such as client.md, product_catalog.md.
 - Please do not list any material that are not directly referenced in the proposal to avoid any confusion.
+- Show any web references used.  If no web search capability, please state N/A in this section.  Below is an example only.
 ```
-[Fund choices] (https://www.hsbc.com.hk/content/dam/hsbc/hk/docs/mpf/mpf_scheme_brochure.pdf)
+- [Fund choices] (https://www.hsbc.com.hk/content/dam/hsbc/hk/docs/mpf/mpf_scheme_brochure.pdf)
+

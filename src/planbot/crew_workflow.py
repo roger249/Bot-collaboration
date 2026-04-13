@@ -36,8 +36,6 @@ from src.shared.run_utils import create_run_root
 LOGGER = logging.getLogger(__name__)
 CHAT_HISTORY_TRANSPORT_LOGGER = logging.getLogger("chat_history.transport")
 
-_CREWAI_CONFIG_DIR = Path(__file__).resolve().parents[2] / "config" / "crewai" / "planbot"
-
 
 def _load_yaml(path: Path) -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -68,26 +66,35 @@ def _generate_with_crew(
     user_prompt: str,
     system_prompt: str,
 ) -> str:
-    agents_cfg = _load_yaml(_CREWAI_CONFIG_DIR / "agents.yaml")
-    tasks_cfg = _load_yaml(_CREWAI_CONFIG_DIR / "tasks.yaml")
+    agents_cfg = _load_yaml(cfg.crewai_config_folder / "agents.yaml")
+    tasks_cfg = _load_yaml(cfg.crewai_config_folder / "tasks.yaml")
 
     llm = _build_crew_llm(app_config, cfg)
 
-    agent_def = agents_cfg["planbot_agent"]
-    backstory = agent_def["backstory"].strip()
-    if system_prompt:
-        backstory = f"{system_prompt.strip()}\n\n{backstory}"
+    task_def = tasks_cfg.get(cfg.task_name)
+    if not task_def:
+        available_tasks = ", ".join(sorted(tasks_cfg.keys())) or "<none>"
+        raise ValueError(
+            f"Task '{cfg.task_name}' not found in {cfg.crewai_config_folder / 'tasks.yaml'}. "
+            f"Available tasks: {available_tasks}"
+        )
+
+    agent_name = str(task_def.get("agent", "")).strip()
+    agent_def = agents_cfg.get(agent_name) if agent_name else None
+    if agent_def is None:
+        agent_def = next(iter(agents_cfg.values()), None)
+    if agent_def is None:
+        raise ValueError("No agent definitions found in CrewAI agents config.")
 
     agent = Agent(
         role=agent_def["role"],
         goal=agent_def["goal"],
-        backstory=backstory,
+        backstory=agent_def["backstory"].strip(),
         llm=llm,
         allow_delegation=False,
         verbose=False,
     )
 
-    task_def = tasks_cfg["generate_proposal_task"]
     task = Task(
         description=user_prompt,
         expected_output=task_def["expected_output"],
@@ -167,16 +174,16 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_na
         redact_fields=app_config.logging_chat_history_redact_fields,
     )
 
-    task_prompt = read_text(cfg.prompt_file)
     LOGGER.info("PlanBot crew run starting: config=%s", config_path)
+    LOGGER.info("Using crewai config folder: %s", cfg.crewai_config_folder)
 
     references = load_references(app_config.root_dir, cfg.reference_glob)
-    LOGGER.info("Loaded %s reference(s) using glob '%s'", len(references), cfg.reference_glob)
+    LOGGER.info("Loaded %s reference(s) using glob %s", len(references), cfg.reference_glob)
     client_profiles = load_references(app_config.root_dir, cfg.client_glob)
-    LOGGER.info("Loaded %s client profile document(s) using glob '%s'", len(client_profiles), cfg.client_glob)
+    LOGGER.info("Loaded %s client profile document(s) using glob %s", len(client_profiles), cfg.client_glob)
     product_catalogs = load_references(app_config.root_dir, cfg.product_catalog_glob)
     LOGGER.info(
-        "Loaded %s product catalog document(s) using glob '%s'",
+        "Loaded %s product catalog document(s) using glob %s",
         len(product_catalogs),
         cfg.product_catalog_glob,
     )
@@ -201,14 +208,22 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_na
         web_access=cfg.web_access,
     )
 
+    tasks_cfg = _load_yaml(cfg.crewai_config_folder / "tasks.yaml")
+    task_def = tasks_cfg.get(cfg.task_name)
+    if not task_def:
+        available_tasks = ", ".join(sorted(tasks_cfg.keys())) or "<none>"
+        raise ValueError(
+            f"Task '{cfg.task_name}' not found in {cfg.crewai_config_folder / 'tasks.yaml'}. "
+            f"Available tasks: {available_tasks}"
+        )
+    task_prompt = str(task_def.get("description", "")).strip()
+
     user_prompt = _build_user_prompt(
         task_prompt=task_prompt,
         reference_payload_json=reference_payload_json,
     )
 
     system_prompt = DEFAULT_SYSTEM_PROMPT
-    if cfg.system_prompt_file and cfg.system_prompt_file.exists():
-        system_prompt = read_text(cfg.system_prompt_file).strip()
 
     LOGGER.info(
         "Payload composed: model=%s, references=%s, client_profiles=%s, product_catalogs=%s, urls=%s",
@@ -224,7 +239,7 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_na
         bot_config = BotConfig(
             provider=cfg.provider,
             model=cfg.model,
-            prompt_file=cfg.prompt_file,
+            prompt_file=Path("."),
             temperature=cfg.temperature,
         )
         request = LLMRequest(

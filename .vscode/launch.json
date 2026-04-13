@@ -42,6 +42,22 @@
         "--config",
         "config/config.mocktest.yaml"
       ]
+    },
+    {
+      "name": "PlanBot: Client Suitability",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "src.main",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "run-planbot",
+        "--config",
+        "config/config.yaml",
+        "--proposal",
+        "client_suitability"
+      ]
     }
   ]
 }

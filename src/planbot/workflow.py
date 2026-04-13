@@ -6,6 +6,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+import yaml
+
 from src.shared.config_loader import AppConfig, BotConfig
 from src.shared.llm_client import LLMRequest, PromptTimeoutError, build_client
 from src.shared.logging_utils import configure_logging
@@ -167,15 +169,14 @@ def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult
         chat_history_backup_count=app_config.logging_chat_history_backup_count,
     )
 
-    task_prompt = read_text(cfg.prompt_file)
     LOGGER.info("PlanBot run starting: config=%s", config_path)
     references = load_references(app_config.root_dir, cfg.reference_glob)
-    LOGGER.info("Loaded %s reference(s) using glob '%s'", len(references), cfg.reference_glob)
+    LOGGER.info("Loaded %s reference(s) using glob %s", len(references), cfg.reference_glob)
     client_profiles = load_references(app_config.root_dir, cfg.client_glob)
-    LOGGER.info("Loaded %s client profile document(s) using glob '%s'", len(client_profiles), cfg.client_glob)
+    LOGGER.info("Loaded %s client profile document(s) using glob %s", len(client_profiles), cfg.client_glob)
     product_catalogs = load_references(app_config.root_dir, cfg.product_catalog_glob)
     LOGGER.info(
-        "Loaded %s product catalog document(s) using glob '%s'",
+        "Loaded %s product catalog document(s) using glob %s",
         len(product_catalogs),
         cfg.product_catalog_glob,
     )
@@ -200,6 +201,17 @@ def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult
         web_access=cfg.web_access,
     )
 
+    # Parse CrewAI tasks YAML directly to keep prompt definitions centralized.
+    tasks_cfg = yaml.safe_load((cfg.crewai_config_folder / "tasks.yaml").read_text(encoding="utf-8"))
+    task_def = tasks_cfg.get(cfg.task_name)
+    if not task_def:
+        available_tasks = ", ".join(sorted(tasks_cfg.keys())) or "<none>"
+        raise ValueError(
+            f"Task '{cfg.task_name}' not found in {cfg.crewai_config_folder / 'tasks.yaml'}. "
+            f"Available tasks: {available_tasks}"
+        )
+    task_prompt = str(task_def.get("description", "")).strip()
+
     user_prompt = _build_user_prompt(
         task_prompt=task_prompt,
         reference_payload_json=reference_payload_json,
@@ -214,13 +226,11 @@ def run_planbot(app_config: AppConfig, config_path: str | Path) -> PlanBotResult
     )
 
     system_prompt = DEFAULT_SYSTEM_PROMPT
-    if cfg.system_prompt_file and cfg.system_prompt_file.exists():
-        system_prompt = read_text(cfg.system_prompt_file).strip()
 
     bot_config = BotConfig(
         provider=cfg.provider,
         model=cfg.model,
-        prompt_file=cfg.prompt_file,
+        prompt_file=Path("."),
         temperature=cfg.temperature,
     )
     client = build_client(app_config, "planbot", bot_config)

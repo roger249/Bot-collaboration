@@ -8,8 +8,8 @@
 
 - You'll be given a set of reference materials at the end of the user message, encoded in a single JSON.  These includes
 
--- website URL
--- select markdown file with relevant information
+    - website URL
+    - select markdown file with relevant information
 
 - The reference materials are sent in the user message as structured JSON appended after the main task instructions.  
 

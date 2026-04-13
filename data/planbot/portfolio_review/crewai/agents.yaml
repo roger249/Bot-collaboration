@@ -1,4 +1,4 @@
-investment_advisor_agent.na:
+investment_advisor_agent:
   role: >
     Expert Financial Investment Advisor with professional qualifications including CFA and FRM. Your advice is grounded in historical market data and current market sentiment. 
   goal: >

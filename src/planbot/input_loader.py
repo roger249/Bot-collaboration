@@ -36,13 +36,14 @@ def _convert_pdf_to_text(path: Path) -> str:
     raise ValueError(f"PDF conversion returned empty content for {path.name}")
 
 
-def load_references(root_dir: Path, glob_pattern: str) -> list[ReferenceDocument]:
-    paths_set: set[Path] = set(root_dir.glob(glob_pattern))
-
-    # If config is markdown-only, include sibling PDFs automatically.
-    if glob_pattern.endswith(".md"):
-        pdf_glob_pattern = glob_pattern[:-3] + ".pdf"
-        paths_set.update(root_dir.glob(pdf_glob_pattern))
+def load_references(root_dir: Path, glob_pattern: str | list[str]) -> list[ReferenceDocument]:
+    patterns = glob_pattern if isinstance(glob_pattern, list) else [glob_pattern]
+    paths_set: set[Path] = set()
+    for pattern in patterns:
+        paths_set.update(root_dir.glob(pattern))
+        # If config is markdown-only, include sibling PDFs automatically.
+        if pattern.endswith(".md"):
+            paths_set.update(root_dir.glob(pattern[:-3] + ".pdf"))
 
     paths = sorted(paths_set)
     references: list[ReferenceDocument] = []
@@ -56,6 +57,10 @@ def load_references(root_dir: Path, glob_pattern: str) -> list[ReferenceDocument
         if suffix == ".md":
             references.append(
                 ReferenceDocument(path=resolved, content=read_text(resolved), source_type="markdown")
+            )
+        elif suffix == ".csv":
+            references.append(
+                ReferenceDocument(path=resolved, content=read_text(resolved), source_type="csv")
             )
         elif suffix == ".pdf":
             references.append(
