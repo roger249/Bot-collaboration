@@ -52,3 +52,24 @@ client_suitability:
 #  model: minimax-m2
   temperature: 0.2
   web_access: true
+
+product_investor_matching:
+  task: product_investor_matching_task
+  output_root: runs/product_investor_matching
+  data_root: data/planbot/product_investor_matching/data
+  crewai_config_folder: crewai
+  output_filename: product_investor_matching.md
+  reference_glob: references/*.md
+  client_glob: 
+    - clients/*.md
+    - clients/*.csv
+  product_catalog_glob: 
+    - product_catalog/*.md
+    - product_catalog/*.csv
+  overwrite_output_folder: true
+  provider: poe
+#  model: deepseek-v3.2-exp
+#  model: qwen3.6-plus
+  model: qwen3.5-flash
+  temperature: 0.2
+  web_access: true
