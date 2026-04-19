@@ -66,8 +66,6 @@ instructions: |
 - This shall include PnL and projected cashflow for the suggested vs the current portfolio.
 - The PnL shall be break down to the asset level, or the same level as the suggested portfolio.
 - Please if the probability of the scenario if data available.
-- Before the scenario analysis table below, show bar chart using the xychart from mermaid for the return of the existing portfolio vs. the suggested for the three scenarios.
-- Generate the line for suggested before current to work around a mermaid shortcoming.
 ```
 
 ### Normal Market Condition
