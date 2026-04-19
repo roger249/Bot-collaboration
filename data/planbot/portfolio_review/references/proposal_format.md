@@ -25,7 +25,7 @@ Name: Alex Chan
 
 |Potential Needs|Investment Horizon|Remark|
 |---------------|----------------|---|
-|Retirement|Long-term|Client estimated to retire in 10y)
+|Retirement|Long-term|Client estimated to retire in 10y|
 |Children University Education|Medium-term|client has children will go into university in 10y|
 |Reduce exposure to tech| N/A | Avoid concentration risk as client's career is in tech|
 
@@ -38,6 +38,7 @@ instructions: |
 - Total allocation adds up to 0% for the change column.
 - Total allocation adds up to 100% for the current and suggested column.
 - No need for come up another listing of the suggested asset except the table below.
+- Show two pie charts indicating the portfolio allocation before this table using mermaid diagram syntax.
 ```
 
 |Asset.     |Current| Suggested | Change | Remark|
@@ -64,7 +65,9 @@ instructions: |
 - below is a illustration of the scenarios, feel free to use others that making better sense.
 - This shall include PnL and projected cashflow for the suggested vs the current portfolio.
 - The PnL shall be break down to the asset level, or the same level as the suggested portfolio.
-- Please if the probability of the scenario if data available
+- Please if the probability of the scenario if data available.
+- Before the scenario analysis table below, show bar chart using the xychart from mermaid for the return of the existing portfolio vs. the suggested for the three scenarios.
+- Generate the line for suggested before current to work around a mermaid shortcoming.
 ```
 
 ### Normal Market Condition

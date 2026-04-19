@@ -18,7 +18,7 @@
       ]
     },
     {
-      "name": "Client Suitability",
+      "name": "Client Investment Proposal",
       "type": "debugpy",
       "request": "launch",
       "module": "src.main",
@@ -30,7 +30,7 @@
         "--config",
         "config/config.yaml",
         "--proposal",
-        "client_suitability"
+        "client_investment_proposal"
       ]
     },
     {

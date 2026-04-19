@@ -6,6 +6,8 @@ product_investor_matching_task:
 
     - Given a list of clients and investable products, generate suitability recommendations based on each client's financial needs and risk profile.
     - For each client, assign a buying score from 1-5 indicating how likely the client is to buy the recommended investment product.  5 is the most likely to buy, while 1 is the least likely to buy.
+    - Only one product recommendation is allowed for each client.
+    - Each product shall have its buying quantity, potentially we could reduce client to reduce its current holding (or cash).
     - The list is ordered by the shows the top 10 clients with the highest buying score for the recommended product, list in the descending order of the buying score.
     - Provide elaborate and detailed reasons to justify the needs of the client.
     - Provide the key factors that influenced your recommendation, such as the client's financial goals, risk tolerance, and how the recommended product aligns with their needs.

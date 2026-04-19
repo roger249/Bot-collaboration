@@ -18,8 +18,8 @@ portfolio_review:
   overwrite_output_folder: true
   provider: poe
 #  model: deepseek-v3.2-exp
-#  model: qwen3.6-plus
-  model: qwen3.5-flash
+  model: qwen3.6-plus
+#  model: qwen3.5-flash
 #  model: gemma-4-31b-t
 #  model: glm-5.1-t
 #  model: kimi-k2.5-fw
@@ -29,12 +29,12 @@ portfolio_review:
   temperature: 0.2
   web_access: true
 
-client_suitability:
-  task: client_suitability_task
-  output_root: runs/client_suitability
-  data_root: data/planbot/client_suitability/data
+client_investment_proposal:
+  task: client_investment_proposal_task
+  output_root: runs/client_investment_proposal
+  data_root: data/planbot/client_investment_proposal/data
   crewai_config_folder: crewai
-  output_filename: client_suitability.md
+  output_filename: client_investment_proposal.md
   reference_glob: references/*.md
   client_glob: 
     - clients/*.md
@@ -69,7 +69,7 @@ product_investor_matching:
   overwrite_output_folder: true
   provider: poe
 #  model: deepseek-v3.2-exp
-#  model: qwen3.6-plus
-  model: qwen3.5-flash
+  model: qwen3.6-plus
+#  model: qwen3.5-flash
   temperature: 0.2
   web_access: true
