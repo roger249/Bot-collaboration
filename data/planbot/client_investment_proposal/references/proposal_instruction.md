@@ -1,0 +1,43 @@
+Investment Proposal: <Client Name>
+==================================
+
+# Executive Summary
+
+```yaml
+instructions: |
+Summarize in 3-4 sentences:
+- Recommended action (e.g., "reduce bonds by 5%, increase equities by 10%")
+- Why the product is recommended.
+- Expected outcome (e.g., "improve long-term growth while managing downside risk")
+```
+
+# Recommended Product: <Product Name>
+```yaml
+instructions: |
+Provide the terms of the recommended product
+```
+## Product Specifications
+
+## Performance Metrics
+
+## Risk Characteristics
+
+## Detailed Justification
+
+# Suggested Portfolio
+```yaml
+instructions: |
+Please refer to the proposal_instruction/suggested_portfolio_instruction.md for the instruction to complete this section.
+```
+
+# Scenario Analysis
+```yaml
+instructions: |
+Please refer to the proposal_instruction/scenario_analysis_instruction to come up this section
+```
+
+# References
+```yaml
+instructions: |
+Please refer to the proposal_instruction/reference_instruction to come up this section
+```

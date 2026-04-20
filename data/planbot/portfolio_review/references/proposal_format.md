@@ -1,4 +1,5 @@
-# Investment Proposal for <client name>
+Investment Proposal for <client name>
+=====================================
 
 # Summary
 
@@ -15,10 +16,10 @@ Summarize in 3-4 sentences:
 ```yaml
 instructions: |
 - Identify hidden needs in point form such as below.  If there're more than 3 needs identified, show only the top three, and use the top three for product suggestions.
-    - retirement
     - children university education, etc.
     - mortgage refinancing, etc.
 - For each hidden needs, attach a potential investment horizon to it.
+- A list of needs could be found in shared/financial_needs/common_needs.md
 ```
 
 Name: Alex Chan
@@ -57,61 +58,20 @@ instructions: |
 - The current portfolio has a high allocation to bond funds, which provides stability but may not offer sufficient growth for long-term goals like retirement.
 - The suggested portfolio reduces bond fund allocation and increases exposure to equities, which can enhance growth potential
 
-## Scenario analysis of the suggested portfolio
+# Scenario Analysis
 ```yaml
 instructions: |
-- Please come up three scenarios - Normal, Upside, Downside, based on some grounds such as historical or current market sentiment.  
-- For any historical reference, go to have the time horizon and from/to year specified.
-- below is a illustration of the scenarios, feel free to use others that making better sense.
-- This shall include PnL and projected cashflow for the suggested vs the current portfolio.
-- The PnL shall be break down to the asset level, or the same level as the suggested portfolio.
-- Please if the probability of the scenario if data available.
+Please refer to the proposal_instruction/scenario_analysis_instruction to come up this section
 ```
-
-### Normal Market Condition
-- Projected global equity returns: 10%.  This was an average return for the last 5 y
-- Projected money market returns: 2%.  This was an average return for the last 5 y
-
-|Asset|% return|Suggested Holding|Return|Current Holding|Return|
-|-----|-------:|----------------:|-----:|--------------:|-----:|
-|Stock|      10|               60|     6|             10|   1.0|
-|Bond |       5|               40|     2|             90|   4.5|
-|Total|       8|              100|     8|            100|   5.5|
-
-- Annual return of the suggested portfolio vs current : 8% vs 5.5%
-
-- Incremental benefit: +HKD 98,000 annually (+23% improvement)
-
-### Equity collapse similar to COVID-19
-- Projected global equity returns: -20%.  This was an average return during the COVID-19 market crash
-
-# Selected products that may be interested
-```yaml
-instructions: |
-Please show no more than three products that the client may be interested
-```
-
-Some additional suggested products based on your profile as below
-
-|Product|Expected yield & maturity|Best yield & maturity|Best yield & maturity|Risk|Remark|
-|---|---:|---:|---:|---|---|
-|Dual currency deposit on USDCNH|
 
 # Risk Disclosure
 ```yaml
 instructions: |
-- Include a standard risk warning block:
-    - "Past performance does not guarantee future returns"
-    - "Projected returns are estimates, not promises"
-    - "Structured products have risk of principal loss"
+Please refer to the proposal_instruction/risk_disclosure_instruction to come up this section
 ```
 
 # References
 ```yaml
 instructions: |
-- List any local references used, such as client.md, product_catalog.md.
-- Please do not list any material that are not directly referenced in the proposal to avoid any confusion.
-- Show any web references used.  If no web search capability, please state N/A in this section.  Below is an example only.
+Please refer to the proposal_instruction/reference_instruction to come up this section
 ```
-- [Fund choices] (https://www.hsbc.com.hk/content/dam/hsbc/hk/docs/mpf/mpf_scheme_brochure.pdf)
-

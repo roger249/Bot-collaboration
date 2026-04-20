@@ -3,7 +3,7 @@
 common:
 # Below are default folder locations to use unless it's specified in the individual proposal section.  In such case, the
 # setting in the proposla section will override the common setting
-  shared_no_web_note_file: data/shared/no_external_web_note.md
+#  shared_glob: data/planbot/shared/*.md
   crewai_config_folder: config/crewai/planbot
 
 portfolio_review:
@@ -12,14 +12,20 @@ portfolio_review:
   data_root: data/planbot/portfolio_review/data
   crewai_config_folder: crewai
   output_filename: portfolio_review.md
-  reference_glob: references/*.md
+  reference_glob: 
+    - references/*.md
+    - ../shared/proposal_instruction/*.md
+    - ../shared/financial_needs/*.md
   client_glob: clients/*.md
-  product_catalog_glob: product_catalog/*.md
+  product_catalog_glob: 
+    - ../shared/product_catalog/*.md
+    - ../shared/product_catalog/*.csv
+#    - product_catalog/*.md
   overwrite_output_folder: true
   provider: poe
 #  model: deepseek-v3.2-exp
-  model: qwen3.6-plus
-#  model: qwen3.5-flash
+#  model: qwen3.6-plus
+  model: qwen3.5-flash
 #  model: gemma-4-31b-t
 #  model: glm-5.1-t
 #  model: kimi-k2.5-fw
@@ -35,18 +41,21 @@ client_investment_proposal:
   data_root: data/planbot/client_investment_proposal/data
   crewai_config_folder: crewai
   output_filename: client_investment_proposal.md
-  reference_glob: references/*.md
+  reference_glob: 
+    - references/*.md
+    - ../shared/proposal_instruction/*.md
+    - ../shared/financial_needs/*.md
   client_glob: 
     - clients/*.md
     - clients/*.csv
   product_catalog_glob: 
-    - product_catalog/*.md
-    - product_catalog/*.csv
+    - ../shared/product_catalog/*.md
+    - ../shared/product_catalog/*.csv
   overwrite_output_folder: true
   provider: poe
 #  model: deepseek-v3.2-exp
-  model: qwen3.6-plus
-#  model: qwen3.5-flash
+#  model: qwen3.6-plus
+  model: qwen3.5-flash
 #  model: gemini-3-flash
 #  model: kimi-k2.5-fw
 #  model: minimax-m2
@@ -59,17 +68,20 @@ product_investor_matching:
   data_root: data/planbot/product_investor_matching/data
   crewai_config_folder: crewai
   output_filename: product_investor_matching.md
-  reference_glob: references/*.md
+  reference_glob: 
+    - references/*.md
+    - ../shared/proposal_instruction/*.md
+    - ../shared/financial_needs/*.md
   client_glob: 
     - clients/*.md
     - clients/*.csv
   product_catalog_glob: 
-    - product_catalog/*.md
-    - product_catalog/*.csv
+    - ../shared/product_catalog/*.md
+    - ../shared/product_catalog/*.csv
   overwrite_output_folder: true
   provider: poe
 #  model: deepseek-v3.2-exp
-  model: qwen3.6-plus
-#  model: qwen3.5-flash
+#  model: qwen3.6-plus
+  model: qwen3.5-flash
   temperature: 0.2
   web_access: true

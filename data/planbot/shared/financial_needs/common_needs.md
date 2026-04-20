@@ -1,5 +1,11 @@
 # Needs
 
+The provides some sample of the needs of an investor will urge the investor to buy new products.  They can be divided into two categories.
+
+1. Quality of the current asset of the portfolio is deteriorating.  Bond being downgraded.  Growth momentum of the equity sector or Geographic location subsides
+
+2. Financial needs due to the situation below
+
 The table below shows the common needs and their investment requirement in four dimensions ranked from 1-5.  1 means the least (smaller) while 5 means the most (larger)
 
 Liquidity 1 means it's highly unlikely we need the fund before the planned date.  While 5 means the need may come earlier and needs liquidate the position to get the funding.
