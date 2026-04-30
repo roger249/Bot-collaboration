@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import yaml
 import logging
+from pydantic import BaseModel
 
 
-@dataclass
-class PlanBotConfig:
+class PlanBotConfig(BaseModel):
     name: str
     task_name: str
     output_root: Path
