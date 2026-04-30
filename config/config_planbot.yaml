@@ -52,10 +52,14 @@ client_investment_proposal:
     - ../shared/product_catalog/*.md
     - ../shared/product_catalog/*.csv
   overwrite_output_folder: true
-  provider: poe
+  provider: openrouter
+  model: qwen/qwen3-coder:free
+  # model: google/gemma-4-31b-it:free
+  # model: qwen/qwen3-next-80b-a3b-instruct:free
+#  provider: poe
 #  model: deepseek-v3.2-exp
 #  model: qwen3.6-plus
-  model: qwen3.5-flash
+#  model: qwen3.5-flash
 #  model: gemini-3-flash
 #  model: kimi-k2.5-fw
 #  model: minimax-m2
@@ -79,7 +83,8 @@ product_investor_matching:
     - ../shared/product_catalog/*.md
     - ../shared/product_catalog/*.csv
   overwrite_output_folder: true
-  provider: poe
+  provider: openrouter
+  model: google/gemma-4-31b-it:free
 #  model: deepseek-v3.2-exp
 #  model: qwen3.6-plus
   model: qwen3.5-flash

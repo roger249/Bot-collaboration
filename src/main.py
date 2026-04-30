@@ -108,5 +108,27 @@ def main() -> None:
             raise SystemExit(1) from exc
 
 
+def run_planbot_programmatically(
+    config_path: str | None = None,
+    planbot_config: str | None = None,
+    proposal: str | None = None,
+) -> object:
+    """Run PlanBot programmatically and return the PlanBotResult.
+
+    This mirrors the behaviour of the `run-planbot` CLI command but can be
+    invoked from Python code or tests.
+    """
+    _load_local_dotenv()
+    if config_path is None:
+        config_path = str(Path(__file__).resolve().parents[1] / "config" / "config.yaml")
+    if planbot_config is None:
+        planbot_config = "config/config_planbot.yaml"
+    if proposal is None:
+        proposal = "portfolio_review"
+
+    app_config = load_config(config_path)
+    return run_crew_planbot(app_config, planbot_config, proposal)
+
+
 if __name__ == "__main__":
     main()

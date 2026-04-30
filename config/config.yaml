@@ -12,10 +12,10 @@ logging:
     - api_key
 
 providers:
-  openai_compatible:
-    api_key_env: OPENAI_API_KEY
-    base_url: https://api.openai.com/v1
-    timeout_seconds: 120
+  openrouter:
+    api_key_env: OPENROUTER_API_KEY
+    base_url: https://openrouter.ai/api/v1
+    timeout_seconds: 240
   deepseek:
     api_key_env: DEEPSEEK_API_KEY
     base_url: https://api.deepseek.com
