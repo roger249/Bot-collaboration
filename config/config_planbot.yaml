@@ -22,16 +22,7 @@ portfolio_review:
     - ../shared/product_catalog/*.csv
 #    - product_catalog/*.md
   overwrite_output_folder: true
-  provider: poe
-#  model: deepseek-v3.2-exp
-#  model: qwen3.6-plus
-  model: qwen3.5-flash
-#  model: gemma-4-31b-t
-#  model: glm-5.1-t
-#  model: kimi-k2.5-fw
-#  model: minimax-m2
-#  model: gpt-oss-120b
-#  model: gpt-5.2
+  llm_model: poe_qwen3.5
   temperature: 0.2
   web_access: true
 
@@ -52,17 +43,7 @@ client_investment_proposal:
     - ../shared/product_catalog/*.md
     - ../shared/product_catalog/*.csv
   overwrite_output_folder: true
-  provider: openrouter
-  model: qwen/qwen3-coder:free
-  # model: google/gemma-4-31b-it:free
-  # model: qwen/qwen3-next-80b-a3b-instruct:free
-#  provider: poe
-#  model: deepseek-v3.2-exp
-#  model: qwen3.6-plus
-#  model: qwen3.5-flash
-#  model: gemini-3-flash
-#  model: kimi-k2.5-fw
-#  model: minimax-m2
+  llm_model: poe_qwen3.5
   temperature: 0.2
   web_access: true
 
@@ -83,10 +64,17 @@ product_investor_matching:
     - ../shared/product_catalog/*.md
     - ../shared/product_catalog/*.csv
   overwrite_output_folder: true
-  provider: openrouter
-  model: google/gemma-4-31b-it:free
-#  model: deepseek-v3.2-exp
-#  model: qwen3.6-plus
-  model: qwen3.5-flash
-  temperature: 0.2
+  llm_model: poe_qwen3.5
   web_access: true
+
+llm_models:
+  poe_qwen3.5:
+    provider: poe
+    model: qwen3.5-flash
+    temperature: 0.2
+  or_gemma:
+    provider: openrouter
+    model: google/gemma-4-31b-it:free
+    temperature: 0.2
+  # model: google/gemma-4-31b-it:free
+  # model: qwen/qwen3-next-80b-a3b-instruct:free

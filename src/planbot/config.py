@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+import logging
 
 
 @dataclass
@@ -72,6 +73,9 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
     path = Path(config_path).resolve()
     data: dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8"))
 
+    # Top-level reusable LLM model definitions
+    llm_models: dict[str, Any] = data.get("llm_models", {}) or {}
+
     # Load common config
     common = data.get("common", {})
     common_shared_no_web_note_file = common.get("shared_no_web_note_file")
@@ -109,6 +113,32 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
     client_glob_rel = _to_glob_list(raw_proposal.get('client_glob'), 'clients/*.md')
     product_catalog_glob_rel = _to_glob_list(raw_proposal.get('product_catalog_glob'), 'product_catalog/*.md')
 
+    # Resolve llm_model reference from top-level `llm_models` mapping.
+    llm_model_ref = raw_proposal.get("llm_model")
+    if not llm_model_ref:
+        raise ValueError(
+            f"Missing 'llm_model' in '{proposal_name}' section of {config_path}; expected a reference to a top-level llm_models mapping."
+        )
+
+    llm_entry = llm_models.get(str(llm_model_ref))
+    if not llm_entry:
+        available = ", ".join(sorted(llm_models.keys())) or "<none>"
+        raise ValueError(
+            f"Unknown llm_model '{llm_model_ref}' referenced in {config_path}. Available llm_models: {available}"
+        )
+
+    provider_val = str(llm_entry.get("provider", "")).strip()
+    model_val = str(llm_entry.get("model", "")).strip()
+    temperature_val = float(llm_entry.get("temperature", raw_proposal.get("temperature", 0.2)))
+
+    logging.getLogger(__name__).debug(
+        "Resolved llm_model '%s' -> provider=%s model=%s temperature=%s",
+        llm_model_ref,
+        provider_val,
+        model_val,
+        temperature_val,
+    )
+
     return PlanBotConfig(
         name=proposal_name,
         task_name=str(raw_proposal.get("task", f"{proposal_name}_task")).strip(),
@@ -128,9 +158,9 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
         shared_no_web_note_file=(
             _resolve(root_dir, str(proposal_shared_no_web_note_file)) if proposal_shared_no_web_note_file else None
         ),
-        provider=str(raw_proposal.get("provider", "mock")).strip(),
-        model=str(raw_proposal.get("model", "gpt-5.2")).strip(),
-        temperature=float(raw_proposal.get("temperature", 0.2)),
+        provider=provider_val,
+        model=model_val,
+        temperature=temperature_val,
         web_access=bool(raw_proposal.get("web_access", False)),
         urls=[str(item).strip() for item in raw_proposal.get("urls", []) if str(item).strip()],
     )
