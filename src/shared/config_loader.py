@@ -57,6 +57,53 @@ def load_config(config_path: str | Path) -> AppConfig:
     root_dir = path.parent.parent
     data: dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8"))
 
+    # Validate config structure with Pydantic for clearer errors and typing.
+    try:
+        from pydantic import BaseModel
+
+        class ProviderModel(BaseModel):
+            api_key_env: str
+            base_url: str
+            timeout_seconds: int | None = None
+
+        class BotModel(BaseModel):
+            provider: str
+            model: str
+            prompt_file: str
+            temperature: float | None = None
+
+        class WorkflowModel(BaseModel):
+            name: str
+            spec_file: str
+            guideline_file: str | None = None
+            output_root: str
+            overwrite_output_folder: bool | None = None
+            max_rounds: int
+            stop_on_no_blockers: bool | None = None
+
+        class LoggingModel(BaseModel):
+            level: str | None = None
+            config_file: str | None = None
+            chat_history_enabled: bool | None = None
+            chat_history_max_bytes: int | None = None
+            chat_history_backup_count: int | None = None
+            chat_history_body_max_chars: int | None = None
+            chat_history_redact_fields: list[str] | None = None
+
+        class AppModel(BaseModel):
+            workflow: WorkflowModel
+            logging: LoggingModel | None = None
+            runtime: dict | None = None
+            bots: dict[str, BotModel]
+            providers: dict[str, ProviderModel] | None = None
+
+        AppModel.model_validate(data)
+    except Exception:
+        # Bubble up pydantic errors as ValueError for caller simplicity.
+        import traceback
+
+        raise ValueError("Invalid config.yaml: " + traceback.format_exc())
+
     workflow = data["workflow"]
     guideline_file = workflow.get("guideline_file")
     logging_data = data.get("logging", {})

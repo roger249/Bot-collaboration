@@ -23,7 +23,6 @@ portfolio_review:
 #    - product_catalog/*.md
   overwrite_output_folder: true
   llm_model: poe_qwen3.5
-  temperature: 0.2
   web_access: true
 
 client_investment_proposal:
@@ -43,8 +42,7 @@ client_investment_proposal:
     - ../shared/product_catalog/*.md
     - ../shared/product_catalog/*.csv
   overwrite_output_folder: true
-  llm_model: poe_qwen3.5
-  temperature: 0.2
+  llm_model: or_gemma
   web_access: true
 
 product_investor_matching:
@@ -64,7 +62,7 @@ product_investor_matching:
     - ../shared/product_catalog/*.md
     - ../shared/product_catalog/*.csv
   overwrite_output_folder: true
-  llm_model: poe_qwen3.5
+  llm_model: or_gemma
   web_access: true
 
 llm_models:

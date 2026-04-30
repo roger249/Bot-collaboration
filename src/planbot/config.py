@@ -76,6 +76,46 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
     # Top-level reusable LLM model definitions
     llm_models: dict[str, Any] = data.get("llm_models", {}) or {}
 
+    # Validate llm_models and each proposal section with Pydantic models for clearer errors.
+    try:
+        from pydantic import BaseModel
+
+        class LLMEntry(BaseModel):
+            provider: str
+            model: str
+            temperature: float | None = None
+
+        class ProposalModel(BaseModel):
+            task: str | None = None
+            output_root: str | None = None
+            data_root: str | None = None
+            crewai_config_folder: str | None = None
+            output_filename: str | None = None
+            reference_glob: list[str] | str | None = None
+            client_glob: list[str] | str | None = None
+            product_catalog_glob: list[str] | str | None = None
+            overwrite_output_folder: bool | None = None
+            llm_model: str
+            provider: str | None = None
+            model: str | None = None
+            temperature: float | None = None
+            web_access: bool | None = None
+            urls: list[str] | None = None
+
+        # Validate llm_models entries
+        for name, entry in llm_models.items():
+            LLMEntry.model_validate(entry)
+
+        # Validate each proposal (every top-level key except 'common' and 'llm_models')
+        for key, val in data.items():
+            if key in ("common", "llm_models"):
+                continue
+            # only validate mapping-like sections
+            if isinstance(val, dict):
+                ProposalModel.model_validate(val)
+    except Exception as exc:
+        raise ValueError(f"Invalid config_planbot.yaml: {exc}")
+
     # Load common config
     common = data.get("common", {})
     common_shared_no_web_note_file = common.get("shared_no_web_note_file")
