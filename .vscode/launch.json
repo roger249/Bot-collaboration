@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "Portfolio review",
-      "type": "debugpy",
+      "type": "python",
       "request": "launch",
       "module": "src.main",
       "cwd": "${workspaceFolder}",
@@ -19,7 +19,7 @@
     },
     {
       "name": "Client Investment Proposal",
-      "type": "debugpy",
+      "type": "python",
       "request": "launch",
       "module": "src.main",
       "cwd": "${workspaceFolder}",
@@ -35,7 +35,7 @@
     },
     {
       "name": "Product Investor Matching",
-      "type": "debugpy",
+      "type": "python",
       "request": "launch",
       "module": "src.main",
       "cwd": "${workspaceFolder}",
@@ -51,7 +51,7 @@
     },
     {
       "name": "Author-Reviewer: Run",
-      "type": "debugpy",
+      "type": "python",
       "request": "launch",
       "module": "src.main",
       "cwd": "${workspaceFolder}",
@@ -65,7 +65,7 @@
     },
     {
       "name": "PlanBot: Mock",
-      "type": "debugpy",
+      "type": "python",
       "request": "launch",
       "module": "src.main",
       "cwd": "${workspaceFolder}",
