@@ -27,17 +27,17 @@ Provide the terms of the recommended product
 # Suggested Portfolio
 ```yaml
 instructions: |
-Please refer to the proposal_instruction/suggested_portfolio_instruction.md for the instruction to complete this section.
+Please refer to the proposal_section_instructions/suggested_portfolio_instruction.md for the instruction to complete this section.
 ```
 
 # Scenario Analysis
 ```yaml
 instructions: |
-Please refer to the proposal_instruction/scenario_analysis_instruction to come up this section
+Please refer to the proposal_section_instructions/scenario_analysis_instruction to come up this section
 ```
 
 # References
 ```yaml
 instructions: |
-Please refer to the proposal_instruction/reference_instruction to come up this section
+Please refer to the proposal_section_instructions/reference_instruction to come up this section
 ```

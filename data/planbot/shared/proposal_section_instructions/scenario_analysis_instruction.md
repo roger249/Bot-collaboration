@@ -1,11 +1,12 @@
 # Scenario analysis of the suggested portfolio
 ```yaml
 instructions: |
-- Please come up three scenarios - Normal, Upside, Downside, based on some grounds such as historical or current market sentiment.  
-- Please if the probability of the scenario if data available.
+- Come up three scenarios - Normal, Upside, Downside, based on some grounds such as historical or current market sentiment.  
+- Scenario shall include the assumption of the movement of each asset classes in the portfolio.
+- Specify the probability of the scenario if data available.
 - For any historical reference, go to have the time horizon and from/to year specified.
 - For each scenario, have a summary including PnL and projected cashflow for the suggested vs the current portfolio.
-- The PnL shall be break down to the product level, or the same level as the suggested portfolio.
+- The PnL shall be break down to the product level.
 - Below is a illustration of the scenarios, feel free to use others that making better sense.
 ```
 

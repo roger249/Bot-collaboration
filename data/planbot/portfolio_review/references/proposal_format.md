@@ -61,17 +61,17 @@ instructions: |
 # Scenario Analysis
 ```yaml
 instructions: |
-Please refer to the proposal_instruction/scenario_analysis_instruction to come up this section
+Please refer to the proposal_section_instructions/scenario_analysis_instruction to come up this section
 ```
 
 # Risk Disclosure
 ```yaml
 instructions: |
-Please refer to the proposal_instruction/risk_disclosure_instruction to come up this section
+Please refer to the proposal_section_instructions/risk_disclosure_instruction to come up this section
 ```
 
 # References
 ```yaml
 instructions: |
-Please refer to the proposal_instruction/reference_instruction to come up this section
+Please refer to the proposal_section_instructions/reference_instruction to come up this section
 ```

@@ -21,7 +21,7 @@ instructions: |
 ## Suggested product
 ```yaml
 instructions: |
-- Please refer to the proposal_instruction/suggested_portfolio_instruction.md for the instruction to complete this section.
+- Please refer to the proposal_section_instructions/suggested_portfolio_instruction.md for the instruction to complete this section.
 - Regardless of the above instruction, suggest at most 1 product only.
 - Do not increase holding for any product other than the suggested product.
 ```
@@ -33,5 +33,5 @@ instructions: |
 # References
 ```yaml
 instructions: |
-Please refer to the proposal_instruction/reference_instruction to come up this section
+Please refer to the proposal_section_instructions/reference_instruction to come up this section
 ```
