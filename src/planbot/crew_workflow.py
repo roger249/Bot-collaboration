@@ -50,7 +50,8 @@ def _build_crew_llm(app_config: AppConfig, cfg) -> LLM:
     if provider is None:
         raise ValueError(f"Unknown provider '{cfg.provider}' in providers config.")
     api_key = _resolve_api_key(provider.api_key_env)
-    base_url = provider.base_url.rstrip("/")
+    # base_url = provider.base_url.rstrip("/")
+    base_url = str(provider.base_url).rstrip("/")
     return LLM(
         model=f"openai/{cfg.model}",
         base_url=base_url,

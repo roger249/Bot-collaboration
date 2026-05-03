@@ -5,7 +5,7 @@ from typing import Any
 
 import yaml
 import logging
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 
 class PlanBotConfig(BaseModel):
@@ -21,8 +21,8 @@ class PlanBotConfig(BaseModel):
     shared_no_web_note_file: Path | None
     provider: str
     model: str
-    temperature: float
-    web_access: bool
+    temperature: float = 0.2
+    web_access: bool = True
     urls: list[str]
 
 
@@ -70,71 +70,71 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
         proposal_name: Name of the proposal section (e.g., 'portfolio_review', 'client_suitability')
     """
     path = Path(config_path).resolve()
-    data: dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8"))
+    data: dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
-    # Top-level reusable LLM model definitions
-    llm_models: dict[str, Any] = data.get("llm_models", {}) or {}
+    # Pydantic models for full validation of the PlanBot YAML
+    class LLMEntry(BaseModel):
+        provider: str
+        model: str
+        temperature: float = 0.2
 
-    # Validate llm_models and each proposal section with Pydantic models for clearer errors.
+    class CommonModel(BaseModel):
+        crewai_config_folder: Path | str | None = "config/crewai/planbot"
+        shared_no_web_note_file: str | None = None
+
+    class ProposalModel(BaseModel):
+        task: str | None = None
+        output_root: Path | str | None = None
+        data_root: Path | str | None = None
+        crewai_config_folder: Path | str | None = None
+        output_filename: str | None = None
+        prompt_root: Path | str | None = None
+        reference_glob: list[str] | str | None = None
+        client_glob: list[str] | str | None = None
+        product_catalog_glob: list[str] | str | None = None
+        overwrite_output_folder: bool = True
+        llm_model: str
+        provider: str | None = None
+        model: str | None = None
+        temperature: float = 0.2
+        web_access: bool = True
+        urls: list[str] | None = None
+        shared_no_web_note_file: Path | str | None = None
+
+    class PlanBotFile(BaseModel):
+        common: CommonModel | None = None
+        llm_models: dict[str, LLMEntry] | None = None
+        proposals: dict[str, ProposalModel]
+
+    # Extract proposal sections (top-level keys except 'common' and 'llm_models')
+    proposals_raw: dict[str, Any] = {k: v for k, v in data.items() if k not in ("common", "llm_models")}
+
     try:
-        from pydantic import BaseModel
+        parsed = PlanBotFile(
+            common=data.get("common"),
+            llm_models=data.get("llm_models"),
+            proposals=proposals_raw,
+        )
+    except ValidationError as exc:
+        raise ValueError(f"Invalid config_planbot.yaml: {exc}") from exc
 
-        class LLMEntry(BaseModel):
-            provider: str
-            model: str
-            temperature: float | None = None
+    common = parsed.common or CommonModel()
+    common_shared_no_web_note_file = common.shared_no_web_note_file
+    common_crewai_config_folder = common.crewai_config_folder or "config/crewai/planbot"
 
-        class ProposalModel(BaseModel):
-            task: str | None = None
-            output_root: str | None = None
-            data_root: str | None = None
-            crewai_config_folder: str | None = None
-            output_filename: str | None = None
-            reference_glob: list[str] | str | None = None
-            client_glob: list[str] | str | None = None
-            product_catalog_glob: list[str] | str | None = None
-            overwrite_output_folder: bool | None = None
-            llm_model: str
-            provider: str | None = None
-            model: str | None = None
-            temperature: float | None = None
-            web_access: bool | None = None
-            urls: list[str] | None = None
+    llm_models: dict[str, Any] = {k: v.dict() for k, v in (parsed.llm_models or {}).items()}
 
-        # Validate llm_models entries
-        for name, entry in llm_models.items():
-            LLMEntry.model_validate(entry)
-
-        # Validate each proposal (every top-level key except 'common' and 'llm_models')
-        for key, val in data.items():
-            if key in ("common", "llm_models"):
-                continue
-            # only validate mapping-like sections
-            if isinstance(val, dict):
-                ProposalModel.model_validate(val)
-    except Exception as exc:
-        raise ValueError(f"Invalid config_planbot.yaml: {exc}")
-
-    # Load common config
-    common = data.get("common", {})
-    common_shared_no_web_note_file = common.get("shared_no_web_note_file")
-    common_crewai_config_folder = common.get("crewai_config_folder", "config/crewai/planbot")
-
-    # Load proposal-specific config
-    raw_proposal = data.get(proposal_name)
+    raw_proposal = parsed.proposals.get(proposal_name)
     if not raw_proposal:
-        raise ValueError(f"Missing '{proposal_name}' section in {config_path}")
+        available = ", ".join(sorted(parsed.proposals.keys())) or "<none>"
+        raise ValueError(f"Missing '{proposal_name}' section in {config_path}. Available proposals: {available}")
 
-    # Per-proposal value overrides common default when provided.
-    proposal_shared_no_web_note_file = raw_proposal.get("shared_no_web_note_file", common_shared_no_web_note_file)
-    proposal_crewai_explicitly_set = "crewai_config_folder" in raw_proposal
-    proposal_crewai_config_folder_raw = str(raw_proposal.get(
-        "crewai_config_folder",
-        common_crewai_config_folder,
-    )).strip()
+    proposal_shared_no_web_note_file = raw_proposal.shared_no_web_note_file or common_shared_no_web_note_file
+    proposal_crewai_explicitly_set = raw_proposal.crewai_config_folder is not None
+    proposal_crewai_config_folder_raw = str(raw_proposal.crewai_config_folder or common_crewai_config_folder).strip()
 
     # Resolve paths
-    prompt_root_rel = str(raw_proposal.get("prompt_root", f"data/planbot/{proposal_name}/prompts")).strip()
+    prompt_root_rel = str(raw_proposal.prompt_root or f"data/planbot/{proposal_name}/prompts").strip()
 
     # Extract proposal base path from prompt_root (remove /prompts suffix)
     # e.g., "data/planbot/portfolio_review/prompts" -> "data/planbot/portfolio_review"
@@ -148,12 +148,12 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
         values = raw_value if isinstance(raw_value, list) else [raw_value]
         return [f"{proposal_base_path}/{str(v).strip()}" for v in values]
 
-    reference_glob_rel = _to_glob_list(raw_proposal.get('reference_glob'), 'references/*.md')
-    client_glob_rel = _to_glob_list(raw_proposal.get('client_glob'), 'clients/*.md')
-    product_catalog_glob_rel = _to_glob_list(raw_proposal.get('product_catalog_glob'), 'product_catalog/*.md')
+    reference_glob_rel = _to_glob_list(raw_proposal.reference_glob, 'references/*.md')
+    client_glob_rel = _to_glob_list(raw_proposal.client_glob, 'clients/*.md')
+    product_catalog_glob_rel = _to_glob_list(raw_proposal.product_catalog_glob, 'product_catalog/*.md')
 
     # Resolve llm_model reference from top-level `llm_models` mapping.
-    llm_model_ref = raw_proposal.get("llm_model")
+    llm_model_ref = raw_proposal.llm_model
     if not llm_model_ref:
         raise ValueError(
             f"Missing 'llm_model' in '{proposal_name}' section of {config_path}; expected a reference to a top-level llm_models mapping."
@@ -168,7 +168,7 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
 
     provider_val = str(llm_entry.get("provider", "")).strip()
     model_val = str(llm_entry.get("model", "")).strip()
-    temperature_val = float(llm_entry.get("temperature", raw_proposal.get("temperature", 0.2)))
+    temperature_val = float(llm_entry.get("temperature", raw_proposal.temperature or 0.2))
 
     logging.getLogger(__name__).debug(
         "Resolved llm_model '%s' -> provider=%s model=%s temperature=%s",
@@ -180,10 +180,10 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
 
     return PlanBotConfig(
         name=proposal_name,
-        task_name=str(raw_proposal.get("task", f"{proposal_name}_task")).strip(),
-        output_root=_resolve(root_dir, str(raw_proposal.get("output_root", f"runs/{proposal_name}"))),
-        overwrite_output_folder=bool(raw_proposal.get("overwrite_output_folder", False)),
-        output_filename=str(raw_proposal.get("output_filename", "output.md")).strip(),
+        task_name=str(raw_proposal.task or f"{proposal_name}_task").strip(),
+        output_root=_resolve(root_dir, str(raw_proposal.output_root or f"runs/{proposal_name}")),
+        overwrite_output_folder=bool(raw_proposal.overwrite_output_folder) if raw_proposal.overwrite_output_folder is not None else False,
+        output_filename=str(raw_proposal.output_filename or "output.md").strip(),
         crewai_config_folder=_resolve_crewai_folder(
             root_dir=root_dir,
             proposal_base_path=proposal_base_path,
@@ -200,6 +200,6 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
         provider=provider_val,
         model=model_val,
         temperature=temperature_val,
-        web_access=bool(raw_proposal.get("web_access", False)),
-        urls=[str(item).strip() for item in raw_proposal.get("urls", []) if str(item).strip()],
+        web_access=bool(raw_proposal.web_access) if raw_proposal.web_access is not None else False,
+        urls=[str(item).strip() for item in (raw_proposal.urls or []) if str(item).strip()],
     )

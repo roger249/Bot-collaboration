@@ -4,7 +4,7 @@ from pathlib import Path
 import yaml
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 
 
 def _resolve(root_dir: Path, raw_path: str) -> Path:
@@ -13,7 +13,7 @@ def _resolve(root_dir: Path, raw_path: str) -> Path:
 
 class ProviderConfig(BaseModel):
     api_key_env: str
-    base_url: str
+    base_url: HttpUrl
     timeout_seconds: int
 
 
@@ -58,7 +58,7 @@ def load_config(config_path: str | Path) -> AppConfig:
     try:
         class RawProvider(BaseModel):
             api_key_env: str
-            base_url: str
+            base_url: HttpUrl
             timeout_seconds: int | None = None
 
         class RawBot(BaseModel):

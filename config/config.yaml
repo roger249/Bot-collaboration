@@ -25,6 +25,8 @@ providers:
     base_url: https://api.poe.com/v1
     timeout_seconds: 300
 
+# Below are configuration specific to the author-reviewer workflow. 
+
 workflow:
   name: author_reviewer
   spec_file: data/author_reviewer/PB system spec.orig.md
