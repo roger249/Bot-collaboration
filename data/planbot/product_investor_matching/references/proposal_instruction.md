@@ -1,5 +1,5 @@
-Product Investor Suitability Proposal
-=====================================
+Client Product-Fit Analysis
+===========================
 
 # Executive Summary
 ```yaml

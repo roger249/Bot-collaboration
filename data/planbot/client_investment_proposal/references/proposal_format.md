@@ -14,7 +14,7 @@ Summarize in 3-4 sentences:
 # Recommended Product: <Product Name>
 ```yaml
 instructions: |
-Provide the terms of the recommended product
+Provide the terms of the recommended product and the products that will decrease allocation, if any.
 ```
 ## Product Specifications
 

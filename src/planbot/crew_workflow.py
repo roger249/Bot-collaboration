@@ -153,6 +153,14 @@ def _generate_with_crew(
 
 
 def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_name: str = "portfolio_review") -> PlanBotResult:
+    """
+    This function will build the prompt payload as follow.
+        - The prompt will include a system prompt, a user prompt that describes the task and includes the reference materials.
+        - The task definition will be loaded from the CrewAI agents.yaml and becomes the system prompt.
+        - The user prompt will be constructed to include
+            - the task description 
+            - the reference materials as a JSON payload that contains the content of the reference documents, client profiles, product catalogs, and URLs. 
+    """
     cfg = load_planbot_config(config_path, app_config.root_dir, proposal_name)
 
     run_root = create_run_root(cfg.output_root, cfg.name, cfg.overwrite_output_folder)

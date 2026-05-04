@@ -7,4 +7,4 @@
 
   expected_output: |
     A complete investment proposal in markdown format that:
-    - Begins exactly with the line: ---** Output of suggestion as below **---
+    - Begins exactly with the line: "---** Output of suggestion as below **---"

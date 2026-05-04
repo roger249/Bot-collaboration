@@ -26,23 +26,26 @@ portfolio_review:
   web_access: true
 
 client_investment_proposal:
+  crewai_config_folder: crewai
   task: client_investment_proposal_task
   output_root: runs/client_investment_proposal
-  data_root: data/planbot/client_investment_proposal/data
-  crewai_config_folder: crewai
   output_filename: client_investment_proposal.md
+  overwrite_output_folder: true
+  data_root: data/planbot/client_investment_proposal/data
+  # references section in the reference materials provides the instruction on how to generate the proposal.  The agent should strictly follow the instruction to generate the proposal.
   reference_glob: 
     - references/*.md
-    - ../shared/proposal_instruction/*.md
+    - ../shared/proposal_section_instructions/*.md
     - ../shared/financial_needs/*.md
+  # client_profiles section in the reference materials provides the client profile and suggested product for each client.  The agent should use the information to generate the proposal.
   client_glob: 
     - clients/*.md
     - clients/*.csv
+  # product_catalogs section in the reference materials provides the details of the investable assets available for recommendation.  The agent should use the information to generate the proposal.
   product_catalog_glob: 
     - ../shared/product_catalog/*.md
     - ../shared/product_catalog/*.csv
-  overwrite_output_folder: true
-  llm_model: mock
+  llm_model: poe_deepseek
   web_access: true
 
 product_investor_matching:
@@ -67,9 +70,16 @@ product_investor_matching:
 
 llm_models:
   poe_qwen3.5:
-  poe_qwen3.5:
     provider: poe
     model: qwen3.5-flash
+    temperature: 0.1
+  poe_deepseek:
+    provider: poe
+    model: deepseek-v3.2-fw
+    temperature: 0.1
+  poe_gemma:
+    provider: poe
+    model: gemma-4-31b-t
     temperature: 0.1
   mock:
     provider: mock
