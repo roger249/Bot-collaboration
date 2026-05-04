@@ -1,31 +1,26 @@
-# Needs
+# Financial Needs & Investment Objectives
 
-The file provides some samples of the needs of an investor that will drive the investor to buy products.  The needs can be divided into two categories.
+This framework categorizes investor requirements to drive precise product alignment. Needs are identified through two primary triggers:
 
-1. Quality of the current investment of the portfolio is deteriorating.  Bond being downgraded.  Growth momentum of the equity sector or geographic location subsides.  
+1.  **Portfolio Hygiene:** Addressing deteriorating asset quality (e.g., credit downgrades, slowing sector momentum, or unfavorable geographic shifts).
+2.  **Life-Stage Milestones:** Demographic-driven requirements such as retirement planning or educational funding, often inferred from the client’s age and family structure.
 
-2. Demographic of the client such as retirement or children education.
+### Matching Dimensions
+Each need is qualified by three dimensions to ensure the suggested products harmonize with the client's reality:
+*   **Time Horizon:** The specific duration until the capital is required.
+*   **Target Return (1–5):** The required growth intensity. A score of 1 focuses on capital preservation, while 5 targets aggressive compounding.
+*   **Certainty (1–5):** The "Confidence Requirement." High-priority needs (e.g., tuition) demand a score of 4–5, meaning the portfolio must prioritize capital protection. Aspirational goals (e.g., early retirement) can tolerate a lower certainty score (1–2) to capture higher upside.
 
-Those need could be guess from the client profile. For example, a client of age 55 will have retirement needs, or a client having two kids of age 10-15 will need university funding.
+### Objective Reference Table
+The following table outlines the strategic logic used to match specific objectives with product profiles:
 
-These needs are further qualified in the following dimensions for product matching.
-- Time horizon.  How long we need the fund.
-- Return.  What's the target return.  Score 1-5.  The higher the return required, the larger the score is.
-- Certainty.  Education fund needs high certainty, but a goal of early retirement can tolerate certain downside.  5 is most certain.
-
-Below table shows the some common needs.
-
-| Investment Objective | Typical Horizon (y) | Return (1-5) | Certainty (1-5) | The Strategic Logic |
-| --- | --- | --- | --- | --- |
-| University Fund / Mortgage down payment | 10–15 | 3 | 4 | Horizon-Locked: 10-year horizon allows balanced funds to smooth volatility and deliver high capital certainty. |
-| Business Owner | 1–2 | 1 | 5 | Operating Buffer: Near-100% capital certainty required; short horizon leaves no room for mean reversion. |
-| Retirement (Accumulation) | \>7 | 5 | 2 | Growth Dominance: Long horizon tolerates volatility; maximise return and accept short-term drawdowns. |
-| Retirement (Distribution) | Ongoing | 3 | 4 | Cash Flow: Steady yield and capital preservation needed to fund regular withdrawals. |
-| Estate/Legacy | 30+ | 5 | 1 | Multi-Gen: 30+ year horizon makes short-term volatility irrelevant; prioritise maximum long-run return. |
-| Emergency Fund | 0.5-1 | 1 | 5 | Immediate Need: Absolute capital stability required; no time for drawdown recovery. |
-| Tax Liability Reserve/Loan | <1 | 1 | 5 | Fixed-date obligation: Capital must be fully intact at maturity; return is secondary to certainty. |
-
-
-# Not consider for the moment
-- "Bridge to social security" is ignored for the moment as we need to account for the difference of each country.
-- Taxation?
+| Investment Objective | Typical Horizon (y) | Return (1-5) | Certainty (1-5) | The Strategic Logic |
+| :--- | :--- | :--- | :--- | :--- |
+| **University Fund** | 10–15 | 3 | 4 | **Horizon-Locked:** A decade-plus allows balanced assets to smooth volatility while delivering high terminal certainty. |
+| **Mortgage Down Payment** | 3–5 | 4 | 3 | **Growth-Tilt:** Mid-term horizon allows for moderate risk-taking to accelerate capital accumulation. |
+| **Business Operating Buffer** | 1–2 | 1 | 5 | **Capital Integrity:** Near-100% certainty required; the short horizon leaves no room for market recovery. |
+| **Retirement (Accumulation)** | 7+ | 5 | 2 | **Growth Dominance:** Long-term compounding justifies high volatility and lower short-term certainty. |
+| **Retirement (Distribution)** | Ongoing | 3 | 4 | **Liability Matching:** Focuses on steady yield and capital preservation to sustain regular cash outflows. |
+| **Estate/Legacy** | 25+ | 5 | 1 | **Multi-Generational:** Extreme horizon makes short-term volatility irrelevant; prioritizes maximum long-run appreciation. |
+| **Emergency Fund** | <1 | 1 | 5 | **Instant Liquidity:** Absolute stability required; provides a safety net for the client’s standard of living. |
+| **Tax/Loan Reserve** | <1 | 1 | 5 | **Fixed Obligation:** Funds must be fully intact by the payment date; return is secondary to total certainty. |

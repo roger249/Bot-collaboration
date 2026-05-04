@@ -1,18 +1,31 @@
 # Overview
 
-The product information is listed in the following files.
-- demo-market-quotes.csv: The list of products, their historical performance and risk ratings
+Product data is sourced from demo-market-quotes.csv, which contains the master list of available instruments, historical performance metrics, and risk classifications. To facilitate high-precision matching, each product is scored across four dimensions:
 
-Each product are ranked in four factors as a summary of their characteristic to facilitate suggestion to investors.
+1. Risk Rating (Mandatory Constraint)
+Scale: 1 (Lowest) to 5 (Highest).
 
-- Risk ranking (1-5)
-    This is a mandatory matching criteria which a suggestion of this product only made if product risk <= client risk ranking.  All ranked in the range of 1-5
+Protocol: This acts as a hard filter. A product is only eligible for a portfolio suggestion if its Risk Rating is less than or equal to the client’s assessed risk tolerance. No exceptions are permitted, ensuring regulatory and strategic harmony.
 
-- Return
+2. Expected Return
+Scale: 1 (Capital Preservation) to 5 (Aggressive Growth).
 
-- Certainty (1, 3, 8y)- 1 is not certain if the asset could have the expected return in the time horizon.  1 is stock for an 1y investment.  5 is very likely such as treasury bond.  For long horizon, stock may be more certain than an individual bond.
+Definition: Represents the projected annualized yield or capital appreciation. A rating of 1 implies a focus on nominal stability, while 5 indicates a high-conviction growth target, typically associated with higher volatility.
 
-- Certainty (10y)- 1 is not certain if the asset could have the expected return in 
+3. Certainty (Time-Horizon Probability)
+Scale: 1 to 5, assessed across three horizons: 1y, 3y, and 8y.
 
-- Liquidity 1 means it's highly unlikely we need the fund before the planned date. While 5 means the need may come earlier and needs liquidate the position to get the funding.
+Definition: Measures the probability of achieving the "Expected Return" over the specific holding period.
 
+Fixed Income Example: A 10-year Treasury bond may score 5/5 for Certainty-8y (low default risk) but 3/5 for Certainty-1y due to mark-to-market sensitivity to interest rate fluctuations.
+
+Equity Example: An index ETF may score 2/5 for Certainty-1y (high short-term variance) but 4/5 for Certainty-8y as historical time-diversification reduces the range of outcomes.
+
+4. Liquidity
+Scale: 1 (Illiquid/Locked) to 5 (Daily Liquidity).
+
+Definition: Reflects the ease of exiting a position at the current market price without significant penalty or delay.
+
+Score 5: Exchange-traded equities and daily-dealing Mutual Funds.
+
+Score 2-3: Products with structural barriers, such as annuities or structured producdt, where early unwinding incurs significant surrender charges or exit fees.

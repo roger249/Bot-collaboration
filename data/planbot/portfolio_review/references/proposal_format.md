@@ -32,31 +32,11 @@ Name: Alex Chan
 
 # Suggested Portfolio
 ```yaml
-instructions: | 
-- Tabulate the current portfolio and the suggested  as show below.
-- Keep suggesting a maximum of 3 new products, if any.
-- We shall suggest the exact asset and % so its executable so that it could be executed.  For example, increase AAPL to 30%.
-- Total allocation adds up to 0% for the change column.
-- Total allocation adds up to 100% for the current and suggested column.
-- No need for come up another listing of the suggested asset except the table below.
-- Show two pie charts indicating the portfolio allocation before this table using mermaid diagram syntax.
-```
-
-|Asset.     |Current| Suggested | Change | Remark|
-|-----------|------:|----------:|-------:|----|
-| Bond Fund |   20% | 15% | -5% | Need to put in high growth asset for retirement planning |
-|Equity Fund|   30% | 40% | +10%| Increase equity for better growth potential |
-
-
-```yaml
 instructions: |
-- Please analyze the pros and cons of the suggested holding with justification from the scenario analysis
-- Any concentration risk?  If yes, please specify precise the asset that have concentration - currency, US exposure, etc.
+- Please refer to the proposal_section_instructions/suggested_portfolio_instruction.md for the instruction to complete this section.
+- Regardless of the above instruction, suggest at most 1 product only.
+- Do not increase holding for any product other than the suggested product.
 ```
-## Pros and cons of suggested portfolio
-
-- The current portfolio has a high allocation to bond funds, which provides stability but may not offer sufficient growth for long-term goals like retirement.
-- The suggested portfolio reduces bond fund allocation and increases exposure to equities, which can enhance growth potential
 
 # Scenario Analysis
 ```yaml

@@ -1,4 +1,4 @@
-Investment Proposal: <Client Name>
+Client Product-Fit Analysis: <Client Name>
 ==================================
 
 # Executive Summary
@@ -14,11 +14,14 @@ Summarize in 3-4 sentences:
 # Recommended Product: <Product Name>
 ```yaml
 instructions: |
-Provide the terms of the recommended product and the products that will decrease allocation, if any.
+- Provide the terms of the recommended product.
 ```
 ## Product Specifications
 
 ## Performance Metrics
+```yaml
+- Please contrast the historical performance of the suggested product vs. switched-out
+```
 
 ## Risk Characteristics
 
