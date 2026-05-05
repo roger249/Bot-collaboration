@@ -6,7 +6,9 @@ instructions: |
 - Keep suggesting a maximum of 3 new products unless specified otherwise.
 - Suggest the specific product and tje quantity to buy or sell so that it could be executed.  For example, increase AAPL to 30%.
 - Total allocation adds up to 0% for the change column, and 100% for the current and suggested columns.
-- Show two pie charts indicating the portfolio allocation before this table using mermaid diagram syntax.  Use double quote " to quote the asset string.
+- Show two pie charts indicating the portfolio allocation before this table using mermaid diagram syntax.  Use double quote (0x22) to quote the asset string.  Mermaid could not accept
+&#x2018 or &#x2019 as quote.
+
 - No need for come up another listing of the suggested asset except the table below.
 ```
 
