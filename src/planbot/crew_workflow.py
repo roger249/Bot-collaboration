@@ -9,11 +9,11 @@ from crewai import Agent, Crew, LLM, Process, Task
 
 from src.planbot.config import load_planbot_config
 from src.planbot.input_loader import (
+    ReferenceDocument,
     extract_urls_from_references,
     load_references,
 )
 from src.planbot.workflow import (
-    DEFAULT_SYSTEM_PROMPT,
     PlanBotResult,
     _build_prompt_snapshot_payload,
     _build_reference_payload,
@@ -65,7 +65,6 @@ def _generate_with_crew(
     app_config: AppConfig,
     cfg,
     user_prompt: str,
-    system_prompt: str,
 ) -> str:
     agents_cfg = _load_yaml(cfg.crewai_config_folder / "agents.yaml")
     tasks_cfg = _load_yaml(cfg.crewai_config_folder / "tasks.yaml")
@@ -115,7 +114,6 @@ def _generate_with_crew(
             "model": cfg.model,
             "temperature": cfg.temperature,
             "messages": [
-                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
             "task_expected_output": task_def["expected_output"],
@@ -186,20 +184,17 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_na
     LOGGER.info("PlanBot crew run starting: config=%s", config_path)
     LOGGER.info("Using crewai config folder: %s", cfg.crewai_config_folder)
 
-    references = load_references(app_config.root_dir, cfg.reference_glob)
-    LOGGER.info("Loaded %s reference(s) using glob %s", len(references), cfg.reference_glob)
-    client_profiles = load_references(app_config.root_dir, cfg.client_glob)
-    LOGGER.info("Loaded %s client profile document(s) using glob %s", len(client_profiles), cfg.client_glob)
-    product_catalogs = load_references(app_config.root_dir, cfg.product_catalog_glob)
-    LOGGER.info(
-        "Loaded %s product catalog document(s) using glob %s",
-        len(product_catalogs),
-        cfg.product_catalog_glob,
-    )
+    loaded_sections: dict[str, tuple[str, list[ReferenceDocument]]] = {}
+    all_docs: list[ReferenceDocument] = []
+    for section_name, section_cfg in cfg.reference_sections.items():
+        docs = load_references(app_config.root_dir, section_cfg.globs)
+        loaded_sections[section_name] = (section_cfg.purpose, docs)
+        all_docs.extend(docs)
+        LOGGER.info("Loaded %s document(s) for section '%s' using globs %s", len(docs), section_name, section_cfg.globs)
 
-    urls_from_references = extract_urls_from_references(references, url_reference_filename="websites.md")
+    urls_from_references = extract_urls_from_references(all_docs, url_reference_filename="websites.md")
     if not urls_from_references:
-        urls_from_references = extract_urls_from_references(references, url_reference_filename=None)
+        urls_from_references = extract_urls_from_references(all_docs, url_reference_filename=None)
     urls = list(dict.fromkeys([*cfg.urls, *urls_from_references]))
     LOGGER.info("Resolved %s URL(s)", len(urls))
 
@@ -209,9 +204,7 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_na
 
     reference_payload_json = _build_reference_payload(
         root_dir=app_config.root_dir,
-        references=references,
-        client_profiles=client_profiles,
-        product_catalogs=product_catalogs,
+        loaded_sections=loaded_sections,
         urls=urls,
         no_web_note=no_web_note,
         web_access=cfg.web_access,
@@ -232,14 +225,12 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_na
         reference_payload_json=reference_payload_json,
     )
 
-    system_prompt = DEFAULT_SYSTEM_PROMPT
-
+    total_docs = sum(len(docs) for _, docs in loaded_sections.values())
     LOGGER.info(
-        "Payload composed: model=%s, references=%s, client_profiles=%s, product_catalogs=%s, urls=%s",
+        "Payload composed: model=%s, total_documents=%s, sections=%s, urls=%s",
         cfg.model,
-        len(references),
-        len(client_profiles),
-        len(product_catalogs),
+        total_docs,
+        list(loaded_sections.keys()),
         len(urls),
     )
 
@@ -252,14 +243,14 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_na
             temperature=cfg.temperature,
         )
         request = LLMRequest(
-            system_prompt=system_prompt,
+            system_prompt="",
             user_prompt=user_prompt,
             model=cfg.model,
             temperature=cfg.temperature,
         )
         output = build_client(app_config, "planbot", bot_config).generate(request)
     else:
-        output = _generate_with_crew(app_config, cfg, user_prompt, system_prompt)
+        output = _generate_with_crew(app_config, cfg, user_prompt)
 
     output = _normalize_planbot_output(output)
 
@@ -270,14 +261,12 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_na
     prompt_snapshot = run_root / "prompt_snapshot.md"
     write_text(
         prompt_snapshot,
-        _build_prompt_snapshot_payload(system_prompt, user_prompt, cfg.model, cfg.temperature),
+        _build_prompt_snapshot_payload(user_prompt, cfg.model, cfg.temperature),
     )
 
     LOGGER.info(
-        "Run complete: references_used=%s, client_profiles_used=%s, product_catalogs_used=%s, urls_used=%s, run_root=%s",
-        len(references),
-        len(client_profiles),
-        len(product_catalogs),
+        "Run complete: total_documents=%s, urls_used=%s, run_root=%s",
+        total_docs,
         len(urls),
         run_root,
     )
@@ -287,6 +276,7 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_na
         log_path=log_path,
         output_path=output_path,
         prompt_path=prompt_snapshot,
-        references_used=len(references),
+        references_used=total_docs,
         urls_used=len(urls),
     )
+

@@ -4,24 +4,24 @@ product_investor_matching_task:
 
   description: |
 
-    - Given a list of clients and investable products, generate suitability recommendations based on each client's financial needs and risk profile.
+    - Given a list of clients and investable products, generate a product-fit based on each client's financial needs and risk profile.
     - For each client, assign a buying score from 1-5 indicating how likely the client is to buy the recommended investment product.  5 is the most likely to buy, while 1 is the least likely to buy.
     - Only one product recommendation is allowed for each client.
     - The list is ordered by the shows the top 10 clients with the highest buying score for the recommended product, list in the descending order of the buying score.
     - For any suggested product, please specify the funding source.  
-    - Do not increase holding for any product other than the recommended one.
-    - Any reference to a product performance, please specify the period.
-    - The reference materials are provided at the end of the user prompt as structured JSON with these sections:
-      - clients: list of client profile and existing holdings
-      - product_catalog: investable assets available for recommendation
-      - common_needs:  A list of the common needs.  Feel free to put up potential needs not in the list.
+    - Do not increase holding for any product other than the suggested product.
+    - If there's any reference to a product performance, please specify the historical period.
+    - The reference materials are provided at the end of the user prompt as structured JSON that includes below:
+      - proposal_instruction_and_format: Instructions and format for generating the proposal
+      - client_profiles: list of client profile and existing holdings
+      - product_catalogs: investable assets available for recommendation
+      - guidelines:  A list of the common needs.  Feel free to put up potential needs not in the list.
+    - Observe the guideline ../shared/common/general_guideline.md
 
   expected_output: |
 
-    A product investor suitability report in markdown format that:
-    - Begins exactly with the line: ---** Output of suggestion as below **---
+    A product investor matching report in markdown format that:
+    - The instruction and the sections in the proposal is in references/proposal_instructions/proposal_format.md.  Please strictly follow the format and the sections in the proposal instructions.
     - Includes one recommendation per client with a 1-5 suitability score and justification.
     - Keep all references material at the reference section.
     - Do not include YAML blocks, extra sections, or commentary.
-    - The instruction and the sections in the proposal is in references/proposal_instructions.yaml.  Please strictly follow the format and the sections in the proposal instructions.
-    

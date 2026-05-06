@@ -18,7 +18,7 @@
       ]
     },
     {
-      "name": "Client Investment Proposal",
+      "name": "Client Product-Fit Analysis",
       "type": "python",
       "request": "launch",
       "module": "src.main",
@@ -30,7 +30,7 @@
         "--config",
         "config/config.yaml",
         "--proposal",
-        "client_investment_proposal"
+        "client_product_fit_analysis"
       ]
     },
     {
@@ -50,7 +50,7 @@
       ]
     },
     {
-      "name": "Author-Reviewer: Run",
+      "name": "Author-Reviewer",
       "type": "python",
       "request": "launch",
       "module": "src.main",

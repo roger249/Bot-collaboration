@@ -1,0 +1,21 @@
+client_product_fit_analysis_task:
+
+  agent: investment_advisor_agent
+
+  description: |
+
+    - Given a client profile and one suggested product, generate an client product-fit analysis for the client that includes a product-fit score and justification for the recommendation.
+    - Do not increase holding for any product other than the suggested product.
+    - The reference materials are provided at the end of the user prompt as structured JSON:
+      - proposal_instruction_and_format: Instructions and format for generating the proposal
+      - client_profiles: list of client profile and existing holdings
+      - product_catalogs: investable assets available for recommendation
+      - guidelines:  A list of the common needs.  Feel free to put up potential needs not in the list.
+    - Observe the guideline ../shared/common/general_guideline.md
+  
+  expected_output: |
+
+    A client product-fit analysis in markdown format that:
+    - The instruction and the sections in the proposal is in proposal_instructions/proposal_format.md
+    - Use tables where they provide a clearer and more concise view.
+    - Do not include YAML blocks, extra section, or commentary.

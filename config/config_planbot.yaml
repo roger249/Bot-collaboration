@@ -5,66 +5,95 @@ common:
 # setting in the proposla section will override the common setting
   crewai_config_folder: config/crewai/planbot
 
-portfolio_review:
-  task: portfolio_review_task
-  output_root: runs/portfolio_review
-  data_root: data/planbot/portfolio_review/data
-  crewai_config_folder: crewai
-  output_filename: portfolio_review.md
-  reference_glob: 
-    - references/*.md
-    - ../shared/proposal_section_instructions/*.md
-    - ../shared/financial_needs/*.md
-  client_glob: clients/*.md
-  product_catalog_glob: 
-    - ../shared/product_catalog/*.md
-    - ../shared/product_catalog/*.csv
-  overwrite_output_folder: true
-  llm_model: poe_deepseek
-  web_access: true
-
-client_investment_proposal:
-  crewai_config_folder: crewai
-  task: client_investment_proposal_task
-  output_root: runs/client_investment_proposal
-  output_filename: client_investment_proposal.md
-  overwrite_output_folder: true
-  data_root: data/planbot/client_investment_proposal/data
-  # references section in the reference materials provides the instruction on how to generate the proposal.  The agent should strictly follow the instruction to generate the proposal.
-  reference_glob: 
-    - references/*.md
-    - ../shared/proposal_section_instructions/*.md
-    - ../shared/financial_needs/*.md
-  # client_profiles section in the reference materials provides the client profile and suggested product for each client.  The agent should use the information to generate the proposal.
-  client_glob: 
-    - clients/*.md
-    - clients/*.csv
-  # product_catalogs section in the reference materials provides the details of the investable assets available for recommendation.  The agent should use the information to generate the proposal.
-  product_catalog_glob: 
-    - ../shared/product_catalog/*.md
-    - ../shared/product_catalog/*.csv
-  llm_model: poe_deepseek
-  web_access: true
-
 product_investor_matching:
   task: product_investor_matching_task
+  data_root: data/planbot/product_investor_matching
+  crewai_config_folder: data/planbot/product_investor_matching/crewai
+  references_root: data/planbot/product_investor_matching
   output_root: runs/product_investor_matching
-  data_root: data/planbot/product_investor_matching/data
-  crewai_config_folder: crewai
   output_filename: product_investor_matching.md
-  reference_glob: 
-    - references/*.md
-    - ../shared/proposal_section_instructions/*.md
-    - ../shared/financial_needs/*.md
-  client_glob: 
-    - clients/*.md
-    - clients/*.csv
-  product_catalog_glob: 
-    - ../shared/product_catalog/*.md
-    - ../shared/product_catalog/*.csv
-  overwrite_output_folder: true
+  references:
+    proposal_instructions_and_format:
+      - name: proposal_instructions/*.md
+        purpose: Instructions and format for generating the proposal
+      - name: ../shared/proposal_section_instructions/*.md
+        purpose: Detail instructions for specific sections in the proposal
+    guidelines: 
+      - name: ../shared/financial_needs/*.md
+        purpose: Guidelines on financial needs analysis and common financial needs
+      - name: ../shared/common/general_guideline.md
+        purpose: Strict guidelines on all tasks.  No exception allowed
+    client_profiles:
+      - name: clients/*.md
+        purpose: Client profiles and suggested product for each client in markdown format
+      - name: clients/*.csv
+        purpose: Client profiles and suggested product for each client in csv format
+    product_catalogs: 
+      - name: ../shared/product_catalog/*.md
+        purpose: Overview of the CSV file and the structure of the product catalogs
+      - name: ../shared/product_catalog/*.csv
+        purpose: Details of the investable assets available for recommendation in csv format
   llm_model: poe_deepseek
-  web_access: true
+
+client_product_fit_analysis:
+  task: client_product_fit_analysis_task
+  output_root: runs/client_product_fit_analysis
+  output_filename: client_product_fit_analysis.md
+  overwrite_output_folder: true
+  crewai_config_folder: data/planbot/client_product_fit/crewai
+  references_root: data/planbot/client_product_fit
+  references:
+    proposal_instructions_and_format:
+      - name: proposal_instruction/*.md
+        purpose: Instructions and format for generating the proposal
+      - name: ../shared/proposal_section_instructions/*.md
+        purpose: Detail instructions for specific sections in the proposal
+    guidelines: 
+      - name: ../shared/financial_needs/*.md
+        purpose: Guidelines on financial needs analysis and common financial needs
+      - name: ../shared/common/general_guideline.md
+        purpose: Strict guidelines on all tasks.  No exception allowed
+    client_profiles:
+      - name: clients/*.md
+        purpose: Client profiles and suggested product for each client in markdown format
+      - name: clients/*.csv
+        purpose: Client profiles and suggested product for each client in csv format
+    product_catalogs: 
+      - name: ../shared/product_catalog/*.md
+        purpose: Overview of the CSV file and the structure of the product catalogs
+      - name: ../shared/product_catalog/*.csv
+        purpose: Details of the investable assets available for recommendation in csv format
+  llm_model: poe_deepseek
+
+portfolio_review:
+  task: portfolio_review_task
+  data_root: data/planbot/portfolio_review
+  crewai_config_folder: data/planbot/portfolio_review/crewai
+  references_root: data/planbot/portfolio_review
+  output_root: runs/portfolio_review
+  output_filename: portfolio_review.md
+  references:
+    proposal_instructions_and_format:
+      - name: proposal_instructions/*.md
+        purpose: Instructions and format for generating the proposal
+      - name: ../shared/proposal_section_instructions/*.md
+        purpose: Detail instructions for specific sections in the proposal
+    guidelines: 
+      - name: ../shared/financial_needs/*.md
+        purpose: Guidelines on financial needs analysis and common financial needs
+      - name: ../shared/common/general_guideline.md
+        purpose: Strict guidelines on all tasks.  No exception allowed
+    client_profiles:
+      - name: clients/*.md
+        purpose: Client profiles and suggested product for each client in markdown format
+      - name: clients/*.csv
+        purpose: Client profiles and suggested product for each client in csv format
+    product_catalogs: 
+      - name: ../shared/product_catalog/*.md
+        purpose: Overview of the CSV file and the structure of the product catalogs
+      - name: ../shared/product_catalog/*.csv
+        purpose: Details of the investable assets available for recommendation in csv format
+  llm_model: poe_deepseek
 
 llm_models:
   poe_qwen:

@@ -8,16 +8,20 @@ import logging
 from pydantic import BaseModel, ValidationError
 
 
+class ReferenceSectionConfig(BaseModel):
+    """One named reference section: a purpose description and a list of glob patterns."""
+    purpose: str = ""
+    globs: list[str]
+
+
 class PlanBotConfig(BaseModel):
     name: str
     task_name: str
     output_root: Path
-    overwrite_output_folder: bool
+    overwrite_output_folder: bool = True
     output_filename: str
     crewai_config_folder: Path
-    reference_glob: list[str]
-    client_glob: list[str]
-    product_catalog_glob: list[str]
+    reference_sections: dict[str, ReferenceSectionConfig]
     shared_no_web_note_file: Path | None
     provider: str
     model: str
@@ -86,17 +90,18 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
         task: str | None = None
         output_root: Path | str | None = None
         data_root: Path | str | None = None
+        references_root: Path | str | None = None
         crewai_config_folder: Path | str | None = None
         output_filename: str | None = None
-        prompt_root: Path | str | None = None
-        reference_glob: list[str] | str | None = None
-        client_glob: list[str] | str | None = None
-        product_catalog_glob: list[str] | str | None = None
+        # Structured references dict: section_name -> list of {name, purpose}
+        references: dict[str, Any]
         overwrite_output_folder: bool = True
         llm_model: str
-        provider: str | None = None
-        model: str | None = None
         temperature: float = 0.2
+        # Prompt-level flag passed to the LLM via the JSON payload. Does not gate any
+        # runtime behaviour — it signals to the LLM whether it may browse the internet.
+        # When False, the no_web_note text (e.g. "Do not access the internet") is also
+        # injected into the payload to reinforce the restriction.
         web_access: bool = True
         urls: list[str] | None = None
         shared_no_web_note_file: Path | str | None = None
@@ -133,24 +138,41 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
     proposal_crewai_explicitly_set = raw_proposal.crewai_config_folder is not None
     proposal_crewai_config_folder_raw = str(raw_proposal.crewai_config_folder or common_crewai_config_folder).strip()
 
-    # Resolve paths
-    prompt_root_rel = str(raw_proposal.prompt_root or f"data/planbot/{proposal_name}/prompts").strip()
+    # Resolve base path for local reference globs.
+    # Prefer explicit references_root, then data_root, then default proposal folder.
+    if raw_proposal.references_root is not None:
+        references_base_path = str(raw_proposal.references_root).strip()
+    elif raw_proposal.data_root is not None:
+        references_base_path = str(raw_proposal.data_root).strip()
+    else:
+        references_base_path = f"data/planbot/{proposal_name}"
 
-    # Extract proposal base path from prompt_root (remove /prompts suffix)
-    # e.g., "data/planbot/portfolio_review/prompts" -> "data/planbot/portfolio_review"
-    proposal_base_path = prompt_root_rel.rsplit("/prompts", 1)[0] if prompt_root_rel.endswith("/prompts") else prompt_root_rel.rsplit("/", 1)[0]
+    reference_sections: dict[str, ReferenceSectionConfig] = {}
+    for section_name, entries in raw_proposal.references.items():
+        if not isinstance(entries, list):
+            raise ValueError(
+                f"Section '{section_name}' under references in '{proposal_name}' must be a list of {{name, purpose}} entries."
+            )
+        globs: list[str] = []
+        purposes: list[str] = []
+        for entry in entries:
+            if isinstance(entry, dict):
+                glob_raw = str(entry.get("name", "")).strip()
+                purpose_raw = str(entry.get("purpose", "")).strip()
+            else:
+                raise ValueError(
+                    f"Entry under references.{section_name} in '{proposal_name}' must be a mapping with 'name' and optional 'purpose'."
+                )
+            if not glob_raw:
+                raise ValueError(
+                    f"Entry under references.{section_name} in '{proposal_name}' has empty 'name'."
+                )
+            globs.append(f"{references_base_path}/{glob_raw}")
+            if purpose_raw:
+                purposes.append(purpose_raw)
 
-    # Construct glob patterns by concatenating proposal base path with relative globs from config.
-    # Each glob key may be a string or a YAML list of strings.
-    def _to_glob_list(raw_value: Any, default: str) -> list[str]:
-        if raw_value is None:
-            raw_value = default
-        values = raw_value if isinstance(raw_value, list) else [raw_value]
-        return [f"{proposal_base_path}/{str(v).strip()}" for v in values]
-
-    reference_glob_rel = _to_glob_list(raw_proposal.reference_glob, 'references/*.md')
-    client_glob_rel = _to_glob_list(raw_proposal.client_glob, 'clients/*.md')
-    product_catalog_glob_rel = _to_glob_list(raw_proposal.product_catalog_glob, 'product_catalog/*.md')
+        section_purpose = "; ".join(purposes) if purposes else ""
+        reference_sections[section_name] = ReferenceSectionConfig(purpose=section_purpose, globs=globs)
 
     # Resolve llm_model reference from top-level `llm_models` mapping.
     llm_model_ref = raw_proposal.llm_model
@@ -186,14 +208,12 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
         output_filename=str(raw_proposal.output_filename or "output.md").strip(),
         crewai_config_folder=_resolve_crewai_folder(
             root_dir=root_dir,
-            proposal_base_path=proposal_base_path,
+            proposal_base_path=references_base_path,
             common_folder_raw=str(common_crewai_config_folder),
             proposal_folder_raw=proposal_crewai_config_folder_raw,
             proposal_explicitly_set=proposal_crewai_explicitly_set,
         ),
-        reference_glob=reference_glob_rel,
-        client_glob=client_glob_rel,
-        product_catalog_glob=product_catalog_glob_rel,
+        reference_sections=reference_sections,
         shared_no_web_note_file=(
             _resolve(root_dir, str(proposal_shared_no_web_note_file)) if proposal_shared_no_web_note_file else None
         ),

@@ -3,7 +3,7 @@
 
 # Unit test
 - Python unittest shall be used to build unit test
-- Basic have two unit test - one normal flow and one on exception condition
+- Basic have two unit tests - one normal flow and one on exception condition
 - These two serve as the minimal regression test after major code changes.
 
 # Logging

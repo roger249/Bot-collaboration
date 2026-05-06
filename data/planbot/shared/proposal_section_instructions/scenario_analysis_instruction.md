@@ -2,6 +2,7 @@
 ```yaml
 instructions: |
 - Come up three scenarios - Normal, Upside, Downside, based on some grounds such as historical or current market sentiment.  
+- Assumption of the expected return for each asset shall have justification from historical as default, deviation from historical shall be justified.  
 - Scenario shall include the assumption of the movement of each asset classes in the portfolio.
 - Specify the probability of the scenario if data available.
 - Any historical reference should have the exact from/to year and duration specified.

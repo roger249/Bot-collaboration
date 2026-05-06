@@ -27,7 +27,6 @@ Name: Alex Chan
 |Potential Needs|Investment Horizon|Remark|
 |---------------|----------------|---|
 |Retirement|Long-term|Client estimated to retire in 10y|
-|Children University Education|Medium-term|client has children will go into university in 10y|
 |Reduce exposure to tech| N/A | Avoid concentration risk as client's career is in tech|
 
 # Suggested Portfolio
@@ -35,7 +34,6 @@ Name: Alex Chan
 instructions: |
 - Please refer to the proposal_section_instructions/suggested_portfolio_instruction.md for the instruction to complete this section.
 - Regardless of the above instruction, suggest at most 1 product only.
-- Do not increase holding for any product other than the suggested product.
 ```
 
 # Scenario Analysis

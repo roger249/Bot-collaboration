@@ -70,16 +70,6 @@ def load_references(root_dir: Path, glob_pattern: str | list[str]) -> list[Refer
     return references
 
 
-def build_reference_block(references: list[ReferenceDocument]) -> str:
-    if not references:
-        return "No local references were provided."
-
-    chunks: list[str] = []
-    for index, ref in enumerate(references, start=1):
-        chunks.append(f"## Reference {index}: {ref.path.name} ({ref.source_type})\n\n{ref.content.strip()}")
-    return "\n\n".join(chunks)
-
-
 def extract_urls_from_references(
     references: list[ReferenceDocument],
     url_reference_filename: str | None = "websites.md",

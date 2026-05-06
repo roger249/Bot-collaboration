@@ -1,5 +1,5 @@
-Client Product-Fit Analysis: <Client Name>
-==================================
+Client Product-Fit Analysis: <Client>
+=====================================
 
 # Executive Summary
 

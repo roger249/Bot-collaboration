@@ -3,7 +3,7 @@ import pytest
 from src import main
 
 
-def test_run_client_investment_proposal_monkeypatched(monkeypatch):
+def test_run_client_product_fit_analysis_monkeypatched(monkeypatch):
     called = {}
 
     def fake_run(app_config, cfg_path, proposal):
@@ -18,10 +18,10 @@ def test_run_client_investment_proposal_monkeypatched(monkeypatch):
     result = main.run_planbot_programmatically(
         config_path='config/config.yaml',
         planbot_config='config/config_planbot.yaml',
-        proposal='client_investment_proposal',
+        proposal='client_product_fit_analysis',
     )
 
     assert 'args' in called
     assert called['args'][1] == 'config/config_planbot.yaml'
-    assert called['args'][2] == 'client_investment_proposal'
+    assert called['args'][2] == 'client_product_fit_analysis'
     assert result is not None

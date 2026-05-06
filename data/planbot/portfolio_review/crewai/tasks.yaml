@@ -8,15 +8,15 @@ portfolio_review_task:
     The reference materials are provided at the end of the user prompt as structured JSON with these sections:
     - clients: client profile and existing holdings
     - product_catalog: Contains file about the investable assets available for recommendation
-    - references: 
-      - proposal template proposal_format.md
-      - urls: external website links for additional context
-
-    If you cannot access an external URL, state this clearly in your response.
+    - The reference materials are provided at the end of the user prompt as structured JSON:
+      - proposal_instruction_and_format: Instructions and format for generating the proposal
+      - client_profiles: list of client profile and existing holdings
+      - product_catalogs: investable assets available for recommendation
+      - guidelines:  A list of the common needs.  Feel free to put up potential needs not in the list.
+    - Observe the guideline ../shared/common/general_guideline.md
 
   expected_output: |
     A complete investment proposal in markdown format that:
-    - Begins exactly with the line: ---** Output of suggestion as below **---
-    - Follow the proposal structure defined in proposal_format.md exactly.
+    - The instruction and the sections in the proposal is in references/proposal_instructions/proposal_format.md.  Please strictly follow the format and the sections in the proposal instructions.
     - Use tables where they provide a clearer and more concise view.
     - Do not include any YAML blocks that are in the proposal_format.md, those are instructions to come up the section and shall NOT be included in the final output

@@ -29,7 +29,7 @@ class WorkflowConfig(BaseModel):
     spec_file: Path
     guideline_file: Path | None
     output_root: Path
-    overwrite_output_folder: bool
+    overwrite_output_folder: bool= True
     max_rounds: int
     stop_on_no_blockers: bool
 
@@ -72,7 +72,7 @@ def load_config(config_path: str | Path) -> AppConfig:
             spec_file: str
             guideline_file: str | None = None
             output_root: str
-            overwrite_output_folder: bool | None = None
+            overwrite_output_folder: bool= True
             max_rounds: int
             stop_on_no_blockers: bool | None = None
 

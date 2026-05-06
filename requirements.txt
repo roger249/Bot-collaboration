@@ -1,7 +1,0 @@
-PyYAML>=6.0
-python-dotenv>=1.0
-markitdown[pdf]>=0.0.1
-crewai==1.12.2
-litellm>=1.76.0
-pytest>=7.0.0
-pydantic>=2.0

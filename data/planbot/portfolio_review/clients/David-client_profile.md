@@ -1,11 +1,11 @@
 # Client Profile
 
-- Name: Alex Chan
+- Name: David Kim
 - Age: 42
 - Occupation: Managing Director of a KPMG
 - Risk tolerance: Moderate
 - Married
-- One children born 2010
+- One children born 2012
 
 # Investment consideration
 
