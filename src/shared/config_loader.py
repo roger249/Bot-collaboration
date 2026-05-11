@@ -59,13 +59,13 @@ def load_config(config_path: str | Path) -> AppConfig:
         class RawProvider(BaseModel):
             api_key_env: str
             base_url: HttpUrl
-            timeout_seconds: int | None = None
+            timeout_seconds: int = 120
 
         class RawBot(BaseModel):
             provider: str
             model: str
             prompt_file: str
-            temperature: float | None = None
+            temperature: float = 0.2
 
         class RawWorkflow(BaseModel):
             name: str

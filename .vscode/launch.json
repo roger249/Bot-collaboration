@@ -2,6 +2,38 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Product Investor Matching",
+      "type": "python",
+      "request": "launch",
+      "module": "src.main",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "run-planbot",
+        "--config",
+        "config/config.yaml",
+        "--proposal",
+        "product_investor_matching"
+      ]
+    },
+    {
+      "name": "Reinvestment Proposal",
+      "type": "python",
+      "request": "launch",
+      "module": "src.main",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "run-planbot",
+        "--config",
+        "config/config.yaml",
+        "--proposal",
+        "reinvestment_proposal"
+      ]
+    },
+    {
       "name": "Portfolio review",
       "type": "python",
       "request": "launch",
@@ -31,22 +63,6 @@
         "config/config.yaml",
         "--proposal",
         "client_product_fit_analysis"
-      ]
-    },
-    {
-      "name": "Product Investor Matching",
-      "type": "python",
-      "request": "launch",
-      "module": "src.main",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "justMyCode": true,
-      "args": [
-        "run-planbot",
-        "--config",
-        "config/config.yaml",
-        "--proposal",
-        "product_investor_matching"
       ]
     },
     {

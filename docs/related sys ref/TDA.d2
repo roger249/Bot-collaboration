@@ -1,0 +1,68 @@
+direction: right
+
+Input: {
+  grid-columns: 2
+  grid-gap: 15
+  Email; FTP
+  Web Page Upload; Database
+}
+ 
+OTC Skill : {
+  grid-rows: 3
+  grid-gap: 15
+  Notional Skill; KI/KO Skill
+  Observation Periods Skill; Wiki Repo
+  OTC System Prompt.width: 250
+}
+
+ai: AI Engine {
+  grid-rows: 2
+  grid-gap: 20
+  slm1: SLM1\nself validation
+  slm2: SLM2\nindependent generation
+}
+
+pii: "Filter & PII Masking"
+
+cv: |md
+    # Cross validation
+    - Semantic validation
+    - Field constrain
+    - Cross field relationship
+|  
+cv.shape: diamond  
+cv.height: 150
+Termsheets.shape: document
+
+# direction: right
+
+Input -> Termsheets -> pii
+OTC Skill -> Skills Selection
+Skills Selection -> ai: skills
+ai <- pii -> Skills Selection: redacted term-sheet
+
+ai.shape: cloud
+ai -- cv {style: {opacity: 0}}
+ai.slm1 -> cv
+ai.slm2 -> cv
+
+Human Review.shape: person
+Reconciliation: Reconciliation\n(Optional)
+Reconciliation.shape: diamond
+Database.shape: cylinder
+
+JSON.shape: package
+
+JSON: Trades from AI Engine
+cv -> JSON: all good
+JSON -> Reconciliation
+Reconciliation -> Human Review: different
+cv -> Human Review: Fields missing
+
+ext_trades: Trades from RFQ records
+ext_trades.shape: document
+ext_trades -> Reconciliation: ETL
+Reconciliation -> Database: reconciled trades
+Database -> Back Office System
+Back Office System.shape: package
+Human Review -> Back Office System: update

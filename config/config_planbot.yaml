@@ -5,6 +5,36 @@ common:
 # setting in the proposla section will override the common setting
   crewai_config_folder: config/crewai/planbot
 
+reinvestment_proposal:
+  task: reinvestment_proposal_task
+  data_root: data/planbot/reinvestment_proposal
+  crewai_config_folder: data/planbot/reinvestment_proposal/crewai
+  references_root: data/planbot/reinvestment_proposal
+  output_root: runs/reinvestment_proposal
+  output_filename: reinvestment_proposal.md
+  references:
+    proposal_instructions_and_format:
+      - name: proposal_instructions/*.md
+        purpose: Instructions and format for generating the proposal
+      - name: ../shared/proposal_section_instructions/*.md
+        purpose: Detail instructions for specific sections in the proposal
+    guidelines: 
+      - name: ../shared/financial_needs/*.md
+        purpose: Guidelines on financial needs analysis and common financial needs
+      - name: ../shared/common/general_guideline.md
+        purpose: Strict guidelines on all tasks.  No exception allowed
+    client_profiles:
+      - name: clients/*.md
+        purpose: Client profiles and suggested product for each client in markdown format
+      - name: clients/*.csv
+        purpose: Client profiles and suggested product for each client in csv format
+    product_catalogs: 
+      - name: ../shared/product_catalog/*.md
+        purpose: Overview of the CSV file and the structure of the product catalogs
+      - name: ../shared/product_catalog/*.csv
+        purpose: Details of the investable assets available for recommendation in csv format
+  llm_model: poe_qwen
+
 product_investor_matching:
   task: product_investor_matching_task
   data_root: data/planbot/product_investor_matching
