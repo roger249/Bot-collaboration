@@ -1,6 +1,12 @@
 # Overview
 
-Product data is sourced from demo-market-quotes.csv, which contains the master list of available instruments, historical performance metrics, and risk classifications. To facilitate high-precision matching, each product is scored across four dimensions:
+Product data is sourced from 
+- demo-market-quotes.csv, which contains the master list of available instruments, historical performance metrics, and risk classifications. 
+- Structured products
+    - CMT_note.md
+    - FXRA0415.md
+
+To facilitate high-precision matching, each product is scored across four dimensions:
 
 1. Risk Rating (Mandatory Constraint)
 Scale: 1 (Lowest) to 5 (Highest).
