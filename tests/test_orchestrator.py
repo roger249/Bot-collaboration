@@ -102,6 +102,56 @@ class TestPipelineOrchestrator:
         assert orchestrator.root_dir == tmp_path
         assert orchestrator.run_id  # Should be auto-generated
 
+    def test_execute_filters_raises_when_product_output_missing(self, tmp_path):
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("run_configurations: {}")
+        orchestrator = PipelineOrchestrator(tmp_path, config_file)
+
+        config = {
+            "filters": {
+                "product_investor_matching_filter": {
+                    "input": {"proposal": "product_investor_matching"},
+                    "output": {
+                        "client_profiles": {"header_pattern": "## Client ID:"},
+                        "client_ids": {"pattern": r"(?<=## Client ID:)\s*(\w+)"},
+                    },
+                },
+                "client_holdings_filter": {
+                    "input": {"file": "data/planbot/shared/client_profile/client_list.csv"}
+                },
+            }
+        }
+
+        with pytest.raises(FileNotFoundError, match="No product investor matching output found"):
+            orchestrator.execute_filters(config)
+
+    def test_execute_filters_raises_when_no_client_ids_extracted(self, tmp_path):
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("run_configurations: {}")
+        orchestrator = PipelineOrchestrator(tmp_path, config_file)
+
+        output_file = tmp_path / "runs" / "product_investor_matching" / "output.md"
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text("# Generic output with no client sections\n")
+
+        config = {
+            "filters": {
+                "product_investor_matching_filter": {
+                    "input": {"proposal": "product_investor_matching"},
+                    "output": {
+                        "client_profiles": {"header_pattern": "## Client ID:"},
+                        "client_ids": {"pattern": r"(?<=## Client ID:)\s*(\w+)"},
+                    },
+                },
+                "client_holdings_filter": {
+                    "input": {"file": "data/planbot/shared/client_profile/client_list.csv"}
+                },
+            }
+        }
+
+        with pytest.raises(ValueError, match="No client IDs extracted"):
+            orchestrator.execute_filters(config)
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

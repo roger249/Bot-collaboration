@@ -226,8 +226,11 @@ class PipelineOrchestrator:
                 self.logger.info("Using latest proposal output fallback: %s", pim_output_path)
                 pim_content = read_text(pim_output_path)
             else:
-                self.logger.warning("Expected proposal output not found: %s", pim_output_path)
-                pim_content = ""
+                raise FileNotFoundError(
+                    "No product investor matching output found for pipeline filters. "
+                    f"Expected {pim_output_path} or any markdown artifact under {proposal_run_root}. "
+                    "Run 'run-planbot --proposal product_investor_matching' first."
+                )
         else:
             pim_content = read_text(pim_output_path)
 
@@ -243,6 +246,13 @@ class PipelineOrchestrator:
             header_pattern=header_pattern,
             client_id_regex=client_id_regex,
         )
+
+        if not client_ids_list:
+            raise ValueError(
+                "No client IDs extracted from product investor matching output. "
+                f"Source file: {pim_output_path}. "
+                f"Expected section headers matching '{header_pattern}' and ids matching '{client_id_regex}'."
+            )
 
         # Run client_holdings_filter
         chf_filter_cfg = filters_config.get("client_holdings_filter", {})
