@@ -15,6 +15,7 @@ if __package__ is None or __package__ == "":
 from src.shared.config_loader import load_config
 from src.author_reviewer.crew_workflow import run_crew_workflow
 from src.planbot.crew_workflow import run_crew_planbot
+from src.planbot.pipeline_runner import PipelineRunner
 
 
 LOGGER = logging.getLogger(__name__)
@@ -49,6 +50,23 @@ def build_parser() -> argparse.ArgumentParser:
         "--proposal",
         default="portfolio_review",
         help="Name of the proposal to run (e.g., portfolio_review, client_suitability)",
+    )
+
+    pipeline_parser = subparsers.add_parser("run-pipeline", help="Run an orchestrated proposal pipeline")
+    pipeline_parser.add_argument(
+        "--config",
+        default="config/config.yaml",
+        help="Path to main config YAML (for logging and LLM setup)",
+    )
+    pipeline_parser.add_argument(
+        "--planbot-config",
+        default="config/config_planbot.yaml",
+        help="Path to PlanBot config YAML with run_configurations",
+    )
+    pipeline_parser.add_argument(
+        "--pipeline",
+        default="client_product_fit_analysis_proposals",
+        help="Name of the pipeline to run",
     )
     return parser
 
@@ -105,6 +123,28 @@ def main() -> None:
         except Exception as exc:
             LOGGER.exception("PlanBot execution failed")
             LOGGER.error("PlanBot failed: %s", exc)
+            raise SystemExit(1) from exc
+    elif args.command == "run-pipeline":
+        config = load_config(args.config)
+        try:
+            runner = PipelineRunner(config, args.planbot_config)
+            result = runner.run_pipeline(args.pipeline)
+            LOGGER.debug(
+                "%s",
+                json.dumps(
+                    {
+                        "run_id": result["run_id"],
+                        "pipeline": result["pipeline"],
+                        "total": result["total"],
+                        "success": result["success"],
+                        "failed": result["failed"],
+                    },
+                    indent=2,
+                ),
+            )
+        except Exception as exc:
+            LOGGER.exception("Pipeline execution failed")
+            LOGGER.error("Pipeline failed: %s", exc)
             raise SystemExit(1) from exc
 
 

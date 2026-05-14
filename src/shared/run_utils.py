@@ -5,10 +5,15 @@ from pathlib import Path
 import shutil
 
 
-def create_run_root(output_root: Path, run_name: str, overwrite_output_folder: bool = False) -> Path:
+def create_run_root(
+    output_root: Path,
+    run_name: str,
+    overwrite_output_folder: bool = False,
+    preserve_existing: bool = False,
+) -> Path:
     if overwrite_output_folder:
         run_root = output_root / run_name
-        if run_root.exists():
+        if run_root.exists() and not preserve_existing:
             shutil.rmtree(run_root)
     else:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

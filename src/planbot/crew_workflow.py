@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+from typing import Any
 
 import yaml
 from crewai import Agent, Crew, LLM, Process, Task
@@ -150,7 +151,13 @@ def _generate_with_crew(
     return output
 
 
-def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_name: str = "portfolio_review") -> PlanBotResult:
+def run_crew_planbot(
+    app_config: AppConfig,
+    config_path: str | Path,
+    proposal_name: str = "portfolio_review",
+    runtime_reference_overrides: dict[str, list[str]] | None = None,
+    output_file_override: str | Path | None = None,
+) -> PlanBotResult:
     """
     This function will build the prompt payload as follow.
         - The prompt will include a system prompt, a user prompt that describes the task and includes the reference materials.
@@ -161,7 +168,13 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_na
     """
     cfg = load_planbot_config(config_path, app_config.root_dir, proposal_name)
 
-    run_root = create_run_root(cfg.output_root, cfg.name, cfg.overwrite_output_folder)
+    preserve_existing_run_root = output_file_override is not None
+    run_root = create_run_root(
+        cfg.output_root,
+        cfg.name,
+        cfg.overwrite_output_folder,
+        preserve_existing=preserve_existing_run_root,
+    )
     logs_dir = run_root / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
 
@@ -187,10 +200,21 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_na
     loaded_sections: dict[str, tuple[str, list[ReferenceDocument]]] = {}
     all_docs: list[ReferenceDocument] = []
     for section_name, section_cfg in cfg.reference_sections.items():
-        docs = load_references(app_config.root_dir, section_cfg.globs)
+        effective_globs = section_cfg.globs
+        if runtime_reference_overrides and section_name in runtime_reference_overrides:
+            # Per-invocation override replaces static section globs for deterministic fan-out inputs.
+            override_globs = runtime_reference_overrides[section_name]
+            effective_globs = override_globs or section_cfg.globs
+            LOGGER.info(
+                "Using runtime reference override for section '%s': %s",
+                section_name,
+                effective_globs,
+            )
+
+        docs = load_references(app_config.root_dir, effective_globs)
         loaded_sections[section_name] = (section_cfg.purpose, docs)
         all_docs.extend(docs)
-        LOGGER.info("Loaded %s document(s) for section '%s' using globs %s", len(docs), section_name, section_cfg.globs)
+        LOGGER.info("Loaded %s document(s) for section '%s' using globs %s", len(docs), section_name, effective_globs)
 
     urls_from_references = extract_urls_from_references(all_docs, url_reference_filename="websites.md")
     if not urls_from_references:
@@ -254,7 +278,16 @@ def run_crew_planbot(app_config: AppConfig, config_path: str | Path, proposal_na
 
     output = _normalize_planbot_output(output)
 
-    output_path = run_root / _resolve_output_filename(cfg.output_filename, cfg.model)
+    if output_file_override:
+        output_override_path = Path(output_file_override)
+        output_path = (
+            output_override_path
+            if output_override_path.is_absolute()
+            else (app_config.root_dir / output_override_path)
+        )
+    else:
+        output_path = run_root / _resolve_output_filename(cfg.output_filename, cfg.model)
+
     write_text(output_path, output)
     LOGGER.info("Output written to %s", output_path)
 

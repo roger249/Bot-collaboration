@@ -92,6 +92,24 @@
         "--config",
         "config/config.mocktest.yaml"
       ]
+    },
+    {
+      "name": "PlanBot: Run Pipeline (Client Product Fit)",
+      "type": "python",
+      "request": "launch",
+      "module": "src.main",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "run-pipeline",
+        "--config",
+        "config/config.yaml",
+        "--planbot-config",
+        "config/config_planbot.yaml",
+        "--pipeline",
+        "client_product_fit_analysis_proposals"
+      ]
     }
   ]
 }

@@ -6,6 +6,10 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 
+_LAST_LOG_FILE: Path | None = None
+_LAST_CHAT_HISTORY_LOG_FILE: Path | None = None
+
+
 def _configure_chat_history_logger(
     chat_history_log_file: Path,
     enabled: bool,
@@ -52,8 +56,28 @@ def configure_logging(
     chat_history_max_bytes: int = 5_000_000,
     chat_history_backup_count: int = 5,
 ) -> None:
+    global _LAST_LOG_FILE, _LAST_CHAT_HISTORY_LOG_FILE
+
     log_file.parent.mkdir(parents=True, exist_ok=True)
     chat_history_log_file.parent.mkdir(parents=True, exist_ok=True)
+
+    resolved_log_file = log_file.resolve()
+    resolved_chat_history_file = chat_history_log_file.resolve()
+
+    # Reuse existing logger setup when targets are unchanged.
+    if (
+        _LAST_LOG_FILE == resolved_log_file
+        and _LAST_CHAT_HISTORY_LOG_FILE == resolved_chat_history_file
+        and logging.getLogger().handlers
+    ):
+        _configure_chat_history_logger(
+            chat_history_log_file,
+            enabled=chat_history_enabled,
+            max_bytes=chat_history_max_bytes,
+            backup_count=chat_history_backup_count,
+        )
+        return
+
     if config_file is not None and config_file.exists():
         logging.config.fileConfig(
             config_file,
@@ -70,6 +94,8 @@ def configure_logging(
             max_bytes=chat_history_max_bytes,
             backup_count=chat_history_backup_count,
         )
+        _LAST_LOG_FILE = resolved_log_file
+        _LAST_CHAT_HISTORY_LOG_FILE = resolved_chat_history_file
         return
 
     logging.basicConfig(
@@ -86,3 +112,5 @@ def configure_logging(
         max_bytes=chat_history_max_bytes,
         backup_count=chat_history_backup_count,
     )
+    _LAST_LOG_FILE = resolved_log_file
+    _LAST_CHAT_HISTORY_LOG_FILE = resolved_chat_history_file

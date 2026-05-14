@@ -110,7 +110,7 @@ For each client:
 - Log `client_id`, proposal name, output path, status (`success|failed|skipped`).
 - Log failure reason if failed.
 
-**Planned log fields:**
+**Log fields:**
 
 ```text
 run_id, stage, proposal, client_id, status, output_path, elapsed_ms, error

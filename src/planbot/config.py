@@ -111,8 +111,8 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
         llm_models: dict[str, LLMEntry] | None = None
         proposals: dict[str, ProposalModel]
 
-    # Extract proposal sections (top-level keys except 'common' and 'llm_models')
-    proposals_raw: dict[str, Any] = {k: v for k, v in data.items() if k not in ("common", "llm_models")}
+    # Extract proposal sections (top-level keys except 'common', 'llm_models', and 'run_configurations')
+    proposals_raw: dict[str, Any] = {k: v for k, v in data.items() if k not in ("common", "llm_models", "run_configurations")}
 
     try:
         parsed = PlanBotFile(
