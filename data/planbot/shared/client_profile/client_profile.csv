@@ -1,0 +1,24 @@
+Client Name,Birthdate,Occupation,Risk Rating,Marital Status,Children Info,Liquidity Need,Income Stability,Investment Objective
+James Harrison,1959-01-01,Retired,2,Married,2 children,Medium (12 months buffer),Stable pension,Regular income
+Sarah Chen,1967-01-01,Legal Partner,5,Divorced,0 children,Low (5-year horizon),High but variable,Regular income
+Michael Sterling,1989-01-01,Legal Partner,1,Divorced,3 children,Low,Stable pension,Aggressive growth
+Emma Thompson,1956-01-01,Retired,1,Single,1 children,Medium (12 months buffer),Stable pension,Capital preservation
+Robert Rodriguez,1990-01-01,Legal Partner,1,Married,0 children,Low (5-year horizon),Stable salaried income,Aggressive growth
+Akira Tanaka,1980-01-01,Real Estate Developer,4,Single,2 children,Low,Stable salaried income,Long-term capital growth
+Elena Petrova,1951-01-01,Retired,1,Single,0 children,High (immediate access),Stable pension,Balanced growth and income
+David Kim,1984-01-01,Managing Director of a KPMG,4,Married,One child born 2012,Medium (12 months emergency buffer required),Stable salaried income,Long-term capital growth with controlled drawdown
+Sophia Rossi,1974-01-01,Surgeon,5,Single,1 children,High (immediate access),Variable business income,Aggressive growth
+William Turner,1987-01-01,CFO,2,Single,0 children,High (immediate access),High but variable,Balanced growth and income
+Emily Harrison,1990-01-01,Managing Director,3,Single,2 children,Low (5-year horizon),Variable business income,Long-term capital growth
+Harrison Holdings Ltd.,N/A,Corporate Entity,3,,,Low,Corporate Revenue,Long-term capital growth
+Harrison Jr. Education Trust,N/A,Corporate Entity,4,,,Low (5-year horizon),Corporate Revenue,Capital preservation
+Sarah Wong,1973-01-01,Entrepreneur,1,Divorced,2 children,Low (5-year horizon),Stable salaried income,Regular income
+Michael Wang,1955-01-01,Retired,2,Married,0 children,Low (5-year horizon),Dividend/Rental income,Capital preservation
+James Chen,1953-01-01,Retired,2,Married,0 children,Medium (12 months buffer),Stable pension,Aggressive growth
+Catherine Li,1990-01-01,CFO,5,Married,3 children,Low,Stable pension,Balanced growth and income
+Emily Zhang,1986-01-01,Entrepreneur,3,Married,2 children,Low (5-year horizon),Variable business income,Capital preservation
+Linda Xu,1960-01-01,Retired,1,Married,0 children,Low,Stable pension,Aggressive growth
+David Wu,1956-01-01,Retired,2,Married,0 children,Low (5-year horizon),Stable pension,Aggressive growth
+Anna Lin,1953-01-01,Retired,1,Single,2 children,High (immediate access),Stable pension,Aggressive growth
+Victor Ng,1987-01-01,Managing Director,3,Divorced,1 children,Low,Variable business income,Regular income
+Rachel Ho,1979-01-01,CFO,4,Divorced,0 children,Low (5-year horizon),Dividend/Rental income,Long-term capital growth

@@ -34,3 +34,11 @@ Consider but not limited the followings to come up the pros and cons
 - Any concentration risk?  If yes, please specify precise the asset that have concentration - currency, US exposure, etc.
 - Analyze the pros and cons of the suggested holding with justification from the scenario analysis including bullish and bearish view
 ```
+
+## Alternative suggested product to consider
+
+```yaml
+instructions: |
+Suggest no more than 2 other products that the client may be interested.  
+Put justification on these recommendation.
+```

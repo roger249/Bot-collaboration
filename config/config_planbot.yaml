@@ -132,8 +132,8 @@ llm_models:
     temperature: 0.1
   poe_deepseek:
     provider: poe
-    model: deepseek-v3.2-exp
-    # model: deepseek-v3.2-fw
+    # model: deepseek-v3.2-exp
+    model: deepseek-v3.2-fw
     # model: deepseek-v4-pro-t # emit the stupid thinking, couldn't use
     temperature: 0.2
   poe_free:
@@ -153,3 +153,55 @@ llm_models:
   mock:
     provider: mock
     model: mock
+
+run_configurations:
+  schema_version: 1
+  # Pydantic model is built with the following defaults.
+  defaults:
+    transport: in_memory
+    retry_count: 0
+    continue_on_client_error: true
+    overwrite_output_file: true
+    max_parallel_clients: 1
+
+  client_product_fit_analysis_proposals:
+    # Generate one client_product_fit_analysis per selected client
+    # Contract: 'from' defines iteration count and order; alias values must resolve one value per iteration; every placeholder token used downstream must be defined in alias.
+    fan_out:
+      from: product_investor_matching_filter.output.client_profiles
+      alias: 
+        client_id: product_investor_matching_filter.output.client_ids
+      references_section_binding:
+        # below will go into the path specified in client_profiles section in the corresponding report.
+        - product_investor_matching_filter.output.client_profiles.{client_id}.md
+        - client_holdings_filter.output.by_client_id.{client_id}.md
+      execute:
+        - proposal: client_product_fit_analysis
+          output_file: runs/sample_outputs/client_product_fit_analysis_{client_id}.md
+        # Keep this as optional while validating first integrated flow.
+        - proposal: portfolio_review
+          enabled: false
+          output_file: runs/sample_outputs/portfolio_review_{client_id}.md
+
+  filters:
+    product_investor_matching_filter:
+      input:
+        proposal: product_investor_matching
+      output:
+        # This will extract each section with header match the following regex for use in future input. The content extracted just for one section and will not include the next section (next ## is encountered).
+        # the size of client_ids should be the same as the number of sections extracted in client_profiles.  Each client_id will be matched with one section in client_profiles based on the order of appearance.
+        # Internally this is stored as a map with client_id as the key.
+        client_profiles:
+          mode: split_sections_by_header
+          header_pattern: "## Client ID:"
+        client_ids:
+          mode: regex_capture_all
+          pattern: "(?<=## Client ID:)(.*?)(?=\\s|\\()"
+
+    # This filter accepts the input and generate holdings for each client id
+    client_holdings_filter:
+      input:
+        file: data/planbot/shared/client_profile/client_list.csv
+        client_ids: product_investor_matching_filter.output.client_ids
+      output:
+        by_client_id: map

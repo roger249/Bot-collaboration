@@ -3,7 +3,7 @@
 - Name: David Kim
 - Age: 42
 - Occupation: Managing Director of a KPMG
-- Risk tolerance: Moderate
+- Risk rating: 4
 - Married
 - One children born 2012
 
