@@ -1,0 +1,84 @@
+vars: {
+  d2-config: {
+    # layout-engine: elk
+    # Terminal theme code
+    theme-id: 1
+  }
+}
+
+# grid-columns: 3
+grid-rows: 2
+
+lg: Lead Generation {
+    shape: step
+    grid-columns: 2
+    grid-gap: 15
+    Focus Product; Popular Product
+    Client Need; Wallet Inflow
+    Client Need.style.fill: silver
+
+}
+ 
+client_int: Client Interaction {
+    shape: step
+    grid-gap: 15
+    grid-rows: 2
+    Portfolio Health Check
+    Chatbot
+    Chatbot.style.fill: silver
+}
+
+execution: Trade Execution {
+    grid-gap: 15
+    grid-rows: 2
+    # grid-columns: 3
+    RFQ;
+    confo: Confirmation Reconciliation
+    RFQ -> confo
+    tsg: Term sheet generation
+}
+
+lg -> client_int -> execution
+
+management: Management Report {
+    grid-gap: 15
+    grid-rows: 2
+    shape: document
+    RM performance
+    lcm: Lead Closing Metrics
+    lcm.style.fill: silver
+}
+
+rm: RM Intel {
+    grid-gap: 15
+    grid-columns: 2
+    # grid-rows: 2
+    Top buying products;
+    Top selling products;
+    Market Event;
+    Alerts: {
+        grid-rows: 2
+        grid-gap: 15
+        Client Fund Outflow;
+        clc:Critical Life Cycles\n (KI/KO, Maturity, etc);
+        clc.style.fill: silver
+    }
+}
+
+client_info: Client Information {
+    shape: cylinder
+    grid-gap: 15
+    grid-columns: 2
+    Demographics
+    Risk Profile
+    Portfolio
+}
+
+product: Product Information {
+    shape: cylinder
+    grid-gap: 15
+    grid-columns: 1
+    Product Profile; 
+    Product Risk Rating
+}
+
