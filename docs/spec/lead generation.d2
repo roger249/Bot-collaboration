@@ -1,0 +1,22 @@
+grid-columns: 2
+
+sources: Source of leads {
+    grid-columns: 1
+    grid-gap: 15
+    fp: 1. Focus Product\nProducts promoted by bank
+    pp: 2. Popular Product\nTop buying products
+    c_needs: 3. Client Needs identified from Client Profile
+    wallet: 4. Customer with Funding from Product Maturing, KI/KO.
+}
+
+Customers: Client Information\nRisk profile, Portfolio, and Preferences
+
+engine: Client Product Matching Engine
+
+customers -> engine
+customers -> sources -> engine
+
+potential_clients: List of Clients with the Recommended Product
+
+engine -> potential_clients: Generate potential clients with recommended products
+

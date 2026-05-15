@@ -190,6 +190,7 @@ class PipelineOrchestrator:
             data = yaml.safe_load(f)
         return data.get("run_configurations", {})
 
+
     def execute_filters(self, config: dict[str, Any]) -> FilterOutput:
         """
         Execute filter chain and return combined output.
@@ -199,40 +200,53 @@ class PipelineOrchestrator:
         - client_holdings_filter
         """
         filters_config = config.get("filters", {})
-        
+
         # Run product_investor_matching_filter
         pim_filter_cfg = filters_config.get("product_investor_matching_filter", {})
         pim_input = pim_filter_cfg.get("input", {})
         pim_proposal_name = pim_input.get("proposal", "product_investor_matching")
-        
-        # For now, assume proposal output is already available or needs to be generated
-        # This is a placeholder; in real implementation, you'd call run_crew_planbot
-        pim_output_path = self.root_dir / f"runs/{pim_proposal_name}" / "output.md"
-        if not pim_output_path.exists():
-            # Fallback to latest markdown artifact under runs/<proposal>/ when filename differs.
-            proposal_run_root = self.root_dir / f"runs/{pim_proposal_name}"
-            all_md = list(proposal_run_root.rglob("*.md")) if proposal_run_root.exists() else []
+        execute_proposal_first = pim_input.get("execute_proposal_first", False)
 
-            # Prefer model output files and skip prompt snapshots.
-            preferred_md = [
-                p
-                for p in all_md
-                if p.name != "prompt_snapshot.md" and p.stem.startswith(pim_proposal_name)
-            ]
-            md_candidates = preferred_md if preferred_md else [p for p in all_md if p.name != "prompt_snapshot.md"]
-            md_candidates = sorted(md_candidates, key=lambda p: p.stat().st_mtime, reverse=True)
-            if md_candidates:
-                pim_output_path = md_candidates[0]
-                self.logger.info("Using latest proposal output fallback: %s", pim_output_path)
-                pim_content = read_text(pim_output_path)
-            else:
+        pim_output_path = self.root_dir / f"runs/{pim_proposal_name}" / "output.md"
+
+        if execute_proposal_first:
+            # Here you would call the proposal execution logic (e.g., run_crew_planbot)
+            # For now, just log the intent
+            self.logger.info("execute_proposal_first is True: would execute proposal '%s' here.", pim_proposal_name)
+            # After execution, reload the output
+            if not pim_output_path.exists():
                 raise FileNotFoundError(
-                    "No product investor matching output found for pipeline filters. "
-                    f"Expected {pim_output_path} or any markdown artifact under {proposal_run_root}. "
-                    "Run 'run-planbot --proposal product_investor_matching' first."
+                    f"Proposal output not found after execution: {pim_output_path}. "
+                    f"Check proposal execution logic."
                 )
-        else:
             pim_content = read_text(pim_output_path)
+        else:
+            # Only use existing output, do not re-run proposal
+            if not pim_output_path.exists():
+                # Fallback to latest markdown artifact under runs/<proposal>/ when filename differs.
+                proposal_run_root = self.root_dir / f"runs/{pim_proposal_name}"
+                all_md = list(proposal_run_root.rglob("*.md")) if proposal_run_root.exists() else []
+
+                # Prefer model output files and skip prompt snapshots.
+                preferred_md = [
+                    p
+                    for p in all_md
+                    if p.name != "prompt_snapshot.md" and p.stem.startswith(pim_proposal_name)
+                ]
+                md_candidates = preferred_md if preferred_md else [p for p in all_md if p.name != "prompt_snapshot.md"]
+                md_candidates = sorted(md_candidates, key=lambda p: p.stat().st_mtime, reverse=True)
+                if md_candidates:
+                    pim_output_path = md_candidates[0]
+                    self.logger.info("Using latest proposal output fallback: %s", pim_output_path)
+                    pim_content = read_text(pim_output_path)
+                else:
+                    raise FileNotFoundError(
+                        "No product investor matching output found for pipeline filters. "
+                        f"Expected {pim_output_path} or any markdown artifact under {proposal_run_root}. "
+                        "Set execute_proposal_first: true to generate output or run 'run-planbot --proposal product_investor_matching' first."
+                    )
+            else:
+                pim_content = read_text(pim_output_path)
 
         pim_output_cfg = pim_filter_cfg.get("output", {})
         client_profiles_cfg = pim_output_cfg.get("client_profiles", {})

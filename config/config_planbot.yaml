@@ -128,12 +128,13 @@ portfolio_review:
 llm_models:
   poe_qwen:
     provider: poe
-    model: qwen3.6-plus
+    model: qwen3.5-397b-a17b-t
+    # model: qwen3.6-plus
     temperature: 0.1
   poe_deepseek:
     provider: poe
-    # model: deepseek-v3.2-exp
-    model: deepseek-v3.2-fw
+    model: deepseek-v3.2-exp
+    # model: deepseek-v3.2-fw
     # model: deepseek-v4-pro-t # emit the stupid thinking, couldn't use
     temperature: 0.2
   poe_free:
@@ -189,6 +190,7 @@ run_configurations:
     product_investor_matching_filter:
       input:
         proposal: product_investor_matching
+        execute_proposal_first: false
       output:
         # This will extract each section with header match the following regex for use in future input. The content extracted just for one section and will not include the next section (next ## is encountered).
         # the size of client_ids should be the same as the number of sections extracted in client_profiles.  Each client_id will be matched with one section in client_profiles based on the order of appearance.
