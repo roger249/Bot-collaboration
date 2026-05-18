@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
+import os
+import re
+import sys
+import time
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -36,6 +42,7 @@ from src.shared.run_utils import create_run_root
 
 LOGGER = logging.getLogger(__name__)
 CHAT_HISTORY_TRANSPORT_LOGGER = logging.getLogger("chat_history.transport")
+CHAT_HISTORY_TOOL_LOGGER = logging.getLogger("chat_history.tool")
 
 
 def _load_yaml(path: Path) -> dict:
@@ -62,10 +69,174 @@ def _build_crew_llm(app_config: AppConfig, cfg) -> LLM:
     )
 
 
+def _build_tool_instance(tool_name: str) -> Any:
+    normalized = str(tool_name).strip()
+    if not normalized:
+        raise ValueError("Agent tool name cannot be empty.")
+
+    if normalized == "Crawl4AI":
+        try:
+            from src.planbot.crawl4ai_tool import Crawl4AITool
+        except ImportError as exc:
+            raise RuntimeError(
+                "Crawl4AI dependency is missing. Install it with: uv pip install crawl4ai && crawl4ai-setup"
+            ) from exc
+
+        return Crawl4AITool()
+
+    if normalized == "ScrapeWebsiteTool":
+        try:
+            from crewai_tools import ScrapeWebsiteTool
+        except ImportError as exc:
+            raise RuntimeError(
+                "ScrapeWebsiteTool dependency is missing. Install it with: uv pip install crewai-tools"
+            ) from exc
+
+        return ScrapeWebsiteTool()
+
+    if normalized != "FirecrawlScrapeWebsiteTool":
+        raise ValueError(f"Unsupported tool '{normalized}' in agent config.")
+
+    firecrawl_api_key = os.getenv("FIRECRAWL_API_KEY", "").strip()
+    if not firecrawl_api_key:
+        raise ValueError(
+            "FIRECRAWL_API_KEY is required when using FirecrawlScrapeWebsiteTool. "
+            "Set it in your environment or .env file."
+        )
+
+    try:
+        from crewai_tools import FirecrawlScrapeWebsiteTool
+    except ImportError as exc:
+        raise RuntimeError(
+            "Firecrawl tool dependency is missing. Install it with: uv pip install firecrawl-py crewai-tools"
+        ) from exc
+
+    try:
+        return FirecrawlScrapeWebsiteTool(api_key=firecrawl_api_key)
+    except TypeError:
+        # Some versions read FIRECRAWL_API_KEY directly from environment.
+        return FirecrawlScrapeWebsiteTool()
+
+
+def _serialize_tool_log_payload(value: object) -> str:
+    try:
+        return _sanitize_transport_body(json.dumps(value, ensure_ascii=False, default=str))
+    except TypeError:
+        return _sanitize_transport_body(str(value))
+
+
+def _instrument_tool(tool: Any, configured_name: str) -> Any:
+    tool_cls = tool.__class__
+
+    def _wrap_class_method(method_name: str) -> None:
+        original = getattr(tool_cls, method_name, None)
+        if not callable(original) or getattr(original, "_tool_logging_wrapped", False):
+            return
+
+        def _logged(self, *args, **kwargs):
+            call_id = uuid.uuid4().hex[:12]
+            started = time.perf_counter()
+            runtime_tool_name = str(getattr(self, "name", configured_name) or configured_name)
+            CHAT_HISTORY_TOOL_LOGGER.debug(
+                "tool invoke\n=== id ===\n%s\n=== tool ===\n%s\n=== method ===\n%s\n=== params ===\n%s",
+                call_id,
+                runtime_tool_name,
+                method_name,
+                _serialize_tool_log_payload({"args": args, "kwargs": kwargs}),
+            )
+            try:
+                result = original(self, *args, **kwargs)
+            except Exception as exc:
+                duration_ms = (time.perf_counter() - started) * 1000
+                CHAT_HISTORY_TOOL_LOGGER.debug(
+                    "tool return\n=== id ===\n%s\n=== tool ===\n%s\n=== method ===\n%s\n=== status ===\nerror\n=== duration_ms ===\n%.2f\n=== response ===\n%s",
+                    call_id,
+                    runtime_tool_name,
+                    method_name,
+                    duration_ms,
+                    _serialize_tool_log_payload({"error_type": type(exc).__name__, "error": str(exc)}),
+                )
+                raise
+
+            duration_ms = (time.perf_counter() - started) * 1000
+            CHAT_HISTORY_TOOL_LOGGER.debug(
+                "tool return\n=== id ===\n%s\n=== tool ===\n%s\n=== method ===\n%s\n=== status ===\nsuccess\n=== duration_ms ===\n%.2f\n=== response ===\n%s",
+                call_id,
+                runtime_tool_name,
+                method_name,
+                duration_ms,
+                _serialize_tool_log_payload({"result": result}),
+            )
+            return result
+
+        setattr(_logged, "_tool_logging_wrapped", True)
+        setattr(tool_cls, method_name, _logged)
+
+    # CrewAI tools may execute through either run or _run depending on version.
+    _wrap_class_method("run")
+    _wrap_class_method("_run")
+    return tool
+
+
+_ANSI_ESCAPE = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])", re.ASCII)
+
+
+@contextlib.contextmanager
+def _tee_stdout_to_log(log_path: Path):
+    """Tee sys.stdout to log_path (ANSI codes stripped) while keeping live console output."""
+    original_stdout = sys.stdout
+    with log_path.open("a", encoding="utf-8") as _log_file:
+
+        class _TeeStream:
+            def write(self, text: str) -> int:
+                original_stdout.write(text)
+                clean = _ANSI_ESCAPE.sub("", text)
+                if clean:
+                    _log_file.write(clean)
+                return len(text)
+
+            def flush(self) -> None:
+                original_stdout.flush()
+                _log_file.flush()
+
+            def isatty(self) -> bool:
+                return False
+
+            @property
+            def encoding(self) -> str:
+                return getattr(original_stdout, "encoding", "utf-8")
+
+            @property
+            def errors(self) -> str | None:
+                return getattr(original_stdout, "errors", None)
+
+        sys.stdout = _TeeStream()  # type: ignore[assignment]
+        try:
+            yield
+        finally:
+            sys.stdout = original_stdout
+
+
+def _resolve_agent_tools(agent_def: dict[str, Any]) -> list[Any]:
+    tool_names = agent_def.get("tools")
+    if not tool_names:
+        return []
+
+    if not isinstance(tool_names, list):
+        raise ValueError("Agent 'tools' field must be a list of tool names.")
+
+    # Add logging for tool resolution
+    LOGGER.info("Resolving tools: %s", tool_names)
+
+    return [_instrument_tool(_build_tool_instance(name), str(name)) for name in tool_names]
+
+
 def _generate_with_crew(
     app_config: AppConfig,
     cfg,
     user_prompt: str,
+    crewai_verbose: bool = False,
+    log_path: Path | None = None,
 ) -> str:
     agents_cfg = _load_yaml(cfg.crewai_config_folder / "agents.yaml")
     tasks_cfg = _load_yaml(cfg.crewai_config_folder / "tasks.yaml")
@@ -87,13 +258,18 @@ def _generate_with_crew(
     if agent_def is None:
         raise ValueError("No agent definitions found in CrewAI agents config.")
 
+    agent_tools = _resolve_agent_tools(agent_def)
+    if agent_tools:
+        LOGGER.info("Resolved %s tool(s) for agent '%s'", len(agent_tools), agent_name or "<default>")
+
     agent = Agent(
         role=agent_def["role"],
         goal=agent_def["goal"],
         backstory=agent_def["backstory"].strip(),
         llm=llm,
+        tools=agent_tools,
         allow_delegation=False,
-        verbose=False,
+        verbose=crewai_verbose,
     )
 
     task = Task(
@@ -106,7 +282,7 @@ def _generate_with_crew(
         agents=[agent],
         tasks=[task],
         process=Process.sequential,
-        verbose=False,
+        verbose=crewai_verbose,
     )
 
     transport_payload = json.dumps(
@@ -131,7 +307,11 @@ def _generate_with_crew(
 
     LOGGER.info("Sending request via CrewAI (model=%s, provider=%s)", cfg.model, cfg.provider)
     try:
-        result = crew.kickoff()
+        if crewai_verbose and log_path is not None:
+            with _tee_stdout_to_log(log_path):
+                result = crew.kickoff()
+        else:
+            result = crew.kickoff()
     except Exception as exc:
         CHAT_HISTORY_TRANSPORT_LOGGER.debug(
             "transport response\n=== status ===\nerror\n=== body ===\n%s",
@@ -274,7 +454,7 @@ def run_crew_planbot(
         )
         output = build_client(app_config, "planbot", bot_config).generate(request)
     else:
-        output = _generate_with_crew(app_config, cfg, user_prompt)
+        output = _generate_with_crew(app_config, cfg, user_prompt, crewai_verbose=app_config.logging_crewai_verbose, log_path=log_path)
 
     output = _normalize_planbot_output(output)
 

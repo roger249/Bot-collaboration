@@ -5,7 +5,7 @@ from typing import Any
 
 import yaml
 import logging
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, DirectoryPath, ValidationError
 
 
 class ReferenceSectionConfig(BaseModel):
@@ -89,9 +89,9 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
     class ProposalModel(BaseModel):
         task: str | None = None
         output_root: Path | str | None = None
-        data_root: Path | str | None = None
-        references_root: Path | str | None = None
-        crewai_config_folder: Path | str | None = None
+        data_root: DirectoryPath | None = None
+        references_root: DirectoryPath | None = None
+        crewai_config_folder: DirectoryPath | None = None
         output_filename: str | None = None
         # Structured references dict: section_name -> list of {name, purpose}
         references: dict[str, Any]

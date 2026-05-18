@@ -5,6 +5,22 @@ common:
 # setting in the proposla section will override the common setting
   crewai_config_folder: config/crewai/planbot
 
+stock_analysis_proposal:
+  task: stock_analysis_proposal_task
+  data_root: data/planbot/stock_analysis
+  crewai_config_folder: data/planbot/stock_analysis/crewai
+  references_root: data/planbot/stock_analysis
+  output_root: runs/stock_analysis
+  output_filename: stock_analysis_proposal.md
+  references:
+    proposal_instructions_and_format:
+      - name: proposal_instructions/*.md
+        purpose: Instructions and format for generating the proposal
+    news_and_data:
+      - name: news_and_data/**/*.md
+        purpose: Recent news and data for the stock analysis
+  llm_model: poe_deepseek_tool
+
 reinvestment_proposal:
   task: reinvestment_proposal_task
   data_root: data/planbot/reinvestment_proposal
@@ -126,6 +142,12 @@ portfolio_review:
   llm_model: poe_deepseek
 
 llm_models:
+  poe_deepseek_tool:
+    provider: poe
+    # model: deepseek-v4-pro-t # emit the stupid thinking, couldn't use
+    # model: minimax-m2.7-fw # emit the stupid thinking, couldn't use
+    model: qwen3-235b-a22b-n
+    temperature: 0.2
   poe_qwen:
     provider: poe
     model: qwen3.5-397b-a17b-t
