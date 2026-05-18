@@ -50,11 +50,11 @@ providers:
   deepseek:
     api_key_env: DEEPSEEK_API_KEY
     base_url: https://api.deepseek.com
-    timeout_seconds: 120
+    timeout_seconds: 1800
   poe:
     api_key_env: POE_API_KEY
     base_url: https://api.poe.com/v1
-    timeout_seconds: 3600
+    timeout_seconds: 300
 
 # Below are configuration specific to the author-reviewer workflow. 
 

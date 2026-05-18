@@ -38,6 +38,42 @@ def test_build_tool_instance_supports_crawl4ai(monkeypatch):
     assert isinstance(tool, FakeCrawl4AITool)
 
 
+def test_scrape_website_tool_macrotrends_pe_ratio_page():
+    """Integration test: ScrapeWebsiteTool should fetch Macrotrends GOOG P/E page content."""
+    tool = crew_workflow._build_tool_instance("ScrapeWebsiteTool")
+
+    result = tool._run(website_url="https://www.macrotrends.net/stocks/charts/GOOG/alphabet/pe-ratio")
+
+    assert isinstance(result, str)
+    result_lower = result.lower()
+    if "just a moment" in result_lower and "enable javascript and cookies" in result_lower:
+        pytest.xfail("Macrotrends is protected by Cloudflare challenge for ScrapeWebsiteTool requests")
+
+    assert len(result) > 500, f"Expected substantial scraped content, got {len(result)} chars"
+    assert any(
+        keyword in result_lower
+        for keyword in ["alphabet", "goog", "p/e", "pe ratio", "macrotrends"]
+    ), "Scraped output did not include expected Macrotrends GOOG P/E ratio terms"
+
+
+def test_crawl4ai_macrotrends_hardened_config():
+    """Integration test: Crawl4AI should return meaningful markdown for Macrotrends GOOG P/E page."""
+    tool = crawl4ai_tool.Crawl4AITool()
+
+    result = tool._run("https://www.macrotrends.net/stocks/charts/GOOG/alphabet/pe-ratio")
+
+    assert isinstance(result, str)
+    assert len(result) > 500, f"Expected substantial scraped content, got {len(result)} chars"
+
+    result_lower = result.lower()
+    assert "just a moment" not in result_lower, "Cloudflare challenge page returned instead of Macrotrends data"
+    assert "enable javascript and cookies" not in result_lower, "Blocked by anti-bot challenge"
+    assert any(
+        keyword in result_lower
+        for keyword in ["alphabet", "goog", "p/e", "pe ratio", "macrotrends"]
+    ), "Macrotrends markdown did not include expected GOOG P/E terms"
+
+
 def test_generate_with_crew_attaches_resolved_tools(monkeypatch, tmp_path: Path):
     captured: dict[str, object] = {}
 
@@ -117,10 +153,46 @@ def test_crawl4ai_tool_uses_raw_markdown_object(monkeypatch):
     assert tool._run("https://example.com") == "md body"
 
 
+def test_crawl4ai_yahoo_finance_returns_valid_markdown():
+    """Integration test: verify Crawl4AI can fetch and return markdown from Yahoo Finance.
+
+    Yahoo Finance uses client-side JS rendering. The tool fetches the page and
+    returns whatever content is available after the configured delay.
+    """
+    tool = crawl4ai_tool.Crawl4AITool()
+
+    result = tool._run("https://finance.yahoo.com/quote/GOOG")
+
+    # Verify we got substantial content
+    assert result is not None
+    assert len(result) > 500, f"Expected substantial content, got {len(result)} chars"
+
+    # Verify page-not-found error is absent
+    assert "does not exist" not in result.lower(), "Page not found error"
+
+    # Verify the response is from the correct Yahoo Finance GOOG page
+    result_lower = result.lower()
+    assert any(
+        keyword in result_lower
+        for keyword in ["EPS", "alphabet", "PE Ratio", "quote", "stock", "market", "trade", "share", "yahoo"]
+    ), "Page doesn't contain expected Yahoo Finance / GOOG content"
+
+    print(f"  Content length: {len(result)} characters")
+    print(f"  Preview: {result[:200]}...")
+
+
 def test_crawl_uses_default_markdown_generator(monkeypatch):
     captured: dict[str, object] = {}
 
+    class FakeStrategy:
+        def set_hook(self, name: str, fn) -> None:
+            captured.setdefault("hooks", {})[name] = fn
+
     class FakeCrawler:
+        def __init__(self, config=None):
+            captured["browser_config"] = config
+            self.crawler_strategy = FakeStrategy()
+
         async def __aenter__(self):
             return self
 
@@ -129,12 +201,55 @@ def test_crawl_uses_default_markdown_generator(monkeypatch):
 
         async def arun(self, *, url, config):
             captured["url"] = url
-            captured["config"] = config
+            captured["crawler_config"] = config
             return types.SimpleNamespace(success=True, error_message=None)
 
-    monkeypatch.setattr(crawl4ai_tool, "AsyncWebCrawler", lambda: FakeCrawler())
+    monkeypatch.setattr(crawl4ai_tool, "AsyncWebCrawler", FakeCrawler)
 
     asyncio.run(crawl4ai_tool._crawl("https://example.com"))
 
     assert captured["url"] == "https://example.com"
-    assert isinstance(captured["config"].markdown_generator, crawl4ai_tool.DefaultMarkdownGenerator)
+    assert isinstance(captured["crawler_config"].markdown_generator, crawl4ai_tool.DefaultMarkdownGenerator)
+    # Verify minimal non-headless browser config (stealth stripped to avoid CF detection)
+    assert captured["browser_config"].browser_type == "chromium"
+    assert captured["browser_config"].headless is False
+    assert "--disable-blink-features=AutomationControlled" in captured["browser_config"].extra_args
+    # Standard path: domcontentloaded + long delay avoids SPA networkidle timeouts
+    assert captured["crawler_config"].cache_mode == crawl4ai_tool.CacheMode.BYPASS
+    assert captured["crawler_config"].wait_until == "domcontentloaded"
+    assert captured["crawler_config"].delay_before_return_html == 8.0
+    # Standard (non-CF) domains must NOT install the CF challenge hook
+    assert "after_goto" not in captured.get("hooks", {}), "CF hook should not be set for non-CF domains"
+
+
+def test_crawl_uses_cf_config_for_macrotrends(monkeypatch):
+    """Macrotrends must use the CF-hardened path: domcontentloaded + after_goto hook."""
+    captured: dict[str, object] = {}
+
+    class FakeStrategy:
+        def set_hook(self, name: str, fn) -> None:
+            captured.setdefault("hooks", {})[name] = fn
+
+    class FakeCrawler:
+        def __init__(self, config=None):
+            captured["browser_config"] = config
+            self.crawler_strategy = FakeStrategy()
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return None
+
+        async def arun(self, *, url, config):
+            captured["url"] = url
+            captured["crawler_config"] = config
+            return types.SimpleNamespace(success=True, error_message=None)
+
+    monkeypatch.setattr(crawl4ai_tool, "AsyncWebCrawler", FakeCrawler)
+
+    asyncio.run(crawl4ai_tool._crawl("https://www.macrotrends.net/stocks/charts/GOOG/alphabet/pe-ratio"))
+
+    assert captured["crawler_config"].wait_until == "domcontentloaded"
+    assert captured["crawler_config"].delay_before_return_html == 3.0
+    assert "after_goto" in captured.get("hooks", {}), "Expected CF challenge hook for macrotrends.net"

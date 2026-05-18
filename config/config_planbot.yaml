@@ -19,7 +19,8 @@ stock_analysis_proposal:
     news_and_data:
       - name: news_and_data/**/*.md
         purpose: Recent news and data for the stock analysis
-  llm_model: poe_deepseek_tool
+  llm_model: deepseek_tool 
+  # deepseek_tool (deepseek-v4-flash) ignores CrewAI ReAct stop-sequences and returns Final Answer immediately
 
 reinvestment_proposal:
   task: reinvestment_proposal_task
@@ -142,6 +143,10 @@ portfolio_review:
   llm_model: poe_deepseek
 
 llm_models:
+  deepseek_tool:
+    provider: deepseek
+    model: deepseek-v4-flash
+    # model: deepseek-v4-pro. never returns
   poe_deepseek_tool:
     provider: poe
     # model: deepseek-v4-pro-t # emit the stupid thinking, couldn't use

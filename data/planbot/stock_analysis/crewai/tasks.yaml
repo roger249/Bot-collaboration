@@ -3,13 +3,13 @@ stock_analysis_proposal_task:
   agent: professional_stock_investor_agent
 
   description: |
-    - The stock ticker to analysis is provided 
+    - The stock ticker to analysis is provided in proposal_instructions/stock_ticker.md
     - Follow the proposal_instructions/proposal_format.md under the reference section to come up the proposal.  This includes the following tasks
       - Gather the data required for the analysis including below from websites and the news_and_data provided in the reference materials.  
         - the historical price ratio 
         - Recent news and outlook about the company
         - Recent market outlook on the sector and the overall market
-    - Please limit your use of the tools to 5 invocations to minimize run-time.
+      - Please limit your use of the tools to 15 invocations to minimize run-time.
     - Always use non-adjusted stock price for the analysis and proposal.
     - The reference materials are provided at the end of the user prompt as structured JSON that includes below:
       - proposal_instruction_and_format: Instructions and format for generating the proposal
@@ -22,5 +22,6 @@ stock_analysis_proposal_task:
     A report in markdown format.
     - The instruction and the proposal format is in proposal_instructions/proposal_format.md.  Follow the section requirement and examples in the markdown.
     - Use tables where they provide a clearer and more concise view.
+    - All figures in the table shall be right aligned.
     - Try to use point form when its appropriate.
-    - Do not include YAML blocks, extra section, or commentary.
+    - Do not include YAML blocks, or commentary.

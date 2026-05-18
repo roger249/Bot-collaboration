@@ -29,7 +29,7 @@ from src.planbot.workflow import (
     _resolve_output_filename,
 )
 from src.shared.config_loader import AppConfig, BotConfig
-from src.shared.io_utils import read_text, write_text
+from src.shared.io_utils import write_text
 from src.shared.llm_client import (
     LLMRequest,
     _resolve_api_key,
@@ -191,13 +191,20 @@ def _tee_stdout_to_log(log_path: Path):
             def write(self, text: str) -> int:
                 original_stdout.write(text)
                 clean = _ANSI_ESCAPE.sub("", text)
-                if clean:
-                    _log_file.write(clean)
+                if clean and not _log_file.closed:
+                    try:
+                        _log_file.write(clean)
+                    except ValueError:
+                        pass  # file closed by context manager before deferred event fired
                 return len(text)
 
             def flush(self) -> None:
                 original_stdout.flush()
-                _log_file.flush()
+                if not _log_file.closed:
+                    try:
+                        _log_file.flush()
+                    except ValueError:
+                        pass
 
             def isatty(self) -> bool:
                 return False
@@ -402,16 +409,9 @@ def run_crew_planbot(
     urls = list(dict.fromkeys([*cfg.urls, *urls_from_references]))
     LOGGER.info("Resolved %s URL(s)", len(urls))
 
-    no_web_note: str | None = None
-    if cfg.shared_no_web_note_file and cfg.shared_no_web_note_file.exists():
-        no_web_note = read_text(cfg.shared_no_web_note_file)
-
     reference_payload_json = _build_reference_payload(
         root_dir=app_config.root_dir,
         loaded_sections=loaded_sections,
-        urls=urls,
-        no_web_note=no_web_note,
-        web_access=cfg.web_access,
     )
 
     tasks_cfg = _load_yaml(cfg.crewai_config_folder / "tasks.yaml")
