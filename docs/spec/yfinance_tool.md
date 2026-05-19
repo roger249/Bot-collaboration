@@ -6,6 +6,6 @@ A reference is in https://github.com/rocketseat-education/semana-tech-ia-01/blob
 
 The following data would like to be retrieved.
 
-- Income statement
+- Income/Cashflow statement
 - historical finance ratio
 - Current price, P/E, P/S, Stock quote

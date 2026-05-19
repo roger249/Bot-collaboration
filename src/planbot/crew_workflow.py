@@ -119,6 +119,16 @@ def _build_tool_instance(tool_name: str) -> Any:
             tool = ScrapflyScrapeWebsiteTool()
             return _with_web_tool_input_guidance(tool)
 
+    if normalized == "YFinance":
+        try:
+            from src.planbot.yfinance_tool import YFinanceTool
+        except ImportError as exc:
+            raise RuntimeError(
+                "YFinance tool dependency is missing. Install it with: uv pip install yfinance"
+            ) from exc
+
+        return YFinanceTool()
+
     if normalized != "FirecrawlScrapeWebsiteTool":
         raise ValueError(f"Unsupported tool '{normalized}' in agent config.")
 
