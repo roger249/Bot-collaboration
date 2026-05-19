@@ -6,7 +6,6 @@ Stock Analysis: <Ticker>
 instructions: |
 Summarize in 3-4 sentences:
 - Show in point form the basic information including company ticker, last closing price, TTM P/E and data date.
-- Please crosscheck the last closing price & TTM PE from finance.yahoo.com against www.nasdaq.com to avoid any tool error.  No output from this check if the relative error < 2%.  
 - Describe why market sentiment justify the current price ratio
 - What's catalyst for the recommendation for this stock relative to its current valuation
 ```
@@ -33,7 +32,7 @@ Summarize in 3-4 sentences:
 # Historical Financial Performance and Pricing Ratio
 ```yaml
 instructions: |
-- Tabulate the following price ratio in rows for the last 8 years (columns) in a table format.  Low/High is the lowest and highest of the corresponding year.
+- Tabulate the following price ratio in rows for the last 5 years (columns) in a table format.  Low/High is the lowest and highest of the corresponding year.
 
     - Revenue
     - EPS

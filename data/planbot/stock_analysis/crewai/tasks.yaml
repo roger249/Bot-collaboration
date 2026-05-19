@@ -15,6 +15,7 @@ stock_analysis_proposal_task:
       - proposal_instruction_and_format: Instructions and format for generating the proposal
       - news_and_data: A collection of news and data relevant to the analysis and proposal.  
     - Please ensure the stock name is same as the one in the stock_ticker.md
+    - Some preferred websites are listed in news_and_data/preferred_websites.md. 
     - The domain in the file news_and_data/blocked_domains.md should not be accessed.
   
   expected_output: |

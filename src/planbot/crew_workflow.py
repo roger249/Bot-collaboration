@@ -82,7 +82,8 @@ def _build_tool_instance(tool_name: str) -> Any:
                 "Crawl4AI dependency is missing. Install it with: uv pip install crawl4ai && crawl4ai-setup"
             ) from exc
 
-        return Crawl4AITool()
+        tool = Crawl4AITool()
+        return _with_web_tool_input_guidance(tool)
 
     if normalized == "ScrapeWebsiteTool":
         try:
@@ -92,7 +93,31 @@ def _build_tool_instance(tool_name: str) -> Any:
                 "ScrapeWebsiteTool dependency is missing. Install it with: uv pip install crewai-tools"
             ) from exc
 
-        return ScrapeWebsiteTool()
+        tool = ScrapeWebsiteTool()
+        return _with_web_tool_input_guidance(tool)
+
+    if normalized == "ScrapflyScrapeWebsiteTool":
+        scrapfly_api_key = os.getenv("SCRAPFLY_API_KEY", "").strip()
+        if not scrapfly_api_key:
+            raise ValueError(
+                "SCRAPFLY_API_KEY is required when using ScrapflyScrapeWebsiteTool. "
+                "Set it in your environment or .env file."
+            )
+
+        try:
+            from crewai_tools import ScrapflyScrapeWebsiteTool
+        except ImportError as exc:
+            raise RuntimeError(
+                "Scrapfly tool dependency is missing. Install it with: uv pip install crewai-tools"
+            ) from exc
+
+        try:
+            tool = ScrapflyScrapeWebsiteTool(api_key=scrapfly_api_key)
+            return _with_web_tool_input_guidance(tool)
+        except TypeError:
+            # Some versions read SCRAPFLY_API_KEY directly from environment.
+            tool = ScrapflyScrapeWebsiteTool()
+            return _with_web_tool_input_guidance(tool)
 
     if normalized != "FirecrawlScrapeWebsiteTool":
         raise ValueError(f"Unsupported tool '{normalized}' in agent config.")
@@ -112,10 +137,27 @@ def _build_tool_instance(tool_name: str) -> Any:
         ) from exc
 
     try:
-        return FirecrawlScrapeWebsiteTool(api_key=firecrawl_api_key)
+        tool = FirecrawlScrapeWebsiteTool(api_key=firecrawl_api_key)
+        return _with_web_tool_input_guidance(tool)
     except TypeError:
         # Some versions read FIRECRAWL_API_KEY directly from environment.
-        return FirecrawlScrapeWebsiteTool()
+        tool = FirecrawlScrapeWebsiteTool()
+        return _with_web_tool_input_guidance(tool)
+
+
+def _with_web_tool_input_guidance(tool: Any) -> Any:
+    """Append strict Action Input guidance to web-retrieval tool descriptions."""
+    guidance = (
+        " Action Input format rule: provide a single key-value dictionary per tool call."
+        " For web scraping tools, pass exactly one URL in one call, for example"
+        " {\"website_url\": \"https://example.com\"} or {\"url\": \"https://example.com\"}."
+        " Do not pass a list of dictionaries in one call."
+    )
+
+    description = str(getattr(tool, "description", "") or "")
+    if guidance.strip() not in description:
+        setattr(tool, "description", (description + guidance).strip())
+    return tool
 
 
 def _serialize_tool_log_payload(value: object) -> str:
