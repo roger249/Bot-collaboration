@@ -80,7 +80,7 @@ product_investor_matching:
         purpose: Overview of the CSV file and the structure of the product catalogs
       - name: ../shared/product_catalog/*.csv
         purpose: Details of the investable assets available for recommendation in csv format
-  llm_model: poe_deepseek
+  llm_model: deepseek_tool
 
 client_product_fit_analysis:
   task: client_product_fit_analysis_task
@@ -160,8 +160,8 @@ llm_models:
     temperature: 0.1
   poe_deepseek:
     provider: poe
-    model: deepseek-v3.2-exp
-    # model: deepseek-v3.2-fw
+    # model: deepseek-v3.2-exp
+    model: deepseek-v3.2-fw
     # model: deepseek-v4-pro-t # emit the stupid thinking, couldn't use
     temperature: 0.2
   poe_free:
