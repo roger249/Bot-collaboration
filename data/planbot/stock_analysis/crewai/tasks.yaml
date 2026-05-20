@@ -17,6 +17,7 @@ stock_analysis_proposal_task:
     - Please ensure the stock name is same as the one in the stock_ticker.md
     - Some preferred websites are listed in news_and_data/preferred_websites.md. 
     - The domain in the file news_and_data/blocked_domains.md should not be accessed.
+    - All analysis and figure presented in the reporting currency.  No FX conversion is needed.
   
   expected_output: |
 
@@ -25,4 +26,5 @@ stock_analysis_proposal_task:
     - Use tables where they provide a clearer and more concise view.
     - All figures in the table shall be right aligned.
     - Try to use point form when its appropriate.
+    - All output begins exactly with the line: "---** Output of suggestion as below **---"
     - Do not include YAML blocks, or commentary.

@@ -7,7 +7,7 @@ instructions: |
 Summarize in 3-4 sentences:
 - Show in point form the basic information including company ticker, last closing price, TTM P/E and data date.
 - Describe why market sentiment justify the current price ratio
-- What's catalyst for the recommendation for this stock relative to its current valuation
+- List the major upside, and downside for this stock relative to its current valuation
 ```
 
 # Company background
