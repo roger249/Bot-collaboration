@@ -5,3 +5,4 @@ __pycache__/
 .env
 .venv/
 data/planbot/**/*.pdf
+data/planbot/stock_analysis/news_and_data/

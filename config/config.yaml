@@ -10,6 +10,37 @@ logging:
   chat_history_redact_fields:
     - authorization
     - api_key
+  crewai_verbose: true
+
+llm_models:
+  poe_qwen:
+    provider: poe
+    model: qwen3.5-397b-a17b-t
+    # model: qwen3.6-plus
+    temperature: 0.1
+  poe_deepseek:
+    provider: poe
+    model: deepseek-v3.2-exp
+    # model: deepseek-v3.2-fw
+    # model: deepseek-v4-pro-t # emit the stupid thinking, couldn't use
+    temperature: 0.2
+  poe_free:
+    provider: poe
+    model: gemma-4-31b
+    temperature: 0.1
+  poe_phi:
+    provider: poe
+    model: phi-4-di
+    temperature: 0.1   
+  or_gemma:
+    provider: openrouter
+    model: google/gemma-4-31b-it:free
+    temperature: 0.1
+  # model: google/gemma-4-31b-it:free
+  # model: qwen/qwen3-next-80b-a3b-instruct:free
+  mock:
+    provider: mock
+    model: mock
 
 providers:
   openrouter:
@@ -19,7 +50,7 @@ providers:
   deepseek:
     api_key_env: DEEPSEEK_API_KEY
     base_url: https://api.deepseek.com
-    timeout_seconds: 120
+    timeout_seconds: 1800
   poe:
     api_key_env: POE_API_KEY
     base_url: https://api.poe.com/v1

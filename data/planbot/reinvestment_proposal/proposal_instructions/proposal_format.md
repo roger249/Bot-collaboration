@@ -6,7 +6,7 @@ Reinvestment Analysis: "<Client>"
 instructions: |
 Summarize in 3-4 sentences:
 - The current product will be matured.
-- Recommended product for the reinvestment after the funding released from the maturing product.
+- Recommended product for the reinvestment after the funding released from the maturing product.  Preferably on JP Morgagn Range Accrual Note (N02952)
 - Why the product is recommended.
 - Expected outcome (e.g., "improve long-term growth while managing downside risk")
 ```

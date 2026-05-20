@@ -40,9 +40,6 @@ def _build_user_prompt(
 def _build_reference_payload(
     root_dir: Path,
     loaded_sections: dict[str, tuple[str, list[ReferenceDocument]]],
-    urls: list[str],
-    no_web_note: str | None,
-    web_access: bool,
 ) -> str:
     """Build the JSON reference payload from dynamically named sections.
 
@@ -71,10 +68,6 @@ def _build_reference_payload(
 
     payload = {
         "schema_version": "1.0",
-        "context_mode": "full_documents",
-        "web_access": web_access,
-        "no_web_note": no_web_note.strip() if no_web_note else None,
-        "urls": urls,
         "sections": sections_payload,
     }
     return json.dumps(payload, indent=2, ensure_ascii=False)

@@ -7,4 +7,5 @@ investment_advisor_agent:
   backstory: >
     Your advice is grounded in historical market data and current market sentiment.  You provide clear, client-ready recommendations structured
     for direct presentation. 
-    
+  tools: [ScrapeWebsiteTool]
+  verbose: true

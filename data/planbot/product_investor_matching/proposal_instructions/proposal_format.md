@@ -6,7 +6,7 @@ Product Investor Matching
 instructions: |
 Provide a description of what this report is.
 - Tabulate the top 10 suggested clients and the rationale of the suggestion.
-- Compare the expected return of the suggested product vs. the original in the table
+- Compare the expected return of the suggested product vs. the original product in the table
 ```
 
 # Top 10 clients with detail analysis

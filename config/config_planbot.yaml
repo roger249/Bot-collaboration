@@ -5,6 +5,23 @@ common:
 # setting in the proposla section will override the common setting
   crewai_config_folder: config/crewai/planbot
 
+stock_analysis_proposal:
+  task: stock_analysis_proposal_task
+  data_root: data/planbot/stock_analysis
+  crewai_config_folder: data/planbot/stock_analysis/crewai
+  references_root: data/planbot/stock_analysis
+  output_root: runs/stock_analysis
+  output_filename: stock_analysis_proposal.md
+  references:
+    proposal_instructions_and_format:
+      - name: proposal_instructions/*.md
+        purpose: Instructions and format for generating the proposal
+    news_and_data:
+      - name: news_and_data/**/*.md
+        purpose: Recent news and data for the stock analysis
+  llm_model: deepseek_tool 
+  # deepseek_tool (deepseek-v4-flash) ignores CrewAI ReAct stop-sequences and returns Final Answer immediately
+
 reinvestment_proposal:
   task: reinvestment_proposal_task
   data_root: data/planbot/reinvestment_proposal
@@ -63,7 +80,7 @@ product_investor_matching:
         purpose: Overview of the CSV file and the structure of the product catalogs
       - name: ../shared/product_catalog/*.csv
         purpose: Details of the investable assets available for recommendation in csv format
-  llm_model: poe_deepseek
+  llm_model: deepseek_tool
 
 client_product_fit_analysis:
   task: client_product_fit_analysis_task
@@ -126,6 +143,16 @@ portfolio_review:
   llm_model: poe_deepseek
 
 llm_models:
+  deepseek_tool:
+    provider: deepseek
+    model: deepseek-v4-flash
+    # model: deepseek-v4-pro. never returns
+  poe_deepseek_tool:
+    provider: poe
+    # model: deepseek-v4-pro-t # emit the stupid thinking, couldn't use
+    # model: minimax-m2.7-fw # emit the stupid thinking, couldn't use
+    model: qwen3-235b-a22b-n
+    temperature: 0.2
   poe_qwen:
     provider: poe
     model: qwen3.5-397b-a17b-t
@@ -133,8 +160,8 @@ llm_models:
     temperature: 0.1
   poe_deepseek:
     provider: poe
-    model: deepseek-v3.2-exp
-    # model: deepseek-v3.2-fw
+    # model: deepseek-v3.2-exp
+    model: deepseek-v3.2-fw
     # model: deepseek-v4-pro-t # emit the stupid thinking, couldn't use
     temperature: 0.2
   poe_free:

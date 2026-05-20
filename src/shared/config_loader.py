@@ -44,6 +44,7 @@ class AppConfig(BaseModel):
     logging_chat_history_backup_count: int
     logging_chat_history_body_max_chars: int
     logging_chat_history_redact_fields: list[str]
+    logging_crewai_verbose: bool
     author: BotConfig
     reviewer: BotConfig
     providers: dict[str, ProviderConfig]
@@ -84,6 +85,7 @@ def load_config(config_path: str | Path) -> AppConfig:
             chat_history_backup_count: int | None = None
             chat_history_body_max_chars: int | None = None
             chat_history_redact_fields: list[str] | None = None
+            crewai_verbose: bool | None = None
 
         class RawApp(BaseModel):
             workflow: RawWorkflow
@@ -140,6 +142,7 @@ def load_config(config_path: str | Path) -> AppConfig:
             for item in logging_data.get("chat_history_redact_fields", ["authorization", "api_key"])
             if str(item).strip()
         ],
+        logging_crewai_verbose=bool(logging_data.get("crewai_verbose", False)),
         author=BotConfig(
             provider=author_bot["provider"].strip(),
             model=author_bot["model"].strip(),

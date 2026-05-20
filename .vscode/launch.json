@@ -84,6 +84,22 @@
       ]
     },
     {
+      "name": "Stock Analysis Report",
+      "type": "python",
+      "request": "launch",
+      "module": "src.main",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "run-planbot",
+        "--config",
+        "config/config.yaml",
+        "--proposal",
+        "stock_analysis_proposal"
+      ]
+    },
+    {
       "name": "Author-Reviewer",
       "type": "python",
       "request": "launch",
