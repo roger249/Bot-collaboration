@@ -3,9 +3,9 @@ stock_analysis_proposal_task:
   agent: professional_stock_investor_agent
 
   description: |
-    - The stock ticker to analysis is provided in proposal_instructions/stock_ticker.md
+    - The stock ticker to analysis is in proposal_instructions/stock_ticker.md
     - Follow the proposal_instructions/proposal_format.md under the reference section to come up the proposal.  This includes the following tasks
-      - Gather the data required for the analysis including below from websites and the news_and_data provided in the reference materials.  
+      - Gather the data required for the analysis including below preferably from YFinance, or websites and the news_and_data provided in the reference materials.  
         - the historical price ratio 
         - Recent news and outlook about the company
         - Recent market outlook on the sector and the overall market

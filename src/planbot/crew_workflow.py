@@ -127,7 +127,7 @@ def _build_tool_instance(tool_name: str) -> Any:
                 "YFinance tool dependency is missing. Install it with: uv pip install yfinance"
             ) from exc
 
-        return YFinanceTool()
+        return _with_yfinance_tool_input_guidance(YFinanceTool())
 
     if normalized != "FirecrawlScrapeWebsiteTool":
         raise ValueError(f"Unsupported tool '{normalized}' in agent config.")
@@ -162,6 +162,21 @@ def _with_web_tool_input_guidance(tool: Any) -> Any:
         " For web scraping tools, pass exactly one URL in one call, for example"
         " {\"website_url\": \"https://example.com\"} or {\"url\": \"https://example.com\"}."
         " Do not pass a list of dictionaries in one call."
+    )
+
+    description = str(getattr(tool, "description", "") or "")
+    if guidance.strip() not in description:
+        setattr(tool, "description", (description + guidance).strip())
+    return tool
+
+
+def _with_yfinance_tool_input_guidance(tool: Any) -> Any:
+    """Append strict Action Input guidance to YFinance tool description."""
+    guidance = (
+        " Action Input format rule: provide a single key-value dictionary per tool call."
+        " Pass exactly one ticker in one call, for example {\"ticker\": \"9988.HK\"}."
+        " Do not pass a list of dictionaries or mixed narrative text in Action Input."
+        " Set include_financial_statement/include_price_history only when needed."
     )
 
     description = str(getattr(tool, "description", "") or "")

@@ -7,6 +7,7 @@ import time
 import pytest
 import src.planbot.lixinger_scraper as lixinger_scraper_module
 
+@pytest.mark.skip(reason="Don't do any lixinger crawling in CI until we have a more robust CF challenge solution in place.")
 from src.planbot.lixinger_scraper import (
     BotBlockedError,
     DataPageNotReadyError,
@@ -22,6 +23,7 @@ from src.planbot.lixinger_scraper import (
 )
 
 
+@pytest.mark.skip(reason="Don't do any lixinger crawling in CI until we have a more robust CF challenge solution in place.")
 def _scrape_with_live_retries(symbol: str, attempts: int = 1) -> dict[str, dict[str, float | str]]:
     last_error: Exception | None = None
     for attempt in range(1, attempts + 1):

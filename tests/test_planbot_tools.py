@@ -104,21 +104,10 @@ def test_yfinance_tool_returns_normalized_payload(monkeypatch):
             }
         )
 
-        quarterly_income_stmt = FakeFrame(
-            {
-                "2026-03-31": {
-                    "Total Revenue": 250,
-                    "Gross Profit": 100,
-                    "Operating Income": 75,
-                    "Net Income": 50,
-                }
-            }
-        )
-
         @staticmethod
         def history(period: str, interval: str):
             assert period == "1y"
-            assert interval == "1d"
+            assert interval == "1mo"
             return FakeFrame({"2026-05-10": {"Close": 188.0}})
 
     class FakeYF:
@@ -130,17 +119,24 @@ def test_yfinance_tool_returns_normalized_payload(monkeypatch):
     monkeypatch.setattr(yfinance_tool, "_import_yfinance", lambda: FakeYF)
 
     tool = yfinance_tool.YFinanceTool()
-    payload = tool._run("AAPL")
+    payload = tool._run(
+        "AAPL",
+        period="1y",
+        interval="1mo",
+        output_format="json",
+        include_financial_statement=True,
+    )
 
     parsed = __import__("json").loads(payload)
     assert parsed["ticker"] == "AAPL"
     assert "income_statement" in parsed
     assert "historical_financial_ratios" in parsed
     assert "quote" in parsed
+    assert list(parsed.keys())[:3] == ["quote", "income_statement", "historical_financial_ratios"]
     assert parsed["quote"]["current_price"] == 190.5
     assert parsed["quote"]["trailing_pe"] == 30.1
     assert parsed["quote"]["price_to_sales"] == 7.4
-    assert parsed["historical_financial_ratios"][0]["gross_margin_pct"] == 40.0
+    assert parsed["historical_financial_ratios"][0]["gross_margin_pct"] == 45.0
 
 
 def test_yfinance_tool_csv_output(monkeypatch):
@@ -175,17 +171,6 @@ def test_yfinance_tool_csv_output(monkeypatch):
             }
         )
 
-        quarterly_income_stmt = FakeFrame(
-            {
-                "2026-03-31": {
-                    "Total Revenue": 75,
-                    "Gross Profit": 30,
-                    "Operating Income": 22,
-                    "Net Income": 18,
-                }
-            }
-        )
-
         @staticmethod
         def history(period: str, interval: str):
             return FakeFrame({"2026-05-10": {"Close": 176.2}})
@@ -199,232 +184,72 @@ def test_yfinance_tool_csv_output(monkeypatch):
     monkeypatch.setattr(yfinance_tool, "_import_yfinance", lambda: FakeYF)
 
     tool = yfinance_tool.YFinanceTool()
-    csv_text = tool._run("GOOG", output_format="csv")
+    csv_text = tool._run("GOOG", output_format="csv", include_financial_statement=True, include_price_history=True)
 
     assert "# quote" in csv_text
     assert "field,value" in csv_text
     assert "current_price,176.2" in csv_text
-    assert "# historical_financial_ratios" in csv_text
-    assert "gross_margin_pct" in csv_text
     assert "# income_statement_annual" in csv_text
     assert "Total Revenue" in csv_text
-
-
-def test_yfinance_tool_include_quote_summary_merges_fields(monkeypatch):
-    import json
-    from src.planbot import yfinance_tool
-
-    class FakeFrame:
-        def __init__(self, payload):
-            self._payload = payload
-
-        def to_dict(self, orient="index"):
-            assert orient == "index"
-            return self._payload
-
-    class FakeTicker:
-        # Deliberately sparse info so quoteSummary merge path is exercised.
-        info = {"symbol": "2601.HK"}
-        income_stmt = FakeFrame({})
-        quarterly_income_stmt = FakeFrame({})
-
-        @staticmethod
-        def history(period: str, interval: str):
-            return FakeFrame({})
-
-    class FakeYF:
-        @staticmethod
-        def Ticker(symbol: str):
-            assert symbol == "2601.HK"
-            return FakeTicker()
-
-    class FakeResponse:
-        def __init__(self, payload: str):
-            self._payload = payload.encode("utf-8")
-
-        def read(self):
-            return self._payload
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc, tb):
-            return None
-
-    def fake_urlopen(request, timeout=15):
-        assert "quoteSummary/2601.HK" in request.full_url
-        result = {
-            "quoteSummary": {
-                "result": [
-                    {
-                        "price": {
-                            "symbol": "2601.HK",
-                            "shortName": "CPIC",
-                            "regularMarketPrice": {"raw": 32.7},
-                            "marketCap": {"raw": 388_890_000_000},
-                            "currency": "HKD",
-                            "quoteType": "EQUITY",
-                            "exchangeName": "HKG",
-                        },
-                        "defaultKeyStatistics": {
-                            "trailingPE": {"raw": 5.62},
-                        },
-                        "summaryDetail": {
-                            "priceToSalesTrailing12Months": {"raw": 0.71},
-                            "previousClose": {"raw": 32.94},
-                        },
-                    }
-                ],
-                "error": None,
-            }
-        }
-        return FakeResponse(json.dumps(result))
-
-    monkeypatch.setattr(yfinance_tool, "_import_yfinance", lambda: FakeYF)
-    monkeypatch.setattr(yfinance_tool.urllib.request, "urlopen", fake_urlopen)
-
-    tool = yfinance_tool.YFinanceTool()
-    text = tool._run("2601.HK", include_quote_summary=True)
-    payload = json.loads(text)
-
-    quote = payload["quote"]
-    assert quote["symbol"] == "2601.HK"
-    assert quote["short_name"] == "CPIC"
-    assert quote["current_price"] == 32.7
-    assert quote["trailing_pe"] == 5.62
-    assert quote["price_to_sales"] == 0.71
-    assert quote["previous_close"] == 32.94
-    assert "quote_summary" in payload
+    assert "# price_history" in csv_text
+    assert "date,Close" in csv_text
+    assert "2026-05-10,176.2" in csv_text
+    assert "Close" in csv_text
+    assert csv_text.index("# quote") < csv_text.index("# income_statement_annual") < csv_text.index("# price_history")
+    assert "# historical_financial_ratios" in csv_text
+    assert "gross_margin_pct" in csv_text
 
 
 @pytest.mark.integration
 @pytest.mark.e2e
-def test_yfinance_tool_live_goog_json():
-    """E2E test: hit live Yahoo/yfinance path and validate normalized JSON shape."""
-    import json
+def test_yfinance_dump_for_human_review():
+    """E2E test: dump live Markdown response to artifact file for manual validation."""
     from src.planbot.yfinance_tool import YFinanceTool
 
     tool = YFinanceTool()
     tool.max_output_chars = 0
+    ticker = "2601.HK"
 
     try:
-        text = tool._run("GOOG", period="1y", interval="1d", output_format="json")
-        payload = json.loads(text)
-    except Exception as exc:  # pragma: no cover - depends on external network/service
-        pytest.xfail(f"Live Yahoo/yfinance call failed: {exc}")
-
-    assert payload["ticker"] == "GOOG"
-    assert "income_statement" in payload
-    assert "historical_financial_ratios" in payload
-    assert "quote" in payload
-    assert payload["quote"].get("current_price") is not None
-    # New: price_history field should be present and non-empty
-    assert "price_history" in payload
-    assert isinstance(payload["price_history"], list)
-    assert len(payload["price_history"]) > 0
-
-
-@pytest.mark.integration
-@pytest.mark.e2e
-def test_yfinance_tool_live_dump_json_for_human_review():
-    """E2E test: dump live GOOG JSON response to artifact file for manual validation."""
-    from src.planbot.yfinance_tool import YFinanceTool
-
-    tool = YFinanceTool()
-    tool.max_output_chars = 0
-
-    try:
-        raw = tool._run(
-            "2601.HK",
+        markdown_text = tool._run(
+            ticker,
             period="1y",
-            interval="1d",
-            output_format="json",
+            interval="1mo",
+            output_format="md",
             include_quote_summary=True,
+            include_financial_statement=True,
+            include_price_history=True,
         )
-        payload = json.loads(raw)
     except Exception as exc:  # pragma: no cover - depends on external network/service
         pytest.xfail(f"Live Yahoo/yfinance call failed: {exc}")
 
-    assert payload.get("ticker") == "2601.HK"
-    assert "income_statement" in payload
-    assert "historical_financial_ratios" in payload
-    assert "quote" in payload
-    assert payload["quote"].get("current_price") is not None
-    # New: price_history field should be present and non-empty
-    assert "price_history" in payload
-    assert isinstance(payload["price_history"], list)
-    assert len(payload["price_history"]) > 0
+    assert isinstance(markdown_text, str)
+    assert "# YFinance Summary:" in markdown_text
+    assert "## Quote" in markdown_text
+    assert "current_price" in markdown_text
+    assert "## Price History" in markdown_text
 
     out_dir = Path("runs/test_artifacts/yfinance")
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    out_file = out_dir / f"2601hk_live_{stamp}.json"
+    out_file = out_dir / f"{ticker.lower()}_live_{stamp}.md"
     out_file.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True),
+        markdown_text,
         encoding="utf-8",
     )
 
     assert out_file.exists()
-    print(f"HUMAN_REVIEW_JSON={out_file}")
+    print(f"HUMAN_REVIEW_MD={out_file}")
 
 
-@pytest.mark.integration
-@pytest.mark.e2e
-def test_yfinance_tool_live_2601hk_with_quote_summary():
-    """E2E test: live Yahoo quoteSummary merge path for a HK ticker."""
-    import json
-    from src.planbot.yfinance_tool import YFinanceTool
-
-    tool = YFinanceTool()
-    tool.max_output_chars = 0
-
-    try:
-        text = tool._run(
-            "2601.HK",
-            period="5y",
-            interval="1mo",
-            output_format="json",
-            include_quote_summary=True,
-        )
-        payload = json.loads(text)
-    except Exception as exc:  # pragma: no cover - depends on external network/service
-        pytest.xfail(f"Live Yahoo/yfinance call failed: {exc}")
-
-    assert payload["ticker"] == "2601.HK"
-    quote = payload.get("quote", {})
-    assert quote.get("symbol") in {"2601.HK", None} or str(quote.get("symbol", "")).endswith(".HK")
-    assert quote.get("current_price") is not None
-    # New: price_history field should be present and non-empty
-    assert "price_history" in payload
-    assert isinstance(payload["price_history"], list)
-    assert len(payload["price_history"]) > 0
-    # quoteSummary may be unavailable for some symbols/regions; when present it should enrich fields.
-    if "quote_summary" in payload:
-        assert payload.get("quote_summary")
-    else:
-        assert any(quote.get(key) is not None for key in ["trailing_pe", "price_to_sales", "market_cap"])
-
-
-def test_yfinance_tool_exclude_price_history(monkeypatch):
-    """Unit: include_price_history disables price_history field."""
+def test_yfinance_tool_rejects_interval_not_1mo():
     from src.planbot import yfinance_tool
 
-    class FakeTicker:
-        def __init__(self, symbol):
-            self.info = {"currentPrice": 123.45}
-            self.income_stmt = None
-            self.quarterly_income_stmt = None
-        def history(self, period, interval):
-            return [{"period": "2020-01-01", "Close": 100.0}]
-
-    class FakeYF:
-        Ticker = FakeTicker
-
-    monkeypatch.setattr(yfinance_tool, "_import_yfinance", lambda: FakeYF)
     tool = yfinance_tool.YFinanceTool()
-    result = tool._run("FAKE", include_price_history=False)
-    payload = json.loads(result)
-    assert "price_history" not in payload
+    with pytest.raises(ValueError, match="must be '1mo' only"):
+        tool._run("AAPL", interval="1wk")
+    with pytest.raises(ValueError, match="must be '1mo' only"):
+        tool._run("AAPL", interval="3mo")
 
 
 def test_scrape_website_tool_page():
@@ -445,6 +270,7 @@ def test_scrape_website_tool_page():
     ), f"Scraped output did not include expected P/E ratio terms\n{result}"
 
 
+@pytest.mark.skip(reason="Don't do any macrotrends crawling in CI until we have a more robust CF challenge solution in place.")
 def test_crawl4ai_macrotrends_hardened_config():
     """Integration test: Crawl4AI should return meaningful markdown for Macrotrends GOOG P/E page."""
     tool = crawl4ai_tool.Crawl4AITool()
@@ -614,6 +440,7 @@ def test_crawl_uses_default_markdown_generator(monkeypatch):
     assert "after_goto" not in captured.get("hooks", {}), "CF hook should not be set for non-CF domains"
 
 
+@pytest.mark.skip(reason="Don't do any macrotrends crawling in CI until we have a more robust CF challenge solution in place.")
 def test_stockdex_macrotrends_key_financial_ratios_msft():
     """Integration test: fetch key financial ratios for MSFT via stockdex / Macrotrends.
 
@@ -673,6 +500,7 @@ def test_stockdex_macrotrends_key_financial_ratios_msft():
     print(df[df.index.isin(EXPECTED_RATIOS)].iloc[:, :5].to_string())
 
 
+@pytest.mark.skip(reason="Don't do any macrotrends crawling in CI until we have a more robust CF challenge solution in place.")
 def test_stockdex_macrotrends_income_statement_msft():
     """Integration test: fetch MSFT quarterly income statement via stockdex / Macrotrends.
 

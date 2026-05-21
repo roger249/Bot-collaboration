@@ -19,7 +19,7 @@ stock_analysis_proposal:
     news_and_data:
       - name: news_and_data/**/*.md
         purpose: Recent news and data for the stock analysis
-  llm_model: deepseek_tool 
+  llm_model: poe_gemini 
   # deepseek_tool (deepseek-v4-flash) ignores CrewAI ReAct stop-sequences and returns Final Answer immediately
 
 reinvestment_proposal:
@@ -164,6 +164,10 @@ llm_models:
     model: deepseek-v3.2-fw
     # model: deepseek-v4-pro-t # emit the stupid thinking, couldn't use
     temperature: 0.2
+  poe_gemini:
+    provider: poe
+    model: gemini-3.1-flash-lite
+    temperature: 0.1
   poe_free:
     provider: poe
     model: gemma-4-31b
