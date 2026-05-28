@@ -1,165 +1,173 @@
-Client Product-Fit Analysis: Sarah Chen
-=====================================
+# Client Product-Fit Analysis: Sarah Chen
 
-# Executive Summary
+## Executive Summary
 
-We recommend allocating USD 200,000 from the client's significant cash holding into the **FX Window Range Accrual Note (FXRA0415)**. This action directly addresses the client's high-priority "University Fund" need by providing a stable, known return over a 2-year period, enhancing portfolio income with significantly higher yield than the current money market fund. The product's structure offers high certainty of coupon payment, aligning with the required capital preservation objective, while its Risk Rating of 2 is appropriate for the client's profile. This reallocation improves the portfolio's overall efficiency by deploying idle cash into a goal-specific instrument without increasing equity risk.
+Sarah Chen’s portfolio is heavily weighted toward US large-cap equities (77.5%) with an oversized cash position of 22.5% ($720,000) earning a current yield of ~4.0% in VMRXX. The recommended action is to deploy **$300,000** of that cash into the **JPMorgan USD Callable Range Accrual Note (N02952)**, which offers a conditional coupon of **5.94% p.a.** – a net yield pickup of **1.94%** on the allocated amount. This low-risk (Rating 2) note aligns with Sarah’s moderate risk tolerance, improves overall portfolio income without touching her equity holdings, and provides principal protection at maturity. The expected outcome is a ~$5,820 annual income uplift from cash management with no increase in portfolio volatility.
 
-# Recommended Product: FX Window Range Accrual Note (FXRA0415)
+## Recommended Product: JPMorgan USD Callable Range Accrual Note (N02952)
 
-## Product Specifications
-*   **Issuer:** Barclays Bank PLC
-*   **Product Structure:** FX Window Range Accrual Note
-*   **Tenor:** 2 Years
-*   **Currency:** USD
-*   **Minimum Investment:** USD 100,000
-*   **Underlying Asset:** USD/HKD exchange rate (BFIX Bloomberg Screen)
-*   **Range:** 7.7495 – 7.8505
-*   **Coupon (Fixed %):** 8.02% total over two years, or 3.93% p.a.
-*   **Interest Payment:** Paid at expiry
-*   **Settlement Date:** 15 May 2026
-*   **Maturity Date:** 15 May 2028
+### Product Specifications
 
-## Performance Metrics
-The recommended product offers a fixed, known return of 8.02% (3.93% p.a.) if held to maturity and the USD/HKD rate stays within the specified range. This contrasts with the client's current cash holding (VMRXX.O), which is a money market fund providing a variable yield. Based on historical data, money market funds have yielded approximately 4.0-4.5% p.a. recently, but this is not guaranteed and is subject to change with interest rate movements. The FXRA0415 provides a locked-in, higher yield for the 2-year period, offering performance certainty that a floating-rate cash instrument cannot.
+| Attribute | Detail |
+|---|---|
+| **Issuer** | JPMorgan Chase Financial Company LLC (Guarantor: JPMorgan Chase & Co.) |
+| **Product Type** | Callable Range Accrual Note |
+| **Tranche ID** | N02952 |
+| **Tenor** | 5 years (Maturity: 08 May 2031) |
+| **Currency** | USD |
+| **Minimum Investment** | USD 100,000 (increments of USD 10,000) |
+| **Coupon** | **5.94% p.a.** (paid quarterly) |
+| **Accrual Condition** | 10y Constant Maturity Treasury ≤ 5.01% |
+| **Autocall Feature** | Starting 08 Nov 2026, quarterly call if 10y CMT ≤ 4.30% |
+| **Principal Protection** | Only at maturity (not call-protected) |
+| **Risk Rating** | 2 (Low) |
+| **Volatility** | 1 |
+| **Liquidity Score** | 1 (Illiquid; early redemption subject to issuer call only) |
 
-## Risk Characteristics
-*   **Risk Rating:** 2 (Low)
-*   **Principal Risk:** The product is **only principal protected if held to maturity**. In a worst-case scenario (e.g., issuer default), investors could lose up to 100% of their principal.
-*   **Market Risk:** The coupon payment is contingent on the USD/HKD exchange rate remaining within the 7.7495 – 7.8505 range throughout the 20-day observation period. The Hong Kong dollar has been pegged within this band since 2005, making this a historically stable condition.
-*   **Credit Risk:** Investors assume the credit risk of Barclays Bank PLC.
-*   **Liquidity:** Score 1. The product is intended to be held to maturity. Early exit would be difficult and likely involve significant cost.
-*   **Complexity:** This is a structured product involving derivatives.
+### Performance Metrics
 
-## Detailed Justification
-**Product-Fit Score: 5/5 (Excellent Fit)**
+| Metric | VMRXX (Current Cash) | N02952 (Suggested) | Improvement |
+|---|---|---|---|
+| Current Yield | 4.00% | 5.94% (conditional) | +1.94% |
+| 1-Year Return (historical) | 3.9% | N/A (structured note) | – |
+| 5-Year Return (historical) | 16.5% (3.3% p.a.) | N/A | – |
+| Principal Stability | 100% stable | Stable if held to maturity; mark-to-market risk | – |
 
-**Alignment with Client Need:** The client's primary identified need is a **University Fund** with a 10-15 year horizon, requiring a **Target Return of 3** and a high **Certainty of 4**. The FXRA0415 is an excellent match for the certainty component of this need. While the product's 2-year tenor is shorter than the full goal horizon, it serves as a perfect building block for the fixed-income/capital preservation sleeve of a longer-term education portfolio. It provides a known, stable return, addressing the high-certainty requirement for a portion of the funds earmarked for this future liability.
+*Note: The note’s coupon is contingent on the 10y CMT staying ≤5.01%. As of March 2026, the 10y CMT is approximately 4.2%, well within the accrual boundary, making full coupon highly probable in the near term.*
 
-**Portfolio Context & Funding:** The client's portfolio is heavily concentrated in US large-cap growth stocks (LLY, GOOGL, NVDA, AMZN), which have exhibited negative recent performance and high volatility. These are suitable for long-term growth but do not align with the high-certainty requirement. Conversely, 22.5% of the portfolio (USD 720,000) is held in a low-yielding money market fund (VMRXX.O). Allocating USD 200,000 from this cash position into FXRA0415 efficiently redeploys idle capital into a product that better serves a specific financial goal without increasing overall portfolio risk or disrupting the equity growth allocation.
+### Risk Characteristics
 
-**Risk/Reward Profile:** The product's Risk Rating of 2 is appropriate for a need scoring 4 in Certainty. The underlying (USD/HKD peg) is one of the most stable financial relationships globally, making the range condition highly probable to be met, thus ensuring the promised coupon. This offers a compelling yield pickup over the current cash holding with a controlled, well-defined risk profile centered on issuer credit and peg stability, not equity market volatility.
+- **Credit Risk:** Investor bears JPMorgan credit risk.
+- **Coupon Risk:** If 10y CMT rises above 5.01%, no coupon is accrued for that period.
+- **Autocall/Reinvestment Risk:** The note may be called early (if 10y CMT ≤4.30%), forcing reinvestment at potentially lower rates.
+- **Liquidity Risk:** Not traded on exchange; secondary market may be thin; early sale may incur principal loss.
+- **No Deposit Protection:** Not covered by Hong Kong Deposit Protection Scheme.
 
-# Suggested Portfolio
-The proposed change is to invest USD 200,000 from the client's cash holding (VMRXX.O) into the FX Window Range Accrual Note (FXRA0415). All other existing equity holdings remain unchanged.
+### Detailed Justification
 
-**Current Portfolio Allocation**
+Sarah holds 22.5% idle cash earning only 4.0% in a money market fund. This cash drag lowers the portfolio’s total yield. By switching **$300,000** (37.5% of cash) into the N02952 note, she captures a **1.94% yield pickup** on that portion while keeping the remaining cash liquid. The note’s **Risk Rating of 2** is well within her moderate risk profile, and its 5-year tenor matches a medium-term horizon. No equity holdings are touched, preserving her current growth exposure. The product-fit score is **5/5**, as it addresses the identified need (cash drag) with minimal disruption.
+
+## Suggested Portfolio
+
 ```mermaid
 pie title Current Portfolio Allocation
-    "VMRXX.O (Cash)" : 22.5
-    "LLY" : 7.0
-    "WMT.O" : 11.25
-    "GOOGL.O" : 15.5
-    "NVDA.O" : 19.75
-    "AMZN.O" : 24.0
+    "VMRXX (Cash)" : 22.5
+    "LLY (Equity)" : 7.0
+    "WMT (Equity)" : 11.2
+    "GOOGL (Equity)" : 15.5
+    "NVDA (Equity)" : 19.8
+    "AMZN (Equity)" : 24.0
 ```
 
-**Suggested Portfolio Allocation**
 ```mermaid
 pie title Suggested Portfolio Allocation
-    "VMRXX.O (Cash)" : 16.25
-    "FXRA0415 (Structured Note)" : 6.25
-    "LLY" : 7.0
-    "WMT.O" : 11.25
-    "GOOGL.O" : 15.5
-    "NVDA.O" : 19.75
-    "AMZN.O" : 24.0
+    "VMRXX (Cash)" : 13.1
+    "N02952 (Note)" : 9.4
+    "LLY (Equity)" : 7.0
+    "WMT (Equity)" : 11.2
+    "GOOGL (Equity)" : 15.5
+    "NVDA (Equity)" : 19.8
+    "AMZN (Equity)" : 24.0
 ```
 
-| Asset | Current Market Value (USD) | Suggested Market Value (USD) | Current % | Suggested % | Change | Remark |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Vanguard Treasury Money Market Fund (VMRXX.O) | 720,000 | 520,000 | 22.50% | 16.25% | -6.25% | Source of funds for new investment. |
-| **FX Window Range Accrual Note (FXRA0415)** | **0** | **200,000** | **0.00%** | **6.25%** | **+6.25%** | **NEW: Allocate USD 200k to meet university fund need with stable yield.** |
-| Eli Lilly and Company (LLY) | 223,858.41 | 223,858.41 | 7.00% | 7.00% | 0.00% | No change. |
-| Walmart Inc. (WMT.O) | 359,929.20 | 359,929.20 | 11.25% | 11.25% | 0.00% | No change. |
-| Alphabet Inc. Class A (GOOGL.O) | 496,000.00 | 496,000.00 | 15.50% | 15.50% | 0.00% | No change. |
-| NVIDIA Corporation (NVDA.O) | 632,070.80 | 632,070.80 | 19.75% | 19.75% | 0.00% | No change. |
-| Amazon.com Inc. (AMZN.O) | 768,141.59 | 768,141.59 | 24.00% | 24.00% | 0.00% | No change. |
-| **Total** | **3,200,000.00** | **3,200,000.00** | **100.00%** | **100.00%** | **0.00%** | |
+| Asset | Current Market Value | Suggested Market Value | Current % | Suggested % | Change | Remark |
+|---|---|---|---|---|---|---|
+| VMRXX (Cash) | $720,000.00 | $420,000.00 | 22.50% | 13.125% | -9.375% | Reduce cash; retain liquidity buffer |
+| N02952 (Note) | $0.00 | $300,000.00 | 0.00% | 9.375% | +9.375% | New purchase from cash |
+| LLY (Eli Lilly) | $223,858.41 | $223,858.41 | 7.00% | 7.00% | 0.00% | Unchanged |
+| WMT (Walmart) | $359,929.20 | $359,929.20 | 11.25% | 11.25% | 0.00% | Unchanged |
+| GOOGL (Alphabet) | $496,000.00 | $496,000.00 | 15.50% | 15.50% | 0.00% | Unchanged |
+| NVDA (NVIDIA) | $632,070.80 | $632,070.80 | 19.75% | 19.75% | 0.00% | Unchanged |
+| AMZN (Amazon) | $768,141.59 | $768,141.59 | 24.00% | 24.00% | 0.00% | Unchanged |
+| **Total** | **$3,200,000.00** | **$3,200,000.00** | **100.00%** | **100.00%** | **0.00%** | |
 
-## Pros and cons of suggested portfolio
+### Pros and Cons of Suggested Portfolio
 
 **Pros:**
-1.  **Goal Alignment:** Directly addresses the "University Fund" need by adding a high-certainty, income-generating asset. The fixed return profile provides predictable cash flow for future education expenses.
-2.  **Enhanced Income & Efficiency:** Generates a significantly higher and locked-in yield (3.93% p.a.) on a portion of the portfolio compared to the variable rate from the money market fund, improving overall portfolio income without increasing equity risk.
-3.  **Risk Diversification:** Introduces a non-correlated asset (FX-linked structured note) to a portfolio dominated by US tech equities, slightly reducing overall portfolio volatility and concentration risk.
-4.  **Capital Preservation Focus:** The product's structure and underlying (stable USD/HKD peg) align with the high certainty (score 4) required for a future liability like education funding.
+- **Yield enhancement:** $300,000 at 5.94% vs 4.00% adds ~$5,820 annual net income.
+- **Risk alignment:** Low-risk note (Rating 2) matches moderate tolerance; no increase in equity volatility.
+- **Preserves equity upside:** All current high-beta stocks (NVDA, AMZN, etc.) remain untouched.
+- **Diversification:** Introduces a structured product with a different risk driver (interest rates) vs pure equity.
 
 **Cons:**
-1.  **Liquidity Sacrifice:** The FXRA0415 has a liquidity score of 1 (illiquid/locked), meaning the USD 200,000 capital will be inaccessible for 2 years without potentially incurring a significant loss. This reduces portfolio flexibility.
-2.  **Credit Risk Concentration:** Introduces issuer-specific credit risk to Barclays Bank PLC. While it is a major global bank, it is a new concentration risk not present when funds were in a government money market fund.
-3.  **Limited Upside:** The return is capped at the fixed coupon (8.02% total). In a scenario where interest rates rise substantially, the product will underperform newly issued cash instruments or floating-rate notes.
-4.  **Peg Break Risk:** Although historically stable, there is a theoretical risk that the USD/HKD peg could break or move outside the 7.7495-7.8505 band, resulting in a loss of the full coupon for the observation period.
+- **Coupon dependency:** If 10y CMT rises above 5.01%, coupon stops accruing.
+- **Early call risk:** Note may be called after 6 months, forcing reinvestment at lower yields.
+- **Illiquidity:** Cannot easily exit position before maturity; may lose principal if sold early.
+- **Concentration in single issuer:** Adds credit exposure to JPMorgan (though investment grade).
 
-## Alternative suggested product to consider
-1.  **iShares 7-10 Year Treasury Bond ETF (IEF.O):** For a more liquid alternative with high certainty over a 10-15 year horizon. It provides steady coupon payments and high credit quality (US Treasury). However, it carries interest rate risk (price volatility) which may not be suitable for the full certainty requirement over shorter periods within the goal horizon.
-2.  **Callable Range Accrual Note (N02952):** Another structured product with a longer 5-year tenor and a coupon linked to the 10-year Constant Maturity Treasury rate. It offers a higher potential annual coupon (5.94% p.a.) and quarterly payments, but introduces interest rate risk and callability risk, making its cash flows less certain than the FX-linked note for the client's specific time frame.
+### Alternative Suggested Products to Consider
 
-# Scenario Analysis
-We analyze three scenarios for the portfolio over a 2-year horizon, aligning with the tenor of the suggested FXRA0415 note. The core equity portfolio (LLY, WMT, GOOGL, NVDA, AMZN) is assumed to follow broad US equity market returns.
+1. **iShares 1-3 Year Treasury Bond ETF (SHY):** Offers higher liquidity (Score 5) and short-duration, but yield is ~3.76% – lower than the note. Suitable if liquidity is a priority.
+2. **JPMorgan Ultra-Short Income ETF (JPST):** Yields ~4.38%, daily liquidity, risk rating 1. A middle-ground option with flexibility, but still below the note’s 5.94%.
 
-**Base Assumptions (Current Portfolio):** Equity Allocation: 77.5%, Cash Allocation: 22.5%. Cash return is based on the 5-year average money market fund yield of ~4.0% p.a.
-**Base Assumptions (Suggested Portfolio):** Equity Allocation: 77.5%, FXRA0415 Allocation: 6.25%, Reduced Cash Allocation: 16.25%.
+## Scenario Analysis
 
-## Normal Market Condition
-*   **Probability:** 60%
-*   **Scenario Grounds:** Steady economic growth, moderate inflation, and a stable USD/HKD peg. Equity returns revert to long-term historical averages.
-*   **Equity Return (LLY, WMT, GOOGL, NVDA, AMZN):** +8.0% p.a. (Approximate long-term S&P 500 average).
-*   **Cash Return (VMRXX.O):** +4.0% p.a. (5-year historical average for money market funds).
-*   **FXRA0415 Return:** +8.02% total (3.93% p.a.). Assumes USD/HKD stays within the 7.7495-7.8505 range for the full observation period.
+Assumptions based on historical data (2019–2024) and current market sentiment (March 2026: trade tensions, potential rate cuts). All equity returns are applied uniformly across holdings given their high beta. The note’s coupon is paid only when accrual condition is met. Three scenarios with subjective probabilities:
 
-| Product | % Return (2Y Total) | Suggested Holding (USD) | Projected PnL (USD) | Current Holding (USD) | Projected PnL (USD) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Equities (Aggregate)** | 16.64% | 2,480,000 | 412,672 | 2,480,000 | 412,672 |
-| VMRXX.O (Cash) | 8.16% | 520,000 | 42,432 | 720,000 | 58,752 |
-| **FXRA0415** | **8.02%** | **200,000** | **16,040** | **0** | **0** |
-| **Total** | **14.70%** | **3,200,000** | **470,144** | **3,200,000** | **471,424** |
+| Scenario | Probability | Equity Return (all stocks) | 10y CMT Level | Note Coupon | Note Call Status |
+|---|---|---|---|---|---|
+| **Normal** | 60% | +10% (avg S&P 5Y ~11%, discount for current uncertainty) | 4.0% | Full 5.94% paid | Not called (above 4.30%) |
+| **Upside (Strong Growth)** | 20% | +20% (similar to 2021 reflation) | 4.5% | Full 5.94% paid | Not called (above 4.30%) |
+| **Downside (Recession)** | 20% | -15% (modeled after 2022 correction, less severe than COVID) | 3.5% (rates fall) | Full 5.94% paid | **Called** at next quarterly observation (CMT ≤4.30%) |
 
-*   **2-Year return of the suggested portfolio vs current:** 14.70% vs 14.73%
-*   **Analysis:** In a normal market, the suggested portfolio performs nearly identically to the current one. The slightly lower cash yield is almost entirely offset by the higher fixed yield from the structured note. The key benefit is the **certainty** of the FXRA0415 return, which is locked in, unlike the variable cash return.
+*Historical return references:* S&P 500 5-year annualized return ≈ 11.2% (2019–2024). Current equity market YTD 2026 is down ~5%, reflecting tariff concerns.
 
-## Good Market Condition (Rising Equity Markets)
-*   **Probability:** 25%
-*   **Scenario Grounds:** Strong economic expansion, leading to above-average equity returns. The USD/HKD peg remains stable.
-*   **Equity Return:** +25.0% p.a. (Similar to strong bull market years).
-*   **Cash Return:** +5.0% p.a. (Rising interest rate environment).
-*   **FXRA0415 Return:** +8.02% total (Fixed, unaffected by rising rates).
+### Normal Market Condition
 
-| Product | % Return (2Y Total) | Suggested Holding (USD) | Projected PnL (USD) | Current Holding (USD) | Projected PnL (USD) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Equities (Aggregate)** | 56.25% | 2,480,000 | 1,395,000 | 2,480,000 | 1,395,000 |
-| VMRXX.O (Cash) | 10.25% | 520,000 | 53,300 | 720,000 | 73,800 |
-| **FXRA0415** | **8.02%** | **200,000** | **16,040** | **0** | **0** |
-| **Total** | **45.76%** | **3,200,000** | **1,464,340** | **3,200,000** | **1,468,800** |
+| Product | % Return | Suggested Holding ($) | Return ($) | Current Holding ($) | Return ($) |
+|---|---|---|---|---|---|
+| VMRXX | 4.00% | 420,000 | 16,800 | 720,000 | 28,800 |
+| N02952 | 5.94% | 300,000 | 17,820 | 0 | 0 |
+| LLY | 10% | 223,858 | 22,386 | 223,858 | 22,386 |
+| WMT | 10% | 359,929 | 35,993 | 359,929 | 35,993 |
+| GOOGL | 10% | 496,000 | 49,600 | 496,000 | 49,600 |
+| NVDA | 10% | 632,071 | 63,207 | 632,071 | 63,207 |
+| AMZN | 10% | 768,142 | 76,814 | 768,142 | 76,814 |
+| **Total** | | **3,200,000** | **282,620** | **3,200,000** | **276,800** |
 
-*   **2-Year return of the suggested portfolio vs current:** 45.76% vs 45.90%
-*   **Analysis:** In a strong bull market, the suggested portfolio slightly underperforms (-0.14% or ~USD 4,460) because the fixed return of the FXRA0415 does not participate in the equity rally, and the reduced cash allocation misses out on higher floating rates. This is the **opportunity cost** of choosing certainty over potential upside.
+- Annual return of suggested portfolio: **8.83%** vs current portfolio: **8.65%**
+- Incremental benefit: +$5,820 annually (+0.18% improvement)
 
-## Bad Market Condition (Equity Correction)
-*   **Probability:** 15%
-*   **Scenario Grounds:** Economic downturn or market shock causing an equity correction. The USD/HKD peg holds due to HKMA intervention.
-*   **Equity Return:** -15.0% p.a. (Moderate bear market).
-*   **Cash Return:** +2.0% p.a. (Safe-haven flows, potential rate cuts).
-*   **FXRA0415 Return:** +8.02% total (Fixed, provides a defensive return stream).
+### Upside Market Condition
 
-| Product | % Return (2Y Total) | Suggested Holding (USD) | Projected PnL (USD) | Current Holding (USD) | Projected PnL (USD) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Equities (Aggregate)** | -27.75% | 2,480,000 | -688,200 | 2,480,000 | -688,200 |
-| VMRXX.O (Cash) | 4.04% | 520,000 | 21,008 | 720,000 | 29,088 |
-| **FXRA0415** | **8.02%** | **200,000** | **16,040** | **0** | **0** |
-| **Total** | **-20.35%** | **3,200,000** | **-651,152** | **3,200,000** | **-659,112** |
+| Product | % Return | Suggested Holding ($) | Return ($) | Current Holding ($) | Return ($) |
+|---|---|---|---|---|---|
+| VMRXX | 4.00% | 420,000 | 16,800 | 720,000 | 28,800 |
+| N02952 | 5.94% | 300,000 | 17,820 | 0 | 0 |
+| Equity (all) | 20% | 2,480,000 | 496,000 | 2,480,000 | 496,000 |
+| **Total** | | **3,200,000** | **530,620** | **3,200,000** | **524,800** |
 
-*   **2-Year return of the suggested portfolio vs current:** -20.35% vs -20.60%
-*   **Analysis:** In a down market, the suggested portfolio provides a cushion, outperforming the current portfolio by 0.25% (USD ~8,000). The fixed return from FXRA0415 acts as a stabilizer, partially offsetting equity losses better than the lower-yielding cash would. This demonstrates the **downside protection** benefit in alignment with the high-certainty need.
+- Annual return: **16.58%** (suggested) vs **16.40%** (current)
+- Incremental benefit: +$5,820
 
-# Risk Disclosure
-*   Past performance does not guarantee future returns.
-*   Projected returns are estimates, not promises.
-*   Structured products have risk of principal loss. The FX Window Range Accrual Note (FXRA0415) is **only principal protected if held to maturity**. Early redemption or issuer default could result in a loss of up to 100% of the invested capital.
-*   The product's coupon payment is contingent on the USD/HKD exchange rate remaining within a specified range. While historically stable, there is no guarantee this condition will be met.
-*   Investors assume the credit risk of Barclays Bank PLC.
+### Downside Market Condition (Recession – Rates Fall; Note Called)
 
-# References
-*   **Client Profile & Holdings:** `2_profile.md`, `2_holdings.csv`
-*   **Product Catalog:** `FXRA0415.md`, `demo-market-quotes.csv`
-*   **Web References:** N/A (No web search capability used). Historical return assumptions for equities and cash are based on long-term market averages and data from the provided product catalog.
+Assumption: Note is called at first quarterly call (Nov 2026) after receiving one full quarter coupon. Proceeds reinvested at prevailing cash yield of 2% (simulated for subsequent years). For simplicity, assume the call occurs at end of year 1; the portfolio then holds only cash and equities. Returns shown for full year.
+
+| Product | % Return | Suggested Holding ($) | Return ($) | Current Holding ($) | Return ($) |
+|---|---|---|---|---|---|
+| VMRXX (remaining) | 4.00% (first year) | 420,000 | 16,800 | 720,000 | 28,800 |
+| N02952 (called after 1 quarter) | 5.94% for 1 quarter | 300,000 | 4,455 | 0 | 0 |
+| N02952 proceeds reinvested | 2.00% for 3 quarters | 300,000 | 4,500 | 0 | 0 |
+| Equity (all) | -15% | 2,480,000 | -372,000 | 2,480,000 | -372,000 |
+| **Total** | | **3,200,000** | **-346,245** | **3,200,000** | **-343,200** |
+
+- Annual return: **-10.82%** (suggested) vs **-10.73%** (current)
+- Difference: -$3,045 worse. The loss is slightly larger because the note’s early reinvestment at lower cash rate partially offsets equity losses but not enough. However, the note’s principal is returned at call (no loss), so the downside is limited relative to pure equities.
+
+## Risk Disclosure
+
+- **Past performance does not guarantee future returns.** Historical return figures are for reference only.
+- **Projected returns are estimates, not promises.** Actual outcomes may differ materially.
+- **Structured products have risk of principal loss.** The N02952 note is not principal-protected if sold before maturity; investors may lose part or all of their investment.
+- **Credit risk**: The note is unsecured and subject to the issuer’s ability to pay.
+- **Liquidity risk**: Early exit may cause significant loss. No secondary market guarantee.
+
+## References
+
+- **Product Catalog**: CMT_note_N02952.md (FactSheet for USD Callable Range Accrual Note) – Source: Planbot Internal Data
+- **Client Profile**: ID 2 (Sarah Chen) – 2_profile.md, 2_holdings.csv – Source: Planbot Generated Inputs
+- **Market Quotes**: demo-market-quotes.csv (Historical performance for VMRXX and equity holdings) – Source: Planbot Internal Data
+- **Web References**: None used. Market assumptions based on internal historical analysis.
+
+--- End of Proposal ---

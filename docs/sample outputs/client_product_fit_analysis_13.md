@@ -1,150 +1,178 @@
-Client Product-Fit Analysis: Harrison Jr. Education Trust
-=====================================
+# Client Product-Fit Analysis: Harrison Jr. Education Trust
 
-# Executive Summary
+## Executive Summary
 
-We recommend reallocating USD 200,000 from the trust's excess cash holding (US 2-Month Treasury Bill) into its existing core position, the iShares Broad USD Investment Grade Corporate Bond ETF (USIG.O). This action optimizes the portfolio for its long-term education funding mandate by improving expected yield and total return while maintaining a low-risk, high-certainty profile aligned with fiduciary responsibilities. The expected outcome is enhanced income generation and capital growth potential without increasing overall portfolio risk.
+Reduce cash and one bond ETF (AGG) to introduce a core equity position in SPDR S&P 500 ETF (SPY), increasing equity exposure from 0% to approximately 41%. This recommendation addresses the trust’s long-term education funding need (10–15 year horizon) where historical equity returns materially exceed bond yields. The expected outcome is improved inflation-adjusted growth and better alignment with the required return target (3/5), while maintaining sufficient fixed income for downside protection.
 
-# Recommended Product: iShares Broad USD Investment Grade Corporate Bond ETF (USIG.O)
+## Recommended Product: SPDR S&P 500 ETF (SPY)
 
-## Product Specifications
-*   **Issuer/Manager:** BlackRock (iShares)
-*   **Underlying Asset:** Broad portfolio of USD-denominated investment-grade corporate bonds.
-*   **Yield:** 4.56% (as of 2026-03-27)
-*   **Risk Rating:** 3 (Low)
-*   **Liquidity Score:** 5 (Daily Liquidity, T+2 Settlement)
+### Product Specifications
 
-## Performance Metrics
-*   **1-Year Return:** 4.82%
-*   **5-Year Annualized Return:** 3.72%
-*   **Yield (12M):** 4.56%
-*   **Historical Contrast:** The suggested product (USIG.O) offers a materially higher yield (4.56%) compared to the cash holding it is replacing (US2MT=X, yield ~4.06%), with a long-term return profile that supports the trust's growth objective better than short-term cash.
+| Field | Value |
+|-------|-------|
+| Ticker | SPY |
+| Issuer | State Street Global Advisors |
+| Asset Class | Equity – US Large Cap |
+| Currency | USD |
+| Risk Rating | 4 (out of 5) |
+| Expected Return Rating | 4 (out of 5) |
+| Liquidity Score | 5 (Daily Exchange-Traded) |
+| Expense Ratio | 0.0945% |
+| Yield (Dividend) | 1.32% (trailing 12-month) |
 
-## Risk Characteristics
-The product carries moderate interest rate and credit risk inherent to the investment-grade corporate bond market. Its high liquidity score (5) ensures the trust can meet potential distribution needs. The risk rating of 3 is appropriate for a fiduciary portfolio focused on capital preservation and income.
+### Performance Metrics
 
-## Detailed Justification
-The trust's portfolio is prudently constructed with high-quality fixed-income assets. However, a 25% allocation to short-term cash (US2MT=X) is excessive for a 10+ year horizon, creating a significant drag on returns. Increasing the allocation to **USIG.O** is a logical optimization because:
-1.  **Goal Alignment:** It enhances portfolio yield and expected return, directly supporting the "Moderate growth" (Return: 3) objective for education funding.
-2.  **Risk/Certainty Match:** The product's Low risk rating (3) and high Certainty scores over a 3-8 year horizon (4,5) perfectly match the trust's need for "High certainty" (Certainty: 4).
-3.  **Portfolio Hygiene:** It efficiently deploys idle capital into a core, diversified asset already held within the strategy, improving overall portfolio efficiency without introducing new risks or complexity.
-4.  **Product-Fit Score: 4/5** – This is a high-conviction, low-risk adjustment that any trustee should find prudent.
+The table contrasts SPY with the two holdings being replaced (US 2-Month T-Bill and AGG).
 
-# Suggested Portfolio
+| Metric (as of Mar 2026) | SPY | US 2-Month T-Bill | iShares Core US Aggregate Bond (AGG) |
+|-------------------------|:---:|:-----------------:|:------------------------------------:|
+| 1-Year Return | +14.75% | +3.99% | +4.35% |
+| 5-Year Annualised Return | +11.20% | +3.27% | +0.12% |
+| YTD Return | -5.32% | +0.72% | -0.67% |
+| Yield | 1.32% | 4.02% | 3.83% |
+| Risk Rating | 4 | 1 | 3 |
+
+*Sources: demo-market-quotes.csv (SPY, SHV.O, AGG). 5-Year annualised for SPY calculated from 5Y cumulative return of 69.97%. T-Bill approximated from SHV (1-3 month).*
+
+### Risk Characteristics
+
+- **Market Risk:** SPY is subject to broad equity market fluctuations. A 10% drop in the S&P 500 would reduce the portfolio by approximately 4.1% (given 41% allocation).
+- **Concentration Risk:** Single-country (US) large-cap exposure. Mitigated by trust’s remaining 59% in diversified bonds.
+- **Liquidity:** Extremely high – SPY trades >50M shares daily.
+- **Time Horizon Alignment:** 10–15 year horizon reduces the probability of negative exit; 8-year certainty rating is 4/5.
+
+### Detailed Justification
+
+The Harrison Jr. Education Trust requires long-term capital appreciation (target return 3/5, certainty 4/5 over 10–15 years). The current 100% fixed income portfolio (yield ~3.8%) is insufficient to outpace education cost inflation (typically 5–6%). Historical data shows SPY returned ~11% annualised over the last 5 years, far exceeding bond returns. With a 40.7% allocation to SPY, the trust gains equity exposure while preserving core fixed income holdings. The product’s risk rating of 4 is acceptable given the long horizon and the trust’s ability to recover from short-term drawdowns.
+
+---
+
+## Suggested Portfolio
 
 ```mermaid
-pie title Current Portfolio Allocation
-    "US2MT=X (Cash)" : 25
-    "USIG.O" : 13.53
-    "VCIT.O" : 14.27
-    "LQD" : 15
-    "AGG" : 15.73
-    "TLT.O" : 16.47
+pie showData
+title "Current Portfolio Allocation"
+"US 2-Month T-Bill (Cash)" : 500000
+"iShares Broad USD IG Corp Bond (USIG)" : 270616
+"Vanguard Int-Term Corp Bond (VCIT)" : 285308
+"iShares iBoxx $ IG Corp Bond (LQD)" : 300000
+"iShares Core US Aggregate Bond (AGG)" : 314692
+"iShares 20+ Year Treasury Bond (TLT)" : 329384
 ```
 
 ```mermaid
-pie title Suggested Portfolio Allocation
-    "US2MT=X (Cash)" : 15
-    "USIG.O" : 23.53
-    "VCIT.O" : 14.27
-    "LQD" : 15
-    "AGG" : 15.73
-    "TLT.O" : 16.47
+pie showData
+title "Suggested Portfolio Allocation"
+"iShares Broad USD IG Corp Bond (USIG)" : 270616
+"Vanguard Int-Term Corp Bond (VCIT)" : 285308
+"iShares iBoxx $ IG Corp Bond (LQD)" : 300000
+"iShares 20+ Year Treasury Bond (TLT)" : 329384
+"SPDR S&P 500 ETF (SPY)" : 814692
 ```
 
 | Asset | Current Market Value (USD) | Suggested Market Value (USD) | Current % | Suggested % | Change | Remark |
-| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| US 2-Month Treasury Bill (US2MT=X) | 500,000 | 300,000 | 25.00% | 15.00% | -10.00% | Reduce excessive short-term holdings; fund strategic increase in core bond position. |
-| iShares Broad USD Inv Grade Corp Bond ETF (USIG.O) | 270,616 | 470,616 | 13.53% | 23.53% | +10.00% | Increase core holding to improve yield and long-term return potential. |
-| Vanguard Intermediate-Term Corp Bond ETF (VCIT.O) | 285,308 | 285,308 | 14.27% | 14.27% | 0.00% | Maintain existing holding. |
-| iShares iBoxx $ Inv Grade Corporate Bond ETF (LQD) | 300,000 | 300,000 | 15.00% | 15.00% | 0.00% | Maintain existing holding. |
-| iShares Core U.S. Aggregate Bond ETF (AGG) | 314,692 | 314,692 | 15.73% | 15.73% | 0.00% | Maintain existing holding. |
-| iShares 20+ Year Treasury Bond ETF (TLT.O) | 329,384 | 329,384 | 16.47% | 16.47% | 0.00% | Maintain existing holding. |
-| **Total** | **2,000,000** | **2,000,000** | **100.00%** | **100.00%** | **0.00%** | |
+|-------|---------------------------:|----------------------------:|:---------:|:-----------:|:-----:|--------|
+| US 2-Month T-Bill (Cash) | 500,000 | 0 | 25.0% | 0.0% | -25.0% | Redeploy to SPY |
+| iShares Broad USD IG Corp Bond (USIG) | 270,616 | 270,616 | 13.5% | 13.5% | 0.0% | Hold |
+| Vanguard Int-Term Corp Bond (VCIT) | 285,308 | 285,308 | 14.3% | 14.3% | 0.0% | Hold |
+| iShares iBoxx $ IG Corp Bond (LQD) | 300,000 | 300,000 | 15.0% | 15.0% | 0.0% | Hold |
+| iShares Core US Aggregate Bond (AGG) | 314,692 | 0 | 15.7% | 0.0% | -15.7% | Redeploy to SPY |
+| iShares 20+ Year Treasury Bond (TLT) | 329,384 | 329,384 | 16.5% | 16.5% | 0.0% | Hold |
+| **SPDR S&P 500 ETF (SPY)** | **0** | **814,692** | **0.0%** | **40.7%** | **+40.7%** | **Core equity exposure** |
+| **Total** | **2,000,000** | **2,000,000** | **100%** | **100%** | **0.0%** | |
 
-## Pros and cons of suggested portfolio
+### Pros and Cons of Suggested Portfolio
 
-**Pros:**
-*   **Improved Return Profile:** The shift from low-yielding cash to higher-yielding investment-grade bonds is expected to increase the portfolio's annual income by approximately USD 9,000, directly supporting the education funding goal.
-*   **Maintained Risk Discipline:** The portfolio remains 100% allocated to high-quality, liquid fixed income, preserving the high certainty required for a trust. No new asset class or issuer risks are introduced.
-*   **Enhanced Efficiency:** Deploying excess cash into a productive asset improves the portfolio's strategic alignment without altering its conservative character.
+**Pros**
+- **Growth alignment:** Equities now 40.7% vs. 0%, targeting historical S&P 500 annualised returns of ~10–11% over the 10–15 year horizon, directly addressing the trust’s need for inflation-adjusted education funding.
+- **Diversification:** Retains 59.3% in investment-grade bonds (USIG, VCIT, LQD, TLT) providing income and stability. TLT adds duration for potential rate-cut scenarios.
+- **Tax efficiency:** SPY is an ETF with low turnover and qualified dividends, suitable for trust taxation.
 
-**Cons:**
-*   **Modestly Increased Interest Rate Sensitivity:** The portfolio's duration will increase slightly as cash is moved into longer-dated bonds, making it more sensitive to rising interest rates in the short term. However, this is appropriate for a long-horizon trust.
-*   **Reduced Immediate Liquidity Buffer:** The cash buffer is reduced from 25% to 15% of AUM. This remains a substantial liquidity reserve (USD 300,000) for any near-term needs.
+**Cons**
+- **Short-term volatility:** In a bear market (e.g., -20% equity), the portfolio could decline ~8.1% vs. 0% previously. However, the education horizon allows recovery.
+- **Concentration risk:** 40.7% in US large-cap single index. This is mitigated by the diversification across sectors within SPY.
+- **Interest rate risk from TLT:** 16.5% allocation to long-term Treasuries; if rates rise sharply, TLT could experience double-digit declines.
 
-## Alternative suggested product to consider
+### Alternative Suggested Products to Consider
 
-1.  **Vanguard Total Bond Market ETF (BND.O):** As an alternative to USIG.O, BND provides exposure to the entire U.S. investment-grade bond market, including government, corporate, and securitized bonds. This offers slightly broader diversification within the same risk bracket.
-2.  **iShares 7-10 Year Treasury Bond ETF (IEF.O):** For a client wishing to maintain a high certainty profile but seeking a marginally higher yield than cash without taking corporate credit risk, IEF.O offers a pure play on intermediate-term U.S. Treasury bonds.
+1. **Vanguard Total Stock Market ETF (VTI)** – Offers broader US equity exposure including mid- and small-caps, further diversifying away from mega-cap concentration. Risk rating 4, similar expected return.
+2. **iShares MSCI ACWI ETF (ACWI)** – Provides global equity exposure (US + developed + emerging), reducing US single-country risk. Slightly lower expected return but better diversification. Risk rating 4.
 
-# Scenario Analysis
+Neither alternative is included in the suggested portfolio because SPY is the specified recommended product and offers the lowest expense ratio among broad US equity ETFs.
 
-## Normal Market Condition
-*Assumptions based on 5-year historical average returns (2021-2026) for the asset classes.*
-- Projected Investment Grade Corporate Bond returns: **4.0%**. This is near the 5-year average for USIG.O (3.72%).
-- Projected Cash returns: **4.0%**. This aligns with the current yield environment for short-term Treasuries.
-- Other bond ETFs (VCIT, LQD, AGG, TLT) are projected at **4.0%**.
+---
 
-| Product | % Return | Suggested Holding (USD) | Projected P&L (USD) | Current Holding (USD) | Projected P&L (USD) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| US2MT=X (Cash) | 4.0 | 300,000 | 12,000 | 500,000 | 20,000 |
-| USIG.O | 4.0 | 470,616 | 18,825 | 270,616 | 10,825 |
-| VCIT.O | 4.0 | 285,308 | 11,412 | 285,308 | 11,412 |
-| LQD | 4.0 | 300,000 | 12,000 | 300,000 | 12,000 |
-| AGG | 4.0 | 314,692 | 12,588 | 314,692 | 12,588 |
-| TLT.O | 4.0 | 329,384 | 13,175 | 329,384 | 13,175 |
-| **Total** | **4.0** | **2,000,000** | **80,000** | **2,000,000** | **80,000** |
+## Scenario Analysis
 
-* Annual return of the suggested portfolio vs current: **4.0% vs 4.0%**.
-* **Analysis:** In a normal market, the suggested portfolio generates the same total return. The benefit is structural: capital is deployed from transient cash into a permanent, income-generating core holding better suited for the long horizon.
+### Normal Market Condition
 
-## Good Market Condition (Upside)
-*Assumption of a bullish bond market with tightening credit spreads and stable-to-lower interest rates.*
-- Projected Investment Grade Corporate Bond returns: **6.0%**.
-- Projected Cash returns: **4.0%**.
-- Other bond ETFs projected at **5.5%**.
+*Assumptions:* Equities return 10% (historical S&P 500 average over last 5 years). Investment-grade corporate bonds (USIG, VCIT, LQD, AGG) return 4% (blend of current yield and stable prices). Long-term Treasuries (TLT) return 3.5% (yield 4.28% adjusted for slight duration headwind). Cash equivalent (2-month T-Bill) return 3% (current yield). Probability: 70%.
 
-| Product | % Return | Suggested Holding (USD) | Projected P&L (USD) | Current Holding (USD) | Projected P&L (USD) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| US2MT=X (Cash) | 4.0 | 300,000 | 12,000 | 500,000 | 20,000 |
-| USIG.O | 6.0 | 470,616 | 28,237 | 270,616 | 16,237 |
-| VCIT.O | 5.5 | 285,308 | 15,692 | 285,308 | 15,692 |
-| LQD | 5.5 | 300,000 | 16,500 | 300,000 | 16,500 |
-| AGG | 5.5 | 314,692 | 17,308 | 314,692 | 17,308 |
-| TLT.O | 5.5 | 329,384 | 18,116 | 329,384 | 18,116 |
-| **Total** | **5.4** | **2,000,000** | **107,853** | **2,000,000** | **103,853** |
+| Product | % Return | Suggested Holding ($) | Return ($) | Current Holding ($) | Return ($) |
+|---------|:-------:|---------------------:|-----------:|-------------------:|-----------:|
+| US 2-Month T-Bill | 3% | 0 | 0 | 500,000 | 15,000 |
+| USIG | 4% | 270,616 | 10,825 | 270,616 | 10,825 |
+| VCIT | 4% | 285,308 | 11,412 | 285,308 | 11,412 |
+| LQD | 4% | 300,000 | 12,000 | 300,000 | 12,000 |
+| AGG | 4% | 0 | 0 | 314,692 | 12,588 |
+| TLT | 3.5% | 329,384 | 11,528 | 329,384 | 11,528 |
+| SPY | 10% | 814,692 | 81,469 | 0 | 0 |
+| **Total** | | **2,000,000** | **127,234** | **2,000,000** | **73,353** |
 
-* Annual return of the suggested portfolio vs current: **5.4% vs 5.2%**.
-* Incremental benefit: **+USD 4,000 annually (+0.2% improvement)**.
+- **Annual return of suggested portfolio:** 6.36% vs. current 3.67%
+- **Incremental benefit:** +$53,881 (+73% improvement)
 
-## Bad Market Condition - Rising Rate / Credit Stress
-*Assumption of a bearish bond market similar to the 2022 rate hike cycle, with widening credit spreads.*
-- Projected Investment Grade Corporate Bond returns: **-2.0%**.
-- Projected Cash returns: **4.0%**.
-- Other bond ETFs projected at **-1.5%**.
+### Upside Market Condition – Accelerated Growth (probability 15%)
 
-| Product | % Return | Suggested Holding (USD) | Projected P&L (USD) | Current Holding (USD) | Projected P&L (USD) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| US2MT=X (Cash) | 4.0 | 300,000 | 12,000 | 500,000 | 20,000 |
-| USIG.O | -2.0 | 470,616 | -9,412 | 270,616 | -5,412 |
-| VCIT.O | -1.5 | 285,308 | -4,280 | 285,308 | -4,280 |
-| LQD | -1.5 | 300,000 | -4,500 | 300,000 | -4,500 |
-| AGG | -1.5 | 314,692 | -4,720 | 314,692 | -4,720 |
-| TLT.O | -1.5 | 329,384 | -4,941 | 329,384 | -4,941 |
-| **Total** | **-0.8** | **2,000,000** | **-15,853** | **2,000,000** | **-3,853** |
+*Assumptions:* Equities return 20% (robust earnings expansion, low recession risk). Bonds return 5% (rate cuts boost prices; credit spreads tighten). TLT returns 8% (long duration benefits from falling rates). Cash returns 3%.
 
-* Annual return of the suggested portfolio vs current: **-0.8% vs -0.2%**.
-* **Analysis:** In a severe downturn, the suggested portfolio shows a larger mark-to-market loss due to the reduced cash buffer. This highlights the trade-off: accepting higher short-term volatility for better long-term returns. For a trust with a 10+ year horizon, this temporary drawdown is acceptable to achieve the primary objective.
+| Product | % Return | Suggested Holding ($) | Return ($) | Current Holding ($) | Return ($) |
+|---------|:-------:|---------------------:|-----------:|-------------------:|-----------:|
+| US 2-Month T-Bill | 3% | 0 | 0 | 500,000 | 15,000 |
+| USIG | 5% | 270,616 | 13,531 | 270,616 | 13,531 |
+| VCIT | 5% | 285,308 | 14,265 | 285,308 | 14,265 |
+| LQD | 5% | 300,000 | 15,000 | 300,000 | 15,000 |
+| AGG | 5% | 0 | 0 | 314,692 | 15,735 |
+| TLT | 8% | 329,384 | 26,351 | 329,384 | 26,351 |
+| SPY | 20% | 814,692 | 162,938 | 0 | 0 |
+| **Total** | | **2,000,000** | **232,085** | **2,000,000** | **99,882** |
 
-# Risk Disclosure
-- Past performance does not guarantee future returns.
-- Projected returns are estimates, not promises.
-- Bond investments, including ETFs, carry interest rate risk and credit risk, which may result in loss of principal.
-- The value of investments may go down as well as up.
+- **Annual return of suggested portfolio:** 11.60% vs. current 4.99%
+- **Incremental benefit:** +$132,203 (+132% improvement)
 
-# References
-- Client Profile: 13_profile.md (Source: Planbot Internal Data)
-- Client Holdings: 13_holdings.csv (Source: Planbot Internal Data)
-- Product Catalog: demo-market-quotes.csv (Source: Planbot Internal Data)
-- Web References Used: N/A
+### Downside Market Condition – Equity Collapse (similar to COVID-19, probability 15%)
+
+*Assumptions:* Equities return -20% (sudden recession, profit decline). Investment-grade bonds return -2% (credit spreads widen, prices fall). TLT returns +3% (flight to safety pushes down yields). Cash returns 3%.
+
+| Product | % Return | Suggested Holding ($) | Return ($) | Current Holding ($) | Return ($) |
+|---------|:-------:|---------------------:|-----------:|-------------------:|-----------:|
+| US 2-Month T-Bill | 3% | 0 | 0 | 500,000 | 15,000 |
+| USIG | -2% | 270,616 | -5,412 | 270,616 | -5,412 |
+| VCIT | -2% | 285,308 | -5,706 | 285,308 | -5,706 |
+| LQD | -2% | 300,000 | -6,000 | 300,000 | -6,000 |
+| AGG | -2% | 0 | 0 | 314,692 | -6,294 |
+| TLT | 3% | 329,384 | 9,882 | 329,384 | 9,882 |
+| SPY | -20% | 814,692 | -162,938 | 0 | 0 |
+| **Total** | | **2,000,000** | **-170,174** | **2,000,000** | **1,470** |
+
+- **Annual return of suggested portfolio:** -8.51% vs. current 0.07%
+- **Incremental loss:** -$171,644 (portfolio drops from slight gain to significant loss)
+
+---
+
+## References
+
+- **Product Catalog:** demo-market-quotes.csv (Source: Planbot Internal Data) – used for SPY performance, bond yields, risk ratings.
+- **Client Profile:** Client ID 13 (Harrison Jr. Education Trust) – provided as 13_profile.md and 13_holdings.csv.
+- **Structured Product Catalog:** CMT_note_N02952.md (not used in this recommendation).
+- **Sector ETF Data:** sector_etf.md (not directly used; SPY covers all sectors).
+- **Web References:** N/A (no web search performed).
+
+### Risk Disclosure
+
+**Important Risk Warnings:**
+- Past performance is not a guarantee of future returns.
+- All projected returns are estimates based on historical data and current market conditions; they are not promises or guarantees.
+- The value of investments and the income from them can go down as well as up. Investors may not get back the full amount invested.
+- The recommended product (SPY) is subject to market risk, including potential losses of principal. The trust’s portfolio contains fixed income products that carry credit, interest rate, and liquidity risk.
+- This analysis is for informational purposes and does not constitute a solicitation or offer to buy or sell any financial instrument.

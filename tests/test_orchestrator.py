@@ -66,6 +66,29 @@ Some trailing text
         assert "Buying Score: 3" in profiles["1"]
         assert "Buying Score: 4" in profiles["zw-5"]
 
+    def test_product_investor_matching_filter_extraction_with_regex_header_pattern(self):
+        """Test extraction when header_pattern is configured as regex."""
+        sample_output = """
+### Rank 1: Client ID 8 (David Kim)
+#### Profile
+- Buying Score: 5
+
+### Rank 2: Client ID zw-7 (David Wu)
+#### Profile
+- Buying Score: 4
+"""
+        profiles, ids = FilterBuilder.product_investor_matching_filter(
+            sample_output,
+            header_pattern=r"##.*Client\s*ID",
+            client_id_regex=r"Client\s*ID:?\s*([^\s(]+)",
+        )
+
+        assert ids == ["8", "zw-7"]
+        assert "8" in profiles
+        assert "zw-7" in profiles
+        assert "Buying Score: 5" in profiles["8"]
+        assert "Buying Score: 4" in profiles["zw-7"]
+
     def test_client_holdings_filter_csv_parsing(self, tmp_path):
         """Test loading and mapping holdings from CSV."""
         csv_content = """client_id,cash,shares

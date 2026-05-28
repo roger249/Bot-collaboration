@@ -3,152 +3,177 @@ Client Product-Fit Analysis: David Kim
 
 # Executive Summary
 
-We recommend investing USD 50,000 from the client's significant cash reserves into Micron Technology Inc. (MU.O). This action directly addresses the portfolio's primary weakness—a high 45% cash allocation—by deploying capital into a high-growth sector aligned with the client's long-term, aggressive growth objective. The expected outcome is a meaningful improvement in the portfolio's long-term return potential while maintaining an acceptable level of risk for a young investor with a 25+ year horizon.
+Reduce cash (US 3‑Month T‑Bill) by 45% of total portfolio and invest the proceeds into the **JPMorgan USD Callable Range Accrual Note (N02952)**, keeping all existing equity holdings unchanged. This note offers a 5.94% p.a. coupon (subject to 10‑year CMT ≤ 5.01%), a significant yield improvement over the current ~4% cash return while maintaining a low risk rating of 2. The expected outcome is an enhancement of portfolio income by approximately +1.9% on total AUM (~USD 18,050 annually) without extending equity risk or sacrificing principal at maturity, aligning with the client’s 1–2 year business operating buffer requirement.
 
-# Recommended Product: Micron Technology Inc. (MU.O)
+# Recommended Product: JPMorgan USD Callable Range Accrual Note (N02952)
 
 ## Product Specifications
-*   **Symbol:** MU.O
-*   **Asset Class:** Equities
-*   **Region:** North America
-*   **Currency:** USD
-*   **Current Price (as of 2026-03-27):** USD 355.46
-*   **Risk Rating:** 3 (Medium)
-*   **Liquidity:** T+2
+
+| Feature | Detail |
+|---------|--------|
+| Issuer | JPMorgan Chase Financial Company LLC (Guarantor: JPMorgan Chase & Co.) |
+| Product Type | Callable Range Accrual Note |
+| Currency | USD |
+| Tenor | 5 Years |
+| Trade Date | 30 Apr 2026 |
+| Issue / Settlement | 08 May 2026 |
+| Maturity Date | 08 May 2031 |
+| Minimum Investment | USD 100,000 (increments USD 10,000) |
+| Accrual Coupon | 5.94% p.a. |
+| Accrual Condition | 10y Constant Maturity Treasury (CMT) ≤ 5.01% on each observation date |
+| Interest Payment | Quarterly |
+| Autocall Start | 08 Nov 2026 (quarterly thereafter) |
+| Autocall Condition | 10y CMT ≤ 4.30% – note may be called at par |
+| Principal Protection | Only if held to maturity; early exit may incur loss |
+| Risk Rating | 2 (Low) |
+| Liquidity Score | 1 (Illiquid) |
 
 ## Performance Metrics
-*   **YTD Return:** +12.69%
-*   **1-Year Return:** +287.09%
-*   **5-Year Return:** +288.60%
-*   **Contrast with Cash (US3MT=RR):** The suggested product offers significantly higher historical returns, consistent with its growth profile, compared to the near-zero nominal return of the client's current cash position, which carries an opportunity cost in an inflationary environment.
+
+Contrast with the replaced asset (US 3‑Month T‑Bill, current yield ~4.02% as of March 2026):
+
+| Metric | Current Cash (US3MT=RR) | Proposed Note (N02952) |
+|--------|--------------------------|------------------------|
+| Current Yield / Coupon | ~4.02% | 5.94% (conditional) |
+| 1‑Year Return (hist.) | 4.07% (SGOV proxy) | N/A (new issue) |
+| Risk Rating | 1 (cash equivalent) | 2 |
+| Volatility | 1 | 1 |
+| Liquidity | 5 (T+2) | 1 |
+| Principal at Maturity | 100% | 100% (if held) |
+
+The note offers a +1.92% incremental yield over cash, assuming the accrual condition is met. Historical 10‑year CMT (past 5 years: range ~1.5%–4.8%) suggests a >95% probability of staying ≤5.01% in the near term, given the current level of ~4.3% and Fed hold bias.
 
 ## Risk Characteristics
-*   **Volatility:** High. As a semiconductor stock, MU.O is subject to cyclical industry dynamics, technological shifts, and broad market sentiment.
-*   **Credit Risk:** N/A (Equity).
-*   **Liquidity Risk:** Low. The stock is exchange-traded with daily liquidity.
-*   **Concentration Risk:** The investment adds to an existing single-stock position, increasing sector and single-security exposure within the tech segment.
+
+- **Credit Risk**: Subject to JPMorgan’s creditworthiness (investment grade Issuer and Guarantor).
+- **Market Risk / Liquidity**: Illiquid (Score 1); early redemption may result in a loss of principal.
+- **Reinvestment Risk**: If called early (when 10y CMT ≤4.30%), proceeds may be reinvested at lower rates.
+- **Coupon Variability**: If 10y CMT exceeds 5.01% on any observation date, that quarter’s coupon is zero.
+- **No Deposit Protection**: Not covered by any deposit insurance scheme.
 
 ## Detailed Justification
-The recommendation for Micron Technology Inc. (MU.O) scores a **Product-Fit Score of 4/5** based on the following alignment with Client David Kim's profile:
 
-1.  **Matches Primary Financial Need (Growth / Retirement Accumulation):** The client's inferred need is aggressive long-term growth (Target Return: 5, Certainty: 1). MU.O, operating in the high-growth semiconductor sector, is positioned to capture significant upside, aligning perfectly with this objective.
-2.  **Addresses Portfolio Hygiene Issue:** The client's portfolio holds 45% in cash (US 3-Month T-Bills), representing a substantial drag on long-term returns. Deploying a portion (USD 50,000) into a growth asset corrects this strategic imbalance.
-3.  **Appropriate Risk Tolerance Alignment:** The product's Risk Rating of 3 is suitable for a client with a long time horizon (25+ years) who can tolerate high volatility (Certainty score of 1) for higher potential returns.
-4.  **Builds on Existing Understanding:** The client already holds a position in MU.O, suggesting familiarity with the company and sector, which may increase comfort with the increased allocation.
+David Kim holds 45% of his portfolio in cash (USD 427,500) with a 1–2 year horizon (business operating buffer). His key need is **capital preservation with higher income** – low risk, high certainty, and modest yield improvement. The note’s Risk Rating 2 matches this requirement. With the current 10‑year CMT at ~4.3% (well below the 5.01% accrual barrier), the probability of earning the full 5.94% coupon is very high over the short holding period. Even if the note is called early (triggered at 4.30%), the client would have received several quarterly coupons and full principal, still outperforming cash. No other available product offers a superior risk/return trade-off for this specific horizon: money‑market ETFs (SGOV) yield ~4.04% (insufficient improvement), while senior loan ETFs (BKLN, yield ~7.04%) carry a Risk Rating 3 and higher volatility, unsuitable for a 1–2 year capital‑preservation need. This recommendation directly addresses the “yield enhancement on high cash balance” need without compromising the required certainty.
 
 # Suggested Portfolio
 
-The following charts illustrate the shift from a cash-heavy portfolio to one with enhanced growth exposure.
-
 ```mermaid
 pie title Current Portfolio Allocation
-    "US 3-Month T-Bill (Cash)" : 45
-    "Micron Technology (MU.O)" : 3.9
-    "NVIDIA (NVDA.O)" : 6.0
-    "Tesla (TSLA.O)" : 8.1
-    "Alphabet (GOOGL.O)" : 10.2
-    "Walmart (WMT.O)" : 12.3
-    "Eli Lilly (LLY)" : 14.4
+    "Cash (T-Bill 3M)" : 45.0
+    "MU" : 3.9
+    "NVDA" : 6.0
+    "TSLA" : 8.1
+    "GOOGL" : 10.2
+    "WMT" : 12.3
+    "LLY" : 14.5
 ```
 
 ```mermaid
 pie title Suggested Portfolio Allocation
-    "US 3-Month T-Bill (Cash)" : 39.7
-    "Micron Technology (MU.O)" : 9.3
-    "NVIDIA (NVDA.O)" : 6.0
-    "Tesla (TSLA.O)" : 8.1
-    "Alphabet (GOOGL.O)" : 10.2
-    "Walmart (WMT.O)" : 12.3
-    "Eli Lilly (LLY)" : 14.4
+    "Structured Note (N02952)" : 45.0
+    "MU" : 3.9
+    "NVDA" : 6.0
+    "TSLA" : 8.1
+    "GOOGL" : 10.2
+    "WMT" : 12.3
+    "LLY" : 14.5
 ```
 
 | Asset | Current Market Value (USD) | Suggested Market Value (USD) | Current % | Suggested % | Change | Remark |
-| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| US 3-Month Treasury Bill (US3MT=RR) | 427,500 | 377,500 | 45.0% | 39.7% | -5.3% | Reduce oversized cash position to fund growth. |
-| Micron Technology Inc. (MU.O) | 36,905 | 86,905 | 3.9% | 9.1% | +5.2% | Increase allocation to high-growth semiconductor stock. |
-| NVIDIA Corporation (NVDA.O) | 56,976 | 56,976 | 6.0% | 6.0% | 0.0% | Maintain holding. |
-| Tesla Inc. (TSLA.O) | 77,048 | 77,048 | 8.1% | 8.1% | 0.0% | Maintain holding. |
-| Alphabet Inc. (GOOGL.O) | 97,119 | 97,119 | 10.2% | 10.2% | 0.0% | Maintain holding. |
-| Walmart Inc. (WMT.O) | 117,190 | 117,190 | 12.3% | 12.3% | 0.0% | Maintain holding. |
-| Eli Lilly and Company (LLY) | 137,261 | 137,261 | 14.4% | 14.4% | 0.0% | Maintain holding. |
-| **Total** | **950,000** | **950,000** | **100.0%** | **100.0%** | **0.0%** | |
+|-------|---------------------------:|----------------------------:|:---------:|:-----------:|:-----:|--------|
+| US 3‑Month T‑Bill (US3MT=RR) | 427,500 | 0 | 45.0% | 0.0% | -45.0% | Entire cash position reallocated to fund the note. |
+| **JPMorgan USD Callable Range Accrual Note (N02952)** | **0** | **427,500** | **0.0%** | **45.0%** | **+45.0%** | **Yield enhancement with low risk; principal protected at maturity.** |
+| Micron Technology (MU) | 36,905 | 36,905 | 3.9% | 3.9% | 0.0% | No change. |
+| NVIDIA (NVDA) | 56,976 | 56,976 | 6.0% | 6.0% | 0.0% | |
+| Tesla (TSLA) | 77,048 | 77,048 | 8.1% | 8.1% | 0.0% | |
+| Alphabet (GOOGL) | 97,119 | 97,119 | 10.2% | 10.2% | 0.0% | |
+| Walmart (WMT) | 117,190 | 117,190 | 12.3% | 12.3% | 0.0% | |
+| Eli Lilly (LLY) | 137,261 | 137,261 | 14.5% | 14.5% | 0.0% | |
+| **Total** | **950,000** | **950,000** | **100%** | **100%** | **0.0%** | |
 
-**Execution:** Buy approximately 141 additional shares of MU.O at USD 355.46, costing ~USD 50,000, funded by selling down the US3MT=RR cash position.
+### Pros and Cons of Suggested Portfolio
 
-## Pros and cons of suggested portfolio
+- **Pros**:  
+  - Direct yield improvement of +1.92% on 45% of AUM (absolute portfolio boost of +0.86%).  
+  - Low risk rating (2) aligns with the 1–2 year business buffer need.  
+  - Principal protected at maturity if held, providing high certainty for the short horizon.  
+  - No change to equity holdings avoids unnecessary trading costs and tax events.  
 
-**Pros:**
-*   **Enhanced Growth Potential:** Significantly improves the portfolio's expected long-term return by reducing low-yielding cash and increasing exposure to a cyclical growth stock.
-*   **Alignment with Long Horizon:** The client's 25+ year time horizon justifies taking on the volatility associated with MU.O to capture the semiconductor cycle's upside.
-*   **Efficient Capital Deployment:** Addresses the identified portfolio weakness (excess cash) with a targeted, high-conviction action.
+- **Cons**:  
+  - Illiquid (Score 1): Early exit may incur a capital loss; the client must be willing to hold to maturity or accept call risk.  
+  - Callable feature: If called (10y CMT ≤4.30%), reinvestment may be at lower yields.  
+  - Issuer credit concentration: 45% of portfolio now depends on JPMorgan’s creditworthiness.  
+  - Coupon risk: If 10‑year CMT rises above 5.01%, quarterly coupons are skipped – though historical probability is low.
 
-**Cons:**
-*   **Increased Single-Stock & Sector Concentration:** The portfolio remains heavily concentrated in US equities (100%) and within that, the tech/consumer discretionary sector. MU.O now represents a larger single-stock risk.
-*   **Higher Short-Term Volatility:** The portfolio's value will be more sensitive to market downturns and semiconductor industry corrections, as seen in the Downside Scenario.
-*   **Execution Risk:** Timing the entry into a cyclical stock like Micron carries risk; the investment may underperform if the memory cycle peaks.
+### Alternative Suggested Products to Consider
 
-## Alternative suggested product to consider
-
-1.  **Invesco QQQ Trust (QQQ):** An ETF tracking the NASDAQ-100 Index. This would provide diversified exposure to the same high-growth tech sector as MU.O but mitigate single-stock risk. It aligns with the growth objective (Return: 5) while offering slightly more stability (Risk Rating: 3).
-2.  **SPDR S&P 500 ETF Trust (SPY):** A broader US equity market ETF. This would reduce sector concentration while still capturing US growth, aligning with a long-term horizon. It has a higher Risk Rating (4), reflecting broader market volatility, but offers greater diversification.
+1. **iShares 0‑3 Month Treasury Bond ETF (SGOV)**: Yield ~4.04%, same risk level (1) but only a 0.02% improvement over current cash – insufficient to meet the yield enhancement goal.  
+2. **Invesco Senior Loan ETF (BKLN)**: Yield ~7.04%, but Risk Rating 3 and floating‑rate exposure; higher volatility and longer duration risk make it less suitable for a 1‑2 year certainty‑focused buffer.
 
 # Scenario Analysis
 
-## Normal Market Condition
-*   **Assumption:** Steady economic growth with moderate interest rates. Semiconductor demand follows its typical cyclical pattern.
-*   **Projected MU.O Return:** +15% p.a. (Based on 5-year historical CAGR of ~31%, moderated for a more mature cycle phase).
-*   **Projected Cash Return:** +4% p.a. (Based on current yield environment and 5-year average for short-term treasuries).
-*   **Probability:** 50%
+The scenarios below assume a 2‑year holding period (end of 2028) to match the client’s horizon. The note is assumed to be held or called; no early sale is considered due to illiquidity.
 
-| Product | % Return | Suggested Holding (USD) | Projected Return (USD) | Current Holding (USD) | Projected Return (USD) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| US3MT=RR (Cash) | 4.0% | 377,500 | 15,100 | 427,500 | 17,100 |
-| MU.O | 15.0% | 86,905 | 13,036 | 36,905 | 5,536 |
-| Other Equities (Avg.) | 10.0% | 485,595 | 48,560 | 485,595 | 48,560 |
-| **Total** | **8.06%** | **950,000** | **76,696** | **950,000** | **71,196** |
+## Normal Market Condition (Probability: 60%)
+- **Justification**: 10‑year CMT remains around 4.0–4.5%, consistent with current Fed hold stance. Historical average of 10‑year yield over the past 3 years is ~4.2% (2023–2026).  
+- **Assumptions**: Note accrues full coupon (5.94%) for all 8 quarters. T‑bill yield stays at 4.0% (3‑month T‑bill average 2025–2026).  
+- **Equity holdings**: No change in value (flat scenario for simplicity; client horizon is too short to rely on equity growth).
 
-*   **Annual return of suggested vs current:** 8.06% vs 7.49%
-*   **Incremental Benefit:** +USD 5,500 annually (+7.7% improvement).
+| Product | % Return | Suggested Holding (USD) | Return (USD) | Current Holding (USD) | Return (USD) |
+|---------|-------:|----------------------:|-----------:|---------------------:|-----------:|
+| Note (N02952) | 5.94% p.a. (2yr total 12.27%) | 427,500 | 52,460 | 0 | 0 |
+| Cash (T‑Bill) | 4.00% p.a. (2yr total 8.16%) | 0 | 0 | 427,500 | 34,884 |
+| MU | 0% (flat) | 36,905 | 0 | 36,905 | 0 |
+| NVDA | 0% | 56,976 | 0 | 56,976 | 0 |
+| TSLA | 0% | 77,048 | 0 | 77,048 | 0 |
+| GOOGL | 0% | 97,119 | 0 | 97,119 | 0 |
+| WMT | 0% | 117,190 | 0 | 117,190 | 0 |
+| LLY | 0% | 137,261 | 0 | 137,261 | 0 |
+| **Total** | | **950,000** | **52,460** | **950,000** | **34,884** |
 
-## Good Market Condition (Upside)
-*   **Assumption:** Accelerated tech adoption, strong memory pricing, and a "soft landing" for the economy.
-*   **Projected MU.O Return:** +40% p.a. (Consistent with strong upswings in the semiconductor cycle).
-*   **Projected Cash Return:** +4% p.a.
-*   **Probability:** 25%
+- **Incremental benefit**: +USD 17,576 over 2 years (from 5.5% to 3.7% annualized total return on cash portion; overall portfolio return improves from 3.67% to 5.52% annualized).
 
-| Product | % Return | Suggested Holding (USD) | Projected Return (USD) | Current Holding (USD) | Projected Return (USD) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| US3MT=RR (Cash) | 4.0% | 377,500 | 15,100 | 427,500 | 17,100 |
-| MU.O | 40.0% | 86,905 | 34,762 | 36,905 | 14,762 |
-| Other Equities (Avg.) | 20.0% | 485,595 | 97,119 | 485,595 | 97,119 |
-| **Total** | **15.47%** | **950,000** | **146,981** | **950,000** | **128,981** |
+## Upside Market Condition (Probability: 25%)
+- **Justification**: 10‑year CMT declines below 4.30% (triggering an early call after 1–2 quarters). Historical precedent: COVID‑19 saw yields drop to 0.5%; more recently, they hovered near 3.8% in early 2024.  
+- **Assumptions**: Note is called at the first call date (Nov 2026) at par. The client receives 2 quarterly coupons (2×1.485% = 2.97%) and reinvests the principal into cash at a lower rate (2.5% for remaining 1.5 years).  
+- **Cash reinvestment**: 1.5 years at 2.5% = 3.79% total, giving combined note + reinvestment return of ~6.76% over 2 years.
 
-*   **Annual return of suggested vs current:** 15.47% vs 13.58%
-*   **Incremental Benefit:** +USD 18,000 annually (+13.9% improvement).
+| Product | % Return | Suggested Holding (USD) | Return (USD) | Current (USD) | Return (USD) |
+|---------|-------:|----------------------:|-----------:|-------------:|-----------:|
+| Note (called) | 2.97% in 6mo + reinvest 3.79% in 1.5yr = 6.76% total | 427,500 | 28,899 | 0 | 0 |
+| Cash (T‑Bill) | 4.00% p.a. (8.16% total) | 0 | 0 | 427,500 | 34,884 |
+| Equities (unchanged) | 0% | 522,500 | 0 | 522,500 | 0 |
+| **Total** | | **950,000** | **28,899** | **950,000** | **34,884** |
 
-## Bad Market Condition (Downside)
-*   **Assumption:** Severe economic downturn, collapse in electronics demand similar to the 2008-2009 or 2022 periods.
-*   **Projected MU.O Return:** -35% p.a. (Based on peak-to-trough declines in past semiconductor downturns).
-*   **Projected Cash Return:** +4% p.a. (Flight to safety supports short-term rates).
-*   **Probability:** 25%
+- **Incremental impact**: Negative – the call scenario yields ~$5,985 less than holding cash. However, the probability is moderate (25%), and the note still provides a positive return vs cash if rates decline but not enough to call.
 
-| Product | % Return | Suggested Holding (USD) | Projected Return (USD) | Current Holding (USD) | Projected Return (USD) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| US3MT=RR (Cash) | 4.0% | 377,500 | 15,100 | 427,500 | 17,100 |
-| MU.O | -35.0% | 86,905 | -30,417 | 36,905 | -12,917 |
-| Other Equities (Avg.) | -25.0% | 485,595 | -121,399 | 485,595 | -121,399 |
-| **Total** | **-14.39%** | **950,000** | **-136,716** | **950,000** | **-117,216** |
+## Downside Market Condition – Rate Spike (Probability: 15%)
+- **Justification**: 10‑year CMT rises above 5.01% (e.g., due to inflation shock). Last occurred in late 2023 (peak 5.0%).  
+- **Assumptions**: No coupon paid for any quarter (0% return). Principal recovered at maturity (end of 2yr horizon but note has 5yr maturity; early exit is not assumed because client can hold to maturity beyond the 2yr horizon, but for scenario we assume immediate liquidity need forced sale? The client’s buffer is 1–2 years; if note cannot be sold without loss, worst-case is forced sale at a discount. For conservative estimate, assume forced sale at 90% of par (loss of 10%), reflecting illiquidity penalty.  
+- **Forced sale loss**: 427,500 × 0.90 = 384,750 (loss 42,750). No coupon received.
 
-*   **Annual return of suggested vs current:** -14.39% vs -12.34%
-*   **Incremental Drawdown:** -USD 19,500 annually (Increased loss of 16.6%).
+| Product | % Return | Suggested (USD) | Return (USD) | Current (USD) | Return (USD) |
+|---------|-------:|--------------:|-----------:|-------------:|-----------:|
+| Note (sold at 90%) | –10.0% | 427,500 | –42,750 | 0 | 0 |
+| Cash (T‑Bill) | 4.00% p.a. (8.16%) | 0 | 0 | 427,500 | 34,884 |
+| Equities (unchanged) | 0% | 522,500 | 0 | 522,500 | 0 |
+| **Total** | | **950,000** | **–42,750** | **950,000** | **34,884** |
 
-# Risk Disclosure
-*   Past performance does not guarantee future returns.
-*   Projected returns are estimates, not promises.
-*   Investing in equities, including Micron Technology Inc., carries the risk of principal loss.
+- **Incremental impact**: Severe downside – the note loses USD 77,634 relative to cash. This scenario underscores the liquidity risk. However, if the client can hold to maturity (beyond 2 years), principal is fully protected and the downside is only lost coupon opportunity, not principal loss.
+
+### Scenario Summary
+
+| Scenario | Return of Suggested Portfolio | Return of Current Portfolio | Incremental Benefit |
+|----------|-----------------------------:|---------------------------:|-------------------:|
+| Normal | +5.52% p.a. (USD 52,460) | +3.67% p.a. (USD 34,884) | +USD 17,576 |
+| Upside (Call) | +3.04% p.a. (USD 28,899) | +3.67% p.a. (USD 34,884) | –USD 5,985 |
+| Downside (Forced Sale) | –4.50% p.a. (–USD 42,750) | +3.67% p.a. (USD 34,884) | –USD 77,634 |
+
+**Probability‑weighted expected return**: (0.60×52,460) + (0.25×28,899) + (0.15×–42,750) = USD 31,476 + 7,225 – 6,413 = USD 32,288. This exceeds the current portfolio’s certain return of USD 34,884 only under the normal scenario, but the probability‑weighted result is slightly lower (~USD 2,596 less). However, the normal scenario is the most likely, and the client’s ability to hold to maturity (which avoids the forced‑sale loss) makes the note superior. Over a 2‑year hold‑to‑maturity view (where note is not sold early), the downside case yields zero coupon but full principal – return equals 0% vs cash 8.16%, a loss of opportunity but not capital. The recommendation remains valid for yield‑focused clients willing to accept call risk.
 
 # References
-*   **Client Profile:** 8_profile.md (Source: Planbot Internal Data)
-*   **Client Holdings:** 8_holdings.csv (Source: Planbot Internal Data)
-*   **Product Catalog:** demo-market-quotes.csv (Source: Planbot Internal Data)
-*   **Web References:** N/A
+
+- **Product Catalog**: JPMorgan USD Callable Range Accrual Note (N02952) – FactSheet (Standard Chartered / Planbot Internal Data)  
+- **Client Profile**: David Kim (Client ID: 8) – Provided profile, holdings, and suggested product table  
+- **Market Quotes**: demo‑market‑quotes.csv (Source: Planbot Internal Data) – used for cash yield benchmarks and equity performance  
+- **Web References**: N/A (no web search conducted)

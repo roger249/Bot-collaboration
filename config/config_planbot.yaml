@@ -228,11 +228,11 @@ run_configurations:
         # Internally this is stored as a map with client_id as the key.
         client_profiles:
           mode: split_sections_by_header
-          header_pattern: "## Client ID:"
+          header_pattern: "^#{2,}.*Client\\s*ID"
         client_ids:
           mode: regex_capture_all
-          pattern: "(?<=## Client ID:)(.*?)(?=\\s|\\()"
-          ## Client ID:1 (James Harrison)
+          pattern: "Client\\s*ID:?\\s*([^\\s(]+)"
+          ## Rank 1: Client ID 1 (James Harrison)
 
 
     # This filter accepts the input and generate holdings for each client id

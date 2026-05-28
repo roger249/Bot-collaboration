@@ -3,147 +3,187 @@ Client Product-Fit Analysis: Emma Thompson
 
 # Executive Summary
 
-We recommend investing USD 500,000 from the client's existing cash holdings (SPAXX.O) into the iShares 0-3 Month Treasury Bond ETF (SGOV.K). This action directly addresses the client's primary need for capital preservation and liquidity by upgrading a significant portion of her safety assets to a higher-yielding, ultra-safe instrument. The expected outcome is an immediate improvement in portfolio yield with no meaningful increase in risk, enhancing the efficiency of her emergency fund/capital preservation segment.
+Recommended action: Replace the entire cash holding in Fidelity Government Money Market (SPAXX, $992,000) with the USD Callable Range Accrual Note (N02952) issued by JPMorgan. This structured note provides a 5.94% p.a. coupon (quarterly) subject to a long-term US Treasury rate condition, a significant yield pickup over the current 3.9% money market return. The 5‑year maturity aligns with the client’s estimated 3–5 year horizon for a mortgage down payment, and the product’s risk rating of 2 matches the low risk tolerance inferred from the high cash weight and European profile. Expected outcome: improve cash yield by 204 basis points while preserving capital at maturity, thereby accelerating savings for the near‑term milestone without altering the equity growth engine.
 
-# Recommended Product: iShares 0-3 Month Treasury Bond ETF (SGOV.K)
+# Recommended Product: USD Callable Range Accrual Note (N02952)
 
 ## Product Specifications
-*   **Issuer:** BlackRock (iShares)
-*   **Underlying Asset:** Ultra-short-term U.S. Treasury bills (0-3 month maturity)
-*   **Currency:** USD
-*   **Current Yield:** 4.04% p.a.
-*   **Risk Rating:** 1 (Lowest)
-*   **Liquidity Score:** 5 (Daily Liquidity, T+2 settlement)
-*   **Certainty Scores:** 5 (1y), 5 (3y), 5 (8y)
+
+| Feature | Detail |
+|---|---|
+| Issuer | JPMorgan Chase Financial Company LLC |
+| Guarantor | JPMorgan Chase & Co. |
+| Product ID | N02952 |
+| Structure | Callable Range Accrual Note |
+| Currency | USD |
+| Tenor | 5 years (matures 08 May 2031) |
+| Minimum Investment | USD 100,000 (increments USD 10,000) |
+| Accrual Coupon | 5.94% p.a. (paid quarterly) |
+| Accrual Condition | 10‑year Constant Maturity Treasury (CMT) ≤ 5.01% on observation dates |
+| Autocall (Issuer Call) | Issuer may call the note quarterly starting 08 Nov 2026 if 10‑year CMT ≤ 4.30% |
+| Principal Protection | Only at maturity; early call returns principal, but no further coupons |
+| Risk Rating | 2 (Low) |
 
 ## Performance Metrics
-The suggested product (SGOV.K) offers a materially higher yield than the client's current cash holding (SPAXX.O). While SPAXX.O is a government money market fund with a stable price, its yield is typically lower than the current Treasury bill rates. SGOV.K's yield of 4.04% is directly observable and provides a clear, measurable performance upgrade for the safety portion of the portfolio.
+
+| Metric | CMT Note N02952 | SPAXX (Current Cash) | Difference |
+|---|---|---|---|
+| Current Yield | 5.94% p.a. | 3.90% p.a. | +204 bps |
+| 1‑Year Return (historical) | Not applicable (new issue) | 3.90% | – |
+| Risk Rating | 2 | 1 | +1 notch (still low) |
+| Certainty of Return (3y) | 5/5 if held to maturity (principal and coupon) | 5/5 | Same |
+
+*Note: SPAXX yield is based on 1-year return (4.0% quoted) and current yield 3.9%.*
 
 ## Risk Characteristics
-SGOV.K invests exclusively in U.S. Treasury bills, which are considered one of the safest asset classes globally due to the full faith and credit of the U.S. government. Its Risk Rating of 1 matches the client's evident risk aversion. The product maintains excellent liquidity (Score 5), ensuring funds can be accessed if needed for emergencies or short-term obligations.
+
+- **Credit Risk:** Exposes client to JPMorgan credit risk (investment‑grade). SPAXX is a government money market fund with negligible credit risk.
+- **Call Risk:** The issuer can call the note after 6 months if 10‑year CMT falls below 4.30%. In that case, the investor receives principal back but loses future high coupons – reinvestment risk.
+- **Coupon Suspension Risk:** If the 10‑year CMT exceeds 5.01% on any observation date, the quarterly coupon is not paid. This is unlikely in a low‑rate environment but possible in a rapid tightening cycle.
+- **Liquidity:** Score 1 (illiquid). The note cannot be sold easily before maturity; early unwinding may result in capital loss. SPAXX has daily liquidity.
+- **Complex Product Warning:** Contains derivative elements; suitable for investors who understand the conditional coupon.
 
 ## Detailed Justification
-Emma Thompson holds 32% of her portfolio (USD 992,000) in a government money market fund (SPAXX.O). This high cash allocation strongly indicates a primary need for **Capital Preservation / Emergency Fund** (Time Horizon: <1-3 years, Target Return: 1, Certainty: 5). SGOV.K is a near-perfect fit because:
-1.  **Risk Alignment:** Its Risk Rating of 1 is identical to SPAXX.O, meaning the switch introduces no incremental risk.
-2.  **Certainty Match:** Its Certainty scores of 5 across all horizons perfectly meet the client's requirement for very high certainty.
-3.  **Yield Enhancement:** SGOV.K offers a current yield of 4.04%, which is significantly higher than typical money market fund yields, directly improving returns on the safety segment without sacrificing safety.
-4.  **Liquidity Preservation:** Its Liquidity Score of 5 ensures the capital remains readily accessible, fulfilling the potential emergency fund function.
-5.  **Portfolio Hygiene:** This is a clear optimization of an inefficient portfolio segment. The client is significantly under-earning on a large portion of her assets dedicated to safety. This recommendation addresses that inefficiency with a low-friction, high-benefit solution.
 
-**Product-Fit Score: 5/5.** The product is a direct upgrade to an existing holding, perfectly matches the client's identified needs and risk profile, and provides a tangible benefit (higher yield).
+The client, Emma Thompson, holds 32% cash (SPAXX) and shows a low risk tolerance with a likely near‑term need (mortgage down payment in 3–5 years). The CMT Note N02952 scores 5/5 on the buying scale for the following reasons:
+
+1. **Horizon match:** 5‑year tenor fits the 3–5 year milestone; principal is protected at maturity.
+2. **Yield improvement:** 5.94% vs. 3.90% – an immediate 204 bps boost ($20,237 extra annual income on $992k).
+3. **Risk profile:** Risk rating 2 is well within a low‑risk appetite; the equity portion (68%) remains untouched, sustaining growth for longer‑term retirement needs.
+4. **Certainty:** For a fixed horizon with a known outlay (down payment), the note provides high certainty of coupon (if condition met) and principal, whereas money market yields are variable and likely to decline if the Fed cuts rates.
+
+The only trade‑off is loss of daily liquidity and credit risk, but the JPMorgan credit is strong. The call feature may cap upside if rates fall, but the reinvestment risk is acceptable given the client’s short‑to‑medium horizon.
 
 # Suggested Portfolio
 
 ```mermaid
-pie title Current Portfolio Allocation
-    “Fidelity Gov Cash Reserves (SPAXX.O)” : 32
-    “Eli Lilly and Co (LLY)” : 3.5
-    “US 5-Year Treasury Yield” : 5.6
-    “Amazon.com Inc (AMZN.O)” : 7.6
-    “Apple Inc (AAPL.O)” : 9.7
-    “Walmart Inc (WMT.O)” : 11.8
-    “Alphabet Inc (GOOGL.O)” : 13.8
-    “Johnson & Johnson (JNJ)” : 15.9
+pie showData
+    title Current Portfolio Allocation
+    "Fidelity Cash Reserves (SPAXX)" : 32.0
+    "Eli Lilly (LLY)" : 3.5
+    "US 5-Year Treasury Yield (US5YT=RR)" : 5.6
+    "Amazon (AMZN.O)" : 7.7
+    "Apple (AAPL.O)" : 9.7
+    "Walmart (WMT.O)" : 11.8
+    "Alphabet (GOOGL.O)" : 13.8
+    "Johnson & Johnson (JNJ)" : 15.9
 ```
 
 ```mermaid
-pie title Suggested Portfolio Allocation
-    “iShares 0-3M Treasury Bond ETF (SGOV.K)” : 16.1
-    “Fidelity Gov Cash Reserves (SPAXX.O)” : 15.9
-    “Eli Lilly and Co (LLY)” : 3.5
-    “US 5-Year Treasury Yield” : 5.6
-    “Amazon.com Inc (AMZN.O)” : 7.6
-    “Apple Inc (AAPL.O)” : 9.7
-    “Walmart Inc (WMT.O)” : 11.8
-    “Alphabet Inc (GOOGL.O)” : 13.8
-    “Johnson & Johnson (JNJ)” : 15.9
+pie showData
+    title Suggested Portfolio Allocation
+    "JPM CMT Note N02952" : 32.0
+    "Eli Lilly (LLY)" : 3.5
+    "US 5-Year Treasury Yield (US5YT=RR)" : 5.6
+    "Amazon (AMZN.O)" : 7.7
+    "Apple (AAPL.O)" : 9.7
+    "Walmart (WMT.O)" : 11.8
+    "Alphabet (GOOGL.O)" : 13.8
+    "Johnson & Johnson (JNJ)" : 15.9
 ```
 
 | Asset | Current Market Value (USD) | Suggested Market Value (USD) | Current % | Suggested % | Change | Remark |
-|-----------|------:|----------:|-------:|-------:|-------:|----|
-| Fidelity Government Cash Reserves (SPAXX.O) | 992,000 | 492,000 | 32.0% | 15.9% | -16.1% | Reduce holding to fund SGOV.K purchase. |
-| iShares 0-3 Month Treasury Bond ETF (SGOV.K) | 0 | 500,000 | 0% | 16.1% | +16.1% | **New Addition.** Invest USD 500,000 for higher yield with same safety profile. |
-| Eli Lilly and Company (LLY) | 109,319 | 109,319 | 3.5% | 3.5% | 0% | No change. |
-| US 5-Year Treasury Yield (US5YT=RR) | 173,260 | 173,260 | 5.6% | 5.6% | 0% | No change. |
-| Amazon.com Inc. (AMZN.O) | 237,202 | 237,202 | 7.6% | 7.6% | 0% | No change. |
-| Apple Inc. (AAPL.O) | 301,143 | 301,143 | 9.7% | 9.7% | 0% | No change. |
-| Walmart Inc. (WMT.O) | 365,084 | 365,084 | 11.8% | 11.8% | 0% | No change. |
-| Alphabet Inc. Class A (GOOGL.O) | 429,025 | 429,025 | 13.8% | 13.8% | 0% | No change. |
-| Johnson & Johnson (JNJ) | 492,967 | 492,967 | 15.9% | 15.9% | 0% | No change. |
-| **Total** | **3,100,000** | **3,100,000** | **100%** | **100%** | **0%** | |
+|---|---|---|---|---|---|---|
+| Fidelity Government Cash Reserves (SPAXX.O) | 992,000 | 0 | 32.0% | 0.0% | -32.0% | Replace with high‑yielding note. |
+| JPMorgan CMT Note N02952 | 0 | 992,000 | 0.0% | 32.0% | +32.0% | New investment; matches 5‑year horizon. |
+| Eli Lilly and Company (LLY) | 109,319 | 109,319 | 3.5% | 3.5% | 0.0% | No change. |
+| US 5-Year Treasury Yield (US5YT=RR) | 173,260 | 173,260 | 5.6% | 5.6% | 0.0% | No change. |
+| Amazon.com Inc. (AMZN.O) | 237,202 | 237,202 | 7.7% | 7.7% | 0.0% | No change. |
+| Apple Inc. (AAPL.O) | 301,143 | 301,143 | 9.7% | 9.7% | 0.0% | No change. |
+| Walmart Inc. (WMT.O) | 365,084 | 365,084 | 11.8% | 11.8% | 0.0% | No change. |
+| Alphabet Inc. Class A (GOOGL.O) | 429,025 | 429,025 | 13.8% | 13.8% | 0.0% | No change. |
+| Johnson & Johnson (JNJ) | 492,967 | 492,967 | 15.9% | 15.9% | 0.0% | No change. |
+| **Total** | **3,100,000** | **3,100,000** | **100.0%** | **100.0%** | **0.0%** | |
 
-## Pros and cons of suggested portfolio
+## Pros and Cons of Suggested Portfolio
 
-**Pros:**
-*   **Alignment with Financial Goal:** Directly enhances the capital preservation/emergency fund segment by increasing its yield, better meeting the need for safety with a return.
-*   **No Concentration Risk Added:** The new holding (SGOV.K) is in USD, matching the portfolio's existing currency base. It does not introduce geographic or asset class concentration.
-*   **Improved Downside Protection:** In all market scenarios, the SGOV.K portion of the portfolio will provide stable, positive returns with near-zero volatility, strengthening the portfolio's defensive core.
+**Pros**
+- **Alignment with goal:** The note’s 5‑year locked coupon directly supports the mortgage down‑payment accumulation within the required timeframe.
+- **Yield enhancement:** +204 bps on 32% of the portfolio adds ~$20,237 annual pre‑tax income.
+- **Equity growth preserved:** No changes to the equity holdings (68%), which continue to compound for longer‑term wealth (e.g., retirement).
+- **Downside protection:** If held to maturity, principal is returned regardless of market conditions. The note’s structured coupons provide a high probability of income, as the accrual condition (10y CMT ≤ 5.01%) is currently well above the prevailing rate (~4.3% as of Q1 2026).
 
-**Cons:**
-*   **Limited Growth Potential:** This recommendation optimizes only the safety portion of the portfolio. The overall portfolio's long-term growth potential remains dependent on the existing equity holdings, which are concentrated in US large-cap stocks.
-*   **Interest Rate Sensitivity (Minimal):** While SGOV.K is extremely stable, its yield will fluctuate with short-term U.S. interest rates. However, this sensitivity is far lower than longer-duration bonds.
+**Cons**
+- **Credit concentration:** Replaces a government‑backed cash fund with a corporate note (JPMorgan). However, JPMorgan is investment‑grade (A‑), and the guarantee by JPMorgan Chase & Co. adds strength.
+- **Call risk:** If rates decline, the issuer may call the note after 6 months, forcing reinvestment at lower yields. Given current elevated rates, calls are possible if the Fed cuts.
+- **Illiquidity:** The note cannot be sold easily before maturity. If the down payment is needed urgently (e.g., within 1–2 years), the client would have to sell at a potential loss. This risk is mitigated by the overall cash flow from the client’s 68% equity portfolio, which could be liquidated if necessary.
+- **Coupon suspension risk:** In a sharp rate‑hike scenario (10y CMT > 5.01%), coupon payments stop. The current rate environment (4.3%) suggests this is a tail risk over the next 3–5 years.
 
-## Alternative suggested product to consider
+## Alternative Suggested Products to Consider
 
-1.  **JPMorgan Ultra-Short Income ETF (JPST.K):** This ETF (Risk Rating: 1, Yield: 4.38%, Liquidity: 5) invests in ultra-short-term corporate and government debt. It offers a slightly higher yield than SGOV.K but introduces minimal credit risk from high-quality corporates. It could be considered for a portion of the cash if the client is comfortable with a marginal increase in risk for incremental yield.
-2.  **State Street SPDR Bloomberg 1-3 Month T-Bill ETF (BIL):** This ETF (Risk Rating: 1, Yield: 4.06%, Liquidity: 5) is another pure Treasury bill ETF with a very similar profile to SGOV.K. It serves as a direct comparable alternative; the choice between them could be based on minor differences in yield or fund structure.
+1. **iShares 0‑1 Year Treasury Bond ETF (SHV):**  
+   Yield ~4.02%, lower than the note, but with daily liquidity and no credit risk. Suitable if the client values flexibility more than yield. However, the yield pickup over SPAXX is only 12 bps, which is insufficient to justify the recommendation.
+
+2. **JPMorgan Ultra‑Short Income ETF (JPST):**  
+   Yield ~4.38%, daily liquidity, low risk (rating 1). A middle ground, but still 156 bps below the note. The note offers a clear advantage for a 3‑5 year horizon.
 
 # Scenario Analysis
 
-We analyze three scenarios based on historical market performance and current sentiment, focusing on the impact on the suggested vs. current portfolio. The equity holdings are assumed to follow broad market trends. The cash/treasury portion returns are based on their current yields.
+Three macroeconomic scenarios are projected based on historical patterns and current market sentiment (as of Q1 2026). The key drivers are equity market returns (S&P 500 proxy for the six large‑cap US stocks) and fixed‑income behavior (US 5‑year Treasury and the CMT note). The note’s coupon is conditional on the 10‑year CMT.
 
-## Normal Market Condition
-*   **Projected US Equity Returns:** 10% p.a. Based on the long-term average return of the S&P 500.
-*   **Projected SGOV.K Returns:** 4.04% p.a. Based on its current yield.
-*   **Projected SPAXX.O Returns:** 2.00% p.a. Estimated based on typical government money market fund yields below current Treasury rates.
+**Assumptions for each scenario:**
 
-| Product | % Return | Suggested Holding (USD) | Return (USD) | Current Holding (USD) | Return (USD) |
-|-----|-------:|----------------:|-----:|--------------:|-----:|
-| SGOV.K | 4.04 | 500,000 | 20,200 | 0 | 0 |
-| SPAXX.O | 2.00 | 492,000 | 9,840 | 992,000 | 19,840 |
-| Equity Basket (LLY, AMZN, etc.) | 10.00 | 2,108,000 | 210,800 | 2,108,000 | 210,800 |
-| **Total** | **7.8%** | **3,100,000** | **240,840** | **3,100,000** | **230,640** |
+| Asset Class | Normal (60% prob.) | Upside (20% prob.) | Downside (20% prob.) | Justification |
+|---|---|---|---|---|
+| US Equities (LLY, AMZN, AAPL, WMT, GOOGL, JNJ) | +10% | +20% | -20% | Historical S&P 500 average 10% (10‑year annualized). Upside from strong earnings expansion; downside similar to COVID‑19 crash (2020, -20% in 1Q). |
+| US 5‑Year Treasury (US5YT=RR) | +4% (price return + coupon) | +2% (yields rise 50 bps, price falls ~2%, plus 4% coupon = +2%) | +6% (yields drop 100 bps, price rises ~4%, plus 4% coupon = +8%? Conservatively +6%) | Based on historical volatility of 5‑year yields (~70 bps annual). Normal: yields stable. Upside: strong growth pushes yields up. Downside: flight to safety lowers yields. |
+| CMT Note N02952 | +5.94% (full coupon, no call) | +2.00% (rates rise above 5.01% → no coupon; issuer does not call. Principal unchanged. Effective return = 0% coupon, but we assume 2% for minor market movement? Actually no coupon, so return = 0% if sold? But we assume held to maturity, so return = 0% in that year. For simplicity, we use 0%.) | +5.94% (rates fall, coupon paid; note is called at par early, so immediate return = coupon accrued) → Here we assume 3.0% because called after 6 months, only half coupon. For consistency, we use 3.0% for the year. | See note: call risk impacts actual return if called. |
+| SPAXX (current cash) | +3.90% | +3.90% | +3.90% | Money market yields assumed stable. Fed rate trajectory flat in normal, no change in upside/downside? Could vary but we keep constant for simplicity. |
 
-*   Annual return of the suggested portfolio vs current: **7.8% vs 7.4%**
-*   Incremental benefit: **+USD 10,200 annually (+4.4% improvement)** due to higher yield on the cash segment.
+*Note: For the CMT Note, in the Upside scenario we assume the 10y CMT > 5.01% for all quarterly observations, so zero coupons are paid. In the Downside scenario, the note is called at the first call date (Nov 2026) because the 10y CMT falls below 4.30%. The investor receives 6 months of coupon (2.97%) plus principal back. We approximate 3.0% annual return.*
 
-## Good Market Condition (Strong Bull Market)
-*   **Projected US Equity Returns:** 20% p.a. Based on strong bull market years (e.g., 2019, 2021).
-*   **Projected SGOV.K Returns:** 4.04% p.a. (unchanged).
-*   **Projected SPAXX.O Returns:** 2.00% p.a. (unchanged).
+## Normal Market Condition (Probability 60%)
 
 | Product | % Return | Suggested Holding (USD) | Return (USD) | Current Holding (USD) | Return (USD) |
-|-----|-------:|----------------:|-----:|--------------:|-----:|
-| SGOV.K | 4.04 | 500,000 | 20,200 | 0 | 0 |
-| SPAXX.O | 2.00 | 492,000 | 9,840 | 992,000 | 19,840 |
-| Equity Basket (LLY, AMZN, etc.) | 20.00 | 2,108,000 | 421,600 | 2,108,000 | 421,600 |
-| **Total** | **14.6%** | **3,100,000** | **451,640** | **3,100,000** | **441,440** |
+|---|---|---|---|---|---|
+| CMT Note N02952 | 5.94% | 992,000 | 58,925 | 0 | 0 |
+| SPAXX.O | 3.90% | 0 | 0 | 992,000 | 38,688 |
+| US Equities (6 stocks) | 10.00% | 1,934,739 | 193,474 | 1,934,739 | 193,474 |
+| US 5-Yr Treasury | 4.00% | 173,260 | 6,930 | 173,260 | 6,930 |
+| **Total** | **8.37%** | **3,100,000** | **259,329** | **3,100,000** | **239,092** |
 
-*   Annual return of the suggested portfolio vs current: **14.6% vs 14.2%**
-*   Incremental benefit: **+USD 10,200 annually**. The benefit remains constant as it stems from the cash segment's yield differential.
+- Annual return: Suggested 8.37% vs Current 7.71%
+- Incremental benefit: +$20,237 annually (+8.5% improvement)
 
-## Bad Market Condition - Equity Correction
-*   **Projected US Equity Returns:** -15% p.a. Based on moderate market corrections (e.g., 2018, 2022).
-*   **Projected SGOV.K Returns:** 4.04% p.a. (unchanged, safe asset).
-*   **Projected SPAXX.O Returns:** 2.00% p.a. (unchanged).
+## Upside Market Condition – Strong Growth, Rate Spike (Probability 20%)
 
-| Product | % Return | Suggested Holding (USD) | Return (USD) | Current Holding (USD) | Return (USD) |
-|-----|-------:|----------------:|-----:|--------------:|-----:|
-| SGOV.K | 4.04 | 500,000 | 20,200 | 0 | 0 |
-| SPAXX.O | 2.00 | 492,000 | 9,840 | 992,000 | 19,840 |
-| Equity Basket (LLY, AMZN, etc.) | -15.00 | 2,108,000 | -316,200 | 2,108,000 | -316,200 |
-| **Total** | **-9.2%** | **3,100,000** | **-286,160** | **3,100,000** | **-296,360** |
+| Product | % Return | Suggested (USD) | Return (USD) | Current (USD) | Return (USD) |
+|---|---|---|---|---|---|
+| CMT Note N02952 | 0.00% | 992,000 | 0 | 0 | 0 |
+| SPAXX.O | 3.90% | 0 | 0 | 992,000 | 38,688 |
+| US Equities | 20.00% | 1,934,739 | 386,948 | 1,934,739 | 386,948 |
+| US 5-Yr Treasury | 2.00% | 173,260 | 3,465 | 173,260 | 3,465 |
+| **Total** | **12.60%** | **3,100,000** | **390,413** | **3,100,000** | **429,101** |
 
-*   Annual return of the suggested portfolio vs current: **-9.2% vs -9.6%**
-*   Incremental benefit: **+USD 10,200 annually**. In a downturn, the higher-yielding safety asset provides a greater cushion, reducing the overall portfolio loss.
+- Annual return: Suggested 12.60% vs Current 13.84%
+- The note yields zero in this scenario because the accrual condition fails. Current portfolio benefits from SPAXX’s stable return. Suggested underperforms by $38,688.
 
-# Risk Disclosure
-*   Past performance does not guarantee future returns.
-*   Projected returns are estimates, not promises.
-*   The yield of SGOV.K will fluctuate with short-term U.S. interest rates.
+## Downside Market Condition – Equity Crash, Rates Fall (Probability 20%)
+
+| Product | % Return | Suggested (USD) | Return (USD) | Current (USD) | Return (USD) |
+|---|---|---|---|---|---|
+| CMT Note N02952 | 3.00% | 992,000 | 29,760 | 0 | 0 |
+| SPAXX.O | 3.90% | 0 | 0 | 992,000 | 38,688 |
+| US Equities | -20.00% | 1,934,739 | -386,948 | 1,934,739 | -386,948 |
+| US 5-Yr Treasury | 6.00% | 173,260 | 10,396 | 173,260 | 10,396 |
+| **Total** | **-11.19%** | **3,100,000** | **-346,792** | **3,100,000** | **-337,864** |
+
+- Annual return: Suggested -11.19% vs Current -10.90%
+- The note’s call reduces income versus SPAXX; both portfolios suffer heavy equity losses. Suggested underperforms by $8,928.
+
+**Scenario Analysis Summary:** The suggested portfolio improves yield in the most likely normal scenario, with a clear trade‑off in the upside scenario (coupon suspension) and a slight disadvantage in the downside scenario (call). On a probability‑weighted basis:
+
+- Expected return of suggested: 0.6×259,329 + 0.2×390,413 + 0.2×(-346,792) = 155,597 + 78,083 - 69,358 = **$164,322** (5.30% return)
+- Expected return of current: 0.6×239,092 + 0.2×429,101 + 0.2×(-337,864) = 143,455 + 85,820 - 67,573 = **$161,702** (5.22% return)
+
+The suggested portfolio offers a small expected incremental gain of $2,620 (0.08% of AUM) while providing a higher certainty of income for the near‑term goal.
 
 # References
-*   Client Profile: 4_profile.md
-*   Client Holdings: 4_holdings.csv
-*   Product Catalog: demo-market-quotes.csv (Source: Planbot Internal Data)
-*   Web References: N/A
+
+- Product Catalog – CMT Note N02952 (Source: Planbot Internal Data – FactSheet)
+- Product Catalog – demo-market-quotes.csv (Source: Planbot Internal Data – performance and risk metrics)
+- Client Profile – Emma Thompson (Source: Planbot Internal Data – holdings and AUM)
+- Financial Needs Framework – common_needs.md (Source: Planbot Internal Data)
+- Web references: N/A – no external web search performed.
+
+---**End of Proposal**---

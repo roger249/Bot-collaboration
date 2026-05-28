@@ -50,14 +50,12 @@ class FilterBuilder:
 
     @staticmethod
     def _is_client_header_line(line: str, header_pattern: str) -> bool:
-        """Return True when line is a markdown heading for a client section."""
+        """Return True when line matches the configured regex for client headers."""
         stripped = line.strip()
-        if stripped.startswith(header_pattern):
-            return True
-
-        # Support headings like "### Client ID:" when config uses "## Client ID:".
-        normalized_header = header_pattern.lstrip("#").strip()
-        return bool(re.match(rf"^#+\s*{re.escape(normalized_header)}", stripped))
+        try:
+            return bool(re.search(header_pattern, stripped))
+        except re.error:
+            return False
 
     @staticmethod
     def _extract_client_id(line: str, client_id_regex: str) -> str | None:
