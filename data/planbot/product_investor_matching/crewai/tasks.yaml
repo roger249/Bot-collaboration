@@ -10,12 +10,13 @@ product_investor_matching_task:
     - The list is ordered by the shows the top 10 clients with the highest buying score for the recommended product, list in the descending order of the buying score.
     - For any suggested product, please specify the funding source.  
     - Do not increase holding for any product other than the suggested product.
+    - The suggested product shall have more than 0.7% return than existing or better liquidity.  Otherwise a strong justification of switching shall be provided.
     - If there's any reference to a product performance, please specify the historical period.
     - The reference materials are provided at the end of the user prompt as structured JSON that includes below:
       - proposal_instruction_and_format: Instructions and format for generating the proposal
       - client_profiles: list of client profile and existing holdings
       - product_catalogs: investable assets available for recommendation
-      - guidelines:  A list of the common needs.  Feel free to put up potential needs not in the list.
+      - guidelines:  A list of the common needs and market outlook.  
     - Observe the guideline ../shared/common/general_guideline.md
 
   expected_output: |

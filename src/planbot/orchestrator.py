@@ -49,6 +49,52 @@ class FilterBuilder:
     """Builds filter outputs from proposal results."""
 
     @staticmethod
+    def _is_client_header_line(line: str, header_pattern: str) -> bool:
+        """Return True when line is a markdown heading for a client section."""
+        stripped = line.strip()
+        if stripped.startswith(header_pattern):
+            return True
+
+        # Support headings like "### Client ID:" when config uses "## Client ID:".
+        normalized_header = header_pattern.lstrip("#").strip()
+        return bool(re.match(rf"^#+\s*{re.escape(normalized_header)}", stripped))
+
+    @staticmethod
+    def _extract_client_id(line: str, client_id_regex: str) -> str | None:
+        """Extract client id from header line using configured regex then fallback."""
+        try:
+            match = re.search(client_id_regex, line)
+        except re.error:
+            match = None
+
+        if match:
+            candidate = match.group(1).strip() if match.groups() else match.group(0).strip()
+            if candidate:
+                return FilterBuilder._normalize_client_id(candidate)
+
+        # Fallback handles heading-level changes and IDs like wl-2 / zw-5.
+        fallback = re.search(r"Client ID:\s*([^\s(]+)", line)
+        if fallback:
+            return FilterBuilder._normalize_client_id(fallback.group(1).strip())
+        return None
+
+    @staticmethod
+    def _normalize_client_id(client_id: str) -> str:
+        """Normalize model-emitted IDs for stable downstream lookups."""
+        dash_variants = {
+            "\u2010": "-",  # hyphen
+            "\u2011": "-",  # non-breaking hyphen
+            "\u2012": "-",  # figure dash
+            "\u2013": "-",  # en dash
+            "\u2014": "-",  # em dash
+            "\u2212": "-",  # minus sign
+        }
+        normalized = client_id
+        for variant, replacement in dash_variants.items():
+            normalized = normalized.replace(variant, replacement)
+        return normalized.strip()
+
+    @staticmethod
     def product_investor_matching_filter(
         proposal_output: str,
         header_pattern: str = "## Client ID:",
@@ -67,15 +113,15 @@ class FilterBuilder:
         current_section_lines: list[str] = []
 
         for line in lines:
-            if line.strip().startswith(header_pattern):
+            if FilterBuilder._is_client_header_line(line, header_pattern):
                 # Save previous section if exists
                 if current_section_id and current_section_lines:
                     sections[current_section_id] = "\n".join(current_section_lines)
 
                 # Extract client_id from header line
-                match = re.search(client_id_regex, line)
-                if match:
-                    current_section_id = match.group(1).strip()
+                extracted_client_id = FilterBuilder._extract_client_id(line, client_id_regex)
+                if extracted_client_id:
+                    current_section_id = extracted_client_id
                     client_ids_list.append(current_section_id)
                     current_section_lines = [line]
                 else:

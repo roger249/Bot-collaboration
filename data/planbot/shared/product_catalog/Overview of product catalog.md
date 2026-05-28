@@ -4,7 +4,8 @@ Product data is sourced from
 - demo-market-quotes.csv, which contains the master list of available instruments, historical performance metrics, and risk classifications. 
 - Structured products
     - CMT_note.md
-    - FXRA0415.md
+- Sector ETF 
+    - sector_etf.md
 
 To facilitate high-precision matching, each product is scored across four dimensions:
 
@@ -16,7 +17,7 @@ Protocol: This acts as a hard filter. A product is only eligible for a portfolio
 2. Expected Return
 Scale: 1 (Capital Preservation) to 5 (Aggressive Growth).
 
-Definition: Represents the projected annualized yield or capital appreciation. A rating of 1 implies a focus on nominal stability, while 5 indicates a high-conviction growth target, typically associated with higher volatility.
+Definition: Represents the rating of projected annualized yield (not the actual price return) or capital appreciation. A rating of 1 implies a focus on nominal stability, while 5 indicates a high-conviction growth target, typically associated with higher volatility.
 
 3. Certainty (Time-Horizon Probability)
 Scale: 1 to 5, assessed across three horizons: 1y, 3y, and 8y.

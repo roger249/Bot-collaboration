@@ -11,7 +11,6 @@ instructions: |
     - Please verify that the total adds up to 100% for suggested column.
 - Unless specified otherwise, keep suggesting a maximum of 3 new products.
 - Suggest the specific product and the quantity to buy or sell so that it could be executed.  For example, increase AAPL to 30%.
-- Whenever appropriate, give preference to recommend structured product instead of exchange trade
 - Avoid the holding more than 90% of equity in the portfolio.
 - Each product in the table shall have separate row.  Don't aggregate by asset class.  In other words, listed every equity ticker instead of grouping them into one row.
 - Show two pie charts indicating the portfolio allocation before this table using mermaid diagram syntax.  Use double quote (0x22) to quote the asset string.  Mermaid does not accept

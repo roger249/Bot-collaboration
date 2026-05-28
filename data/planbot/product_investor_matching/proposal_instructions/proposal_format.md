@@ -15,9 +15,19 @@ instructions: |
 - Provide details of the suggestion per each client as the sections below. 
 - Elaborate the reasons to justify the financial needs of the client.
 - Provide the key factors that influenced your recommendation, such as the client's financial goals, risk tolerance, and how the recommended product aligns with their needs.
+- Compare the recommended product's expected return against the existing return of the specific switched funds (e.g., $1.5M out of a $10M portfolio), rather than the entire portfolio.
+- No more than 4 clients shall be suggested for structure products.  
 ```
 
+| Rank | Client ID | Client Name | Suggested Product | Buying Score | Rationale | Expected Return | Existing Return |
+|:---:|:---------:|:------------|:----------------|:------------:|:----------|:-----------------------------|---|
+| 1 | 2 | Sarah Chen | FX Window Range Accrual Note (FXRA0415) | 5 | High cash allocation (22.5%) and |
+
 ## Potential needs
+```yaml
+instructions: |
+- List in point forms the potential needs for this client and how the suggested product facilitate achieving the goal.
+```
 
 ## Suggested product
 ```yaml

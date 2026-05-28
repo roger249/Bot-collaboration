@@ -1,13 +1,15 @@
 # Select Sector SPDR ETFs – Performance Summary
 
+## Rating
+Expected Return:4
+Risk Rating: 4
+Volatility: 4
+Certain 1y: 1
+Certain 2y: 2
+Certain 7y: 4
+Liquidity: 5
+
 (S&P 500 Sector Components)
-
-As of: Latest available data (Feb–Mar 2026)  
-Returns are NAV total returns.  
-3Y and 5Y figures are annualized (p.a.).  
-Figures rounded for readability.
-
----
 
 ## 📊 Consolidated Table
 

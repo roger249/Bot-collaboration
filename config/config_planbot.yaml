@@ -50,7 +50,7 @@ reinvestment_proposal:
         purpose: Overview of the CSV file and the structure of the product catalogs
       - name: ../shared/product_catalog/*.csv
         purpose: Details of the investable assets available for recommendation in csv format
-  llm_model: poe_deepseek
+  llm_model: deepseek_tool
 
 product_investor_matching:
   task: product_investor_matching_task
@@ -70,9 +70,9 @@ product_investor_matching:
         purpose: Guidelines on financial needs analysis and common financial needs
       - name: ../shared/common/general_guideline.md
         purpose: Strict guidelines on all tasks.  No exception allowed
+      - name: ../shared/market_outlook/*.md
+        purpose: Market outlook and sentiment analysis for the recommendation
     client_profiles:
-      - name: clients/*.md
-        purpose: Client profiles and suggested product for each client in markdown format
       - name: clients/*.csv
         purpose: Client profiles and suggested product for each client in csv format
     product_catalogs: 
@@ -110,7 +110,7 @@ client_product_fit_analysis:
         purpose: Overview of the CSV file and the structure of the product catalogs
       - name: ../shared/product_catalog/*.csv
         purpose: Details of the investable assets available for recommendation in csv format
-  llm_model: poe_deepseek
+  llm_model: deepseek_tool
 
 portfolio_review:
   task: portfolio_review_task
@@ -140,7 +140,7 @@ portfolio_review:
         purpose: Overview of the CSV file and the structure of the product catalogs
       - name: ../shared/product_catalog/*.csv
         purpose: Details of the investable assets available for recommendation in csv format
-  llm_model: poe_deepseek
+  llm_model: deepseek_tool
 
 llm_models:
   deepseek_tool:
@@ -160,8 +160,8 @@ llm_models:
     temperature: 0.1
   poe_deepseek:
     provider: poe
-    # model: deepseek-v3.2-exp
-    model: deepseek-v3.2-fw
+    model: deepseek-v3.2-exp
+    # model: deepseek-v3.2-fw
     # model: deepseek-v4-pro-t # emit the stupid thinking, couldn't use
     temperature: 0.2
   poe_gemini:
@@ -232,6 +232,8 @@ run_configurations:
         client_ids:
           mode: regex_capture_all
           pattern: "(?<=## Client ID:)(.*?)(?=\\s|\\()"
+          ## Client ID:1 (James Harrison)
+
 
     # This filter accepts the input and generate holdings for each client id
     client_holdings_filter:

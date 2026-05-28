@@ -43,6 +43,29 @@ Some trailing text
         assert "### Profile for C0001" in profiles["C0001"]
         assert "### Profile for C0002" in profiles["C0002"]
 
+    def test_product_investor_matching_filter_extraction_with_h3_headers(self):
+        """Test extraction when report uses ### Client ID headings."""
+        sample_output = """
+### Client ID: 1 (James Harrison)
+#### Profile
+- Buying Score: 3
+
+### Client ID: zw\u20115 (Emily Zhang)
+#### Profile
+- Buying Score: 4
+"""
+        profiles, ids = FilterBuilder.product_investor_matching_filter(
+            sample_output,
+            header_pattern="## Client ID:",
+            client_id_regex=r"(?<=## Client ID:)(.*?)(?=\s|\()",
+        )
+
+        assert ids == ["1", "zw-5"]
+        assert "1" in profiles
+        assert "zw-5" in profiles
+        assert "Buying Score: 3" in profiles["1"]
+        assert "Buying Score: 4" in profiles["zw-5"]
+
     def test_client_holdings_filter_csv_parsing(self, tmp_path):
         """Test loading and mapping holdings from CSV."""
         csv_content = """client_id,cash,shares

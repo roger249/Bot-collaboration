@@ -36,14 +36,41 @@ def _convert_pdf_to_text(path: Path) -> str:
     raise ValueError(f"PDF conversion returned empty content for {path.name}")
 
 
+def _derive_glob_search_folder(root_dir: Path, pattern: str) -> Path:
+    """Infer the base folder a glob searches in for clearer diagnostics."""
+    wildcard_found = False
+    static_parts: list[str] = []
+
+    for part in Path(pattern).parts:
+        if any(char in part for char in "*?["):
+            wildcard_found = True
+            break
+        static_parts.append(part)
+
+    if wildcard_found:
+        return (root_dir / Path(*static_parts)).resolve()
+
+    # Non-glob pattern: show parent folder that was expected to contain the file.
+    return (root_dir / Path(pattern)).parent.resolve()
+
+
 def load_references(root_dir: Path, glob_pattern: str | list[str]) -> list[ReferenceDocument]:
     patterns = glob_pattern if isinstance(glob_pattern, list) else [glob_pattern]
     paths_set: set[Path] = set()
     for pattern in patterns:
-        paths_set.update(root_dir.glob(pattern))
+        matched_paths = {path for path in root_dir.glob(pattern) if path.is_file()}
         # If config is markdown-only, include sibling PDFs automatically.
         if pattern.endswith(".md"):
-            paths_set.update(root_dir.glob(pattern[:-3] + ".pdf"))
+            matched_paths.update(path for path in root_dir.glob(pattern[:-3] + ".pdf") if path.is_file())
+
+        if not matched_paths:
+            search_folder = _derive_glob_search_folder(root_dir, pattern)
+            raise FileNotFoundError(
+                f"Reference glob '{pattern}' matched no files under root '{root_dir}'. "
+                f"Expected files under '{search_folder}' (exists={search_folder.exists()})."
+            )
+
+        paths_set.update(matched_paths)
 
     paths = sorted(paths_set)
     references: list[ReferenceDocument] = []
