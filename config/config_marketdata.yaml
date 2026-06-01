@@ -1,0 +1,27 @@
+output_filename: runs/market_data/selected_etf.csv
+frequency: 1w
+periods:
+  - 6m
+  - 1y
+  - 3y
+  - 5y
+  - 10y
+tickers:
+  - XLK
+  - XLF
+  - XLV
+  - XLY
+  - XLP
+  - XLE
+  - XLI
+  - XLB
+  - XLRE
+  - XLU
+  - XLC
+  - VOO
+  - HYG
+  - FLOT
+  - BSV
+  - SHYG
+  - USO
+  - GLDM

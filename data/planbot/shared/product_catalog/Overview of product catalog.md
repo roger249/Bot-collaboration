@@ -5,7 +5,7 @@ Product data is sourced from
 - Structured products
     - CMT_note.md
 - Sector ETF 
-    - sector_etf.md
+    - selected_etf.csv
 
 To facilitate high-precision matching, each product is scored across four dimensions:
 

@@ -11,6 +11,7 @@ product_investor_matching_task:
     - For any suggested product, please specify the funding source.  
     - Do not increase holding for any product other than the suggested product.
     - The suggested product shall have more than 0.7% return than existing or better liquidity.  Otherwise a strong justification of switching shall be provided.
+    - Consider having more than 5% of the portfolio in cash or cash equivalent for liquidity purpose.
     - If there's any reference to a product performance, please specify the historical period.
     - The reference materials are provided at the end of the user prompt as structured JSON that includes below:
       - proposal_instruction_and_format: Instructions and format for generating the proposal

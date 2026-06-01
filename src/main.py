@@ -15,6 +15,7 @@ if __package__ is None or __package__ == "":
 from src.shared.config_loader import load_config
 from src.author_reviewer.crew_workflow import run_crew_workflow
 from src.planbot.crew_workflow import run_crew_planbot
+from src.planbot.market_data_module import get_market_data_from_config
 from src.planbot.pipeline_runner import PipelineRunner
 
 
@@ -67,6 +68,19 @@ def build_parser() -> argparse.ArgumentParser:
         "--pipeline",
         default="client_product_fit_analysis_proposals",
         help="Name of the pipeline to run",
+    )
+
+    market_parser = subparsers.add_parser("run-market-data", help="Generate product catalog market CSV")
+    market_parser.add_argument(
+        "--config",
+        default="config/config_marketdata.yaml",
+        help="Path to market data config YAML",
+    )
+    market_parser.add_argument(
+        "--tickers",
+        nargs="+",
+        required=False,
+        help="Yahoo ticker symbols to retrieve",
     )
     return parser
 
@@ -145,6 +159,17 @@ def main() -> None:
         except Exception as exc:
             LOGGER.exception("Pipeline execution failed")
             LOGGER.error("Pipeline failed: %s", exc)
+            raise SystemExit(1) from exc
+    elif args.command == "run-market-data":
+        try:
+            output_path = get_market_data_from_config(
+                config_path=args.config,
+                tickers=args.tickers,
+            )
+            LOGGER.info("Market data CSV generated at %s", output_path)
+        except Exception as exc:
+            LOGGER.exception("Market data generation failed")
+            LOGGER.error("Market data generation failed: %s", exc)
             raise SystemExit(1) from exc
 
 
