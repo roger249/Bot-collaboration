@@ -19,13 +19,18 @@ except Exception:  # pragma: no cover - fallback when loguru is unavailable
 
 SUPPORTED_FREQUENCIES = {"1d": "1d", "1w": "1wk", "1m": "1mo", "1q": "3mo"}
 DEFAULT_PERIODS = ["6m", "1y", "3y", "5y", "10y"]
+DEFAULT_METRICS = ["return", "cagr", "max_drawdown", "price_ihr_20", "price_ihr_80"]
+ALLOWED_METRICS = set(DEFAULT_METRICS)
+ALLOWED_METRICS.add("calmar_ratio")
 
 
 class MarketDataConfig(BaseModel):
     output_filename: str = "selected_etf.csv"
+    metrics: list[str] = Field(default_factory=lambda: list(DEFAULT_METRICS))
     frequency: str = "1w"
     periods: list[str] = Field(default_factory=lambda: list(DEFAULT_PERIODS))
     tickers: list[str] = Field(default_factory=list)
+    name_preference: str = "long"
 
     @field_validator("frequency")
     @classmethod
@@ -51,10 +56,35 @@ class MarketDataConfig(BaseModel):
             raise ValueError("tickers cannot be empty")
         return cleaned
 
+    @field_validator("name_preference")
+    @classmethod
+    def _validate_name_preference(cls, value: str) -> str:
+        normalized = str(value).strip().lower()
+        if normalized not in {"long", "short"}:
+            raise ValueError("name_preference must be either 'long' or 'short'")
+        return normalized
+
+    @field_validator("metrics")
+    @classmethod
+    def _validate_metrics(cls, values: list[str]) -> list[str]:
+        normalized = [_normalize_metric_name(item) for item in values if str(item).strip()]
+        if not normalized:
+            raise ValueError("metrics cannot be empty")
+        if len(set(normalized)) != len(normalized):
+            raise ValueError("metrics cannot contain duplicates")
+        invalid = [item for item in normalized if item not in ALLOWED_METRICS]
+        if invalid:
+            raise ValueError(
+                f"Unsupported metrics: {invalid}. Supported: {sorted(ALLOWED_METRICS)}"
+            )
+        return normalized
+
 
 @dataclass
 class PeriodMetrics:
     period_return: float | None
+    cagr: float | None
+    calmar_ratio: float | None
     max_drawdown: float | None
     ihr20: float | None
     ihr80: float | None
@@ -76,13 +106,21 @@ def get_market_data(
     metrics: list[str] | None = None,
     periods: list[str] | None = None,
     output_dir: str | Path = "data/planbot/shared/product_catalog",
+    name_preference: str = "long",
 ) -> Path:
     """Generate a single-table CSV market dataset for the provided Yahoo tickers."""
-    del metrics  # Reserved for future extension.
-
     normalized_tickers = [str(item).strip().upper() for item in tickers if str(item).strip()]
     if not normalized_tickers:
         raise ValueError("tickers cannot be empty")
+
+    normalized_metrics = [_normalize_metric_name(item) for item in (metrics or DEFAULT_METRICS) if str(item).strip()]
+    if not normalized_metrics:
+        raise ValueError("metrics cannot be empty")
+    invalid_metrics = [item for item in normalized_metrics if item not in ALLOWED_METRICS]
+    if invalid_metrics:
+        raise ValueError(
+            f"Unsupported metrics: {invalid_metrics}. Supported: {sorted(ALLOWED_METRICS)}"
+        )
 
     normalized_frequency = str(frequency).strip().lower()
     if normalized_frequency not in SUPPORTED_FREQUENCIES:
@@ -95,10 +133,14 @@ def get_market_data(
     if not normalized_periods:
         raise ValueError("periods cannot be empty")
 
+    normalized_name_preference = str(name_preference).strip().lower()
+    if normalized_name_preference not in {"long", "short"}:
+        raise ValueError("name_preference must be either 'long' or 'short'")
+
     output_path = _resolve_output_path(output_filename=output_filename, output_dir=Path(output_dir))
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    fieldnames = _build_fieldnames(normalized_periods)
+    fieldnames = _build_fieldnames(normalized_periods, normalized_metrics)
     yf = _import_yfinance()
 
     rows: list[dict[str, Any]] = []
@@ -109,7 +151,7 @@ def get_market_data(
         row: dict[str, Any] = {
             "ticker": symbol,
             "asset_class": _as_text(info.get("quoteType") or info.get("category")),
-            "name": _as_text(info.get("shortName") or info.get("longName")),
+            "name": _pick_name(info, normalized_name_preference),
             "currency": _as_text(info.get("currency")),
             "last_update_date": "",
             "last_closing_price": "",
@@ -119,14 +161,22 @@ def get_market_data(
         latest_row = None
 
         for period in normalized_periods:
-            history = _history_to_rows(ticker_obj.history(period=_to_yfinance_period(period), interval=interval))
+            history = _history_to_rows(
+                _fetch_history(ticker_obj=ticker_obj, period=_to_yfinance_period(period), interval=interval)
+            )
             period_metrics = _calculate_period_metrics(history)
             period_results[period] = period_metrics
 
-            row[f"{period}_return"] = _round_or_blank(period_metrics.period_return)
-            row[f"{period}_max_drawdown"] = _round_or_blank(period_metrics.max_drawdown)
-            row[f"price_{period}_IHR_20"] = _round_or_blank(period_metrics.ihr20)
-            row[f"price_{period}_IHR_80"] = _round_or_blank(period_metrics.ihr80)
+            metric_values: dict[str, float | None] = {
+                "return": period_metrics.period_return,
+                "cagr": period_metrics.cagr,
+                "calmar_ratio": period_metrics.calmar_ratio,
+                "max_drawdown": period_metrics.max_drawdown,
+                "price_ihr_20": period_metrics.ihr20,
+                "price_ihr_80": period_metrics.ihr80,
+            }
+            for metric in normalized_metrics:
+                row[_metric_column_name(metric, period)] = _round_or_blank(metric_values.get(metric))
 
             if latest_row is None and history:
                 latest_row = history[0]
@@ -138,12 +188,12 @@ def get_market_data(
         risk_rating = _estimate_risk_rating(period_results.get("1y"), period_results)
         expected_return_score = _estimate_expected_return_score(period_results.get("1y"))
 
-        row["risk_rating"] = _round_or_blank(float(risk_rating))
-        row["expected_return_score"] = _round_or_blank(float(expected_return_score))
-        row["certainty_1y_score"] = _round_or_blank(float(_estimate_certainty_score(risk_rating, horizon="1y")))
-        row["certainty_3y_score"] = _round_or_blank(float(_estimate_certainty_score(risk_rating, horizon="3y")))
-        row["certainty_8y_score"] = _round_or_blank(float(_estimate_certainty_score(risk_rating, horizon="8y")))
-        row["liquidity_score"] = _round_or_blank(float(_estimate_liquidity_score(info)))
+        row["risk_rating"] = risk_rating
+        row["expected_return_score"] = expected_return_score
+        row["certainty_1y_score"] = _estimate_certainty_score(risk_rating, horizon="1y")
+        row["certainty_3y_score"] = _estimate_certainty_score(risk_rating, horizon="3y")
+        row["certainty_8y_score"] = _estimate_certainty_score(risk_rating, horizon="8y")
+        row["liquidity_score"] = _estimate_liquidity_score(info)
 
         rows.append(row)
 
@@ -168,8 +218,10 @@ def get_market_data_from_config(
         tickers=configured_or_overridden_tickers,
         output_filename=cfg.output_filename,
         frequency=cfg.frequency,
+        metrics=cfg.metrics,
         periods=cfg.periods,
         output_dir=output_dir,
+        name_preference=cfg.name_preference,
     )
 
 
@@ -181,7 +233,15 @@ def _import_yfinance() -> Any:
     return yf
 
 
-def _build_fieldnames(periods: list[str]) -> list[str]:
+def _fetch_history(ticker_obj: Any, period: str, interval: str) -> Any:
+    """Fetch price history with a bounded timeout when supported by yfinance."""
+    try:
+        return ticker_obj.history(period=period, interval=interval, timeout=20)
+    except TypeError:
+        return ticker_obj.history(period=period, interval=interval)
+
+
+def _build_fieldnames(periods: list[str], metrics: list[str]) -> list[str]:
     base = [
         "ticker",
         "asset_class",
@@ -190,16 +250,11 @@ def _build_fieldnames(periods: list[str]) -> list[str]:
         "last_update_date",
         "last_closing_price",
     ]
+    # Category-first ordering driven by metrics list from config,
+    # with each category expanded by period.
     dynamic: list[str] = []
-    for period in periods:
-        dynamic.extend(
-            [
-                f"{period}_return",
-                f"{period}_max_drawdown",
-                f"price_{period}_IHR_20",
-                f"price_{period}_IHR_80",
-            ]
-        )
+    for metric in metrics:
+        dynamic.extend(_metric_column_name(metric, period) for period in periods)
 
     tail = [
         "risk_rating",
@@ -277,7 +332,14 @@ def _normalize_index_value(index_value: Any) -> str:
 
 def _calculate_period_metrics(history_rows: list[dict[str, Any]]) -> PeriodMetrics:
     if len(history_rows) < 2:
-        return PeriodMetrics(period_return=None, max_drawdown=None, ihr20=None, ihr80=None)
+        return PeriodMetrics(
+            period_return=None,
+            cagr=None,
+            calmar_ratio=None,
+            max_drawdown=None,
+            ihr20=None,
+            ihr80=None,
+        )
 
     closes_new_to_old = [float(item["close"]) for item in history_rows]
     closes = list(reversed(closes_new_to_old))
@@ -289,16 +351,44 @@ def _calculate_period_metrics(history_rows: list[dict[str, Any]]) -> PeriodMetri
     else:
         period_return = ((last_close / first_close) - 1.0) * 100.0
 
+    cagr = None
+    period_years = _period_to_years_from_rows(history_rows)
+    if first_close > 0 and last_close > 0 and period_years > 0:
+        cagr = ((last_close / first_close) ** (1.0 / period_years) - 1.0) * 100.0
+
     max_drawdown = _max_drawdown_pct(closes)
+    calmar_ratio = _calmar_ratio(cagr, max_drawdown)
     ihr20 = _percentile(closes, 0.2)
     ihr80 = _percentile(closes, 0.8)
 
     return PeriodMetrics(
         period_return=period_return,
+        cagr=cagr,
+        calmar_ratio=calmar_ratio,
         max_drawdown=max_drawdown,
         ihr20=ihr20,
         ihr80=ihr80,
     )
+
+
+def _calmar_ratio(cagr: float | None, max_drawdown: float | None) -> float | None:
+    if cagr is None or max_drawdown is None:
+        return None
+    denominator = abs(max_drawdown)
+    if denominator <= 0:
+        return None
+    return cagr / denominator
+
+
+def _period_to_years_from_rows(history_rows: list[dict[str, Any]]) -> float:
+    if len(history_rows) < 2:
+        return 0.0
+    # rows are new->old
+    span_points = max(1, len(history_rows) - 1)
+    # Works with configured weekly/monthly/quarterly frequencies as an approximation.
+    # 52 points/year is a reasonable baseline for CAGR purposes here.
+    years = span_points / 52.0
+    return max(years, 1 / 52.0)
 
 
 def _max_drawdown_pct(closes: list[float]) -> float | None:
@@ -436,3 +526,37 @@ def _as_text(value: Any) -> str:
     if value is None:
         return ""
     return str(value)
+
+
+def _pick_name(info: dict[str, Any], preference: str) -> str:
+    long_name = _as_text(info.get("longName")).strip()
+    short_name = _as_text(info.get("shortName")).strip()
+
+    if preference == "short":
+        return short_name or long_name
+    return long_name or short_name
+
+
+def _normalize_metric_name(value: str) -> str:
+    text = str(value).strip().lower().replace("-", "_").replace(" ", "_")
+    if text == "price_ihr20":
+        return "price_ihr_20"
+    if text == "price_ihr80":
+        return "price_ihr_80"
+    return text
+
+
+def _metric_column_name(metric: str, period: str) -> str:
+    if metric == "return":
+        return f"{period}_return"
+    if metric == "cagr":
+        return f"{period}_cagr"
+    if metric == "calmar_ratio":
+        return f"{period}_calmar_ratio"
+    if metric == "max_drawdown":
+        return f"{period}_max_drawdown"
+    if metric == "price_ihr_20":
+        return f"price_{period}_IHR_20"
+    if metric == "price_ihr_80":
+        return f"price_{period}_IHR_80"
+    raise ValueError(f"Unsupported metric '{metric}'")

@@ -126,6 +126,20 @@
         "--config",
         "config/config.mocktest.yaml"
       ]
+    },
+    {
+      "name": "Run Market Data",
+      "type": "python",
+      "request": "launch",
+      "module": "src.main",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "run-market-data",
+        "--config",
+        "config/config_marketdata.yaml"
+      ]
     }
   ]
 }

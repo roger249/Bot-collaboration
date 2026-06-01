@@ -21,6 +21,7 @@ def test_get_market_data_generates_single_valid_csv(monkeypatch, tmp_path: Path)
         info = {
             "quoteType": "ETF",
             "shortName": "Fake ETF",
+            "longName": "Fake ETF Long Name",
             "currency": "USD",
             "averageVolume": 2_000_000,
         }
@@ -81,6 +82,8 @@ def test_get_market_data_generates_single_valid_csv(monkeypatch, tmp_path: Path)
         "last_closing_price",
         "1y_return",
         "3y_return",
+        "1y_cagr",
+        "3y_cagr",
         "1y_max_drawdown",
         "3y_max_drawdown",
         "price_1y_IHR_20",
@@ -98,9 +101,15 @@ def test_get_market_data_generates_single_valid_csv(monkeypatch, tmp_path: Path)
     assert len(rows) == 2
     assert rows[0]["ticker"] == "XLK"
     assert rows[1]["ticker"] == "XLF"
+    assert rows[0]["name"] == "Fake ETF Long Name"
     assert rows[0]["last_closing_price"].count(".") == 1
     assert len(rows[0]["last_closing_price"].split(".")[1]) == 2
-    assert rows[0]["risk_rating"].endswith(".00")
+    assert rows[0]["risk_rating"].isdigit()
+    assert rows[0]["expected_return_score"].isdigit()
+    assert rows[0]["certainty_1y_score"].isdigit()
+    assert rows[0]["certainty_3y_score"].isdigit()
+    assert rows[0]["certainty_8y_score"].isdigit()
+    assert rows[0]["liquidity_score"].isdigit()
 
 
 def test_get_market_data_rejects_invalid_frequency(tmp_path: Path):
@@ -184,10 +193,15 @@ def test_get_market_data_from_config_uses_yaml_tickers(monkeypatch, tmp_path: Pa
     cfg_file.write_text(
         """
 output_filename: generated.csv
+metrics:
+    - return
+    - CAGR
+    - calmar_ratio
 frequency: 1w
 periods:
   - 6m
   - 1y
+name_preference: short
 tickers:
   - XLK
   - XLF
@@ -202,7 +216,14 @@ tickers:
     )
 
     with output_path.open("r", encoding="utf-8", newline="") as handle:
-        rows = list(csv.DictReader(handle))
+        reader = csv.DictReader(handle)
+        rows = list(reader)
+        headers = reader.fieldnames or []
 
     assert len(rows) == 2
     assert [row["ticker"] for row in rows] == ["XLK", "XLF"]
+    assert rows[0]["name"] == "Fake ETF"
+    assert "6m_return" in headers
+    assert "1y_cagr" in headers
+    assert "1y_calmar_ratio" in headers
+    assert "6m_max_drawdown" not in headers

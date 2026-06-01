@@ -1,4 +1,9 @@
 output_filename: runs/market_data/selected_etf.csv
+metrics:
+  - return
+  - CAGR
+  - max_drawdown
+  - calmar_ratio
 frequency: 1w
 periods:
   - 6m
@@ -6,6 +11,7 @@ periods:
   - 3y
   - 5y
   - 10y
+name_preference: long
 tickers:
   - XLK
   - XLF
@@ -25,3 +31,5 @@ tickers:
   - SHYG
   - USO
   - GLDM
+  - CBON
+  - ICVT
