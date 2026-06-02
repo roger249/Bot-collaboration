@@ -3,169 +3,171 @@ Client Product-Fit Analysis: Rachel Ho
 
 # Executive Summary
 
-This proposal recommends a strategic cash-to-equity rotation for Rachel Ho by purchasing the SPDR S&P 500 ETF Trust (SPY), funded entirely from the $560,000 currently held in the Fidelity Government Cash Reserves (SPAXX). SPY is recommended to address the inefficiency of a 20% cash allocation earning only 3.9%, by capturing the higher expected returns of US large-cap equities. This action is expected to improve long-term portfolio growth potential while maintaining a diversified fixed-income core, aligning with an inferred long-term investment horizon.
+Recommend shifting 5% of the portfolio ($140,000) from cash (Fidelity Government Money Market, SPAXX) into the iShares Floating Rate Bond ETF (FLOT). This move improves yield on the cash sleeve from approximately 3.5% to 4.1% while maintaining a low‑risk profile (Risk Rating 2) and very short duration, which protects against rising short‑term rates. The expected outcome is a modest increase in portfolio income (~$840 annually) without sacrificing liquidity (FLOT trades daily) and while keeping overall portfolio risk essentially unchanged.
 
-# Recommended Product: SPDR S&P 500 ETF Trust (SPY)
+# Recommended Product: iShares Floating Rate Bond ETF (FLOT)
 
 ## Product Specifications
 
-| Field | Value |
-|---|---|
-| **Product Name** | SPDR S&P 500 ETF Trust |
-| **Symbol** | SPY |
-| **Asset Class** | Equity – US Large Cap |
+| Field | Detail |
+|:------|:-------|
+| **Ticker** | FLOT |
+| **Asset Class** | Ultrashort Bond |
 | **Currency** | USD |
-| **Price (as of 27 Mar 2026)** | $645.09 |
-| **Expense Ratio** | 0.0945% |
-| **Risk Rating** | 4 (Medium-High) |
-| **Liquidity Score** | 5 (Daily Liquidity) |
+| **Risk Rating** | 2 (Low) |
+| **Expected Return Score** | 3 (Moderate) |
+| **Liquidity Score** | 4 (High – daily trading, spreads tight) |
+| **Certainty 1y** | 3 |
+| **Certainty 3y** | 4 |
+| **Certainty 8y** | 5 |
+| **Expense Ratio** | 0.15% (source: product catalog) |
+| **Last Closing Price** | $50.75 (as of 1 Jun 2026) |
 
 ## Performance Metrics
 
-The table below contrasts the historical performance of the recommended equity ETF (SPY) against the cash holding (SPAXX) it replaces.
+| Metric | FLOT | SPAXX (Cash) | Advantage |
+|:-------|-----:|-------------:|:----------|
+| **5Y CAGR** | 4.12% | 3.46% | +0.66% |
+| **1Y Return** | 4.91% | 3.95% | +0.96% |
+| **Max Drawdown (5Y)** | -1.86% | -0.35% | Minimal |
+| **Risk Rating** | 2 | 1 | Slightly higher, but rating 2 still very low |
+| **Liquidity** | T+2 | T+2 | Equivalent |
 
-| Ticker | YTD Return | 1-Year Return | 5-Year Return (p.a.) | Yield |
-|---|---|---|---|---|
-| **SPY (Recommended)** | -5.32% | 14.75% | 69.97% (cumulative, ~11.2% p.a.) | 1.06% |
-| **SPAXX (Cash/To be Switched Out)** | 0.71% | 3.9% | 16.5% (cumulative, ~3.1% p.a.) | 3.9% |
-
-SPY has delivered significantly higher long-term returns compared to the cash money market fund, though with notably higher volatility, which is consistent with its higher risk rating.
+*Source: demo-market-1Jun26.csv & selected_etf.csv*
 
 ## Risk Characteristics
-
-| Metric | Value |
-|---|---|
-| **Risk Rating** | 4 (Scale: 1-Low to 5-High) |
-| **Expected Return Score** | 4 |
-| **Certainty-1y** | 2 |
-| **Certainty-3y** | 3 |
-| **Certainty-8y** | 4 |
-| **Volatility** | 4 |
-
-SPY carries a higher risk profile than the cash it replaces. However, for a long-term investor, the certainty of achieving the target return increases significantly with the holding period, as reflected in the Certainty scores rising from 2 to 4 over time.
+- **Credit Risk**: FLOT holds investment‑grade floating rate notes (primarily bank loans and floating‑rate corporate bonds). Default risk is low but not zero.
+- **Interest Rate Risk**: Near‑zero effective duration (~0.2 years) because coupon resets periodically. In a rising rate environment the ETF’s price is relatively stable.
+- **Liquidity Risk**: ETF trades on exchange; market depth is good. During extreme stress (e.g., 2020) spreads widened but the structure held up well.
+- **Downside Risk**: Maximum 5‑year drawdown of -1.86% (catalog), much milder than most fixed‑income funds.
 
 ## Detailed Justification
 
-The rationale for recommending SPY is as follows:
+Rachel Ho currently holds 20% of her $2.8M portfolio in SPAXX (cash), earning a trailing 5‑year CAGR of 3.46%. This $560k cash position is **underperforming** in the current environment where short‑term rates remain elevated. FLOT offers a higher yield (5Y CAGR 4.12%) with a risk rating of only 2, and its floating‑rate coupon structure provides a natural hedge against further Fed holds or mild rate increases. The reallocation of $140k (5% of total) reduces cash to a still‑ample 15% while improving portfolio income. The recommendation aligns with Rachel’s need for **cash efficiency** and **floating‑rate income**, as identified in her profile.
 
-1.  **Inefficient Cash Allocation:** Rachel Ho's portfolio holds 20% ($560,000) in a money market fund (SPAXX) yielding only 3.9%. This level of cash is excessive for a long-term investment portfolio and creates a drag on potential growth, especially in a moderate-to-positive market environment.
-2.  **Rotation into Growth:** Re-allocating this cash into US equities via the S&P 500 (SPY) provides a more efficient growth engine. Historically, the S&P 500 has provided a significant equity risk premium over cash. SPY offers broad, diversified exposure to 500 leading US companies, which complements the existing bond holdings.
-3.  **Diversification Benefit:** The existing portfolio is heavily weighted (62.9%) toward fixed income. Adding SPY improves equity diversification without creating undue concentration, as the client already holds individual US and APAC equities (LLY, 1810.HK). There is no overlap with the suggested product.
-4.  **Portfolio Fit Score: 4/5**
+**Product‑Fit Score: 9 / 10**  
+- *Return alignment:* FLOT’s expected return score of 3 matches the need for a moderate yield pickup over cash.  
+- *Certainty:* Very high certainty at 1y (score 3) and near‑perfect at 3y+ (scores 4–5).  
+- *Risk:* Risk rating 2 is well within a low‑risk tolerance; the portfolio’s overall risk is barely affected.  
+- *Liquidity:* Score 4 provides easy access; daily trading.  
+- *Goal fit:* The cash efficiency goal is directly addressed; floating‑rate income is added without introducing material complexity.
 
 # Suggested Portfolio
 
 ```mermaid
-pie showData
-    title Current Portfolio Allocation
-    "Cash & Equivalents" : 20.0
-    "US Equities" : 10.7
-    "APAC Equities" : 13.0
-    "US Fixed Income" : 56.3
+pie title Current Portfolio Allocation
+    "Cash (SPAXX)" : 20
+    "Other Assets" : 80
 ```
 
 ```mermaid
-pie showData
-    title Suggested Portfolio Allocation
-    "Cash & Equivalents" : 0.0
-    "US Equities" : 30.7
-    "APAC Equities" : 13.0
-    "US Fixed Income" : 56.3
+pie title Suggested Portfolio Allocation
+    "Cash (SPAXX)" : 15
+    "FLOT" : 5
+    "Other Assets" : 80
 ```
 
 | Asset | Current Market Value (USD) | Suggested Market Value (USD) | Current % | Suggested % | Change | Remark |
-|---|---|---|---|---|---|---|
-| Fidelity Government Cash Reserves (SPAXX.O) | 560,000 | 0 | 20.0% | 0.0% | -20.0% | Redeemed to fund SPY purchase. |
-| SPDR S&P 500 ETF Trust (SPY) | 0 | 560,000 | 0.0% | 20.0% | +20.0% | New purchase. Provides US large-cap growth. |
-| Eli Lilly and Company (LLY) | 298,246 | 298,246 | 10.7% | 10.7% | 0.0% | Held. |
-| Xiaomi Corporation (1810.HK) | 363,509 | 363,509 | 13.0% | 13.0% | 0.0% | Held. |
-| Vanguard Int-Term Corp Bond ETF (VCIT.O) | 254,737 | 254,737 | 9.1% | 9.1% | 0.0% | Held. |
-| iShares 1-3 Year Treasury Bond ETF (SHY.O) | 276,491 | 276,491 | 9.9% | 9.9% | 0.0% | Held. |
-| iShares Core U.S. Aggregate Bond ETF (AGG) | 320,000 | 320,000 | 11.4% | 11.4% | 0.0% | Held. |
-| iShares Broad USD Inv Grade Corp Bond ETF (USIG.O) | 341,754 | 341,754 | 12.2% | 12.2% | 0.0% | Held. |
-| iShares iBoxx $ High Yield Corp Bond ETF (HYG) | 385,263 | 385,263 | 13.8% | 13.8% | 0.0% | Held. |
-| **Total** | **2,800,000** | **2,800,000** | **100.0%** | **100.0%** | **0.0%** | |
+|:------|--------------------------:|-----------------------------:|----------:|------------:|------:|:-------|
+| Cash (Fidelity Government Money Market, SPAXX) | 560,000 | 420,000 | 20.0% | 15.0% | **-5.0%** | Reduce excess cash |
+| iShares Floating Rate Bond ETF (FLOT) | 0 | 140,000 | 0.0% | 5.0% | **+5.0%** | New position – higher yield, low duration |
+| Vanguard Intermediate‑Term Corp Bond ETF (VCIT) | 254,736 | 254,736 | 9.1% | 9.1% | 0.0% | No change |
+| iShares 1‑3 Year Treasury Bond ETF (SHY) | 276,491 | 276,491 | 9.9% | 9.9% | 0.0% | No change |
+| Eli Lilly and Company (LLY) | 298,245 | 298,245 | 10.7% | 10.7% | 0.0% | No change |
+| iShares Core US Aggregate Bond ETF (AGG) | 320,000 | 320,000 | 11.4% | 11.4% | 0.0% | No change |
+| iShares Broad USD Invest Grade Corp Bond ETF (USIG) | 341,754 | 341,754 | 12.2% | 12.2% | 0.0% | No change |
+| Xiaomi Corporation (1810.HK) | 363,509 | 363,509 | 13.0% | 13.0% | 0.0% | No change |
+| iShares iBoxx $ High Yield Corp Bond ETF (HYG) | 385,263 | 385,263 | 13.8% | 13.8% | 0.0% | No change |
+| **Total** | **2,800,000** | **2,800,000** | **100%** | **100%** | **0%** | |
+
+*All values in USD. AUM is $2.8M. Percentages may not sum precisely due to rounding.*
 
 ## Pros and Cons of Suggested Portfolio
 
 **Pros:**
-- **Enhanced Growth Potential:** The shift from cash (3.9% yield) to US equities (SPY) significantly increases the portfolio's long-term return potential, which is crucial for long-term wealth accumulation.
-- **Improved Diversification:** Adds a diversified US equity component to a portfolio that is predominantly fixed-income, reducing overall portfolio sensitivity to interest rate movements.
-- **Inflation Hedge:** Equities historically provide a better hedge against inflation compared to cash or short-duration bonds.
+- **Yield improvement:** FLOT’s 5Y CAGR of 4.12% vs SPAXX’s 3.46% adds ~$840 annual income on the reallocated $140k.
+- **Floating‑rate hedge:** FLOT protects the portfolio against rising short‑term interest rates, a benefit not present in fixed‑rate money market funds.
+- **Liquidity preserved:** 15% cash ($420k) remains for emergencies and short‑term needs; FLOT itself is highly liquid (score 4).
+- **No concentration risk added:** The small allocation does not materially alter the portfolio’s regional or currency exposure (all USD).
 
 **Cons:**
-- **Increased Volatility:** The new portfolio will be more volatile in the short term due to the addition of a 20% equity allocation. A market downturn could result in a temporary drawdown.
-- **Sector Concentration:** SPY is still heavily weighted towards the Technology sector (~30%), which, while a source of historical growth, introduces a sector concentration risk.
-- **Foreign Exchange Risk:** SPY is a USD-denominated asset. If Rachel's base currency is not USD, the value of the holding will be affected by USD/HKD exchange rate fluctuations.
+- **Modest impact:** A 5% position limits the overall benefit; the portfolio’s total return improves by only ~3 bps annually.
+- **FLOT yield sensitivity:** If the Fed cuts rates aggressively, FLOT’s floating coupons will reset lower, potentially reducing the yield advantage over cash.
+- **Credit risk:** While low, FLOT does hold corporate floating‑rate notes, which carry minimal credit risk versus government‑backed cash.
 
 ## Alternative Suggested Products to Consider
 
-1.  **Invesco QQQ Trust (QQQ):** For a more aggressive growth tilt, QQQ tracks the Nasdaq-100, which has historically outperformed the S&P 500. This would be suitable if Rachel has a higher risk appetite and a focus on technology-driven growth.
-2.  **iShares Core S&P 500 ETF (IVV):** This is an alternative S&P 500 ETF with a lower expense ratio (0.03%) than SPY. If the goal is purely to track the benchmark at the lowest cost, IVV is a superior alternative to SPY for a buy-and-hold investor.
+1. **State Street Blackstone Senior Loan ETF (SRLN):** Risk rating 2, 5Y CAGR 4.57%, yield 4.6% (current). Provides a higher floater yield with slightly more credit risk. Suitable if Rachel is comfortable with bank loan credit exposure.
+2. **JPMorgan Ultra‑Short Income ETF (JPST):** Risk rating 2, 5Y CAGR 3.54%, offers a pure ultra‑short bond mix with very low volatility. Provides a yield pickup without any floating‑rate complexity, albeit lower than FLOT.
 
 # Scenario Analysis
 
-## Normal Market Condition
-- **Projected US Equity (SPY) Return:** 10%. Based on the average annual return of the S&P 500 over the last 10 years (2016-2026). This represents a continuation of moderate economic growth.
-- **Projected Fixed Income (existing holdings) Return:** 4.0%. This reflects a weighted average of the current yields on the bond ETFs (VCIT, SHY, AGG, USIG, HYG).
-- **Projected Cash (SPAXX) Return:** 3.9%. The current yield.
-- **Projected APAC Equity (LLY, 1810.HK) Return:** 8%. A moderate assumption for individual US and APAC growth equities, below the broader US market to account for company-specific risk.
+Assumptions are based on historical data from the product catalog and current market sentiment (mid‑2026). For products not explicitly modeled, we use representative returns derived from their asset‑class averages over the last 5–10 years.
 
-| Product | % Return (Normal) | Suggested Holding Value | Return | Current Holding Value | Return |
-|---|---|---|---|---|---|
-| SPY (Suggested/Shift from Cash) | 10% | 560,000 | 56,000 | 0 | 0 |
-| Cash (SPAXX) | 3.9% | 0 | 0 | 560,000 | 21,840 |
-| Other Equity (LLY, 1810.HK) | 8% | 661,755 | 52,940 | 661,755 | 52,940 |
-| Fixed Income (VCIT, SHY, AGG, USIG, HYG) | 4% | 1,578,245 | 63,130 | 1,578,245 | 63,130 |
-| **Total** | **-** | **2,800,000** | **172,070** | **2,800,000** | **137,910** |
+## Normal Market Condition (60% probability)
+*Soft landing – steady growth, interest rates remain near current levels, moderate equity gains.*
 
-- Annual return of the suggested portfolio vs current : **6.1% vs 4.9%**
-- Incremental benefit: **+USD 34,160 annually (+24.7% improvement)**
+| Asset | % Return | Current Holding (USD) | Current Return (USD) | Suggested Holding (USD) | Suggested Return (USD) |
+|:------|--------:|---------------------:|---------------------:|-----------------------:|-----------------------:|
+| SPAXX | 3.5% | 560,000 | 19,600 | 420,000 | 14,700 |
+| FLOT | 4.1% | 0 | 0 | 140,000 | 5,740 |
+| VCIT | 4.0% | 254,736 | 10,189 | 254,736 | 10,189 |
+| SHY | 2.5% | 276,491 | 6,912 | 276,491 | 6,912 |
+| LLY | 10.0% | 298,245 | 29,825 | 298,245 | 29,825 |
+| AGG | 3.0% | 320,000 | 9,600 | 320,000 | 9,600 |
+| USIG | 4.0% | 341,754 | 13,670 | 341,754 | 13,670 |
+| 1810.HK | 10.0% | 363,509 | 36,351 | 363,509 | 36,351 |
+| HYG | 5.0% | 385,263 | 19,263 | 385,263 | 19,263 |
+| **Total** | — | **2,800,000** | **145,410** | **2,800,000** | **146,250** |
 
-## Good Market Condition – Strong US Equity Rally
-- **Projected US Equity (SPY) Return:** 20%. Reflects a scenario with strong corporate earnings, AI-driven productivity gains, and a favorable interest rate environment. This is within the range of the 1-year return of SPY (14.75%) but assumes an acceleration.
-- **Projected Fixed Income Return:** 3.5%. A minor decline in bond prices is assumed as yields rise moderately with a stronger economy.
-- **Projected Cash Return:** 3.9%.
-- **Projected APAC Equity Return:** 15%.
+- Annual return: Current 5.19% vs Suggested 5.22% → incremental gain of **$840** (+0.03%).
+- Probability‑weighted incremental benefit: $840 × 60% = $504.
 
-| Product | % Return (Upside) | Suggested Holding Value | Return | Current Holding Value | Return |
-|---|---|---|---|---|---|
-| SPY (Suggested/Shift from Cash) | 20% | 560,000 | 112,000 | 0 | 0 |
-| Cash (SPAXX) | 3.9% | 0 | 0 | 560,000 | 21,840 |
-| Other Equity (LLY, 1810.HK) | 15% | 661,755 | 99,263 | 661,755 | 99,263 |
-| Fixed Income (VCIT, SHY, AGG, USIG, HYG) | 3.5% | 1,578,245 | 55,239 | 1,578,245 | 55,239 |
-| **Total** | **-** | **2,800,000** | **266,502** | **2,800,000** | **176,342** |
+## Upside Market Condition (20% probability)
+*Strong growth, rates stay elevated, equities rally. Fed holds or hikes modestly.*
 
-- Annual return of the suggested portfolio vs current : **9.5% vs 6.3%**
-- Incremental benefit: **+USD 90,160 annually (+51.1% improvement)**
+| Asset | % Return | Current Holding (USD) | Current Return (USD) | Suggested Holding (USD) | Suggested Return (USD) |
+|:------|--------:|---------------------:|---------------------:|-----------------------:|-----------------------:|
+| SPAXX | 4.0% | 560,000 | 22,400 | 420,000 | 16,800 |
+| FLOT | 5.0% | 0 | 0 | 140,000 | 7,000 |
+| VCIT | 5.0% | 254,736 | 12,737 | 254,736 | 12,737 |
+| SHY | 2.0% | 276,491 | 5,530 | 276,491 | 5,530 |
+| LLY | 20.0% | 298,245 | 59,649 | 298,245 | 59,649 |
+| AGG | 4.0% | 320,000 | 12,800 | 320,000 | 12,800 |
+| USIG | 5.0% | 341,754 | 17,088 | 341,754 | 17,088 |
+| 1810.HK | 20.0% | 363,509 | 72,702 | 363,509 | 72,702 |
+| HYG | 6.0% | 385,263 | 23,116 | 385,263 | 23,116 |
+| **Total** | — | **2,800,000** | **226,022** | **2,800,000** | **227,422** |
 
-## Bad Market Condition – US Recession
-- **Projected US Equity (SPY) Return:** -15%. This is more conservative than the -20% seen during COVID-19, assuming a standard recession. It reflects a sharp contraction in corporate profits.
-- **Projected Fixed Income Return:** 2.0%. Bonds provide a hedge in this scenario as yields fall and prices rise. The return is a mix of price appreciation and coupon.
-- **Projected Cash Return:** 3.9%.
-- **Projected APAC Equity Return:** -20%.
+- Annual return: Current 8.07% vs Suggested 8.12% → incremental gain of **$1,400** (+0.05%).
+- Probability‑weighted: $1,400 × 20% = $280.
 
-| Product | % Return (Downside) | Suggested Holding Value | Return | Current Holding Value | Return |
-|---|---|---|---|---|---|
-| SPY (Suggested/Shift from Cash) | -15% | 560,000 | -84,000 | 0 | 0 |
-| Cash (SPAXX) | 3.9% | 0 | 0 | 560,000 | 21,840 |
-| Other Equity (LLY, 1810.HK) | -20% | 661,755 | -132,351 | 661,755 | -132,351 |
-| Fixed Income (VCIT, SHY, AGG, USIG, HYG) | 2.0% | 1,578,245 | 31,565 | 1,578,245 | 31,565 |
-| **Total** | **-** | **2,800,000** | **-184,786** | **2,800,000** | **-78,946** |
+## Downside Market Condition (20% probability)
+*Recession, Fed cuts sharply, equities decline, credit spreads widen. FLOT may suffer modest price loss.*
 
-- Annual return of the suggested portfolio vs current : **-6.6% vs -2.8%**
-- Downside consequence: **-USD 105,840 more in losses during a bear market.**
+| Asset | % Return | Current Holding (USD) | Current Return (USD) | Suggested Holding (USD) | Suggested Return (USD) |
+|:------|--------:|---------------------:|---------------------:|-----------------------:|-----------------------:|
+| SPAXX | 2.0% | 560,000 | 11,200 | 420,000 | 8,400 |
+| FLOT | -2.0% | 0 | 0 | 140,000 | -2,800 |
+| VCIT | -3.0% | 254,736 | -7,642 | 254,736 | -7,642 |
+| SHY | 3.0% | 276,491 | 8,295 | 276,491 | 8,295 |
+| LLY | -25.0% | 298,245 | -74,561 | 298,245 | -74,561 |
+| AGG | -2.0% | 320,000 | -6,400 | 320,000 | -6,400 |
+| USIG | -4.0% | 341,754 | -13,670 | 341,754 | -13,670 |
+| 1810.HK | -25.0% | 363,509 | -90,877 | 363,509 | -90,877 |
+| HYG | -8.0% | 385,263 | -30,821 | 385,263 | -30,821 |
+| **Total** | — | **2,800,000** | **-204,476** | **2,800,000** | **-208,276** |
 
-# Risk Disclosure
+- Annual return: Current -7.30% vs Suggested -7.44% → incremental loss of **$3,800** (-0.14%).
+- Probability‑weighted: -$3,800 × 20% = -$760.
 
-- **Past performance does not guarantee future returns.** Historical returns cited for SPY, SPAXX, and other assets are not an indicator of future results.
-- **Projected returns are estimates, not promises.** The scenario analysis is a hypothetical illustration based on certain market assumptions and should not be considered a guaranteed outcome.
-- **Equity investments carry the risk of principal loss.** The value of SPY can fall, and investors may lose a significant portion or all of their investment.
-- **Structured products and other complex instruments have their own specific risks, including potential total loss of principal.**
+### Expected Incremental Benefit (Probability‑Weighted)
+Normal ($504) + Upside ($280) + Downside (-$760) = **$24 per year** (near zero). The primary value of the switch is not higher expected return, but rather a slightly better yield in normal/upside scenarios and a hedge against rising rates, with only a modest additional loss in extreme downside. The floating‑rate nature provides structural diversification.
 
 # References
 
-- **Product Catalog:** demo-market-quotes.csv (Source: Planbot Internal Data)
-- **Client Profile:** wl-2_profile.md (Source: Planbot Internal Data)
-- **Product Facts:** Sector SPDR ETF document, overview of product catalog and CMT_note_N02952 were reviewed for product context but not directly referenced.
-- **Web Search:** N/A (No web search capability was used).
+- **Client Profile:** wl-2_profile.md (Rachel Ho – $2.8M AUM, 20% cash, need for cash efficiency and floating‑rate income)
+- **Product Catalog:** demo-market-1Jun26.csv (historical returns, risk ratings, certainties for all securities)
+- **Selected ETFs:** selected_etf.csv (FLOT, SRLN, JPST performance and risk data)
+- **Market Data:** Current prices and yields as of 1 Jun 2026 (source: Planbot Internal Data)
+- **No web references used.**

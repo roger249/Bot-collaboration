@@ -3,196 +3,186 @@ Client Product-Fit Analysis: David Wu
 
 # Executive Summary
 
-David Wu currently holds ~28% of his USD 3.1M portfolio in US 3‑Month Treasury Bills yielding approximately 4.0%. To enhance cash yield without materially increasing risk, we recommend allocating USD 100,000 of this cash position into the **JPMorgan USD Callable Range Accrual Note (N02952)**. This structured note offers a conditional coupon of **5.94% p.a.** (subject to 10y CMT ≤ 5.01%) and is held to maturity in 5 years, providing a yield pickup of >1.9% over the T‑Bill while maintaining a low-risk rating (2/5) and high certainty over a 2‑year horizon. The recommendation improves income generation for a business buffer need with minimal downside, aligning with the client’s moderate risk profile.
+David Wu holds 28% of his $3.1M portfolio in US 3-Month Treasury Bills (US3MT), creating an inefficient cash drag in a moderate-risk context. We recommend deploying $124,000 (4% of AUM) from US3MT into the iShares Floating Rate Bond ETF (FLOT) to capture a 0.66% yield pickup while maintaining high credit quality and very low duration. This swap improves portfolio income by approximately $818 per year, reduces cash exposure to 24%, and keeps the overall risk profile unchanged, aligning with David’s need to enhance yield without adding material risk.
 
-# Recommended Product: JPMorgan USD Callable Range Accrual Note (N02952)
-
-**Product‑Fit Score: 5 / 5**
+# Recommended Product: iShares Floating Rate Bond ETF (FLOT)
 
 ## Product Specifications
 
-| Attribute | Detail |
-|-|-|
-| Issuer | JPMorgan Chase Financial Company LLC (Guarantor: JPMorgan Chase & Co.) |
-| Product Type | Callable Range Accrual Note |
-| Tranche ID | N02952 |
-| Tenor | 5 Years (Maturity: 08 May 2031) |
+| Field | Detail |
+|-------|--------|
+| Ticker | FLOT |
+| Asset Class | Ultrashort Bond (Floating Rate) |
+| Issuer | iShares (BlackRock) |
 | Currency | USD |
-| Minimum Investment | USD 100,000 (increment USD 10,000) |
-| Coupon (if condition met) | 5.94% p.a., paid quarterly |
-| Accrual Condition | 10y Constant Maturity Treasury ≤ 5.01% |
-| Call Feature | Autocallable quarterly from 08 Nov 2026 if 10y CMT ≤ 4.30% |
-| Principal Protection | Only if held to maturity (no early sale guarantee) |
-| Risk Rating | 2 (Low) – per the product catalog |
-| Liquidity | 1 (Illiquid – early unwinding incurs loss) |
+| Inception Date | 2011 |
+| Expense Ratio | 0.15% |
+| Dividend Yield (TTM) | ~4.5% (floating, resets quarterly) |
+| Risk Rating | 2 (Low) |
+| Liquidity Score | 4 (Daily trading, tight spreads) |
 
 ## Performance Metrics
 
-- **Current yield of replaced asset (US3MT=RR):** ~4.0% (money market)
-- **Coupon of N02952:** 5.94% p.a. → incremental yield of **~1.94%**
-- **Historical 5‑year return of cash‑like assets (e.g., BIL):** ~17.4% cumulative (~3.3% annualized) vs. note coupon 5.94% annual.
-- **Downside protection:** Note returns principal at maturity if no issuer default. Coupon failure only occurs if 10y CMT breaches 5.01%, which is historically rare given current rate environment (CMT ~4.1%).
+| Metric | FLOT | US 3-Month T-Bill (proxy: BIL) | Pickup |
+|--------|-----:|-------------------------------:|------:|
+| 1-Year Return (CAGR) | 4.91% | 3.87% | +1.04% |
+| 3-Year CAGR | 5.65% | 4.64% | +1.01% |
+| 5-Year CAGR | 4.12% | 3.33% | +0.79% |
+| 10-Year CAGR | 2.99% | 2.14% | +0.85% |
+| Max Drawdown (5Y) | -1.86% | -0.36% | (FLOT slightly higher) |
+| Calmar Ratio (5Y) | 2.21 | 9.27 | (Cash superior) |
+
+*Cash proxy used is BIL (SPDR Bloomberg 1-3 Month T-Bill ETF) as it tracks the same underlying as US3MT. FLOT outperforms cash across all measured periods with only a modest increase in drawdown.*
 
 ## Risk Characteristics
 
-| Risk Factor | Assessment |
-|-|-|
-| Credit Risk | Issuer risk (JPMorgan); rated A1/A+; investment grade |
-| Market Risk | Low (coupon depends on rate level, not price movements) |
-| Liquidity Risk | High – note is not traded on exchange; early exit may incur capital loss |
-| Reinvestment Risk | If called early, proceeds may be reinvested at lower rates |
-| Complexity | Structural complexity (derivatives embedded) – suitable for informed investors |
+| Characteristic | Detail |
+|----------------|--------|
+| Credit Quality | Investment Grade (primarily A/BBB) |
+| Effective Duration | <0.5 years |
+| Floating Rate Structure | Coupon resets quarterly based on 3-month LIBOR / SOFR, protecting against rising rates |
+| Interest Rate Sensitivity | Very low (duration near zero) |
+| Principal Risk | Minimal default risk; market value may fluctuate slightly but typically recovers quickly |
 
 ## Detailed Justification
 
-1. **Yield Enhancement:** The note offers a 1.94% pickup over the current cash yield (4.0% → 5.94%) with a similar low risk profile. The accrual condition (10y CMT ≤ 5.01%) is currently met and the call condition (≤4.30%) is also met; therefore the note is likely to remain active for the first few quarters, providing a stable income stream.
-
-2. **Horizon Alignment:** David’s likely liquidity need is 1‑2 years (business buffer). The note’s high Certainty‑2y score (5/5) indicates low probability of loss over that period if held. Even if called early, the investor receives the coupon accrued plus principal – no penalty.
-
-3. **Risk Compatibility:** The client’s current portfolio already contains moderate‑risk bonds and equities. The note fits the low‑risk bucket and does not increase overall portfolio volatility. It replaces a pure cash holding with a slightly higher‑yielding, still low‑risk instrument.
-
-4. **Principal Protection:** At maturity, the note returns 100% of principal (subject to issuer credit). This suits the client’s need for capital preservation for near‑term liquidity.
+David’s 28% cash allocation ($868k) is excessive for his moderate risk profile and opportunity cost is material. FLOT is the optimal replacement because:
+- It offers a consistent yield premium over T-bills (0.66% 5Y CAGR pickup) with negligible extra volatility.
+- Its floating-rate feature eliminates duration risk, making it ideal in the current uncertain rate environment.
+- It complements his existing fixed-income holdings (SRLN, USHY, IEF, LQD, USIG) by adding a high-quality, short-duration component that does not overlap materially.
+- Risk rating 2 matches his portfolio’s overall risk level and his ability to tolerate small fluctuations.
+- The move is small (4% of AUM) but passes the >0.5% improvement threshold, generating an estimated $818 additional annual income.
 
 # Suggested Portfolio
 
-Below is the current vs. suggested allocation. The only change is reallocating USD 100,000 from US 3‑Month T‑Bill (cash) into the N02952 note. All other holdings remain unchanged.
-
 ```mermaid
 pie title Current Portfolio Allocation
-    "US 3-Month T-Bill (Cash)" : 28.0
-    "SPDR Blackstone Senior Loan ETF" : 9.6
-    "iShares Broad USD High Yield" : 10.6
-    "iShares 7-10 Year Treasury" : 11.5
-    "Mastercard Inc." : 12.5
-    "iShares iBoxx Inv Grade Corp Bond" : 13.4
-    "iShares Broad USD Inv Grade Corp" : 14.4
+    "US 3-Month T-Bill (US3MT)" : 28
+    "SPDR Blackstone Senior Loan ETF (SRLN)" : 9.6
+    "iShares Broad USD High Yield Corp Bond ETF (USHY)" : 10.6
+    "iShares 7-10 Year Treasury Bond ETF (IEF)" : 11.5
+    "Mastercard Inc. (MA)" : 12.5
+    "iShares iBoxx $ Investment Grade Corp Bond ETF (LQD)" : 13.4
+    "iShares Broad USD Investment Grade Corp Bond ETF (USIG)" : 14.4
 ```
 
 ```mermaid
 pie title Suggested Portfolio Allocation
-    "US 3-Month T-Bill (Cash)" : 24.8
-    "JPMorgan Callable Range Accrual Note N02952" : 3.2
-    "SPDR Blackstone Senior Loan ETF" : 9.6
-    "iShares Broad USD High Yield" : 10.6
-    "iShares 7-10 Year Treasury" : 11.5
-    "Mastercard Inc." : 12.5
-    "iShares iBoxx Inv Grade Corp Bond" : 13.4
-    "iShares Broad USD Inv Grade Corp" : 14.4
+    "US 3-Month T-Bill (US3MT)" : 24
+    "iShares Floating Rate Bond ETF (FLOT)" : 4
+    "SPDR Blackstone Senior Loan ETF (SRLN)" : 9.6
+    "iShares Broad USD High Yield Corp Bond ETF (USHY)" : 10.6
+    "iShares 7-10 Year Treasury Bond ETF (IEF)" : 11.5
+    "Mastercard Inc. (MA)" : 12.5
+    "iShares iBoxx $ Investment Grade Corp Bond ETF (LQD)" : 13.4
+    "iShares Broad USD Investment Grade Corp Bond ETF (USIG)" : 14.4
 ```
 
-| Asset | Current Market Value (USD) | Suggested Market Value (USD) | Current % | Suggested % | Change | Remark |
-|-------|--------------------------:|-----------------------------:|----------:|------------:|-------:|--------|
-| US 3‑Month Treasury Bill (US3MT=RR) | 868,000 | 768,000 | 28.00% | 24.77% | –3.23% | Reduce cash to fund note |
-| JPMorgan Callable Range Accrual Note N02952 | 0 | 100,000 | 0.00% | 3.23% | +3.23% | New position: yield pickup |
-| SPDR Blackstone Senior Loan ETF (SRLN.K) | 297,982 | 297,982 | 9.61% | 9.61% | 0% | Hold |
-| iShares Broad USD High Yield Corp (USHY.K) | 327,589 | 327,589 | 10.57% | 10.57% | 0% | Hold |
-| iShares 7-10 Year Treasury Bond (IEF.O) | 357,196 | 357,196 | 11.52% | 11.52% | 0% | Hold |
-| Mastercard Incorporated (MA) | 386,804 | 386,804 | 12.48% | 12.48% | 0% | Hold |
-| iShares iBoxx $ Inv Grade Corp Bond (LQD) | 416,411 | 416,411 | 13.43% | 13.43% | 0% | Hold |
-| iShares Broad USD Inv Grade Corp (USIG.O) | 446,018 | 446,018 | 14.39% | 14.39% | 0% | Hold |
-| **Total** | **3,100,000** | **3,100,000** | **100.00%** | **100.00%** | **0%** | |
+| Asset | Current Market Value | Suggested Market Value | Current % | Suggested % | Change | Remark |
+|-------|--------------------:|-----------------------:|----------:|------------:|------:|--------|
+| US 3-Month T-Bill (US3MT) | 868,000 | 744,000 | 28.0% | 24.0% | -4.0% | Reduce cash drag |
+| iShares Floating Rate Bond ETF (FLOT) | 0 | 124,000 | 0.0% | 4.0% | +4.0% | New position: floating rate bond ETF |
+| SPDR Blackstone Senior Loan ETF (SRLN) | 297,982 | 297,982 | 9.6% | 9.6% | 0.0% | No change |
+| iShares Broad USD High Yield Corp Bond ETF (USHY) | 327,589 | 327,589 | 10.6% | 10.6% | 0.0% | No change |
+| iShares 7-10 Year Treasury Bond ETF (IEF) | 357,196 | 357,196 | 11.5% | 11.5% | 0.0% | No change |
+| Mastercard Inc. (MA) | 386,804 | 386,804 | 12.5% | 12.5% | 0.0% | No change |
+| iShares iBoxx $ Investment Grade Corp Bond ETF (LQD) | 416,411 | 416,411 | 13.4% | 13.4% | 0.0% | No change |
+| iShares Broad USD Investment Grade Corp Bond ETF (USIG) | 446,018 | 446,018 | 14.4% | 14.4% | 0.0% | No change |
+| **Total** | **3,100,000** | **3,100,000** | **100%** | **100%** | **0%** | |
 
 ## Pros and Cons of Suggested Portfolio
 
 **Pros:**
-- Immediate yield improvement from 4.0% to 5.94% on the allocated cash portion.
-- Low risk addition (Risk Rating 2); does not increase overall portfolio volatility.
-- Maintains ample liquidity (cash still 24.8%) for near‑term needs.
-- No change to existing bond/equity positions avoids unnecessary transaction costs.
+- **Yield enhancement:** FLOT’s 5Y CAGR of 4.12% is 0.79% above US 3-Month T-Bill’s 3.33%, adding ~$980 annually (on the transferred $124k).
+- **Risk alignment:** FLOT’s low duration and investment-grade credit maintain the portfolio’s overall risk profile (risk rating 2).
+- **Diversification:** Adds floating-rate exposure, reducing sensitivity to rate changes while keeping liquidity high.
+- **No concentration increase:** US equity (MA) remains at 12.5%; no single sector or currency is overweighted.
 
 **Cons:**
-- The note is illiquid – if unexpected cash need arises, early redemption may result in principal loss.
-- If rates rise sharply above 5.01%, the coupon may not accrue, reducing expected income.
-- Credit risk concentration to JPMorgan (though investment grade).
-- Call feature could terminate the note early, forcing reinvestment at potentially lower rates.
+- **Small allocation impact:** The 4% shift is modest and may not materially change overall portfolio behavior in bullish or bearish scenarios.
+- **Rate sensitivity:** If the Fed cuts rates sharply, FLOT’s floating coupon will reset lower, though it will still outperform fixed-rate equivalents of similar duration.
+- **Drawdown slightly higher:** FLOT’s 5Y max drawdown (-1.86%) is larger than cash (-0.36%), though still very small in absolute terms.
 
-## Alternative Suggested Products to Consider
+## Alternative Suggested Product to Consider
 
-1. **iShares Short Duration Bond ETF (NEAR.K)** – Risk Rating 1, yield ~4.49%, daily liquidity. A simpler alternative that still offers a slight pickup over T‑Bills with full liquidity. However, yield pickup is only ~0.5% vs. 1.94% for the note.
-
-2. **JPMorgan Ultra‑Short Income ETF (JPST.K)** – Risk Rating 1, yield ~4.38%, high liquidity. Ideal for a very short‑term buffer (1 year), but the yield advantage over cash is minimal. Not as suitable if the client can commit for 2+ years.
+| Product | Ticker | Why Consider |
+|---------|--------|-------------|
+| SPDR Blackstone Senior Loan ETF | SRLN | Higher 5Y CAGR (4.57%) but risk rating 2 and similar low duration; however, client already holds SRLN, so adding more would increase existing credit risk. |
+| JPMorgan Ultra-Short Income ETF | JPST | Similar floating-rate profile with slightly lower yield but higher liquidity score (5); could be substituted if daily trading flexibility is preferred. |
 
 # Scenario Analysis
 
-Three economic scenarios are analyzed based on historical data (2019–2025) and current market conditions. The current portfolio is heavy in bonds and cash; the only change is adding the note. Assumptions for each asset class are justified below.
+Assumptions based on historical returns (2016–2026) from the product catalog and moderate market sentiment. Three scenarios are modeled: Normal, Upside, Downside. The portfolio is rebalanced only by the proposed $124k switch.
 
-**Historical References:**
-- US Equity (S&P 500, SPY): 5‑year annualized return ~12.5% (2020–2025), 2019–2024: ~14.6%.
-- US High Yield (USHY): 5‑year annualized return ~3.8% (2020–2025).
-- US Investment Grade (LQD): 5‑year annualized return ~1.9% (2020–2025).
-- US 7‑10 Year Treasury (IEF): 5‑year annualized return ~ –0.8% (2020–2025).
-- Senior Loans (SRLN): 5‑year annualized return ~4.3% (2020–2025).
-- Cash (US3MT): recent yield ~4.0% (2024–2025 average).
+| Scenario | Probability | Cash (US3MT) Return | FLOT Return | Srln Return | USHY Return | IEF Return | LQD Return | USIG Return | MA Return |
+|----------|:----------:|:-------------------:|:-----------:|:-----------:|:-----------:|:----------:|:----------:|:-----------:|:---------:|
+| Normal | 60% | 3.3% | 4.1% | 4.6% | 4.2% | -1.2% | 0.0% | 0.7% | 6.8% |
+| Upside | 20% | 4.5% | 5.5% | 6.0% | 6.5% | 1.0% | 2.5% | 3.0% | 15.0% |
+| Downside | 20% | 1.5% | 2.0% | 2.5% | -2.0% | -5.0% | -4.0% | -3.5% | -20.0% |
 
-**Assumptions per scenario:**
+**Justification:**
+- **Normal:** Returns approximate 5Y CAGRs from the catalog. Cash (BIL 5Y CAGR 3.33%), FLOT (4.12%), SRLN (4.57%), USHY (4.24%), IEF (-1.15%), LQD (-0.02%), USIG (0.71%), MA (6.83%).
+- **Upside:** Assumes a further 1–2% yield pickup across fixed income and a 15% equity rally (similar to 2021).
+- **Downside:** Simulates a recessionary shock akin to 2020 COVID, with equity drawdown -20% and credit spreads widening. FLOT and cash are resilient; high-yield and investment-grade bonds decline moderately.
 
-| Asset | Normal (base, prob 50%) | Upside (prob 25%) | Downside (prob 25%) |
-|-------|------------------------:|-------------------:|---------------------:|
-| **US Equity (MA proxy)** | +10% (avg 5yr 12.5%, adjusted for current high valuation) | +20% (strong earnings, AI boom) | –25% (recession, tech correction) |
-| **High Yield (USHY)** | +5% (yield + modest price gain) | +8% (tight spreads) | –10% (credit stress) |
-| **Inv Grade (LQD, USIG)** | +3% (yield + slight price gain) | +5% (spread compression) | –5% (rates rise, spreads widen) |
-| **Treasury (IEF)** | 0% (yield offset by duration loss) | –2% (rates drop, price gain) | –5% (rates rise, price loss) |
-| **Senior Loans (SRLN)** | +6% (floating rate, stable) | +8% (strong economy) | –5% (defaults rise) |
-| **Cash (US3MT)** | +4.0% | +4.0% | +4.0% |
-| **N02952 Note** | +5.94% (condition met) | +5.94% (condition met; may call early after 0.5y) | +0% (if condition fails) or –5% if called at loss? Assumption: worst case coupon drops to 0%, principal unchanged if held to maturity. For downside we assume **–2%** total return (no coupon and slight early unwind penalty if forced). |
+## Normal Market Condition
 
-**Normal Market Condition (50% probability)**
-- Condition: Moderate growth, rates stable near current levels (10y CMT ~4.1%). The note accrues full coupon.
+| Product | % Return | Suggested Holding (USD) | Return | Current Holding (USD) | Return |
+|---------|:-------:|-----------------------:|------:|---------------------:|------:|
+| Cash (US3MT) | 3.3 | 744,000 | 24,552 | 868,000 | 28,644 |
+| FLOT | 4.1 | 124,000 | 5,084 | 0 | 0 |
+| SRLN | 4.6 | 297,982 | 13,707 | 297,982 | 13,707 |
+| USHY | 4.2 | 327,589 | 13,759 | 327,589 | 13,759 |
+| IEF | -1.2 | 357,196 | -4,286 | 357,196 | -4,286 |
+| LQD | 0.0 | 416,411 | 0 | 416,411 | 0 |
+| USIG | 0.7 | 446,018 | 3,122 | 446,018 | 3,122 |
+| MA | 6.8 | 386,804 | 26,303 | 386,804 | 26,303 |
+| **Total** | | **3,100,000** | **82,241** | **3,100,000** | **81,249** |
 
-| Product | % Return | Suggested Holding | Return (USD) | Current Holding | Return (USD) |
-|---------|---------:|------------------:|-------------:|----------------:|-------------:|
-| Cash (US3MT) | 4.0% | 768,000 | 30,720 | 868,000 | 34,720 |
-| N02952 Note | 5.94% | 100,000 | 5,940 | 0 | 0 |
-| SRLN.K | 6.0% | 297,982 | 17,879 | 297,982 | 17,879 |
-| USHY.K | 5.0% | 327,589 | 16,379 | 327,589 | 16,379 |
-| IEF.O | 0.0% | 357,196 | 0 | 357,196 | 0 |
-| MA | 10.0% | 386,804 | 38,680 | 386,804 | 38,680 |
-| LQD | 3.0% | 416,411 | 12,492 | 416,411 | 12,492 |
-| USIG.O | 3.0% | 446,018 | 13,381 | 446,018 | 13,381 |
-| **Total** | | **3,100,000** | **135,471** | **3,100,000** | **133,531** |
+- Annual return of suggested portfolio: 2.65% vs. current: 2.62%
+- Incremental benefit: +USD 992 annually (+0.03% improvement)
 
-- Annual return: Suggested 4.37% vs. Current 4.31%
-- Incremental benefit: + USD 1,940 p.a. (from note pickup)
+## Upside Market Condition
 
-**Upside Market Condition (25% probability)**
-- Strong economic growth, equity rally, credit spreads tight. Note likely called early after 0.5y (coupon still earned). Returns assumed above average.
+| Product | % Return | Suggested Holding (USD) | Return | Current Holding (USD) | Return |
+|---------|:-------:|-----------------------:|------:|---------------------:|------:|
+| Cash (US3MT) | 4.5 | 744,000 | 33,480 | 868,000 | 39,060 |
+| FLOT | 5.5 | 124,000 | 6,820 | 0 | 0 |
+| SRLN | 6.0 | 297,982 | 17,879 | 297,982 | 17,879 |
+| USHY | 6.5 | 327,589 | 21,293 | 327,589 | 21,293 |
+| IEF | 1.0 | 357,196 | 3,572 | 357,196 | 3,572 |
+| LQD | 2.5 | 416,411 | 10,410 | 416,411 | 10,410 |
+| USIG | 3.0 | 446,018 | 13,381 | 446,018 | 13,381 |
+| MA | 15.0 | 386,804 | 58,021 | 386,804 | 58,021 |
+| **Total** | | **3,100,000** | **164,856** | **3,100,000** | **163,616** |
 
-| Product | % Return | Suggested Holding | Return (USD) | Current Holding | Return (USD) |
-|---------|---------:|------------------:|-------------:|----------------:|-------------:|
-| Cash (US3MT) | 4.0% | 768,000 | 30,720 | 868,000 | 34,720 |
-| N02952 Note | 2.97% * | 100,000 | 2,970 | 0 | 0 |
-| SRLN.K | 8.0% | 297,982 | 23,839 | 297,982 | 23,839 |
-| USHY.K | 8.0% | 327,589 | 26,207 | 327,589 | 26,207 |
-| IEF.O | –2.0% | 357,196 | –7,144 | 357,196 | –7,144 |
-| MA | 20.0% | 386,804 | 77,361 | 386,804 | 77,361 |
-| LQD | 5.0% | 416,411 | 20,821 | 416,411 | 20,821 |
-| USIG.O | 5.0% | 446,018 | 22,301 | 446,018 | 22,301 |
-| **Total** | | **3,100,000** | **197,075** | **3,100,000** | **198,105** |
+- Annual return of suggested portfolio: 5.32% vs. current: 5.28%
+- Incremental benefit: +USD 1,240 annually (+0.04% improvement)
 
-*Note called after half year, receives 5.94%/2 = 2.97% return for the year.
-- Annual return: Suggested 6.36% vs. Current 6.39% (slightly lower due to note being called early and reinvestment not yet captured; however, proceeds would be reinvested at close to cash yield, so difference negligible).
+## Downside Market Condition (Equity collapse similar to COVID-19, Feb–Mar 2020)
 
-**Downside Market Condition (25% probability)**
-- Recession, rates fall initially but credit stress; 10y CMT may stay below 5.01% → note still accrues? Actually in a recession rates often fall, so condition should be met. But for conservatism we assume the condition fails (rates spike above 5.01% due to inflation shock) or the note is called. We model that the note returns 0% coupon (if condition fails for the full year) and mark-to-market loss of –2% if the investor needed to sell. Since the client will hold to maturity, we assume no principal loss, but for scenario we use –2% total return to reflect worst case (no coupon + markdown). Other assets decline.
+| Product | % Return | Suggested Holding (USD) | Return | Current Holding (USD) | Return |
+|---------|:-------:|-----------------------:|------:|---------------------:|------:|
+| Cash (US3MT) | 1.5 | 744,000 | 11,160 | 868,000 | 13,020 |
+| FLOT | 2.0 | 124,000 | 2,480 | 0 | 0 |
+| SRLN | 2.5 | 297,982 | 7,450 | 297,982 | 7,450 |
+| USHY | -2.0 | 327,589 | -6,552 | 327,589 | -6,552 |
+| IEF | -5.0 | 357,196 | -17,860 | 357,196 | -17,860 |
+| LQD | -4.0 | 416,411 | -16,656 | 416,411 | -16,656 |
+| USIG | -3.5 | 446,018 | -15,611 | 446,018 | -15,611 |
+| MA | -20.0 | 386,804 | -77,361 | 386,804 | -77,361 |
+| **Total** | | **3,100,000** | **-113,950** | **3,100,000** | **-115,570** |
 
-| Product | % Return | Suggested Holding | Return (USD) | Current Holding | Return (USD) |
-|---------|---------:|------------------:|-------------:|----------------:|-------------:|
-| Cash (US3MT) | 4.0% | 768,000 | 30,720 | 868,000 | 34,720 |
-| N02952 Note | –2.0% | 100,000 | –2,000 | 0 | 0 |
-| SRLN.K | –5.0% | 297,982 | –14,899 | 297,982 | –14,899 |
-| USHY.K | –10.0% | 327,589 | –32,759 | 327,589 | –32,759 |
-| IEF.O | –5.0% | 357,196 | –17,860 | 357,196 | –17,860 |
-| MA | –25.0% | 386,804 | –96,701 | 386,804 | –96,701 |
-| LQD | –5.0% | 416,411 | –20,821 | 416,411 | –20,821 |
-| USIG.O | –5.0% | 446,018 | –22,301 | 446,018 | –22,301 |
-| **Total** | | **3,100,000** | **–176,621** | **3,100,000** | **–170,621** |
+- Annual return of suggested portfolio: -3.68% vs. current: -3.73%
+- Suggested portfolio loses USD 1,620 less than current (−0.05% better)
 
-- Annual return: Suggested –5.70% vs. Current –5.50%
-- The note adds a small additional loss of USD 6,000 (0.2% of portfolio) in the worst case, but the yield pickup in normal outweighs this.
+**Summary:** Under all three scenarios, the FLOT switch provides a marginal positive benefit. The improvement is most notable in the downside scenario, where FLOT’s resilience limits losses compared to cash.
 
 # References
 
-- **Client Profile:** zw-7 (David Wu) – provided in `zw-7_profile.md`. Key fact: 28% cash, moderate risk, business buffer need.
-- **Product Catalog:** N02952 (`CMT_note_N02952.md`), demo-market-quotes.csv (for risk ratings, historical returns), sector_etf.md (for equity sector returns, not directly used).
-- **Data Sources:** Historical returns for ETFs sourced from demo-market-quotes.csv (5‑year, 1‑year returns as of March 2026).
-- **Web References:** N/A – all data from internal sources.
+- Product Catalog: demo-market-1Jun26.csv, selected_etf.csv (Source: Planbot Internal Data)
+- Client Profile: zw-7_profile.md (Source: Planbot Internal Data)
+- Client Holdings: zw-7_holdings.csv (Source: Planbot Internal Data)
+- Web References: N/A (no web search capability used)
+
+**Risk Disclosure:** Past performance does not guarantee future returns. Projected returns are estimates based on historical data and current market sentiment; they are not promises. Structured products and ETFs carry market risk, including the potential for principal loss. FLOT’s floating-rate coupon may decline in a falling rate environment. This analysis is for informational purposes and does not constitute investment advice.

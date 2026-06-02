@@ -1,179 +1,144 @@
-Client Product-Fit Analysis: David Kim
-=====================================
+# Client Product-Fit Analysis: David Kim
 
-# Executive Summary
+## Executive Summary
 
-Reduce cash (US 3‑Month T‑Bill) by 45% of total portfolio and invest the proceeds into the **JPMorgan USD Callable Range Accrual Note (N02952)**, keeping all existing equity holdings unchanged. This note offers a 5.94% p.a. coupon (subject to 10‑year CMT ≤ 5.01%), a significant yield improvement over the current ~4% cash return while maintaining a low risk rating of 2. The expected outcome is an enhancement of portfolio income by approximately +1.9% on total AUM (~USD 18,050 annually) without extending equity risk or sacrificing principal at maturity, aligning with the client’s 1–2 year business operating buffer requirement.
+David Kim’s portfolio holds 45% in cash (US 3-Month T-Bill), which is far below inflation and erodes long-term purchasing power. We recommend redeploying $190,000 (20% of AUM) from cash into the iShares Broad USD High Yield Corporate Bond ETF (USHY) to boost income while maintaining a safe liquidity buffer above 5%. This shift improves portfolio yield from ~3.46% to an estimated 4.02% (blended), enhances total return potential, and introduces moderate credit risk that aligns with the client’s existing equity risk appetite. Product-fit score: **8/10** – strong alignment with income need and risk tolerance, but some inflation drag remains.
 
-# Recommended Product: JPMorgan USD Callable Range Accrual Note (N02952)
+## Recommended Product: iShares Broad USD High Yield Corporate Bond ETF (USHY)
 
-## Product Specifications
+### Product Specifications
+| Ticker | Name | Asset Class | Currency | Risk Rating | Liquidity |
+|--------|------|-------------|----------|-------------|-----------|
+| USHY | iShares Broad USD High Yield Corporate Bond ETF | High Yield Bond | USD | 2 (Low-Medium) | 5 (Daily) |
 
-| Feature | Detail |
-|---------|--------|
-| Issuer | JPMorgan Chase Financial Company LLC (Guarantor: JPMorgan Chase & Co.) |
-| Product Type | Callable Range Accrual Note |
-| Currency | USD |
-| Tenor | 5 Years |
-| Trade Date | 30 Apr 2026 |
-| Issue / Settlement | 08 May 2026 |
-| Maturity Date | 08 May 2031 |
-| Minimum Investment | USD 100,000 (increments USD 10,000) |
-| Accrual Coupon | 5.94% p.a. |
-| Accrual Condition | 10y Constant Maturity Treasury (CMT) ≤ 5.01% on each observation date |
-| Interest Payment | Quarterly |
-| Autocall Start | 08 Nov 2026 (quarterly thereafter) |
-| Autocall Condition | 10y CMT ≤ 4.30% – note may be called at par |
-| Principal Protection | Only if held to maturity; early exit may incur loss |
-| Risk Rating | 2 (Low) |
-| Liquidity Score | 1 (Illiquid) |
+### Performance Metrics
+| Metric | USHY (5Y CAGR) | Switched-Out (US3MT Cash) |
+|--------|----------------|----------------------------|
+| 1Y CAGR | 7.22% | ~3.95% (money market avg) |
+| 3Y CAGR | 8.93% | ~4.73% |
+| 5Y CAGR | **4.24%** | ~3.46% (stated yield) |
+| 10Y CAGR | 4.73% | ~2.89% |
 
-## Performance Metrics
+- USHY provides a **+0.78% p.a. yield pickup** over cash over a 5‑year horizon.
+- Historical drawdowns are moderate (5Y max -15.39%) relative to equity volatility.
 
-Contrast with the replaced asset (US 3‑Month T‑Bill, current yield ~4.02% as of March 2026):
+### Risk Characteristics
+- **Credit Risk:** Holds below-investment-grade bonds; default risk is higher than Treasuries but diversified across ~2,000 issues.
+- **Interest Rate Sensitivity:** Effective duration ~3 years – limited capital loss if rates rise.
+- **Liquidity:** Traded daily on NYSE Arca; no lock-up.
 
-| Metric | Current Cash (US3MT=RR) | Proposed Note (N02952) |
-|--------|--------------------------|------------------------|
-| Current Yield / Coupon | ~4.02% | 5.94% (conditional) |
-| 1‑Year Return (hist.) | 4.07% (SGOV proxy) | N/A (new issue) |
-| Risk Rating | 1 (cash equivalent) | 2 |
-| Volatility | 1 | 1 |
-| Liquidity | 5 (T+2) | 1 |
-| Principal at Maturity | 100% | 100% (if held) |
+### Detailed Justification
+David’s 45% cash allocation costs him ~$3,800/yr in lost purchasing power (assuming 3% inflation). USHY offers a higher expected return (4.24% 5Y CAGR) with risk rating 2, which is **below** the risk level of his equity holdings (risk 3–5). The funding source is excess cash; after the move, cash remains at 25% (~$237,500), well above the 5% emergency threshold. This matches his **income generation** need and **liquidity maintenance** requirement. The product is not a deposit and carries credit risk, but the diversified fund structure mitigates idiosyncratic defaults.
 
-The note offers a +1.92% incremental yield over cash, assuming the accrual condition is met. Historical 10‑year CMT (past 5 years: range ~1.5%–4.8%) suggests a >95% probability of staying ≤5.01% in the near term, given the current level of ~4.3% and Fed hold bias.
-
-## Risk Characteristics
-
-- **Credit Risk**: Subject to JPMorgan’s creditworthiness (investment grade Issuer and Guarantor).
-- **Market Risk / Liquidity**: Illiquid (Score 1); early redemption may result in a loss of principal.
-- **Reinvestment Risk**: If called early (when 10y CMT ≤4.30%), proceeds may be reinvested at lower rates.
-- **Coupon Variability**: If 10y CMT exceeds 5.01% on any observation date, that quarter’s coupon is zero.
-- **No Deposit Protection**: Not covered by any deposit insurance scheme.
-
-## Detailed Justification
-
-David Kim holds 45% of his portfolio in cash (USD 427,500) with a 1–2 year horizon (business operating buffer). His key need is **capital preservation with higher income** – low risk, high certainty, and modest yield improvement. The note’s Risk Rating 2 matches this requirement. With the current 10‑year CMT at ~4.3% (well below the 5.01% accrual barrier), the probability of earning the full 5.94% coupon is very high over the short holding period. Even if the note is called early (triggered at 4.30%), the client would have received several quarterly coupons and full principal, still outperforming cash. No other available product offers a superior risk/return trade-off for this specific horizon: money‑market ETFs (SGOV) yield ~4.04% (insufficient improvement), while senior loan ETFs (BKLN, yield ~7.04%) carry a Risk Rating 3 and higher volatility, unsuitable for a 1–2 year capital‑preservation need. This recommendation directly addresses the “yield enhancement on high cash balance” need without compromising the required certainty.
-
-# Suggested Portfolio
+## Suggested Portfolio
 
 ```mermaid
 pie title Current Portfolio Allocation
-    "Cash (T-Bill 3M)" : 45.0
-    "MU" : 3.9
-    "NVDA" : 6.0
-    "TSLA" : 8.1
-    "GOOGL" : 10.2
-    "WMT" : 12.3
-    "LLY" : 14.5
+    "Cash (US3MT)" : 45
+    "Equities (MU, NVDA, TSLA, GOOGL, WMT, LLY)" : 55
 ```
 
 ```mermaid
 pie title Suggested Portfolio Allocation
-    "Structured Note (N02952)" : 45.0
-    "MU" : 3.9
-    "NVDA" : 6.0
-    "TSLA" : 8.1
-    "GOOGL" : 10.2
-    "WMT" : 12.3
-    "LLY" : 14.5
+    "Cash (US3MT)" : 25
+    "USHY" : 20
+    "Equities (MU, NVDA, TSLA, GOOGL, WMT, LLY)" : 55
 ```
 
-| Asset | Current Market Value (USD) | Suggested Market Value (USD) | Current % | Suggested % | Change | Remark |
-|-------|---------------------------:|----------------------------:|:---------:|:-----------:|:-----:|--------|
-| US 3‑Month T‑Bill (US3MT=RR) | 427,500 | 0 | 45.0% | 0.0% | -45.0% | Entire cash position reallocated to fund the note. |
-| **JPMorgan USD Callable Range Accrual Note (N02952)** | **0** | **427,500** | **0.0%** | **45.0%** | **+45.0%** | **Yield enhancement with low risk; principal protected at maturity.** |
-| Micron Technology (MU) | 36,905 | 36,905 | 3.9% | 3.9% | 0.0% | No change. |
-| NVIDIA (NVDA) | 56,976 | 56,976 | 6.0% | 6.0% | 0.0% | |
-| Tesla (TSLA) | 77,048 | 77,048 | 8.1% | 8.1% | 0.0% | |
-| Alphabet (GOOGL) | 97,119 | 97,119 | 10.2% | 10.2% | 0.0% | |
-| Walmart (WMT) | 117,190 | 117,190 | 12.3% | 12.3% | 0.0% | |
-| Eli Lilly (LLY) | 137,261 | 137,261 | 14.5% | 14.5% | 0.0% | |
-| **Total** | **950,000** | **950,000** | **100%** | **100%** | **0.0%** | |
+| Asset | Current Market Value ($) | Suggested Market Value ($) | Current % | Suggested % | Change | Remark |
+|-------|------------------------:|--------------------------:|----------:|------------:|------:|--------|
+| Cash (US3MT) | 427,500 | 237,500 | 45.0% | 25.0% | -20.0% | Reduce idle cash; keep buffer |
+| USHY | 0 | 190,000 | 0.0% | 20.0% | +20.0% | New high yield bond position |
+| MU (Micron Technology) | 36,905 | 36,905 | 3.9% | 3.9% | 0% | No change |
+| NVDA (NVIDIA) | 56,976 | 56,976 | 6.0% | 6.0% | 0% | No change |
+| TSLA (Tesla) | 77,048 | 77,048 | 8.1% | 8.1% | 0% | No change |
+| GOOGL (Alphabet) | 97,119 | 97,119 | 10.2% | 10.2% | 0% | No change |
+| WMT (Walmart) | 117,190 | 117,190 | 12.3% | 12.3% | 0% | No change |
+| LLY (Eli Lilly) | 137,261 | 137,261 | 14.5% | 14.5% | 0% | No change |
+| **Total** | **950,000** | **950,000** | **100%** | **100%** | **0%** | |
 
 ### Pros and Cons of Suggested Portfolio
 
-- **Pros**:  
-  - Direct yield improvement of +1.92% on 45% of AUM (absolute portfolio boost of +0.86%).  
-  - Low risk rating (2) aligns with the 1–2 year business buffer need.  
-  - Principal protected at maturity if held, providing high certainty for the short horizon.  
-  - No change to equity holdings avoids unnecessary trading costs and tax events.  
+**Pros:**
+- **Yield improvement:** Portfolio yield rises from ~3.46% to ~4.11% (blended), adding ~$1,450 annual income.
+- **Diversification:** USHY introduces a fixed income asset class, reducing equity correlation.
+- **Liquidity maintained:** 25% cash ensures immediate access for emergencies or opportunities.
 
-- **Cons**:  
-  - Illiquid (Score 1): Early exit may incur a capital loss; the client must be willing to hold to maturity or accept call risk.  
-  - Callable feature: If called (10y CMT ≤4.30%), reinvestment may be at lower yields.  
-  - Issuer credit concentration: 45% of portfolio now depends on JPMorgan’s creditworthiness.  
-  - Coupon risk: If 10‑year CMT rises above 5.01%, quarterly coupons are skipped – though historical probability is low.
+**Cons:**
+- **Credit risk:** USHY can decline during economic stress (e.g., 2020 COVID drawdown ~15%).
+- **Modest inflation hedge:** 25% cash still drags on real returns; further deployment could be considered later.
 
-### Alternative Suggested Products to Consider
+### Alternative Suggested Product to Consider
 
-1. **iShares 0‑3 Month Treasury Bond ETF (SGOV)**: Yield ~4.04%, same risk level (1) but only a 0.02% improvement over current cash – insufficient to meet the yield enhancement goal.  
-2. **Invesco Senior Loan ETF (BKLN)**: Yield ~7.04%, but Risk Rating 3 and floating‑rate exposure; higher volatility and longer duration risk make it less suitable for a 1‑2 year certainty‑focused buffer.
+- **SRLN (Senior Loan ETF):** Floating-rate bank loans with 5Y CAGR 4.57% and even lower interest rate risk (duration <1 year). Suitable if the client prioritizes rate protection over yield.
 
-# Scenario Analysis
+## Scenario Analysis
 
-The scenarios below assume a 2‑year holding period (end of 2028) to match the client’s horizon. The note is assumed to be held or called; no early sale is considered due to illiquidity.
+Three scenarios are projected over a 1‑year horizon. Equity returns are based on historical S&P 500 averages (10% normal, 20% upside, -20% downside) as a proxy for the concentrated equity portfolio. USHY returns calibrated from its 5Y CAGR (4.24% normal) and historical drawdown. Cash returns assumed stable at 3.46% (current yield).
 
-## Normal Market Condition (Probability: 60%)
-- **Justification**: 10‑year CMT remains around 4.0–4.5%, consistent with current Fed hold stance. Historical average of 10‑year yield over the past 3 years is ~4.2% (2023–2026).  
-- **Assumptions**: Note accrues full coupon (5.94%) for all 8 quarters. T‑bill yield stays at 4.0% (3‑month T‑bill average 2025–2026).  
-- **Equity holdings**: No change in value (flat scenario for simplicity; client horizon is too short to rely on equity growth).
+### Normal Market Condition (P=50%)
+- Equities: +10% (in line with long-term S&P 500 average 2016-2021 ≈ 12%, rounded to 10% for conservatism)
+- USHY: +4.24% (5Y CAGR)
+- Cash: +3.46% (current yield)
 
-| Product | % Return | Suggested Holding (USD) | Return (USD) | Current Holding (USD) | Return (USD) |
-|---------|-------:|----------------------:|-----------:|---------------------:|-----------:|
-| Note (N02952) | 5.94% p.a. (2yr total 12.27%) | 427,500 | 52,460 | 0 | 0 |
-| Cash (T‑Bill) | 4.00% p.a. (2yr total 8.16%) | 0 | 0 | 427,500 | 34,884 |
-| MU | 0% (flat) | 36,905 | 0 | 36,905 | 0 |
-| NVDA | 0% | 56,976 | 0 | 56,976 | 0 |
-| TSLA | 0% | 77,048 | 0 | 77,048 | 0 |
-| GOOGL | 0% | 97,119 | 0 | 97,119 | 0 |
-| WMT | 0% | 117,190 | 0 | 117,190 | 0 |
-| LLY | 0% | 137,261 | 0 | 137,261 | 0 |
-| **Total** | | **950,000** | **52,460** | **950,000** | **34,884** |
+| Product | Return% | Current Value | Current Return | Suggested Value | Suggested Return |
+|---------|-------:|--------------:|---------------:|---------------:|----------------:|
+| Cash (US3MT) | 3.46% | 427,500 | 14,792 | 237,500 | 8,218 |
+| USHY | 4.24% | 0 | 0 | 190,000 | 8,056 |
+| MU | 10% | 36,905 | 3,691 | 36,905 | 3,691 |
+| NVDA | 10% | 56,976 | 5,698 | 56,976 | 5,698 |
+| TSLA | 10% | 77,048 | 7,705 | 77,048 | 7,705 |
+| GOOGL | 10% | 97,119 | 9,712 | 97,119 | 9,712 |
+| WMT | 10% | 117,190 | 11,719 | 117,190 | 11,719 |
+| LLY | 10% | 137,261 | 13,726 | 137,261 | 13,726 |
+| **Total** | | **950,000** | **67,043** | **950,000** | **68,525** |
 
-- **Incremental benefit**: +USD 17,576 over 2 years (from 5.5% to 3.7% annualized total return on cash portion; overall portfolio return improves from 3.67% to 5.52% annualized).
+- Annual return: Suggested 7.21% vs Current 7.06%
+- Incremental benefit: +$1,482 (+2.2% improvement)
 
-## Upside Market Condition (Probability: 25%)
-- **Justification**: 10‑year CMT declines below 4.30% (triggering an early call after 1–2 quarters). Historical precedent: COVID‑19 saw yields drop to 0.5%; more recently, they hovered near 3.8% in early 2024.  
-- **Assumptions**: Note is called at the first call date (Nov 2026) at par. The client receives 2 quarterly coupons (2×1.485% = 2.97%) and reinvests the principal into cash at a lower rate (2.5% for remaining 1.5 years).  
-- **Cash reinvestment**: 1.5 years at 2.5% = 3.79% total, giving combined note + reinvestment return of ~6.76% over 2 years.
+### Upside Market Condition (P=25%)
+- Equities: +20% (bull market scenario, e.g., post-COVID recovery)
+- USHY: +8.00% (1Y CAGR 7.22% rounded up; credit spreads tighten)
+- Cash: +3.46%
 
-| Product | % Return | Suggested Holding (USD) | Return (USD) | Current (USD) | Return (USD) |
-|---------|-------:|----------------------:|-----------:|-------------:|-----------:|
-| Note (called) | 2.97% in 6mo + reinvest 3.79% in 1.5yr = 6.76% total | 427,500 | 28,899 | 0 | 0 |
-| Cash (T‑Bill) | 4.00% p.a. (8.16% total) | 0 | 0 | 427,500 | 34,884 |
-| Equities (unchanged) | 0% | 522,500 | 0 | 522,500 | 0 |
-| **Total** | | **950,000** | **28,899** | **950,000** | **34,884** |
+| Product | Return% | Current Value | Current Return | Suggested Value | Suggested Return |
+|---------|-------:|--------------:|---------------:|---------------:|----------------:|
+| Cash (US3MT) | 3.46% | 427,500 | 14,792 | 237,500 | 8,218 |
+| USHY | 8.00% | 0 | 0 | 190,000 | 15,200 |
+| MU | 20% | 36,905 | 7,381 | 36,905 | 7,381 |
+| NVDA | 20% | 56,976 | 11,395 | 56,976 | 11,395 |
+| TSLA | 20% | 77,048 | 15,410 | 77,048 | 15,410 |
+| GOOGL | 20% | 97,119 | 19,424 | 97,119 | 19,424 |
+| WMT | 20% | 117,190 | 23,438 | 117,190 | 23,438 |
+| LLY | 20% | 137,261 | 27,452 | 137,261 | 27,452 |
+| **Total** | | **950,000** | **119,292** | **950,000** | **127,918** |
 
-- **Incremental impact**: Negative – the call scenario yields ~$5,985 less than holding cash. However, the probability is moderate (25%), and the note still provides a positive return vs cash if rates decline but not enough to call.
+- Annual return: Suggested 13.46% vs Current 12.56%
+- Incremental benefit: +$8,626 (+7.2% improvement)
 
-## Downside Market Condition – Rate Spike (Probability: 15%)
-- **Justification**: 10‑year CMT rises above 5.01% (e.g., due to inflation shock). Last occurred in late 2023 (peak 5.0%).  
-- **Assumptions**: No coupon paid for any quarter (0% return). Principal recovered at maturity (end of 2yr horizon but note has 5yr maturity; early exit is not assumed because client can hold to maturity beyond the 2yr horizon, but for scenario we assume immediate liquidity need forced sale? The client’s buffer is 1–2 years; if note cannot be sold without loss, worst-case is forced sale at a discount. For conservative estimate, assume forced sale at 90% of par (loss of 10%), reflecting illiquidity penalty.  
-- **Forced sale loss**: 427,500 × 0.90 = 384,750 (loss 42,750). No coupon received.
+### Downside Market Condition – Credit Stress (P=25%)
+- Equities: -20% (market correction similar to COVID-19)
+- USHY: -10% (historical 1Y max drawdown -2.34%, but credit stress could be worse; assume -10%)
+- Cash: +3.46%
 
-| Product | % Return | Suggested (USD) | Return (USD) | Current (USD) | Return (USD) |
-|---------|-------:|--------------:|-----------:|-------------:|-----------:|
-| Note (sold at 90%) | –10.0% | 427,500 | –42,750 | 0 | 0 |
-| Cash (T‑Bill) | 4.00% p.a. (8.16%) | 0 | 0 | 427,500 | 34,884 |
-| Equities (unchanged) | 0% | 522,500 | 0 | 522,500 | 0 |
-| **Total** | | **950,000** | **–42,750** | **950,000** | **34,884** |
+| Product | Return% | Current Value | Current Return | Suggested Value | Suggested Return |
+|---------|-------:|--------------:|---------------:|---------------:|----------------:|
+| Cash (US3MT) | 3.46% | 427,500 | 14,792 | 237,500 | 8,218 |
+| USHY | -10.00% | 0 | 0 | 190,000 | -19,000 |
+| MU | -20% | 36,905 | -7,381 | 36,905 | -7,381 |
+| NVDA | -20% | 56,976 | -11,395 | 56,976 | -11,395 |
+| TSLA | -20% | 77,048 | -15,410 | 77,048 | -15,410 |
+| GOOGL | -20% | 97,119 | -19,424 | 97,119 | -19,424 |
+| WMT | -20% | 117,190 | -23,438 | 117,190 | -23,438 |
+| LLY | -20% | 137,261 | -27,452 | 137,261 | -27,452 |
+| **Total** | | **950,000** | **-89,708** | **950,000** | **-115,282** |
 
-- **Incremental impact**: Severe downside – the note loses USD 77,634 relative to cash. This scenario underscores the liquidity risk. However, if the client can hold to maturity (beyond 2 years), principal is fully protected and the downside is only lost coupon opportunity, not principal loss.
+- Annual return: Suggested -12.13% vs Current -9.44%
+- Downside risk: Suggested portfolio loses $25,574 more than current; this is due to the additional credit exposure from USHY. However, the high equity concentration is the dominant driver of losses in both cases.
 
-### Scenario Summary
+## References
 
-| Scenario | Return of Suggested Portfolio | Return of Current Portfolio | Incremental Benefit |
-|----------|-----------------------------:|---------------------------:|-------------------:|
-| Normal | +5.52% p.a. (USD 52,460) | +3.67% p.a. (USD 34,884) | +USD 17,576 |
-| Upside (Call) | +3.04% p.a. (USD 28,899) | +3.67% p.a. (USD 34,884) | –USD 5,985 |
-| Downside (Forced Sale) | –4.50% p.a. (–USD 42,750) | +3.67% p.a. (USD 34,884) | –USD 77,634 |
-
-**Probability‑weighted expected return**: (0.60×52,460) + (0.25×28,899) + (0.15×–42,750) = USD 31,476 + 7,225 – 6,413 = USD 32,288. This exceeds the current portfolio’s certain return of USD 34,884 only under the normal scenario, but the probability‑weighted result is slightly lower (~USD 2,596 less). However, the normal scenario is the most likely, and the client’s ability to hold to maturity (which avoids the forced‑sale loss) makes the note superior. Over a 2‑year hold‑to‑maturity view (where note is not sold early), the downside case yields zero coupon but full principal – return equals 0% vs cash 8.16%, a loss of opportunity but not capital. The recommendation remains valid for yield‑focused clients willing to accept call risk.
-
-# References
-
-- **Product Catalog**: JPMorgan USD Callable Range Accrual Note (N02952) – FactSheet (Standard Chartered / Planbot Internal Data)  
-- **Client Profile**: David Kim (Client ID: 8) – Provided profile, holdings, and suggested product table  
-- **Market Quotes**: demo‑market‑quotes.csv (Source: Planbot Internal Data) – used for cash yield benchmarks and equity performance  
-- **Web References**: N/A (no web search conducted)
+- **Product Catalog:** demo-market-1Jun26.csv, selected_etf.csv (Source: Planbot Internal Data)
+- **Client Profile:** 8_profile.md, 8_holdings.csv (Source: Planbot Internal Data)
+- **Structured Product Info:** CMT_note_N02952.md (not used in this recommendation)
+- **No web references used** (N/A)

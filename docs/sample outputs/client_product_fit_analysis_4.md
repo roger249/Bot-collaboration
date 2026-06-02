@@ -3,187 +3,181 @@ Client Product-Fit Analysis: Emma Thompson
 
 # Executive Summary
 
-Recommended action: Replace the entire cash holding in Fidelity Government Money Market (SPAXX, $992,000) with the USD Callable Range Accrual Note (N02952) issued by JPMorgan. This structured note provides a 5.94% p.a. coupon (quarterly) subject to a long-term US Treasury rate condition, a significant yield pickup over the current 3.9% money market return. The 5‑year maturity aligns with the client’s estimated 3–5 year horizon for a mortgage down payment, and the product’s risk rating of 2 matches the low risk tolerance inferred from the high cash weight and European profile. Expected outcome: improve cash yield by 204 basis points while preserving capital at maturity, thereby accelerating savings for the near‑term milestone without altering the equity growth engine.
+Emma Thompson’s portfolio holds 32% cash ($992k) in SPAXX, which yields only 3.46% (5Y CAGR) – well below current inflation expectations and the return potential of risk assets. We recommend deploying $310k (10% of the portfolio) into the State Street Blackstone Senior Loan ETF (SRLN), a floating-rate senior loan ETF that offers a higher 5Y CAGR of 4.57% while maintaining moderate risk (risk rating 2) and good liquidity. This shift increases portfolio income without significantly altering the risk profile, improves long-term growth by an estimated +1.11% p.a. on the switched amount, and preserves a 22% cash buffer (well above the 5% emergency liquidity line).
 
-# Recommended Product: USD Callable Range Accrual Note (N02952)
+# Recommended Product: State Street Blackstone Senior Loan ETF (SRLN)
 
 ## Product Specifications
 
-| Feature | Detail |
-|---|---|
-| Issuer | JPMorgan Chase Financial Company LLC |
-| Guarantor | JPMorgan Chase & Co. |
-| Product ID | N02952 |
-| Structure | Callable Range Accrual Note |
-| Currency | USD |
-| Tenor | 5 years (matures 08 May 2031) |
-| Minimum Investment | USD 100,000 (increments USD 10,000) |
-| Accrual Coupon | 5.94% p.a. (paid quarterly) |
-| Accrual Condition | 10‑year Constant Maturity Treasury (CMT) ≤ 5.01% on observation dates |
-| Autocall (Issuer Call) | Issuer may call the note quarterly starting 08 Nov 2026 if 10‑year CMT ≤ 4.30% |
-| Principal Protection | Only at maturity; early call returns principal, but no further coupons |
-| Risk Rating | 2 (Low) |
+| Attribute | Detail |
+|-----------|--------|
+| **Ticker** | SRLN |
+| **Asset Class** | Bank Loan (Floating-Rate Senior Loans) |
+| **Issuer** | State Street / Blackstone |
+| **Currency** | USD |
+| **Risk Rating** | 2 (Low to Moderate) |
+| **Liquidity Score** | 4 (High – daily traded ETF) |
+| **Expense Ratio** | ~0.70% (industry standard for bank loan ETFs) |
+| **Dividend Frequency** | Monthly |
+| **Underlying Holdings** | Diversified pool of senior secured floating-rate corporate loans |
 
 ## Performance Metrics
 
-| Metric | CMT Note N02952 | SPAXX (Current Cash) | Difference |
-|---|---|---|---|
-| Current Yield | 5.94% p.a. | 3.90% p.a. | +204 bps |
-| 1‑Year Return (historical) | Not applicable (new issue) | 3.90% | – |
-| Risk Rating | 2 | 1 | +1 notch (still low) |
-| Certainty of Return (3y) | 5/5 if held to maturity (principal and coupon) | 5/5 | Same |
+| Metric | SRLN | SPAXX (switched out) |
+|--------|------|----------------------|
+| **1Y CAGR** | 5.57% | 3.95% |
+| **3Y CAGR** | 7.89% | 4.73% |
+| **5Y CAGR** | 4.57% | 3.46% |
+| **1Y Max Drawdown** | -3.42% | -0.30% |
+| **1Y Calmar Ratio** | 1.63 | 13.25 |
 
-*Note: SPAXX yield is based on 1-year return (4.0% quoted) and current yield 3.9%.*
+SRLN has delivered consistently higher total returns than cash across all measured horizons, with only modest drawdowns. The 5Y CAGR advantage of 1.11% p.a. is material and sustainable given the floating-rate coupon structure.
 
 ## Risk Characteristics
 
-- **Credit Risk:** Exposes client to JPMorgan credit risk (investment‑grade). SPAXX is a government money market fund with negligible credit risk.
-- **Call Risk:** The issuer can call the note after 6 months if 10‑year CMT falls below 4.30%. In that case, the investor receives principal back but loses future high coupons – reinvestment risk.
-- **Coupon Suspension Risk:** If the 10‑year CMT exceeds 5.01% on any observation date, the quarterly coupon is not paid. This is unlikely in a low‑rate environment but possible in a rapid tightening cycle.
-- **Liquidity:** Score 1 (illiquid). The note cannot be sold easily before maturity; early unwinding may result in capital loss. SPAXX has daily liquidity.
-- **Complex Product Warning:** Contains derivative elements; suitable for investors who understand the conditional coupon.
+- **Credit Risk:** Senior secured loans are first-lien, investment-grade quality on average, but can default during severe economic stress. The ETF’s diversified holdings mitigate idiosyncratic risk.
+- **Interest Rate Risk:** Low – floating-rate coupons reset periodically with benchmark rates (e.g., SOFR), providing protection against rising rates.
+- **Liquidity Risk:** Score 4 – ETF trades daily on liquid exchanges; bid-ask spreads are tight.
+- **Drawdown Risk:** Historical 5Y max drawdown of -7.93% (COVID-19 period), but recovery was rapid.
 
 ## Detailed Justification
 
-The client, Emma Thompson, holds 32% cash (SPAXX) and shows a low risk tolerance with a likely near‑term need (mortgage down payment in 3–5 years). The CMT Note N02952 scores 5/5 on the buying scale for the following reasons:
+Emma’s portfolio is overweight cash (32%), which acts as a drag on total return. The recommendation to switch 10% into SRLN aligns with her moderate risk tolerance (she already holds equities with risk 3-4) and her need for income in a “higher-for-longer” rate environment. SRLN’s risk rating of 2 is well within her capacity, and its floating-rate feature provides a tactical hedge against future rate hikes. The 5Y CAGR of 4.57% offers a meaningful pickup over cash (3.46%) without introducing excessive volatility. The 22% cash position retained ($682k) still provides a generous liquidity buffer, far exceeding the 5% emergency threshold.
 
-1. **Horizon match:** 5‑year tenor fits the 3–5 year milestone; principal is protected at maturity.
-2. **Yield improvement:** 5.94% vs. 3.90% – an immediate 204 bps boost ($20,237 extra annual income on $992k).
-3. **Risk profile:** Risk rating 2 is well within a low‑risk appetite; the equity portion (68%) remains untouched, sustaining growth for longer‑term retirement needs.
-4. **Certainty:** For a fixed horizon with a known outlay (down payment), the note provides high certainty of coupon (if condition met) and principal, whereas money market yields are variable and likely to decline if the Fed cuts rates.
-
-The only trade‑off is loss of daily liquidity and credit risk, but the JPMorgan credit is strong. The call feature may cap upside if rates fall, but the reinvestment risk is acceptable given the client’s short‑to‑medium horizon.
+**Product-Fit Score: 9/10** – Excellent alignment with cash deployment need, risk profile, and current macro outlook.
 
 # Suggested Portfolio
 
 ```mermaid
-pie showData
-    title Current Portfolio Allocation
-    "Fidelity Cash Reserves (SPAXX)" : 32.0
-    "Eli Lilly (LLY)" : 3.5
-    "US 5-Year Treasury Yield (US5YT=RR)" : 5.6
-    "Amazon (AMZN.O)" : 7.7
-    "Apple (AAPL.O)" : 9.7
-    "Walmart (WMT.O)" : 11.8
-    "Alphabet (GOOGL.O)" : 13.8
-    "Johnson & Johnson (JNJ)" : 15.9
+pie title Current Portfolio Allocation
+    "Cash (SPAXX)" : 32
+    "LLY" : 4
+    "US5YT" : 6
+    "AMZN" : 8
+    "AAPL" : 10
+    "WMT" : 12
+    "GOOGL" : 14
+    "JNJ" : 16
 ```
 
 ```mermaid
-pie showData
-    title Suggested Portfolio Allocation
-    "JPM CMT Note N02952" : 32.0
-    "Eli Lilly (LLY)" : 3.5
-    "US 5-Year Treasury Yield (US5YT=RR)" : 5.6
-    "Amazon (AMZN.O)" : 7.7
-    "Apple (AAPL.O)" : 9.7
-    "Walmart (WMT.O)" : 11.8
-    "Alphabet (GOOGL.O)" : 13.8
-    "Johnson & Johnson (JNJ)" : 15.9
+pie title Suggested Portfolio Allocation
+    "Cash (SPAXX)" : 22
+    "SRLN" : 10
+    "LLY" : 4
+    "US5YT" : 6
+    "AMZN" : 8
+    "AAPL" : 10
+    "WMT" : 12
+    "GOOGL" : 14
+    "JNJ" : 16
 ```
 
-| Asset | Current Market Value (USD) | Suggested Market Value (USD) | Current % | Suggested % | Change | Remark |
-|---|---|---|---|---|---|---|
-| Fidelity Government Cash Reserves (SPAXX.O) | 992,000 | 0 | 32.0% | 0.0% | -32.0% | Replace with high‑yielding note. |
-| JPMorgan CMT Note N02952 | 0 | 992,000 | 0.0% | 32.0% | +32.0% | New investment; matches 5‑year horizon. |
-| Eli Lilly and Company (LLY) | 109,319 | 109,319 | 3.5% | 3.5% | 0.0% | No change. |
-| US 5-Year Treasury Yield (US5YT=RR) | 173,260 | 173,260 | 5.6% | 5.6% | 0.0% | No change. |
-| Amazon.com Inc. (AMZN.O) | 237,202 | 237,202 | 7.7% | 7.7% | 0.0% | No change. |
-| Apple Inc. (AAPL.O) | 301,143 | 301,143 | 9.7% | 9.7% | 0.0% | No change. |
-| Walmart Inc. (WMT.O) | 365,084 | 365,084 | 11.8% | 11.8% | 0.0% | No change. |
-| Alphabet Inc. Class A (GOOGL.O) | 429,025 | 429,025 | 13.8% | 13.8% | 0.0% | No change. |
-| Johnson & Johnson (JNJ) | 492,967 | 492,967 | 15.9% | 15.9% | 0.0% | No change. |
-| **Total** | **3,100,000** | **3,100,000** | **100.0%** | **100.0%** | **0.0%** | |
+| Asset | Current Market Value | Suggested Market Value | Current % | Suggested % | Change | Remark |
+|-------|--------------------:|-----------------------:|----------:|------------:|------:|--------|
+| SPAXX (Cash) | 992,000 | 682,000 | 32.0% | 22.0% | -10.0% | Reduce cash; deploy into higher-yielding SRLN. |
+| SRLN | 0 | 310,000 | 0.0% | 10.0% | +10.0% | New position: floating-rate senior loan ETF. |
+| LLY (Eli Lilly) | 109,319 | 109,319 | 3.5% | 3.5% | 0.0% | No change. |
+| US5YT (US 5-Year Treasury Yield) | 173,260 | 173,260 | 5.6% | 5.6% | 0.0% | No change. |
+| AMZN (Amazon.com) | 237,202 | 237,202 | 7.7% | 7.7% | 0.0% | No change. |
+| AAPL (Apple Inc.) | 301,143 | 301,143 | 9.7% | 9.7% | 0.0% | No change. |
+| WMT (Walmart Inc.) | 365,084 | 365,084 | 11.8% | 11.8% | 0.0% | No change. |
+| GOOGL (Alphabet Inc.) | 429,025 | 429,025 | 13.8% | 13.8% | 0.0% | No change. |
+| JNJ (Johnson & Johnson) | 492,967 | 492,967 | 15.9% | 15.9% | 0.0% | No change. |
+| **Total** | **3,100,000** | **3,100,000** | **100%** | **100%** | **0%** | |
 
-## Pros and Cons of Suggested Portfolio
+## Pros and cons of suggested portfolio
 
-**Pros**
-- **Alignment with goal:** The note’s 5‑year locked coupon directly supports the mortgage down‑payment accumulation within the required timeframe.
-- **Yield enhancement:** +204 bps on 32% of the portfolio adds ~$20,237 annual pre‑tax income.
-- **Equity growth preserved:** No changes to the equity holdings (68%), which continue to compound for longer‑term wealth (e.g., retirement).
-- **Downside protection:** If held to maturity, principal is returned regardless of market conditions. The note’s structured coupons provide a high probability of income, as the accrual condition (10y CMT ≤ 5.01%) is currently well above the prevailing rate (~4.3% as of Q1 2026).
+**Pros:**
+- **Yield enhancement:** The $310k shifted to SRLN earns an incremental 1.11% p.a. (~$3,441 additional annual income) compared to cash.
+- **Floating-rate protection:** SRLN’s coupons adjust with short-term rates, providing a natural hedge against further Fed rate hikes or persistent inflation.
+- **Liquidity preserved:** Cash position at 22% ($682k) remains ample; the 5% emergency buffer ($155k) is comfortably covered.
+- **Concentration unchanged:** No additional sector or single-name risk; U.S. exposure remains diversified across mega-cap equities and fixed income.
 
-**Cons**
-- **Credit concentration:** Replaces a government‑backed cash fund with a corporate note (JPMorgan). However, JPMorgan is investment‑grade (A‑), and the guarantee by JPMorgan Chase & Co. adds strength.
-- **Call risk:** If rates decline, the issuer may call the note after 6 months, forcing reinvestment at lower yields. Given current elevated rates, calls are possible if the Fed cuts.
-- **Illiquidity:** The note cannot be sold easily before maturity. If the down payment is needed urgently (e.g., within 1–2 years), the client would have to sell at a potential loss. This risk is mitigated by the overall cash flow from the client’s 68% equity portfolio, which could be liquidated if necessary.
-- **Coupon suspension risk:** In a sharp rate‑hike scenario (10y CMT > 5.01%), coupon payments stop. The current rate environment (4.3%) suggests this is a tail risk over the next 3–5 years.
+**Cons:**
+- **Credit risk:** Senior loans can default during deep recessions. SRLN’s 5Y max drawdown of -7.93% exceeds cash’s near-zero drawdown. However, the loss is likely recoverable over a 1-2 year horizon.
+- **Lower certainty of return:** While SRLN’s historical 5Y CAGR is 4.57%, actual returns vary year-to-year. Cash provides near-certain nominal returns.
+- **Reduced cash buffer:** The 22% cash level still exceeds the 5% floor, but is less than Emma’s historically high 32% holding, which may feel less conservative.
 
-## Alternative Suggested Products to Consider
+## Alternative suggested product to consider
 
-1. **iShares 0‑1 Year Treasury Bond ETF (SHV):**  
-   Yield ~4.02%, lower than the note, but with daily liquidity and no credit risk. Suitable if the client values flexibility more than yield. However, the yield pickup over SPAXX is only 12 bps, which is insufficient to justify the recommendation.
+- **FLOT (iShares Floating Rate Bond ETF):** FLOT offers a slightly lower 5Y CAGR of 4.12% but with even shorter duration and a risk rating of 2. It is an excellent alternative if Emma prefers a pure floating-rate bond ETF with slightly lower yield but even lower volatility. FLOT’s 1Y max drawdown of -0.41% is negligible.
 
-2. **JPMorgan Ultra‑Short Income ETF (JPST):**  
-   Yield ~4.38%, daily liquidity, low risk (rating 1). A middle ground, but still 156 bps below the note. The note offers a clear advantage for a 3‑5 year horizon.
+- **JPST (JPMorgan Ultra-Short Income ETF):** JPST yields a 5Y CAGR of 3.54%, only marginally above cash, but has a risk rating of 2 and daily liquidity. It provides a conservative middle ground if the client wants a small step up from cash with near-zero drawdown.
 
 # Scenario Analysis
 
-Three macroeconomic scenarios are projected based on historical patterns and current market sentiment (as of Q1 2026). The key drivers are equity market returns (S&P 500 proxy for the six large‑cap US stocks) and fixed‑income behavior (US 5‑year Treasury and the CMT note). The note’s coupon is conditional on the 10‑year CMT.
+The following scenarios are based on historical market data (5-year average returns as baseline) and current macroeconomic sentiment (sticky inflation, central bank “higher-for-longer”). The portfolio difference is driven solely by the $310k shift from SPAXX to SRLN; all other holdings are unchanged.
 
-**Assumptions for each scenario:**
+**Assumptions for asset returns:**
 
-| Asset Class | Normal (60% prob.) | Upside (20% prob.) | Downside (20% prob.) | Justification |
-|---|---|---|---|---|
-| US Equities (LLY, AMZN, AAPL, WMT, GOOGL, JNJ) | +10% | +20% | -20% | Historical S&P 500 average 10% (10‑year annualized). Upside from strong earnings expansion; downside similar to COVID‑19 crash (2020, -20% in 1Q). |
-| US 5‑Year Treasury (US5YT=RR) | +4% (price return + coupon) | +2% (yields rise 50 bps, price falls ~2%, plus 4% coupon = +2%) | +6% (yields drop 100 bps, price rises ~4%, plus 4% coupon = +8%? Conservatively +6%) | Based on historical volatility of 5‑year yields (~70 bps annual). Normal: yields stable. Upside: strong growth pushes yields up. Downside: flight to safety lowers yields. |
-| CMT Note N02952 | +5.94% (full coupon, no call) | +2.00% (rates rise above 5.01% → no coupon; issuer does not call. Principal unchanged. Effective return = 0% coupon, but we assume 2% for minor market movement? Actually no coupon, so return = 0% if sold? But we assume held to maturity, so return = 0% in that year. For simplicity, we use 0%.) | +5.94% (rates fall, coupon paid; note is called at par early, so immediate return = coupon accrued) → Here we assume 3.0% because called after 6 months, only half coupon. For consistency, we use 3.0% for the year. | See note: call risk impacts actual return if called. |
-| SPAXX (current cash) | +3.90% | +3.90% | +3.90% | Money market yields assumed stable. Fed rate trajectory flat in normal, no change in upside/downside? Could vary but we keep constant for simplicity. |
+| Asset | Normal (5Y CAGR) | Upside (Bull) | Downside (Recession / Credit Stress) |
+|-------|-----------------|---------------|---------------------------------------|
+| SPAXX (Cash) | 3.46% | 4.00% (Fed pauses cuts) | 2.50% (rate cuts begin) |
+| SRLN (Senior Loans) | 4.57% | 6.50% (tight spreads, strong economy) | -1.00% (credit defaults spike) |
+| Equities (LLY, AMZN, AAPL, WMT, GOOGL, JNJ) | 15.0% (blended 5Y CAGR) | 25.0% (AI boom) | -20.0% (COVID-like crash) |
+| US5YT (Treasury Yield position) | 2.0% (proxy: SHY 5Y CAGR) | 3.0% (flattening) | 0.5% (flight to safety) |
 
-*Note: For the CMT Note, in the Upside scenario we assume the 10y CMT > 5.01% for all quarterly observations, so zero coupons are paid. In the Downside scenario, the note is called at the first call date (Nov 2026) because the 10y CMT falls below 4.30%. The investor receives 6 months of coupon (2.97%) plus principal back. We approximate 3.0% annual return.*
+*Equity blended return is the weighted average of the client’s individual equity 5Y CAGRs, rounded to 15% for scenario simplicity.*
 
-## Normal Market Condition (Probability 60%)
+## Normal Market Condition
 
-| Product | % Return | Suggested Holding (USD) | Return (USD) | Current Holding (USD) | Return (USD) |
-|---|---|---|---|---|---|
-| CMT Note N02952 | 5.94% | 992,000 | 58,925 | 0 | 0 |
-| SPAXX.O | 3.90% | 0 | 0 | 992,000 | 38,688 |
-| US Equities (6 stocks) | 10.00% | 1,934,739 | 193,474 | 1,934,739 | 193,474 |
-| US 5-Yr Treasury | 4.00% | 173,260 | 6,930 | 173,260 | 6,930 |
-| **Total** | **8.37%** | **3,100,000** | **259,329** | **3,100,000** | **239,092** |
+- Probability: 60% (based on current consensus of no recession and gradual normalization)
+- **Suggested Portfolio PnL:**
 
-- Annual return: Suggested 8.37% vs Current 7.71%
-- Incremental benefit: +$20,237 annually (+8.5% improvement)
+| Asset | % Return | Suggested Holding | Return | Current Holding | Return |
+|-------|---------:|------------------:|------:|----------------:|------:|
+| SPAXX | 3.46% | 682,000 | 23,597 | 992,000 | 34,323 |
+| SRLN | 4.57% | 310,000 | 14,167 | 0 | 0 |
+| LLY | 15.0% | 109,319 | 16,398 | 109,319 | 16,398 |
+| US5YT | 2.0% | 173,260 | 3,465 | 173,260 | 3,465 |
+| AMZN | 15.0% | 237,202 | 35,580 | 237,202 | 35,580 |
+| AAPL | 15.0% | 301,143 | 45,171 | 301,143 | 45,171 |
+| WMT | 15.0% | 365,084 | 54,763 | 365,084 | 54,763 |
+| GOOGL | 15.0% | 429,025 | 64,354 | 429,025 | 64,354 |
+| JNJ | 15.0% | 492,967 | 73,945 | 492,967 | 73,945 |
+| **Total** | | **3,100,000** | **331,440** | **3,100,000** | **328,000** |
 
-## Upside Market Condition – Strong Growth, Rate Spike (Probability 20%)
+- **Annual return:** Suggested 10.69% vs Current 10.58%
+- **Incremental benefit:** +$3,441 (0.11% improvement) – due to the higher yield on SRLN compared to cash.
 
-| Product | % Return | Suggested (USD) | Return (USD) | Current (USD) | Return (USD) |
-|---|---|---|---|---|---|
-| CMT Note N02952 | 0.00% | 992,000 | 0 | 0 | 0 |
-| SPAXX.O | 3.90% | 0 | 0 | 992,000 | 38,688 |
-| US Equities | 20.00% | 1,934,739 | 386,948 | 1,934,739 | 386,948 |
-| US 5-Yr Treasury | 2.00% | 173,260 | 3,465 | 173,260 | 3,465 |
-| **Total** | **12.60%** | **3,100,000** | **390,413** | **3,100,000** | **429,101** |
+## Upside Market Condition (Strong Economy, Tight Credit Spreads)
 
-- Annual return: Suggested 12.60% vs Current 13.84%
-- The note yields zero in this scenario because the accrual condition fails. Current portfolio benefits from SPAXX’s stable return. Suggested underperforms by $38,688.
+- Probability: 20% (low probability given late-cycle fears)
+- **Assumption:** SRLN returns 6.50% (tight spreads + rate stability); equities return 25%; cash returns 4.00%.
 
-## Downside Market Condition – Equity Crash, Rates Fall (Probability 20%)
+| Asset | % Return | Suggested Holding | Return | Current Holding | Return |
+|-------|---------:|------------------:|------:|----------------:|------:|
+| SPAXX | 4.00% | 682,000 | 27,280 | 992,000 | 39,680 |
+| SRLN | 6.50% | 310,000 | 20,150 | 0 | 0 |
+| Equities (blended) | 25.0% | 1,934,700 | 483,675 | 1,934,700 | 483,675 |
+| US5YT | 3.0% | 173,260 | 5,198 | 173,260 | 5,198 |
+| **Total** | | **3,100,000** | **536,303** | **3,100,000** | **528,553** |
 
-| Product | % Return | Suggested (USD) | Return (USD) | Current (USD) | Return (USD) |
-|---|---|---|---|---|---|
-| CMT Note N02952 | 3.00% | 992,000 | 29,760 | 0 | 0 |
-| SPAXX.O | 3.90% | 0 | 0 | 992,000 | 38,688 |
-| US Equities | -20.00% | 1,934,739 | -386,948 | 1,934,739 | -386,948 |
-| US 5-Yr Treasury | 6.00% | 173,260 | 10,396 | 173,260 | 10,396 |
-| **Total** | **-11.19%** | **3,100,000** | **-346,792** | **3,100,000** | **-337,864** |
+- **Annual return:** Suggested 17.30% vs Current 17.05%
+- **Incremental benefit:** +$7,750 (0.25% improvement) – amplified by SRLN’s higher upside in a buoyant credit market.
 
-- Annual return: Suggested -11.19% vs Current -10.90%
-- The note’s call reduces income versus SPAXX; both portfolios suffer heavy equity losses. Suggested underperforms by $8,928.
+## Downside Market Condition (Recession / Credit Stress similar to COVID-19)
 
-**Scenario Analysis Summary:** The suggested portfolio improves yield in the most likely normal scenario, with a clear trade‑off in the upside scenario (coupon suspension) and a slight disadvantage in the downside scenario (call). On a probability‑weighted basis:
+- Probability: 20% (tail risk from geopolitical or inflation shocks)
+- **Assumption:** Equities decline -20%, SRLN falls -1.00% (senior loans are relatively resilient but have credit losses), cash yields drop to 2.50%.
 
-- Expected return of suggested: 0.6×259,329 + 0.2×390,413 + 0.2×(-346,792) = 155,597 + 78,083 - 69,358 = **$164,322** (5.30% return)
-- Expected return of current: 0.6×239,092 + 0.2×429,101 + 0.2×(-337,864) = 143,455 + 85,820 - 67,573 = **$161,702** (5.22% return)
+| Asset | % Return | Suggested Holding | Return | Current Holding | Return |
+|-------|---------:|------------------:|------:|----------------:|------:|
+| SPAXX | 2.50% | 682,000 | 17,050 | 992,000 | 24,800 |
+| SRLN | -1.00% | 310,000 | -3,100 | 0 | 0 |
+| Equities (blended) | -20.0% | 1,934,700 | -386,940 | 1,934,700 | -386,940 |
+| US5YT | 0.50% | 173,260 | 866 | 173,260 | 866 |
+| **Total** | | **3,100,000** | **-372,124** | **3,100,000** | **-361,274** |
 
-The suggested portfolio offers a small expected incremental gain of $2,620 (0.08% of AUM) while providing a higher certainty of income for the near‑term goal.
+- **Annual return:** Suggested -12.00% vs Current -11.65%
+- **Incremental loss:** -$10,850 (–0.35% worse) – the SRLN position loses value while cash holds stable; however, the 22% cash buffer remains intact and the loss is limited.
+
+**Risk Disclosure:** Past performance does not guarantee future returns. Projected returns are estimates, not promises. Structured products and ETFs carry risk of principal loss. The scenarios above are hypothetical and for illustration only.
 
 # References
 
-- Product Catalog – CMT Note N02952 (Source: Planbot Internal Data – FactSheet)
-- Product Catalog – demo-market-quotes.csv (Source: Planbot Internal Data – performance and risk metrics)
-- Client Profile – Emma Thompson (Source: Planbot Internal Data – holdings and AUM)
-- Financial Needs Framework – common_needs.md (Source: Planbot Internal Data)
-- Web references: N/A – no external web search performed.
-
----**End of Proposal**---
+- **Product Catalog:** `demo-market-1Jun26.csv`, `selected_etf.csv` (Source: Planbot Internal Data)
+- **Client Profile:** `4_profile.md`, `4_holdings.csv` (Source: Planbot Internal Data)
+- **Financial Needs Framework:** `common_needs.md` (Source: Planbot Internal Data)
+- **Web References:** N/A – No external web search was used.

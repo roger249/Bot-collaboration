@@ -2,10 +2,10 @@
 
 Product data is sourced from 
 - demo-market-1Jun26.csv, which contains the master list of available instruments, historical performance metrics, and risk classifications. 
+- Sector ETF that that gives the product with bank's preference
+    - selected_etf.csv
 - Structured products
     - CMT_note.md
-- Sector ETF 
-    - selected_etf.csv
 
 To facilitate high-precision matching, each product is scored across four dimensions:
 

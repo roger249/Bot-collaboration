@@ -25,6 +25,8 @@ instructions: |
 |:---:|:---------:|:------------|:----------------|:------------:|:----------|:-----------------------------|---|
 | 1 | 2 | Sarah Chen | FX Window Range Accrual Note (FXRA0415) | 5 | High cash allocation (22.5%) and |
 
+# Client: <ID> (<Client name>)
+
 ## Potential needs
 ```yaml
 instructions: |

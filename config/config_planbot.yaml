@@ -45,6 +45,8 @@ reinvestment_proposal:
         purpose: Client profiles and suggested product for each client in markdown format
       - name: clients/*.csv
         purpose: Client profiles and suggested product for each client in csv format
+      - name: ../shared/market_outlook/*.md
+        purpose: Market outlook and sentiment analysis for the recommendation
     product_catalogs: 
       - name: ../shared/product_catalog/*.md
         purpose: Overview of the CSV file and the structure of the product catalogs
@@ -105,6 +107,8 @@ client_product_fit_analysis:
         purpose: Client profiles and suggested product for each client in markdown format
       - name: clients/*.csv
         purpose: Client profiles and suggested product for each client in csv format
+      - name: ../shared/market_outlook/*.md
+        purpose: Market outlook and sentiment analysis for the recommendation
     product_catalogs: 
       - name: ../shared/product_catalog/*.md
         purpose: Overview of the CSV file and the structure of the product catalogs
@@ -125,6 +129,8 @@ portfolio_review:
         purpose: Instructions and format for generating the proposal
       - name: ../shared/proposal_section_instructions/*.md
         purpose: Detail instructions for specific sections in the proposal
+      - name: ../shared/market_outlook/*.md
+        purpose: Market outlook and sentiment analysis for the recommendation
     guidelines: 
       - name: ../shared/financial_needs/*.md
         purpose: Guidelines on financial needs analysis and common financial needs
@@ -228,10 +234,12 @@ run_configurations:
         # Internally this is stored as a map with client_id as the key.
         client_profiles:
           mode: split_sections_by_header
-          header_pattern: "^#{2,}.*Client\\s*ID"
+#          header_pattern: "^#{2,}\\s*(?:.*Client\\s*ID|Rank\\s*\\d+\\s*[–-]\\s*Client\\s+[^\\s(]+)"
+          header_pattern: "^##[^C]*Client"
         client_ids:
           mode: regex_capture_all
-          pattern: "Client\\s*ID:?\\s*([^\\s(]+)"
+          pattern: "(?:Client[^\\d]*\\s+)([^\\s]+)"
+#          pattern: "(?:Client\\s*ID:?\\s*|Rank\\s*\\d+\\s*[–-]\\s*Client\\s+)([^\\s(]+)"
           ## Rank 1: Client ID 1 (James Harrison)
 
 

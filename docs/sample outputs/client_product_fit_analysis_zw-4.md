@@ -1,185 +1,152 @@
-# Client Product-Fit Analysis: Catherine Li
+Client Product-Fit Analysis: Catherine Li
+=====================================
 
-## Executive Summary
+# Executive Summary
+Recommended action: Reduce the cash position (SGOV) by $324,000 (2% of portfolio) and allocate to iShares Broad USD High Yield Corporate Bond ETF (USHY) to enhance yield while maintaining moderate risk. USHY is recommended because it offers a 5‑year CAGR of 4.24% versus 3.46% for SGOV, with a risk rating of 2 (low to moderate) and low correlation to her existing Treasuries and investment‑grade bonds. Expected outcome: a modest annual income improvement of approximately $2,500 (0.78% yield pickup on the switched amount) without significantly altering the portfolio’s risk profile.
 
-We recommend reducing exposure to two underperforming single stocks (LLY and PLTR) and redirecting that capital into the Technology Select Sector SPDR (XLK), a diversified technology sector ETF. This action consolidates tech exposure into a single instrument with a proven historical track record (+28% 1-year) and eliminates the idiosyncratic losses from LLY (–16.8%) and PLTR (–12.1%). The expected outcome is improved long‑term growth potential while reducing stock‑specific concentration risk, all while maintaining the portfolio’s overall risk profile within acceptable bounds.
+# Recommended Product: iShares Broad USD High Yield Corporate Bond ETF (USHY)
 
-## Recommended Product: Technology Select Sector SPDR (XLK)
+## Product Specifications
+| Field | Value |
+|-------|-------|
+| Ticker | USHY |
+| Asset Class | High Yield Bond |
+| Currency | USD |
+| Risk Rating | 2 (Low to Moderate) |
+| Liquidity Score | 5 (Daily) |
+| Expected Return Score | 3 (Moderate) |
+| 5‑Year CAGR (Historical) | 4.24% |
+| 1‑Year CAGR (Historical) | 7.22% |
+| 5‑Year Maximum Drawdown | –15.39% |
 
-### Product Specifications
+## Performance Metrics
+| Metric | SGOV (Switched‑Out) | USHY (Suggested) |
+|--------|---------------------|------------------|
+| 1‑Year CAGR | 3.95% | 7.22% |
+| 3‑Year CAGR | 4.73% | 8.93% |
+| 5‑Year CAGR | 3.46% | 4.24% |
+| 5‑Year Max Drawdown | –0.35% | –15.39% |
+| Risk Rating | 1 | 2 |
 
-| Attribute | Detail |
-|-----------|--------|
-| **Ticker** | XLK |
-| **Issuer** | State Street Global Advisors |
-| **Asset Class** | Equity – US Large Cap |
-| **Sector Focus** | S&P 500 Information Technology |
-| **Expense Ratio** | 0.09% |
-| **Risk Rating** | 4 (Higher, but diversified) |
-| **Expected Return** | 4 (Aggressive Growth) |
-| **Liquidity Score** | 5 (Daily, high volume) |
-| **Volatility** | 4 |
-| **Certainty (1y)** | 1 (low short‑term certainty) |
-| **Certainty (2y)** | 2 |
-| **Certainty (7y)** | 4 (high long‑term certainty) |
+## Risk Characteristics
+- **Credit risk:** USHY holds below‑investment‑grade bonds; defaults could cause principal loss, especially during economic downturns.
+- **Interest rate risk:** Moderate duration (~3.5 years); rising rates may depress prices, but the floating‑rate coupon (implied) provides some buffer.
+- **Liquidity:** Daily tradable with deep market, ensuring easy exit.
+- **Downside:** The 2% allocation limits portfolio‑level impact; the worst‑case annual loss of –15% would reduce total portfolio value by only 0.3%.
 
-### Performance Metrics
+## Detailed Justification
+Catherine Li holds 18% cash ($2.916M) in SGOV, which is excessive for a $16.2M portfolio. Her existing fixed‑income positions (BND, IEF, AGG, LQD) are all investment‑grade or government bonds, leaving no high‑yield exposure. USHY provides a meaningful yield pickup (historical 5‑year CAGR +0.78%) while maintaining a low risk rating (2). The small allocation (2%) minimises disruption and credit risk, and the low correlation to Treasuries improves diversification. Historical data supports consistent positive carry from high‑yield bonds. This aligns with the client’s need for yield enhancement with moderate risk (per the “Yield enhancement with moderate risk” and “Cash reduction” potential needs identified).
 
-| Metric | XLK | LLY | PLTR |
-|-------|----:|----:|-----:|
-| **1‑Year Return** | ~28% | –16.8% | –12.1% |
-| **3‑Year Return (p.a.)** | ~18–20% | (not available) | (not available) |
-| **5‑Year Return (p.a.)** | ~20–22% | (not available) | (not available) |
-| **Current Yield** | ~0.5% | 0.69% | 0% |
-
-*Source: sector_etf.md (XLK), demo-market-quotes.csv (LLY, PLTR oneYearReturnPct).*
-
-### Risk Characteristics
-
-XLK carries a risk rating of 4, higher than the individual stock risk ratings (3 for LLY and PLTR). However, the portfolio’s overall risk does not increase materially because the swapped amount is less than 18% of total AUM and the remaining portfolio contains 18% cash (SGOV) and ~40% bonds (BND, IEF, AGG, LQD), providing a substantial cushion. The key benefit is the elimination of single‑stock tail risk – a single FDA decision (LLY) or government contract loss (PLTR) could cause severe losses; XLK’s 65+ holdings diversify that risk.
-
-### Detailed Justification
-
-The client’s existing tech holdings (LLY and PLTR) are both in double‑digit drawdowns over the past year, while the technology sector as a whole (XLK) delivered +28%. Holding concentrated positions in names that have deteriorated suggests a need for **portfolio hygiene** – replacing idiosyncratic risk with diversified sector exposure. The financial need is **growth‑oriented tech exposure** with a **medium‑term horizon** (7+ years) and a **return certainty score of 4** (based on the 7‑year certainty of XLK). XLK aligns perfectly: it offers the same sector exposure with better historical returns, broad diversification, and institutional‑grade liquidity. The slight increase in risk rating (3→4) is acceptable given the low overall equity beta of the portfolio and the high cash/bond allocation.
-
-## Suggested Portfolio
+# Suggested Portfolio
 
 ```mermaid
 pie title Current Portfolio Allocation
-    "SGOV (Cash)" : 18.0
-    "BND (Bond)" : 7.6
-    "LLY (Equity)" : 8.3
-    "PLTR (Equity)" : 9.1
-    "IEF (Bond)" : 9.9
-    "BRKA (Equity)" : 10.6
-    "AGG (Bond)" : 11.4
-    "LQD (Bond)" : 12.1
-    "JPM (Equity)" : 12.9
+    "Cash (SGOV)" : 18
+    "Bond ETFs (BND.O, IEF, AGG, LQD)" : 41
+    "Equities (LLY, PLTR, BRK, JPM)" : 41
 ```
 
 ```mermaid
 pie title Suggested Portfolio Allocation
-    "SGOV (Cash)" : 18.0
-    "BND (Bond)" : 7.6
-    "IEF (Bond)" : 9.9
-    "BRKA (Equity)" : 10.6
-    "AGG (Bond)" : 11.4
-    "LQD (Bond)" : 12.1
-    "JPM (Equity)" : 12.9
-    "XLK (Technology Equity)" : 17.4
+    "Cash (SGOV)" : 16
+    "USHY" : 2
+    "Bond ETFs (BND.O, IEF, AGG, LQD)" : 41
+    "Equities (LLY, PLTR, BRK, JPM)" : 41
 ```
 
 | Asset | Current Market Value (USD) | Suggested Market Value (USD) | Current % | Suggested % | Change | Remark |
-|-------|---------------------------:|----------------------------:|:---------:|:-----------:|:-----:|--------|
-| SGOV (Cash) | 2,916,000 | 2,916,000 | 18.0% | 18.0% | 0.0% | Keep cash. |
-| BND (Bond) | 1,228,969 | 1,228,969 | 7.6% | 7.6% | 0.0% |  |
-| LLY | 1,352,263 | 0 | 8.3% | 0.0% | –8.3% | Sell to fund XLK. |
-| PLTR | 1,475,558 | 0 | 9.1% | 0.0% | –9.1% | Sell to fund XLK. |
-| IEF (Bond) | 1,598,853 | 1,598,853 | 9.9% | 9.9% | 0.0% |  |
-| BRKA | 1,722,147 | 1,722,147 | 10.6% | 10.6% | 0.0% |  |
-| AGG | 1,845,442 | 1,845,442 | 11.4% | 11.4% | 0.0% |  |
-| LQD | 1,968,737 | 1,968,737 | 12.1% | 12.1% | 0.0% |  |
-| JPM | 2,092,031 | 2,092,031 | 12.9% | 12.9% | 0.0% |  |
-| **XLK (Technology Select Sector SPDR)** | **0** | **2,827,821** | **0.0%** | **17.4%** | **+17.4%** | **Diversified tech growth** |
-| **Total** | **16,200,000** | **16,200,000** | **100%** | **100%** | **0.0%** | |
+|-------|---------------------------:|----------------------------:|----------:|------------:|------:|:-------|
+| SGOV | 2,916,000 | 2,592,000 | 18.0% | 16.0% | –2.0% | Reduce cash; redirected to USHY |
+| USHY | 0 | 324,000 | 0.0% | 2.0% | +2.0% | New high‑yield bond position |
+| BND.O | 1,228,969 | 1,228,969 | 7.6% | 7.6% | 0.0% | No change |
+| IEF.O | 1,598,853 | 1,598,853 | 9.9% | 9.9% | 0.0% | No change |
+| AGG | 1,845,442 | 1,845,442 | 11.4% | 11.4% | 0.0% | No change |
+| LQD | 1,968,737 | 1,968,737 | 12.2% | 12.2% | 0.0% | No change |
+| LLY | 1,352,263 | 1,352,263 | 8.3% | 8.3% | 0.0% | No change |
+| PLTR.O | 1,475,558 | 1,475,558 | 9.1% | 9.1% | 0.0% | No change |
+| BRKa | 1,722,147 | 1,722,147 | 10.6% | 10.6% | 0.0% | No change |
+| JPM | 2,092,031 | 2,092,031 | 12.9% | 12.9% | 0.0% | No change |
+| **Total** | **16,200,000** | **16,200,000** | **100%** | **100%** | **0%** | |
 
-### Pros and Cons of Suggested Portfolio
+## Pros and cons of suggested portfolio
 
 **Pros:**
-- Eliminates concentrated losses from LLY (–16.8%) and PLTR (–12.1%) and replaces them with a sector ETF that returned +28% over the same period.
-- Broadens technology exposure across 65+ holdings (Apple, Microsoft, NVIDIA, etc.), reducing single‑stock risk.
-- Improves portfolio hygiene by removing two names with severe negative momentum.
-- No change to cash/bond allocation; the conservative core (18% cash + 41% bonds) remains intact.
+- **Yield enhancement:** USHY’s historical 5‑year CAGR of 4.24% exceeds SGOV’s 3.46%, improving portfolio income.
+- **Diversification:** High‑yield bonds have low correlation to U.S. Treasuries; the small allocation adds a new risk‑return source.
+- **Controlled impact:** Only 2% of portfolio is moved, limiting downside from credit events.
+- **Alignment:** Directly addresses the client’s need for cash reduction and yield enhancement with moderate risk.
 
 **Cons:**
-- XLK has a higher risk rating (4) than the swapped stocks (3), which slightly increases portfolio volatility. However, the total equity allocation only increases from 41% to 50%, and the remaining 50% in cash/bonds anchors the portfolio.
-- Forgoes the potential recovery of LLY/PLTR if they rebound sharply. However, their recent underperformance (both –12% to –17%) and lack of catalyst suggest a low probability.
+- **Credit risk:** High‑yield bonds can default; a severe recession could trigger losses.
+- **Small allocation:** The benefit is modest (+$2,500 annually) and may not meaningfully move total portfolio performance.
+- **Interest rate sensitivity:** Despite moderate duration, a sharp rise in yields could depress USHY’s price.
 
-### Alternative Suggested Product to Consider
+## Alternative suggested product to consider
 
-1. **Invesco QQQ Trust (QQQ)** – Similar to XLK but tracks the Nasdaq‑100, which includes both technology and consumer discretionary names (e.g., Amazon, Tesla). Historically slightly higher volatility but also higher returns. Suitable if the client prefers a broader growth basket.
-2. **Vanguard Information Technology ETF (VGT)** – Another low‑cost tech sector ETF (expense ratio 0.10%) with a similar risk/return profile. Good alternative if the client has a preference for Vanguard products.
+| Product | Ticker | Justification |
+|---------|--------|---------------|
+| State Street Blackstone Senior Loan ETF | SRLN | Floating‑rate coupons provide protection against rising interest rates; 5‑year CAGR 4.57% with a risk rating of 2. Preferred if the client expects rate hikes. |
+| iShares 0‑5 Year High Yield Corporate Bond ETF | SHYG | Shorter duration (0–5 years) reduces credit and rate risk; 5‑year CAGR 4.82% with risk rating 2. Suitable for even lower volatility within high yield. |
 
-## Scenario Analysis
+# Scenario Analysis
 
-Assumptions:
-- Normal market: Based on the long‑term average of the S&P 500 (10% equity return, 5‑year rolling average) and bond returns (4%, based on historical aggregate bond yield). XLK return assumption: 12% (slight premium over market due to sector growth).
-- Upside market: Technology bull case similar to 2023–2024 – S&P 500 +20%, XLK +28% (from sector_etf.md 1‑year historical). Bonds stable at +4%.
-- Downside market: Severe correction similar to 2022 – S&P 500 –18%, XLK –28% (tech stocks fall more), bonds rally slightly (+3% as rates fall).
-- Probability: Normal 60%, Upside 20%, Downside 20% (based on current market sentiment of moderate uncertainty).
+The scenario analysis focuses on the $324,000 switched from SGOV to USHY. The remaining 82% of the portfolio (held in unchanged positions) is assumed to have the same return in both current and suggested portfolios, so the incremental effect is isolated.
 
-### Normal Market Condition
+**Assumptions:**
+- **SGOV return (cash):** Historical 5‑year CAGR 3.46% used for Normal and Downside; 1‑year CAGR 3.95% used for Upside (justified by the recent peak of the rate cycle).
+- **USHY return:** Normal uses 5‑year CAGR 4.24%; Upside uses 1‑year CAGR 7.22% (recent spread compression); Downside uses –10% (modelled after the 2008 high‑yield drawdown of –20% but scaled to a moderate stress scenario given current low default expectations).
+- **Other assets:** Return unchanged at $1,699,489 (derived from the current portfolio’s historical weighted average of 11.11% on the $13,284,000 other holdings).
 
-| Product | Return % | Suggested Holding (USD) | Return (USD) | Current Holding (USD) | Return (USD) |
-|---------|:-------:|-----------------------:|-------------:|---------------------:|-------------:|
-| SGOV    | 4%      | 2,916,000             | 116,640      | 2,916,000           | 116,640      |
-| BND     | 4%      | 1,228,969             | 49,159       | 1,228,969           | 49,159       |
-| LLY     | 10%     | 0                     | 0            | 1,352,263           | 135,226      |
-| PLTR    | 10%     | 0                     | 0            | 1,475,558           | 147,556      |
-| IEF     | 4%      | 1,598,853             | 63,954       | 1,598,853           | 63,954       |
-| BRKA    | 10%     | 1,722,147             | 172,215      | 1,722,147           | 172,215      |
-| AGG     | 4%      | 1,845,442             | 73,818       | 1,845,442           | 73,818       |
-| LQD     | 4%      | 1,968,737             | 78,749       | 1,968,737           | 78,749       |
-| JPM     | 10%     | 2,092,031             | 209,203      | 2,092,031           | 209,203      |
-| **XLK** | **12%** | **2,827,821**         | **339,339**  | **0**               | **0**        |
-| **Total** |       | **16,200,000**        | **1,103,077**| **16,200,000**      | **1,046,520** |
+## Normal Market Condition
+- **USHY return:** 4.24% (5‑year CAGR, 2019–2024 average)
+- **SGOV return:** 3.46% (5‑year CAGR, 2019–2024 average)
 
-- Annual return: Suggested 6.8% vs Current 6.5%  
-- Incremental benefit: +USD 56,557 annually (+5.4% improvement)
+| Product | Current Return (USD) | Suggested Return (USD) |
+|---------|---------------------:|-----------------------:|
+| SGOV | 2,916,000 × 3.46% = 100,894 | 2,592,000 × 3.46% = 89,683 |
+| USHY | 0 | 324,000 × 4.24% = 13,738 |
+| Other assets (unchanged) | 1,699,489 | 1,699,489 |
+| **Total Portfolio Return** | **1,800,383** | **1,802,910** |
 
-### Upside Market Condition
+- Annual return of suggested vs current: $1,802,910 vs $1,800,383 = +$2,527 improvement (+0.14% on total portfolio).
 
-| Product | Return % | Suggested Holding (USD) | Return (USD) | Current Holding (USD) | Return (USD) |
-|---------|:-------:|-----------------------:|-------------:|---------------------:|-------------:|
-| SGOV    | 4%      | 2,916,000             | 116,640      | 2,916,000           | 116,640      |
-| BND     | 4%      | 1,228,969             | 49,159       | 1,228,969           | 49,159       |
-| LLY     | 20%     | 0                     | 0            | 1,352,263           | 270,453      |
-| PLTR    | 20%     | 0                     | 0            | 1,475,558           | 295,112      |
-| IEF     | 4%      | 1,598,853             | 63,954       | 1,598,853           | 63,954       |
-| BRKA    | 20%     | 1,722,147             | 344,429      | 1,722,147           | 344,429      |
-| AGG     | 4%      | 1,845,442             | 73,818       | 1,845,442           | 73,818       |
-| LQD     | 4%      | 1,968,737             | 78,749       | 1,968,737           | 78,749       |
-| JPM     | 20%     | 2,092,031             | 418,406      | 2,092,031           | 418,406      |
-| **XLK** | **28%** | **2,827,821**         | **791,790**  | **0**               | **0**        |
-| **Total** |       | **16,200,000**        | **1,936,945**| **16,200,000**      | **1,710,720** |
+## Upside Market Condition (Strong credit environment)
+- **USHY return:** 7.22% (1‑year CAGR, 2025–2026)
+- **SGOV return:** 3.95% (1‑year CAGR, 2025–2026)
 
-- Annual return: Suggested 12.0% vs Current 10.6%  
-- Incremental benefit: +USD 226,225 annually (+13.2% improvement)
+| Product | Current Return (USD) | Suggested Return (USD) |
+|---------|---------------------:|-----------------------:|
+| SGOV | 2,916,000 × 3.95% = 115,090 | 2,592,000 × 3.95% = 102,290 |
+| USHY | 0 | 324,000 × 7.22% = 23,393 |
+| Other assets (unchanged) | 1,699,489 | 1,699,489 |
+| **Total Portfolio Return** | **1,814,579** | **1,825,172** |
 
-### Downside Market Condition (similar to 2022)
+- Annual return of suggested vs current: $1,825,172 vs $1,814,579 = +$10,593 improvement (+0.58% on total portfolio).
 
-| Product | Return % | Suggested Holding (USD) | Return (USD) | Current Holding (USD) | Return (USD) |
-|---------|:-------:|-----------------------:|-------------:|---------------------:|-------------:|
-| SGOV    | 4%      | 2,916,000             | 116,640      | 2,916,000           | 116,640      |
-| BND     | 3%      | 1,228,969             | 36,869       | 1,228,969           | 36,869       |
-| LLY     | –18%    | 0                     | 0            | 1,352,263           | –243,407     |
-| PLTR    | –18%    | 0                     | 0            | 1,475,558           | –265,600     |
-| IEF     | 3%      | 1,598,853             | 47,966       | 1,598,853           | 47,966       |
-| BRKA    | –18%    | 1,722,147             | –309,986     | 1,722,147           | –309,986     |
-| AGG     | 3%      | 1,845,442             | 55,363       | 1,845,442           | 55,363       |
-| LQD     | 3%      | 1,968,737             | 59,062       | 1,968,737           | 59,062       |
-| JPM     | –18%    | 2,092,031             | –376,566     | 2,092,031           | –376,566     |
-| **XLK** | **–28%**| **2,827,821**         | **–791,790** | **0**               | **0**        |
-| **Total** |       | **16,200,000**        | **–1,161,442**| **16,200,000**      | **–878,858** |
+## Downside Market Condition (Recession / credit crisis similar to 2008)
+- **USHY return:** –10% (severe stress, not far from historical max drawdown)
+- **SGOV return:** 3.46% (stable, remains near risk‑free)
 
-- Annual return: Suggested –7.2% vs Current –5.4%  
-- Incremental loss: –USD 282,584 (the suggested portfolio underperforms by 1.8% in this scenario, due to tech’s higher beta)
+| Product | Current Return (USD) | Suggested Return (USD) |
+|---------|---------------------:|-----------------------:|
+| SGOV | 2,916,000 × 3.46% = 100,894 | 2,592,000 × 3.46% = 89,683 |
+| USHY | 0 | 324,000 × (–10%) = –32,400 |
+| Other assets (unchanged) | 1,699,489 | 1,699,489 |
+| **Total Portfolio Return** | **1,800,383** | **1,756,772** |
 
-**Trade‑off accepted:** The upside scenario (+USD 226k) more than compensates the downside scenario (–USD 283k) given the 60/20/20 probability weighting. The net expected improvement is positive.
+- Annual loss of suggested vs current: $1,756,772 vs $1,800,383 = –$43,611 less (–2.4% on total portfolio).
 
-## Risk Disclosure
+**Key risk metric:** The downside scenario shows a maximum incremental loss of $43,611 (0.27% of total portfolio), confirming that the 2% allocation is manageable even in a severe credit downturn.
 
-- Past performance does not guarantee future returns.
-- Projected returns are estimates, not promises. Actual results may differ materially.
-- ETFs carry market risk, including potential loss of principal.
-- The recommended product (XLK) is not a deposit and is not protected by any deposit insurance scheme.
-- Investors should consider their own risk tolerance and investment horizon before acting.
+# Risk Disclosure
 
-## References
+**Past performance does not guarantee future returns.**  
+**Projected returns are estimates, not promises.**  
+**Structured products have risk of principal loss.**  
+High‑yield bonds (USHY) carry credit risk and may decline in value during economic contractions. The small allocation limits, but does not eliminate, this risk.
 
-- **Client Profile:** `zw-4_profile.md` (Source: Planbot Internal Data)
-- **Client Holdings:** `zw-4_holdings.csv` (Source: Planbot Internal Data)
-- **Product Catalog (XLK):** `sector_etf.md` (Source: Planbot Internal Data)
-- **Market Quotes (LLY, PLTR, SGOV, etc.):** `demo-market-quotes.csv` (Source: Planbot Internal Data)
-- **Guidelines & Instructions:** `general_guideline.md`, `common_needs.md`, `proposal_format.md` (Source: Planbot Internal Data)
-- **Web References:** N/A (no web search capability used)
+# References
+
+- Client Profile: zw-4 (Catherine Li) – Planbot Internal Data  
+- Product Catalog: demo-market-1Jun26.csv, selected_etf.csv, CMT_note_N02952.md – Planbot Internal Data  
+- No web references used (N/A).
