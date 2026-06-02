@@ -1,7 +1,7 @@
 # Overview
 
 Product data is sourced from 
-- demo-market-quotes.csv, which contains the master list of available instruments, historical performance metrics, and risk classifications. 
+- demo-market-1Jun26.csv, which contains the master list of available instruments, historical performance metrics, and risk classifications. 
 - Structured products
     - CMT_note.md
 - Sector ETF 

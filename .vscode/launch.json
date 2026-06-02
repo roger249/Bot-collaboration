@@ -128,7 +128,7 @@
       ]
     },
     {
-      "name": "Run Market Data",
+      "name": "Load Product Catalog",
       "type": "python",
       "request": "launch",
       "module": "src.main",

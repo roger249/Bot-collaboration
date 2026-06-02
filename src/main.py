@@ -82,6 +82,11 @@ def build_parser() -> argparse.ArgumentParser:
         required=False,
         help="Yahoo ticker symbols to retrieve",
     )
+    market_parser.add_argument(
+        "--ticker-groupname",
+        required=False,
+        help="Ticker group name from config/config_marketdata.yaml to retrieve",
+    )
     return parser
 
 
@@ -165,6 +170,7 @@ def main() -> None:
             output_path = get_market_data_from_config(
                 config_path=args.config,
                 tickers=args.tickers,
+                ticker_groupname=args.ticker_groupname,
             )
             LOGGER.info("Market data CSV generated at %s", output_path)
         except Exception as exc:

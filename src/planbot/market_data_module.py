@@ -30,6 +30,9 @@ class MarketDataConfig(BaseModel):
     frequency: str = "1w"
     periods: list[str] = Field(default_factory=lambda: list(DEFAULT_PERIODS))
     tickers: list[str] = Field(default_factory=list)
+    ticker_groups: dict[str, list[str]] = Field(default_factory=dict)
+    asset_class_proxy: dict[str, str] = Field(default_factory=dict)
+    execute_ticker_groupname: str | None = None
     name_preference: str = "long"
 
     @field_validator("frequency")
@@ -52,9 +55,41 @@ class MarketDataConfig(BaseModel):
     @classmethod
     def _validate_tickers(cls, values: list[str]) -> list[str]:
         cleaned = [str(item).strip().upper() for item in values if str(item).strip()]
-        if not cleaned:
-            raise ValueError("tickers cannot be empty")
         return cleaned
+
+    @field_validator("ticker_groups")
+    @classmethod
+    def _validate_ticker_groups(cls, value: dict[str, list[str]]) -> dict[str, list[str]]:
+        normalized: dict[str, list[str]] = {}
+        for group_name, tickers in (value or {}).items():
+            cleaned_group = str(group_name).strip()
+            cleaned_tickers = [str(item).strip().upper() for item in (tickers or []) if str(item).strip()]
+            if not cleaned_group:
+                raise ValueError("ticker_groups cannot contain an empty group name")
+            if not cleaned_tickers:
+                raise ValueError(f"ticker_groups['{cleaned_group}'] cannot be empty")
+            normalized[cleaned_group] = cleaned_tickers
+        return normalized
+
+    @field_validator("asset_class_proxy")
+    @classmethod
+    def _validate_asset_class_proxy(cls, value: dict[str, str]) -> dict[str, str]:
+        normalized: dict[str, str] = {}
+        for asset_class, proxy_ticker in (value or {}).items():
+            cleaned_asset_class = str(asset_class).strip()
+            cleaned_proxy = str(proxy_ticker).strip().upper()
+            if not cleaned_asset_class or not cleaned_proxy:
+                raise ValueError("asset_class_proxy entries must include both asset class and proxy ticker")
+            normalized[cleaned_asset_class] = cleaned_proxy
+        return normalized
+
+    @field_validator("execute_ticker_groupname")
+    @classmethod
+    def _validate_execute_ticker_groupname(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = str(value).strip()
+        return normalized or None
 
     @field_validator("name_preference")
     @classmethod
@@ -107,6 +142,8 @@ def get_market_data(
     periods: list[str] | None = None,
     output_dir: str | Path = "data/planbot/shared/product_catalog",
     name_preference: str = "long",
+    asset_class_proxy: dict[str, str] | None = None,
+    ticker_groupname: str | None = None,
 ) -> Path:
     """Generate a single-table CSV market dataset for the provided Yahoo tickers."""
     normalized_tickers = [str(item).strip().upper() for item in tickers if str(item).strip()]
@@ -137,11 +174,27 @@ def get_market_data(
     if normalized_name_preference not in {"long", "short"}:
         raise ValueError("name_preference must be either 'long' or 'short'")
 
-    output_path = _resolve_output_path(output_filename=output_filename, output_dir=Path(output_dir))
+    normalized_asset_class_proxy = {
+        str(asset_class).strip(): str(proxy).strip().upper()
+        for asset_class, proxy in (asset_class_proxy or {}).items()
+        if str(asset_class).strip() and str(proxy).strip()
+    }
+
+    output_path = _resolve_output_path(
+        output_filename=output_filename,
+        output_dir=Path(output_dir),
+        ticker_groupname=ticker_groupname,
+    )
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     fieldnames = _build_fieldnames(normalized_periods, normalized_metrics)
     yf = _import_yfinance()
+    proxy_history_cache: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    sgov_one_year_return = _fetch_benchmark_one_year_return(
+        yf=yf,
+        interval=interval,
+        benchmark_ticker="SGOV",
+    )
 
     rows: list[dict[str, Any]] = []
     for symbol in normalized_tickers:
@@ -150,7 +203,7 @@ def get_market_data(
 
         row: dict[str, Any] = {
             "ticker": symbol,
-            "asset_class": _as_text(info.get("quoteType") or info.get("category")),
+            "asset_class": _normalize_asset_class(info),
             "name": _pick_name(info, normalized_name_preference),
             "currency": _as_text(info.get("currency")),
             "last_update_date": "",
@@ -164,7 +217,22 @@ def get_market_data(
             history = _history_to_rows(
                 _fetch_history(ticker_obj=ticker_obj, period=_to_yfinance_period(period), interval=interval)
             )
+            if latest_row is None and history:
+                latest_row = history[0]
+
             period_metrics = _calculate_period_metrics(history)
+            if _history_needs_proxy(history) or _period_metrics_need_proxy(period_metrics):
+                proxy_history = _history_with_proxy_fallback(
+                    history=history,
+                    asset_class=row["asset_class"],
+                    asset_class_proxy=normalized_asset_class_proxy,
+                    interval=interval,
+                    period=period,
+                    yf=yf,
+                    proxy_history_cache=proxy_history_cache,
+                )
+                if proxy_history is not history:
+                    period_metrics = _calculate_period_metrics(proxy_history)
             period_results[period] = period_metrics
 
             metric_values: dict[str, float | None] = {
@@ -178,20 +246,31 @@ def get_market_data(
             for metric in normalized_metrics:
                 row[_metric_column_name(metric, period)] = _round_or_blank(metric_values.get(metric))
 
-            if latest_row is None and history:
-                latest_row = history[0]
-
         if latest_row:
             row["last_update_date"] = str(latest_row.get("date") or "")
             row["last_closing_price"] = _round_or_blank(_as_float(latest_row.get("close")))
 
         risk_rating = _estimate_risk_rating(period_results.get("1y"), period_results)
-        expected_return_score = _estimate_expected_return_score(period_results.get("1y"))
+        risk_rating = _enforce_sgov_return_ratio_rule(
+            risk_rating=risk_rating,
+            one_year_return=(period_results.get("1y").period_return if period_results.get("1y") else None),
+            sgov_one_year_return=sgov_one_year_return,
+            is_etf=_is_etf(info),
+        )
+        expected_return_score = _estimate_expected_return_score(period_results.get("3y"))
+        certainty_1y_score = _estimate_certainty_score(risk_rating, horizon="1y")
+        certainty_3y_score = _estimate_certainty_score(risk_rating, horizon="3y")
+        certainty_1y_score, certainty_3y_score = _apply_certainty_caps(
+            certainty_1y_score=certainty_1y_score,
+            certainty_3y_score=certainty_3y_score,
+            risk_rating=risk_rating,
+            asset_class=row["asset_class"],
+        )
 
         row["risk_rating"] = risk_rating
         row["expected_return_score"] = expected_return_score
-        row["certainty_1y_score"] = _estimate_certainty_score(risk_rating, horizon="1y")
-        row["certainty_3y_score"] = _estimate_certainty_score(risk_rating, horizon="3y")
+        row["certainty_1y_score"] = certainty_1y_score
+        row["certainty_3y_score"] = certainty_3y_score
         row["certainty_8y_score"] = _estimate_certainty_score(risk_rating, horizon="8y")
         row["liquidity_score"] = _estimate_liquidity_score(info)
 
@@ -209,11 +288,17 @@ def get_market_data(
 
 def get_market_data_from_config(
     tickers: list[str] | None = None,
+    ticker_groupname: str | None = None,
     config_path: str | Path = "config/config_marketdata.yaml",
     output_dir: str | Path = "data/planbot/shared/product_catalog",
 ) -> Path:
     cfg = load_market_data_config(config_path)
-    configured_or_overridden_tickers = tickers if tickers is not None else cfg.tickers
+    effective_ticker_groupname = ticker_groupname or cfg.execute_ticker_groupname
+    configured_or_overridden_tickers = _resolve_configured_tickers(
+        cfg=cfg,
+        tickers=tickers,
+        ticker_groupname=effective_ticker_groupname,
+    )
     return get_market_data(
         tickers=configured_or_overridden_tickers,
         output_filename=cfg.output_filename,
@@ -222,6 +307,8 @@ def get_market_data_from_config(
         periods=cfg.periods,
         output_dir=output_dir,
         name_preference=cfg.name_preference,
+        asset_class_proxy=cfg.asset_class_proxy,
+        ticker_groupname=effective_ticker_groupname,
     )
 
 
@@ -239,6 +326,22 @@ def _fetch_history(ticker_obj: Any, period: str, interval: str) -> Any:
         return ticker_obj.history(period=period, interval=interval, timeout=20)
     except TypeError:
         return ticker_obj.history(period=period, interval=interval)
+
+
+def _fetch_benchmark_one_year_return(yf: Any, interval: str, benchmark_ticker: str = "SGOV") -> float | None:
+    try:
+        ticker_obj = yf.Ticker(benchmark_ticker)
+        history = _history_to_rows(
+            _fetch_history(
+                ticker_obj=ticker_obj,
+                period=_to_yfinance_period("1y"),
+                interval=interval,
+            )
+        )
+        return _calculate_period_metrics(history).period_return
+    except Exception:
+        logger.warning(f"Unable to retrieve benchmark return for {benchmark_ticker}")
+        return None
 
 
 def _build_fieldnames(periods: list[str], metrics: list[str]) -> list[str]:
@@ -267,8 +370,46 @@ def _build_fieldnames(periods: list[str], metrics: list[str]) -> list[str]:
     return base + dynamic + tail
 
 
-def _resolve_output_path(output_filename: str, output_dir: Path) -> Path:
-    candidate = Path(output_filename)
+def _resolve_configured_tickers(
+    cfg: MarketDataConfig,
+    tickers: list[str] | None,
+    ticker_groupname: str | None,
+) -> list[str]:
+    if tickers is not None:
+        cleaned = [str(item).strip().upper() for item in tickers if str(item).strip()]
+        if not cleaned:
+            raise ValueError("tickers cannot be empty")
+        return cleaned
+
+    if ticker_groupname is not None:
+        group_name = str(ticker_groupname).strip()
+        if not group_name:
+            raise ValueError("ticker_groupname cannot be empty")
+        if group_name not in cfg.ticker_groups:
+            raise ValueError(
+                f"Unknown ticker_groupname '{group_name}'. Available groups: {sorted(cfg.ticker_groups)}"
+            )
+        return cfg.ticker_groups[group_name]
+
+    if cfg.tickers:
+        return cfg.tickers
+
+    if len(cfg.ticker_groups) == 1:
+        return next(iter(cfg.ticker_groups.values()))
+
+    if cfg.ticker_groups:
+        raise ValueError(
+            "ticker_groupname is required when config defines multiple ticker_groups"
+        )
+
+    raise ValueError("No tickers configured. Provide tickers or define ticker_groups in config")
+
+
+def _resolve_output_path(output_filename: str, output_dir: Path, ticker_groupname: str | None = None) -> Path:
+    group_name = ticker_groupname or "selected_etf"
+    rendered_output_filename = output_filename.replace("<tickers_groupname>", group_name)
+    rendered_output_filename = rendered_output_filename.replace("<tickers_group>", group_name)
+    candidate = Path(rendered_output_filename)
     if candidate.is_absolute():
         return candidate
 
@@ -289,6 +430,25 @@ def _to_yfinance_period(period: str) -> str:
 
 def _safe_to_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
+
+
+def _normalize_asset_class(info: dict[str, Any]) -> str:
+    candidates = [
+        info.get("assetClass"),
+        info.get("fundCategory"),
+        info.get("category"),
+        info.get("quoteType"),
+    ]
+    for value in candidates:
+        text = _as_text(value).strip()
+        if text:
+            return text
+    return ""
+
+
+def _is_etf(info: dict[str, Any]) -> bool:
+    quote_type = _as_text(info.get("quoteType")).strip().lower()
+    return quote_type == "etf"
 
 
 def _history_to_rows(frame: Any) -> list[dict[str, Any]]:
@@ -317,6 +477,59 @@ def _history_to_rows(frame: Any) -> list[dict[str, Any]]:
 
     rows.sort(key=lambda item: str(item["date"]), reverse=True)
     return rows
+
+
+def _history_needs_proxy(history_rows: list[dict[str, Any]]) -> bool:
+    if len(history_rows) < 2:
+        return True
+    closes = [float(item["close"]) for item in history_rows if _as_float(item.get("close")) is not None]
+    if not closes:
+        return True
+    return all(abs(close) <= 1e-9 for close in closes)
+
+
+def _period_metrics_need_proxy(period_metrics: PeriodMetrics) -> bool:
+    return (
+        _is_blank_or_zero(period_metrics.period_return)
+        and _is_blank_or_zero(period_metrics.cagr)
+        and _is_blank_or_zero(period_metrics.max_drawdown)
+    )
+
+
+def _history_with_proxy_fallback(
+    history: list[dict[str, Any]],
+    asset_class: str,
+    asset_class_proxy: dict[str, str],
+    interval: str,
+    period: str,
+    yf: Any,
+    proxy_history_cache: dict[tuple[str, str], list[dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    proxy_ticker = asset_class_proxy.get(_as_text(asset_class).strip())
+    if not proxy_ticker:
+        return history
+
+    cache_key = (proxy_ticker, period)
+    if cache_key not in proxy_history_cache:
+        proxy_ticker_obj = yf.Ticker(proxy_ticker)
+        proxy_history_cache[cache_key] = _history_to_rows(
+            _fetch_history(
+                ticker_obj=proxy_ticker_obj,
+                period=_to_yfinance_period(period),
+                interval=interval,
+            )
+        )
+    proxy_history = proxy_history_cache[cache_key]
+    if _history_needs_proxy(proxy_history):
+        return history
+
+    logger.info(
+        "Using proxy ticker {} for asset class {} period {}",
+        proxy_ticker,
+        asset_class,
+        period,
+    )
+    return proxy_history
 
 
 def _normalize_index_value(index_value: Any) -> str:
@@ -449,19 +662,37 @@ def _estimate_risk_rating(one_year_metrics: PeriodMetrics | None, all_metrics: d
     return 5
 
 
-def _estimate_expected_return_score(one_year_metrics: PeriodMetrics | None) -> int:
-    period_return = one_year_metrics.period_return if one_year_metrics else None
-    if period_return is None:
+def _estimate_expected_return_score(period_metrics: PeriodMetrics | None) -> int:
+    period_cagr = period_metrics.cagr if period_metrics else None
+    if period_cagr is None:
         return 3
-    if period_return <= 0:
+    if period_cagr <= 0:
         return 1
-    if period_return <= 5:
+    if period_cagr <= 5:
         return 2
-    if period_return <= 12:
+    if period_cagr <= 12:
         return 3
-    if period_return <= 20:
+    if period_cagr <= 20:
         return 4
     return 5
+
+
+def _enforce_sgov_return_ratio_rule(
+    risk_rating: int,
+    one_year_return: float | None,
+    sgov_one_year_return: float | None,
+    is_etf: bool,
+) -> int:
+    if not is_etf:
+        return risk_rating
+    if one_year_return is None or sgov_one_year_return is None:
+        return risk_rating
+    if sgov_one_year_return <= 0:
+        return risk_rating
+
+    required_risk_rating = math.ceil(abs(one_year_return / sgov_one_year_return))
+    required_risk_rating = max(1, min(5, required_risk_rating))
+    return max(risk_rating, required_risk_rating)
 
 
 def _estimate_certainty_score(risk_rating: int, horizon: str) -> int:
@@ -471,6 +702,33 @@ def _estimate_certainty_score(risk_rating: int, horizon: str) -> int:
     elif horizon == "8y":
         base += 1
     return max(1, min(5, base))
+
+
+def _is_non_short_duration_bond(asset_class: str) -> bool:
+    text = _as_text(asset_class).strip().lower()
+    if not text:
+        return False
+
+    is_bond_like = ("bond" in text) or ("government" in text)
+    is_short_duration = ("short" in text) or (text in {"moneymarket", "money market"})
+    return is_bond_like and not is_short_duration
+
+
+def _apply_certainty_caps(
+    certainty_1y_score: int,
+    certainty_3y_score: int,
+    risk_rating: int,
+    asset_class: str,
+) -> tuple[int, int]:
+    cap = None
+    if _is_non_short_duration_bond(asset_class):
+        cap = 3
+    if int(risk_rating) > 2:
+        cap = 3 if cap is None else min(cap, 3)
+    if cap is None:
+        return certainty_1y_score, certainty_3y_score
+
+    return min(certainty_1y_score, cap), min(certainty_3y_score, cap)
 
 
 def _estimate_liquidity_score(info: dict[str, Any]) -> int:
@@ -513,6 +771,12 @@ def _as_float(value: Any) -> float | None:
         return number
     except Exception:
         return None
+
+
+def _is_blank_or_zero(value: float | None, tolerance: float = 1e-9) -> bool:
+    if value is None:
+        return True
+    return abs(float(value)) <= tolerance
 
 
 def _round_or_blank(value: float | None, digits: int = 2) -> str:

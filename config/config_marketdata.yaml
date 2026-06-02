@@ -1,4 +1,4 @@
-output_filename: runs/market_data/selected_etf.csv
+output_filename: runs/market_data/<tickers_groupname>.csv
 metrics:
   - return
   - CAGR
@@ -12,24 +12,128 @@ periods:
   - 5y
   - 10y
 name_preference: long
-tickers:
-  - XLK
-  - XLF
-  - XLV
-  - XLY
-  - XLP
-  - XLE
-  - XLI
-  - XLB
-  - XLRE
-  - XLU
-  - XLC
-  - VOO
-  - HYG
-  - FLOT
-  - BSV
-  - SHYG
-  - USO
-  - GLDM
-  - CBON
-  - ICVT
+asset_class_proxy: 
+  # The following tickers are used as proxies for their respective asset classes if the historical data is missing.  (e.g., return=0)
+  MONEYMARKET: SGOV
+execute_ticker_groupname: demo-market-1Jun26
+# execute_ticker_groupname: selected_etf
+
+ticker_groups:
+  selected_etf:
+    - XLK
+    - XLF
+    - XLV
+    - XLY
+    - XLP
+    - XLE
+    - XLI
+    - XLB
+    - XLRE
+    - XLU
+    - XLC
+    - VOO
+    - HYG
+    - FLOT
+    - BSV
+    - SHYG
+    - USO
+    - GLDM
+    - CBON
+    - ICVT
+    - IWM
+    - EEM
+    - VTI
+  test:
+    - SPY
+    - QQQ
+    - AGG
+    - VMRXX
+    - IBHJ
+  demo-market-1Jun26:
+    - NEAR
+    - JPST
+    - ICSH
+    - BIL
+    - SHV
+    - VMRXX
+    - FZDXX
+    - SPAXX
+    - SGOV
+    - USIG
+    - SRLN
+    - BND
+    - SPIB
+    - VCIT
+    - IEF
+    - EMB
+    - AGG
+    - USHY
+    - TLT
+    - LQD
+    - BKLN
+    - HYG
+    - EDV
+    - VGIT
+    - GOVT
+    - SHY
+    - NVDA
+    - AAPL
+    - GOOGL
+    - MSFT
+    - AMZN
+    - META
+    - TSLA
+    - AVGO
+    - NFLX
+    - PLTR
+    - WMT
+    - BRK-A
+    - LLY
+    - JPM
+    - XOM
+    - V
+    - JNJ
+    - MA
+    - MU
+    - COST
+    - ORCL
+    - ABBV
+    - CVX
+    - PG
+    - HD
+    - 0700.HK
+    - 9988.HK
+    - 3690.HK
+    - 1810.HK
+    - 0941.HK
+    - 1299.HK
+    - 2382.HK
+    - 2269.HK
+    - DX-Y.NYB
+    - EURUSD=X
+    - USDJPY=X
+    - GBPUSD=X
+    - USDCNY=X
+    - USDHKD=X
+    - USDCNH=X
+    - LTC-USD
+    - XRP-USD
+    - BNB-USD
+    - USDT-USD
+    - ETH-USD
+    - BTC-USD
+    - PYPL
+    - 9618.HK
+    - TSM
+    - 2018.HK
+    - BA
+    - 0005.HK
+    - 2823.HK
+    - COIN
+    - 2800.HK
+    - 3033.HK
+    - 3188.HK
+    - 3195.HK
+    - QQQ
+    - SPY
+  

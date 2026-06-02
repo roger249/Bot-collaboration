@@ -11,9 +11,9 @@ product_investor_matching_task:
     - For any suggested product, please specify the funding source.  
     - The risk class or asset class of the suggested product should be similar to the funding source.
     - Do not increase holding for any product other than the suggested product.
-    - The suggested product shall have more than 0.7% return than existing or better liquidity.  Otherwise a strong justification of switching shall be provided.
+    - The suggested product shall have more than 0.5% return than existing or better liquidity.  Otherwise a strong justification of switching shall be provided.
     - Consider having more than 5% of the portfolio in cash or cash equivalent for liquidity purpose.
-    - If there's any reference to a product performance, please specify the historical period.
+    - Uses 5y CAGR to for the future expected return.  For product with much higher 1y, 3y CAGR than 5y CAGR, please provide justification on the sustainability of the return.
     - The reference materials are provided at the end of the user prompt as structured JSON that includes below:
       - proposal_instruction_and_format: Instructions and format for generating the proposal
       - client_profiles: list of client profile and existing holdings
