@@ -21,9 +21,9 @@ instructions: |
 
 ```
 
-| Rank | Client ID | Client Name | Suggested Product | Buying Score | Rationale | Expected Return | Existing Return |
-|:---:|:---------:|:------------|:----------------|:------------:|:----------|:-----------------------------|---|
-| 1 | 2 | Sarah Chen | FX Window Range Accrual Note (FXRA0415) | 5 | High cash allocation (22.5%) and |
+| Rank | Client ID | Client Name | Suggested Product                       | Buying Score | Rationale                        | Expected Return | Existing Return |
+| ---: | --------: | :---------- | :-------------------------------------- | -----------: | :------------------------------- | --------------: | --------------- |
+|    1 |         2 | Sarah Chen  | FX Window Range Accrual Note (FXRA0415) |            5 | High cash allocation (22.5%) and |            5.5% | 2.5%            |
 
 # Client: <ID> (<Client name>)
 

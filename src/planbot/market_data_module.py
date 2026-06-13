@@ -22,6 +22,8 @@ DEFAULT_PERIODS = ["6m", "1y", "3y", "5y", "10y"]
 DEFAULT_METRICS = ["return", "cagr", "max_drawdown", "price_ihr_20", "price_ihr_80"]
 ALLOWED_METRICS = set(DEFAULT_METRICS)
 ALLOWED_METRICS.add("calmar_ratio")
+ALLOWED_METRICS.add("downside_risk")
+ALLOWED_METRICS.add("volatility")
 
 
 class MarketDataConfig(BaseModel):
@@ -32,8 +34,19 @@ class MarketDataConfig(BaseModel):
     tickers: list[str] = Field(default_factory=list)
     ticker_groups: dict[str, list[str]] = Field(default_factory=dict)
     asset_class_proxy: dict[str, str] = Field(default_factory=dict)
-    execute_ticker_groupname: str | None = None
+    execute_ticker_groupname: str | list[str] | None = None
     name_preference: str = "long"
+    risk_rating: list[dict] = Field(default_factory=lambda: [
+        {"1": "1%"}, {"2": "4%"}, {"3": "10%"}, {"4": "20%"}, {"5": None}
+    ])
+    certainty_rating: list[dict] = Field(default_factory=lambda: [
+        {"5": -2}, {"4": -1}, {"3": 0.5}, {"2": 1.5}, {"1": None}
+    ])
+    certainty_period: list[str] = Field(default_factory=lambda: ["1y", "3y", "5y"])
+    certainty_method: str = "zscore"  # "zscore" or "risk_derived"
+    certainty_target_return: float = 0.0  # Fixed target return % for z-score; used when certainty_method == "zscore"
+    certainty_enabled: bool = True    # Set false to skip generating certainty columns
+    liquidity_rating: dict[str, int] = Field(default_factory=dict)
 
     @field_validator("frequency")
     @classmethod
@@ -85,9 +98,12 @@ class MarketDataConfig(BaseModel):
 
     @field_validator("execute_ticker_groupname")
     @classmethod
-    def _validate_execute_ticker_groupname(cls, value: str | None) -> str | None:
+    def _validate_execute_ticker_groupname(cls, value: str | list[str] | None) -> str | list[str] | None:
         if value is None:
             return None
+        if isinstance(value, list):
+            cleaned = [str(item).strip() for item in value if str(item).strip()]
+            return cleaned if cleaned else None
         normalized = str(value).strip()
         return normalized or None
 
@@ -114,12 +130,66 @@ class MarketDataConfig(BaseModel):
             )
         return normalized
 
+    @field_validator("risk_rating")
+    @classmethod
+    def _validate_risk_rating(cls, values: list[dict]) -> list[dict]:
+        if not values:
+            raise ValueError("risk_rating cannot be empty")
+        for entry in values:
+            if not isinstance(entry, dict) or len(entry) != 1:
+                raise ValueError(f"Each risk_rating entry must be a single-key dict, got: {entry}")
+        return values
+
+    @field_validator("certainty_rating")
+    @classmethod
+    def _validate_certainty_rating(cls, values: list[dict]) -> list[dict]:
+        if not values:
+            raise ValueError("certainty_rating cannot be empty")
+        for entry in values:
+            if not isinstance(entry, dict) or len(entry) != 1:
+                raise ValueError(f"Each certainty_rating entry must be a single-key dict, got: {entry}")
+        return values
+
+    @field_validator("certainty_period")
+    @classmethod
+    def _validate_certainty_period(cls, values: list[str]) -> list[str]:
+        cleaned = [str(item).strip().lower() for item in values if str(item).strip()]
+        if not cleaned:
+            raise ValueError("certainty_period cannot be empty")
+        return cleaned
+
+    @field_validator("certainty_method")
+    @classmethod
+    def _validate_certainty_method(cls, value: str) -> str:
+        normalized = str(value).strip().lower()
+        if normalized not in {"zscore", "risk_derived"}:
+            raise ValueError("certainty_method must be either 'zscore' or 'risk_derived'")
+        return normalized
+
+
+def _parse_rating_table(raw: list[dict]) -> list[tuple[int, float | None]]:
+    """Convert [{1: '1%'}, {2: '4%'}, {5: None}] to [(1, 1.0), (2, 4.0), (5, None)]."""
+    result: list[tuple[int, float | None]] = []
+    for entry in raw:
+        for key, threshold in entry.items():
+            rating = int(key)
+            if threshold is None:
+                result.append((rating, None))
+            elif isinstance(threshold, str):
+                cleaned = str(threshold).strip().rstrip("%")
+                result.append((rating, float(cleaned)))
+            else:
+                result.append((rating, float(threshold)))
+    return result
+
 
 @dataclass
 class PeriodMetrics:
     period_return: float | None
     cagr: float | None
     calmar_ratio: float | None
+    downside_risk: float | None
+    volatility: float | None
     max_drawdown: float | None
     ihr20: float | None
     ihr80: float | None
@@ -144,6 +214,13 @@ def get_market_data(
     name_preference: str = "long",
     asset_class_proxy: dict[str, str] | None = None,
     ticker_groupname: str | None = None,
+    risk_rating_table: list[dict] | None = None,
+    certainty_rating_table: list[dict] | None = None,
+    certainty_periods: list[str] | None = None,
+    certainty_method: str = "zscore",
+    certainty_target_return: float = 0.0,
+    certainty_enabled: bool = True,
+    liquidity_rating_map: dict[str, int] | None = None,
 ) -> Path:
     """Generate a single-table CSV market dataset for the provided Yahoo tickers."""
     normalized_tickers = [str(item).strip().upper() for item in tickers if str(item).strip()]
@@ -187,7 +264,22 @@ def get_market_data(
     )
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    fieldnames = _build_fieldnames(normalized_periods, normalized_metrics)
+    # Parse rating config tables
+    parsed_risk_rating = _parse_rating_table(risk_rating_table) if risk_rating_table else _parse_rating_table([
+        {"1": "1%"}, {"2": "4%"}, {"3": "10%"}, {"4": "20%"}, {"5": None}
+    ])
+    parsed_certainty_rating = _parse_rating_table(certainty_rating_table) if certainty_rating_table else _parse_rating_table([
+        {"5": -2}, {"4": -1}, {"3": 0.5}, {"2": 1.5}, {"1": None}
+    ])
+    effective_certainty_periods = certainty_periods or ["1y", "3y", "5y"]
+    effective_liquidity_map = liquidity_rating_map or {}
+    effective_certainty_method = str(certainty_method).strip().lower()
+    effective_target_return = float(certainty_target_return)
+
+    fieldnames = _build_fieldnames(
+        normalized_periods, normalized_metrics,
+        effective_certainty_periods if certainty_enabled else None,
+    )
     yf = _import_yfinance()
     proxy_history_cache: dict[tuple[str, str], list[dict[str, Any]]] = {}
     sgov_one_year_return = _fetch_benchmark_one_year_return(
@@ -239,6 +331,8 @@ def get_market_data(
                 "return": period_metrics.period_return,
                 "cagr": period_metrics.cagr,
                 "calmar_ratio": period_metrics.calmar_ratio,
+                "downside_risk": period_metrics.downside_risk,
+                "volatility": period_metrics.volatility,
                 "max_drawdown": period_metrics.max_drawdown,
                 "price_ihr_20": period_metrics.ihr20,
                 "price_ihr_80": period_metrics.ihr80,
@@ -250,29 +344,42 @@ def get_market_data(
             row["last_update_date"] = str(latest_row.get("date") or "")
             row["last_closing_price"] = _round_or_blank(_as_float(latest_row.get("close")))
 
-        risk_rating = _estimate_risk_rating(period_results.get("1y"), period_results)
+        risk_rating = _estimate_risk_rating(
+            period_results.get("1y"), period_results, parsed_risk_rating,
+        )
         risk_rating = _enforce_sgov_return_ratio_rule(
             risk_rating=risk_rating,
             one_year_return=(period_results.get("1y").period_return if period_results.get("1y") else None),
             sgov_one_year_return=sgov_one_year_return,
             is_etf=_is_etf(info),
         )
-        expected_return_score = _estimate_expected_return_score(period_results.get("3y"))
-        certainty_1y_score = _estimate_certainty_score(risk_rating, horizon="1y")
-        certainty_3y_score = _estimate_certainty_score(risk_rating, horizon="3y")
-        certainty_1y_score, certainty_3y_score = _apply_certainty_caps(
-            certainty_1y_score=certainty_1y_score,
-            certainty_3y_score=certainty_3y_score,
-            risk_rating=risk_rating,
-            asset_class=row["asset_class"],
-        )
+        expected_return = _estimate_expected_return(period_results.get("3y"))
 
         row["risk_rating"] = risk_rating
-        row["expected_return_score"] = expected_return_score
-        row["certainty_1y_score"] = certainty_1y_score
-        row["certainty_3y_score"] = certainty_3y_score
-        row["certainty_8y_score"] = _estimate_certainty_score(risk_rating, horizon="8y")
-        row["liquidity_score"] = _estimate_liquidity_score(info)
+        row["expected_return"] = _round_or_blank(expected_return)
+        row["liquidity_rating"] = _estimate_liquidity_rating(info, effective_liquidity_map)
+
+        # Dynamic certainty columns from config
+        if certainty_enabled:
+            for cert_period in effective_certainty_periods:
+                if effective_certainty_method == "risk_derived":
+                    # Legacy: derive certainty from risk_rating alone
+                    certainty_val = _estimate_certainty_score(risk_rating, horizon=cert_period)
+                else:
+                    # New: z-score based certainty; r = fixed target_return %
+                    certainty_val = _estimate_certainty_rating(
+                        horizon=cert_period,
+                        period_results=period_results,
+                        certainty_rating_table=parsed_certainty_rating,
+                        target_return=effective_target_return,
+                    )
+                # Apply certainty boundary caps (same rule: cap at 3 for bonds / risk>2)
+                certainty_val = _apply_certainty_cap(
+                    certainty_score=certainty_val,
+                    risk_rating=risk_rating,
+                    asset_class=row["asset_class"],
+                )
+                row[f"certainty_{cert_period}_rating"] = certainty_val
 
         rows.append(row)
 
@@ -299,6 +406,12 @@ def get_market_data_from_config(
         tickers=tickers,
         ticker_groupname=effective_ticker_groupname,
     )
+    # Use first group name for filename when multiple groups are specified
+    filename_groupname: str | None
+    if isinstance(effective_ticker_groupname, list):
+        filename_groupname = effective_ticker_groupname[0] if effective_ticker_groupname else None
+    else:
+        filename_groupname = effective_ticker_groupname
     return get_market_data(
         tickers=configured_or_overridden_tickers,
         output_filename=cfg.output_filename,
@@ -308,7 +421,14 @@ def get_market_data_from_config(
         output_dir=output_dir,
         name_preference=cfg.name_preference,
         asset_class_proxy=cfg.asset_class_proxy,
-        ticker_groupname=effective_ticker_groupname,
+        ticker_groupname=filename_groupname,
+        risk_rating_table=cfg.risk_rating,
+        certainty_rating_table=cfg.certainty_rating,
+        certainty_periods=cfg.certainty_period,
+        certainty_method=cfg.certainty_method,
+        certainty_target_return=cfg.certainty_target_return,
+        certainty_enabled=cfg.certainty_enabled,
+        liquidity_rating_map=cfg.liquidity_rating,
     )
 
 
@@ -344,13 +464,12 @@ def _fetch_benchmark_one_year_return(yf: Any, interval: str, benchmark_ticker: s
         return None
 
 
-def _build_fieldnames(periods: list[str], metrics: list[str]) -> list[str]:
+def _build_fieldnames(periods: list[str], metrics: list[str], certainty_periods: list[str] | None = None) -> list[str]:
     base = [
         "ticker",
         "asset_class",
         "name",
         "currency",
-        "last_update_date",
         "last_closing_price",
     ]
     # Category-first ordering driven by metrics list from config,
@@ -359,21 +478,23 @@ def _build_fieldnames(periods: list[str], metrics: list[str]) -> list[str]:
     for metric in metrics:
         dynamic.extend(_metric_column_name(metric, period) for period in periods)
 
-    tail = [
+    tail: list[str] = [
         "risk_rating",
-        "expected_return_score",
-        "certainty_1y_score",
-        "certainty_3y_score",
-        "certainty_8y_score",
-        "liquidity_score",
+        "expected_return",
     ]
+    if certainty_periods is not None:
+        tail.extend(f"certainty_{p}_rating" for p in certainty_periods)
+    tail.extend([
+        "liquidity_rating",
+        "last_update_date",
+    ])
     return base + dynamic + tail
 
 
 def _resolve_configured_tickers(
     cfg: MarketDataConfig,
     tickers: list[str] | None,
-    ticker_groupname: str | None,
+    ticker_groupname: str | list[str] | None,
 ) -> list[str]:
     if tickers is not None:
         cleaned = [str(item).strip().upper() for item in tickers if str(item).strip()]
@@ -382,6 +503,26 @@ def _resolve_configured_tickers(
         return cleaned
 
     if ticker_groupname is not None:
+        if isinstance(ticker_groupname, list):
+            # Merge tickers from all named groups, preserving order and removing duplicates
+            merged: list[str] = []
+            seen: set[str] = set()
+            for name in ticker_groupname:
+                group_name = str(name).strip()
+                if not group_name:
+                    continue
+                if group_name not in cfg.ticker_groups:
+                    raise ValueError(
+                        f"Unknown ticker_groupname '{group_name}'. Available groups: {sorted(cfg.ticker_groups)}"
+                    )
+                for t in cfg.ticker_groups[group_name]:
+                    if t not in seen:
+                        seen.add(t)
+                        merged.append(t)
+            if not merged:
+                raise ValueError("ticker_groupname list resolved to no tickers")
+            return merged
+
         group_name = str(ticker_groupname).strip()
         if not group_name:
             raise ValueError("ticker_groupname cannot be empty")
@@ -549,6 +690,8 @@ def _calculate_period_metrics(history_rows: list[dict[str, Any]]) -> PeriodMetri
             period_return=None,
             cagr=None,
             calmar_ratio=None,
+            downside_risk=None,
+            volatility=None,
             max_drawdown=None,
             ihr20=None,
             ihr80=None,
@@ -571,6 +714,9 @@ def _calculate_period_metrics(history_rows: list[dict[str, Any]]) -> PeriodMetri
 
     max_drawdown = _max_drawdown_pct(closes)
     calmar_ratio = _calmar_ratio(cagr, max_drawdown)
+    periodic_returns = _periodic_returns(closes)
+    volatility = _annualized_volatility_pct(periodic_returns)
+    downside_risk = _annualized_downside_risk_pct(periodic_returns)
     ihr20 = _percentile(closes, 0.2)
     ihr80 = _percentile(closes, 0.8)
 
@@ -578,10 +724,48 @@ def _calculate_period_metrics(history_rows: list[dict[str, Any]]) -> PeriodMetri
         period_return=period_return,
         cagr=cagr,
         calmar_ratio=calmar_ratio,
+        downside_risk=downside_risk,
+        volatility=volatility,
         max_drawdown=max_drawdown,
         ihr20=ihr20,
         ihr80=ihr80,
     )
+
+
+def _periodic_returns(closes: list[float]) -> list[float]:
+    if len(closes) < 2:
+        return []
+
+    periodic_returns: list[float] = []
+    for idx in range(1, len(closes)):
+        previous = closes[idx - 1]
+        current = closes[idx]
+        if previous <= 0:
+            continue
+        periodic_returns.append((current / previous) - 1.0)
+    return periodic_returns
+
+
+def _annualized_volatility_pct(periodic_returns: list[float], periods_per_year: float = 52.0) -> float | None:
+    if len(periodic_returns) < 2:
+        return None
+
+    mean = sum(periodic_returns) / len(periodic_returns)
+    variance = sum((value - mean) ** 2 for value in periodic_returns) / len(periodic_returns)
+    if variance < 0:
+        return None
+    return math.sqrt(variance) * math.sqrt(periods_per_year) * 100.0
+
+
+def _annualized_downside_risk_pct(periodic_returns: list[float], periods_per_year: float = 52.0) -> float | None:
+    if len(periodic_returns) < 2:
+        return None
+
+    downside_returns = [min(0.0, value) for value in periodic_returns]
+    downside_variance = sum(value ** 2 for value in downside_returns) / len(downside_returns)
+    if downside_variance < 0:
+        return None
+    return math.sqrt(downside_variance) * math.sqrt(periods_per_year) * 100.0
 
 
 def _calmar_ratio(cagr: float | None, max_drawdown: float | None) -> float | None:
@@ -638,43 +822,120 @@ def _percentile(values: list[float], q: float) -> float | None:
     return sorted_values[lo] * (1 - weight) + sorted_values[hi] * weight
 
 
-def _estimate_risk_rating(one_year_metrics: PeriodMetrics | None, all_metrics: dict[str, PeriodMetrics]) -> int:
-    drawdown = one_year_metrics.max_drawdown if one_year_metrics else None
-    if drawdown is None:
-        # Fall back to the longest available period with drawdown information.
+def _estimate_risk_rating(
+    one_year_metrics: PeriodMetrics | None,
+    all_metrics: dict[str, PeriodMetrics],
+    risk_rating_table: list[tuple[int, float | None]],
+) -> int:
+    """Estimate risk rating from downside deviation using the config threshold table.
+
+    Falls back to max_drawdown-based thresholds when downside_risk is unavailable
+    (e.g., too few data points).
+    """
+    downside = one_year_metrics.downside_risk if one_year_metrics else None
+    if downside is None:
+        # Fall back to the longest available period with downside_risk information.
         for key in sorted(all_metrics.keys(), key=_period_to_months, reverse=True):
-            drawdown = all_metrics[key].max_drawdown
-            if drawdown is not None:
+            downside = all_metrics[key].downside_risk
+            if downside is not None:
                 break
 
-    if drawdown is None:
-        return 3
+    # If still no downside_risk, fall back to max_drawdown with legacy thresholds.
+    if downside is None:
+        drawdown = one_year_metrics.max_drawdown if one_year_metrics else None
+        if drawdown is None:
+            for key in sorted(all_metrics.keys(), key=_period_to_months, reverse=True):
+                drawdown = all_metrics[key].max_drawdown
+                if drawdown is not None:
+                    break
+        if drawdown is None:
+            return 3
+        # Legacy max_drawdown thresholds applied against the config table ranges.
+        # Map config thresholds (downside %) to approximate max_drawdown equivalents.
+        magnitude = abs(drawdown)
+        for rating, threshold in risk_rating_table:
+            if threshold is None:
+                return rating
+            if magnitude <= threshold:
+                return rating
+        return risk_rating_table[-1][0] if risk_rating_table else 3
 
-    magnitude = abs(drawdown)
-    if magnitude <= 5:
-        return 1
-    if magnitude <= 10:
-        return 2
-    if magnitude <= 20:
-        return 3
-    if magnitude <= 35:
-        return 4
-    return 5
+    for rating, threshold in risk_rating_table:
+        if threshold is None:
+            return rating
+        if downside <= threshold:
+            return rating
+
+    return risk_rating_table[-1][0] if risk_rating_table else 3
 
 
-def _estimate_expected_return_score(period_metrics: PeriodMetrics | None) -> int:
-    period_cagr = period_metrics.cagr if period_metrics else None
-    if period_cagr is None:
-        return 3
-    if period_cagr <= 0:
-        return 1
-    if period_cagr <= 5:
-        return 2
-    if period_cagr <= 12:
-        return 3
-    if period_cagr <= 20:
-        return 4
-    return 5
+def _estimate_expected_return(period_metrics: PeriodMetrics | None) -> float | None:
+    """Return raw expected return (annualized CAGR) as a percentage."""
+    if period_metrics is None:
+        return None
+    return period_metrics.cagr
+
+
+def _get_cagr_and_volatility_for_horizon(
+    horizon: str,
+    period_results: dict[str, PeriodMetrics],
+) -> tuple[float | None, float | None]:
+    """Find the best-matching period's CAGR and volatility for the given certainty horizon."""
+    target_months = _period_to_months(horizon)
+
+    # Try exact match first
+    if horizon in period_results:
+        pm = period_results[horizon]
+        if pm.cagr is not None and pm.volatility is not None:
+            return pm.cagr, pm.volatility
+
+    # Find closest period by month distance
+    best_key: str | None = None
+    best_diff = float("inf")
+    for key, pm in period_results.items():
+        if pm.cagr is None:
+            continue
+        diff = abs(_period_to_months(key) - target_months)
+        if diff < best_diff:
+            best_diff = diff
+            best_key = key
+
+    if best_key is not None:
+        pm = period_results[best_key]
+        return pm.cagr, pm.volatility
+
+    return None, None
+
+
+def _estimate_certainty_rating(
+    horizon: str,
+    period_results: dict[str, PeriodMetrics],
+    certainty_rating_table: list[tuple[int, float | None]],
+    target_return: float = 0.0,
+) -> int:
+    """Compute certainty rating via z-score: z = √T · (r − μ) / σ.
+
+    r = fixed target_return % (e.g., 0 = break-even, 5 = need 5% return).
+    μ = horizon-matched historical CAGR.
+    """
+    T_years = _period_to_months(horizon) / 12.0
+    if T_years <= 0:
+        T_years = 1.0
+
+    mu, sigma = _get_cagr_and_volatility_for_horizon(horizon, period_results)
+
+    if mu is None or sigma is None or sigma <= 0:
+        return 3  # default neutral
+
+    z = math.sqrt(T_years) * (target_return - mu) / sigma
+
+    for rating, threshold in certainty_rating_table:
+        if threshold is None:
+            return rating
+        if z <= threshold:
+            return rating
+
+    return certainty_rating_table[-1][0] if certainty_rating_table else 3
 
 
 def _enforce_sgov_return_ratio_rule(
@@ -696,12 +957,32 @@ def _enforce_sgov_return_ratio_rule(
 
 
 def _estimate_certainty_score(risk_rating: int, horizon: str) -> int:
+    """Legacy certainty: derived from risk_rating with horizon adjustment.
+
+    Used when certainty_method == 'risk_derived'.
+    """
     base = 6 - int(risk_rating)
     if horizon == "1y":
         base -= 1
-    elif horizon == "8y":
+    elif horizon in ("5y", "8y"):
         base += 1
     return max(1, min(5, base))
+
+
+def _apply_certainty_cap(
+    certainty_score: int,
+    risk_rating: int,
+    asset_class: str,
+) -> int:
+    """Apply boundary caps to a single certainty score."""
+    cap: int | None = None
+    if _is_non_short_duration_bond(asset_class):
+        cap = 3
+    if int(risk_rating) > 2:
+        cap = 3 if cap is None else min(cap, 3)
+    if cap is None:
+        return certainty_score
+    return min(certainty_score, cap)
 
 
 def _is_non_short_duration_bond(asset_class: str) -> bool:
@@ -731,7 +1012,29 @@ def _apply_certainty_caps(
     return min(certainty_1y_score, cap), min(certainty_3y_score, cap)
 
 
-def _estimate_liquidity_score(info: dict[str, Any]) -> int:
+def _estimate_liquidity_rating(
+    info: dict[str, Any],
+    liquidity_rating_map: dict[str, int],
+) -> int:
+    """Estimate liquidity rating from asset class using the config mapping.
+
+    Falls back to volume-based estimation if no mapping matches.
+    """
+    if liquidity_rating_map:
+        asset_class = _as_text(_normalize_asset_class(info)).strip().lower()
+        quote_type = _as_text(info.get("quoteType")).strip().lower()
+
+        # Try exact match on quote type first, then asset class
+        for candidate in (quote_type, asset_class):
+            if candidate and candidate in liquidity_rating_map:
+                return liquidity_rating_map[candidate]
+
+        # Try substring match within the mapping keys
+        for key, rating in liquidity_rating_map.items():
+            if key in asset_class or key in quote_type:
+                return rating
+
+    # Fallback: volume-based estimation
     volume = _as_float(
         info.get("averageVolume")
         or info.get("averageDailyVolume10Day")
@@ -817,6 +1120,10 @@ def _metric_column_name(metric: str, period: str) -> str:
         return f"{period}_cagr"
     if metric == "calmar_ratio":
         return f"{period}_calmar_ratio"
+    if metric == "downside_risk":
+        return f"{period}_downside_risk"
+    if metric == "volatility":
+        return f"{period}_volatility"
     if metric == "max_drawdown":
         return f"{period}_max_drawdown"
     if metric == "price_ihr_20":

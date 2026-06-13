@@ -91,13 +91,14 @@ def test_get_market_data_generates_single_valid_csv(monkeypatch, tmp_path: Path)
         "price_1y_IHR_80",
         "price_3y_IHR_80",
         "risk_rating",
-        "expected_return_score",
-        "certainty_1y_score",
-        "certainty_3y_score",
-        "certainty_8y_score",
-        "liquidity_score",
+        "expected_return",
+        "certainty_1y_rating",
+        "certainty_3y_rating",
+        "certainty_5y_rating",
+        "liquidity_rating",
     }
     assert expected_columns.issubset(set(headers))
+    assert headers[-1] == "last_update_date"
     assert len(rows) == 2
     assert rows[0]["ticker"] == "XLK"
     assert rows[1]["ticker"] == "XLF"
@@ -105,11 +106,11 @@ def test_get_market_data_generates_single_valid_csv(monkeypatch, tmp_path: Path)
     assert rows[0]["last_closing_price"].count(".") == 1
     assert len(rows[0]["last_closing_price"].split(".")[1]) == 2
     assert rows[0]["risk_rating"].isdigit()
-    assert rows[0]["expected_return_score"].isdigit()
-    assert rows[0]["certainty_1y_score"].isdigit()
-    assert rows[0]["certainty_3y_score"].isdigit()
-    assert rows[0]["certainty_8y_score"].isdigit()
-    assert rows[0]["liquidity_score"].isdigit()
+    assert rows[0]["expected_return"] != ""
+    assert rows[0]["certainty_1y_rating"].isdigit()
+    assert rows[0]["certainty_3y_rating"].isdigit()
+    assert rows[0]["certainty_5y_rating"].isdigit()
+    assert rows[0]["liquidity_rating"].isdigit()
 
 
 def test_get_market_data_rejects_invalid_frequency(tmp_path: Path):
@@ -197,6 +198,8 @@ metrics:
     - return
     - CAGR
     - calmar_ratio
+    - downside_risk
+    - volatility
 frequency: 1w
 periods:
   - 6m
@@ -226,6 +229,8 @@ tickers:
     assert "6m_return" in headers
     assert "1y_cagr" in headers
     assert "1y_calmar_ratio" in headers
+    assert "1y_downside_risk" in headers
+    assert "1y_volatility" in headers
     assert "6m_max_drawdown" not in headers
 
 
@@ -588,7 +593,7 @@ def test_etf_risk_rating_uses_ceil_abs_return_over_sgov(monkeypatch, tmp_path: P
     assert rows[0]["risk_rating"] == "2"
 
 
-def test_expected_return_score_uses_3y_return(monkeypatch, tmp_path: Path):
+def test_expected_return_uses_3y_cagr(monkeypatch, tmp_path: Path):
     from src.planbot import market_data_module
 
     class FakeFrame:
@@ -665,7 +670,12 @@ def test_expected_return_score_uses_3y_return(monkeypatch, tmp_path: Path):
     assert len(rows) == 1
     assert rows[0]["1y_return"] == "2.00"
     assert rows[0]["3y_return"] == "50.00"
-    assert rows[0]["expected_return_score"] == "5"
+    # expected_return is raw 3Y CAGR percentage, formatted to 2 decimal places
+    assert "expected_return" in rows[0]
+    expected_ret = rows[0]["expected_return"]
+    assert expected_ret != ""
+    # Should be a float string (may have decimal point)
+    float(expected_ret)
 
 
 def test_etf_risk_rating_rises_until_return_is_below_risk_times_sgov(

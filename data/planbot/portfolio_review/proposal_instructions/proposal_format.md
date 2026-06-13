@@ -24,17 +24,17 @@ instructions: |
 
 Name: Alex Chan
 
-|Potential Needs|Investment Horizon|Remark|
-|---------------|----------------|---|
-|Retirement|Long-term|Client estimated to retire in 10y|
-|Reduce exposure to tech| N/A | Avoid concentration risk as client's career is in tech|
+| Potential Needs         | Investment Horizon | Remark                                                 |
+| ----------------------- | ------------------ | ------------------------------------------------------ |
+| Retirement              | Long-term          | Client estimated to retire in 10y                      |
+| Reduce exposure to tech | N/A                | Avoid concentration risk as client's career is in tech |
 
 # Suggested Portfolio
 ```yaml
 instructions: |
+- No more than 3 new products introduced.
 - Please refer to the proposal_section_instructions/suggested_portfolio_instruction.md for the instruction to complete this section.
 - The expected return of the suggested portfolio should not lower than the existing one unless justified by the time horizon / certainty factor of the needs or the risk rating of the client.
-- Keep a maximum of 3 or less new products introduced into the existing portfolio.
 ```
 
 # Scenario Analysis

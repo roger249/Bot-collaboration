@@ -4,6 +4,8 @@ metrics:
   - CAGR
   - max_drawdown
   - calmar_ratio
+  - downside_risk
+  - volatility
 frequency: 1w
 periods:
   - 6m
@@ -15,8 +17,11 @@ name_preference: long
 asset_class_proxy: 
   # The following tickers are used as proxies for their respective asset classes if the historical data is missing.  (e.g., return=0)
   MONEYMARKET: SGOV
-execute_ticker_groupname: demo-market-1Jun26
-# execute_ticker_groupname: selected_etf
+# execute_ticker_groupname: demo-market-1Jun26
+execute_ticker_groupname: 
+  - selected_etf
+  - demo-market-1Jun26
+
 
 ticker_groups:
   selected_etf:
@@ -136,4 +141,53 @@ ticker_groups:
     - 3195.HK
     - QQQ
     - SPY
+  watchlist-1:
+    - 3311.HK
+    - 966.HK
+    - 168.HK
+    - 836.HK
   
+# The rating is assigned by running thru the following table from top the bottom, for example, if the downside deviation is 15%, it will run thru the row until the number on the right hand side is more than 15%.  The same logic applies to all other rating tables
+risk_rating:
+  - 1: 1%
+  - 2: 4%
+  - 3: 10%
+  - 4: 20%
+  - 5: 
+
+certainty_rating:
+  - 5: -2
+  - 4: -1
+  - 3: 0.5
+  - 2: 1.5
+  - 1: 
+
+certainty_period:
+- 1y
+- 3y
+- 8y
+
+# Certainty computation method:
+#   set certainty_enabled: false to skip generating certainty columns entirely
+#   "zscore"       — (default) z-score based: z = √T · (r − μ) / σ, rated via certainty_rating table
+#                     r = certainty_target_return  (fixed target %, e.g. 0 = break-even)
+#   "risk_derived" — legacy: derived from risk_rating alone (base = 6 − risk_rating ± horizon adjustment)
+certainty_enabled: false
+certainty_method: zscore
+certainty_target_return: 0
+
+# Liquidity rating based on asset type / quote type from Yahoo Finance.
+# Keys are matched case-insensitively against quoteType and asset_class fields.
+# Falls back to volume-based estimation if no mapping matches.
+liquidity_rating:
+  etf: 5
+  equity: 5
+  currency: 5
+  future: 5
+  index: 5
+  mutualfund: 4
+  bond: 4
+  structured: 3
+  annuity: 3
+  realestate: 2
+  privateequity: 1

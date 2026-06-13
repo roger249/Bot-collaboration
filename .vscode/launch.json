@@ -128,7 +128,7 @@
       ]
     },
     {
-      "name": "Load Product Catalog",
+      "name": "Generate Product Catalog",
       "type": "python",
       "request": "launch",
       "module": "src.main",

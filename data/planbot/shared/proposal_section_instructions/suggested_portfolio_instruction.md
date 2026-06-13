@@ -18,10 +18,10 @@ instructions: |
 - No need for come up another listing of the suggested asset except the table below.
 ```
 
-| Asset | Current Market Value | Suggested Market Value  | Current % | Suggested % | Change | Remark |
-|-----------|------:|----------:|-------:|-------:|-------:|----|
-| Tracker Fund of HK (2800.HK) | 30 | 20 | 30% | 20% | -10% | Reduce HK concentration; maintain local dividend exposure. |
-| MS US Advantage Fund (N06) | 20 | 0 | 20% | 0% | -20% | Eliminate overlap; consolidate into broader index (SPY). |
+| Asset                        | Current Market Value | Suggested Market Value | Current % | Suggested % | Change | Remark                                                     |
+| ---------------------------- | -------------------: | ---------------------: | --------: | ----------: | -----: | ---------------------------------------------------------- |
+| Tracker Fund of HK (2800.HK) |                   30 |                     20 |       30% |         20% |   -10% | Reduce HK concentration; maintain local dividend exposure. |
+| MS US Advantage Fund (N06)   |                   20 |                      0 |       20% |          0% |   -20% | Eliminate overlap; consolidate into broader index (SPY).   |
 
 ## Pros and cons of suggested portfolio
 
