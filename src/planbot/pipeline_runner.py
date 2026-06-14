@@ -62,6 +62,9 @@ class PipelineRunner:
             LOGGER.error("filters missing 'client_holdings_filter'")
             return False
 
+        if "client_profile_filter" not in filters:
+            LOGGER.info("client_profile_filter not configured; client demographics will be omitted")
+
         # Validate fan_out contract
         proposals_cfg = config.get("client_product_fit_analysis_proposals", {})
         fan_out_cfg = proposals_cfg.get("fan_out", {})
@@ -108,7 +111,7 @@ class PipelineRunner:
         Returns:
             Summary dict with results
         """
-        orchestrator = PipelineOrchestrator(self.root_dir, self.config_path)
+        orchestrator = PipelineOrchestrator(self.root_dir, self.config_path, app_config=self.app_config)
 
         # Configure a pipeline-scoped log file so early filter failures are persisted.
         pipeline_logs_dir = self.root_dir / "runs" / "pipelines" / pipeline_name / orchestrator.run_id / "logs"

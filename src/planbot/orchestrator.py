@@ -21,6 +21,7 @@ class FilterOutput:
     client_profiles: dict[str, str] | list[str]  # keyed by client_id or ordered list
     client_ids: list[str]
     by_client_id: dict[str, dict[str, Any]]  # keyed holdings map
+    client_profile_data: dict[str, dict[str, str]] = field(default_factory=dict)
 
 
 @dataclass
@@ -32,6 +33,7 @@ class ExecutionContext:
     client_profile: str
     client_holding: dict[str, Any]
     bindings: dict[str, Any] = field(default_factory=dict)
+    client_profile_data: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -194,6 +196,112 @@ class FilterBuilder:
         LOGGER.info("client_holdings_filter loaded %d client holdings", len(holdings_map))
         return holdings_map
 
+    @staticmethod
+    def client_profile_filter(
+        profile_csv_path: Path,
+        holdings_csv_path: Path,
+        client_ids: list[str],
+    ) -> dict[str, dict[str, str]]:
+        """
+        Load client demographic profiles from profile CSV, mapped to numeric client_id.
+
+        Strategy:
+        1. Read client_profile.csv → build {Client Name: demographics row}
+        2. Read client_list.csv → build {Client Name: client_id} mapping
+        3. Cross-walk: for each target client_id, look up demographics by name.
+
+        Returns:
+            dict keyed by client_id, each value a dict of profile fields.
+        """
+        profile_map: dict[str, dict[str, str]] = {}
+
+        if not profile_csv_path.exists():
+            LOGGER.warning("Client profile CSV not found: %s", profile_csv_path)
+            return profile_map
+
+        if not holdings_csv_path.exists():
+            LOGGER.warning("Holdings CSV not found for name→id mapping: %s", holdings_csv_path)
+            return profile_map
+
+        # --- build name → client_id from holdings CSV ---
+        holdings_content = read_text(holdings_csv_path)
+        h_lines = holdings_content.strip().split("\n")
+        name_to_id: dict[str, str] = {}
+        if len(h_lines) > 1:
+            h_headers = [h.strip() for h in h_lines[0].split(",")]
+            name_candidates = ["client/name", "client_name", "name"]
+            id_candidates = ["client/id", "client_id", "id"]
+            name_col = next((col for col in name_candidates if col in h_headers), None)
+            id_col = next((col for col in id_candidates if col in h_headers), None)
+            if name_col and id_col:
+                name_idx = h_headers.index(name_col)
+                id_idx = h_headers.index(id_col)
+                for line in h_lines[1:]:
+                    if not line.strip():
+                        continue
+                    cols = [c.strip() for c in line.split(",")]
+                    if len(cols) > max(name_idx, id_idx):
+                        name_to_id[cols[name_idx]] = cols[id_idx]
+
+        # --- read client_profile.csv ---
+        profile_content = read_text(profile_csv_path)
+        p_lines = profile_content.strip().split("\n")
+        if len(p_lines) < 2:
+            LOGGER.warning("Client profile CSV is empty or has no data rows")
+            return profile_map
+
+        p_headers = [h.strip() for h in p_lines[0].split(",")]
+        name_candidates = ["Client Name", "client_name", "name", "Name"]
+        name_col = next((col for col in name_candidates if col in p_headers), None)
+        if name_col is None:
+            LOGGER.warning(
+                "Client profile CSV has no supported name column in %s. Available: %s",
+                profile_csv_path,
+                ", ".join(p_headers),
+            )
+            return profile_map
+        name_idx = p_headers.index(name_col)
+
+        target_set = set(client_ids)
+
+        for line in p_lines[1:]:
+            if not line.strip():
+                continue
+            cols = [c.strip() for c in line.split(",")]
+            if len(cols) <= name_idx:
+                continue
+            client_name = cols[name_idx]
+            client_id = name_to_id.get(client_name)
+            if client_id is None:
+                LOGGER.debug(
+                    "Client name '%s' from profile CSV not found in holdings CSV; skipping",
+                    client_name,
+                )
+                continue
+            if client_id not in target_set:
+                continue
+
+            # Build demographics dict from this row
+            demographics: dict[str, str] = {}
+            for i, header in enumerate(p_headers):
+                demographics[header] = cols[i] if i < len(cols) else ""
+            profile_map[client_id] = demographics
+
+        # Log coverage
+        matched = set(profile_map.keys())
+        missing = target_set - matched
+        if missing:
+            LOGGER.info(
+                "client_profile_filter: %d/%d clients matched; missing (will use empty): %s",
+                len(matched),
+                len(target_set),
+                sorted(missing),
+            )
+        else:
+            LOGGER.info("client_profile_filter: all %d clients matched", len(matched))
+
+        return profile_map
+
 
 class PlaceholderResolver:
     """Resolves placeholders in config strings using binding values."""
@@ -216,9 +324,16 @@ class PlaceholderResolver:
 class PipelineOrchestrator:
     """Orchestrates execution of proposal pipelines with filters and fan-out."""
 
-    def __init__(self, root_dir: Path, config_path: Path, run_id: str | None = None):
+    def __init__(
+        self,
+        root_dir: Path,
+        config_path: Path,
+        app_config: Any | None = None,
+        run_id: str | None = None,
+    ):
         self.root_dir = root_dir
         self.config_path = config_path
+        self.app_config = app_config
         self.run_id = run_id or self._generate_run_id()
         self.logger = LOGGER
 
@@ -254,16 +369,30 @@ class PipelineOrchestrator:
         pim_output_path = self.root_dir / f"runs/{pim_proposal_name}" / "output.md"
 
         if execute_proposal_first:
-            # Here you would call the proposal execution logic (e.g., run_crew_planbot)
-            # For now, just log the intent
-            self.logger.info("execute_proposal_first is True: would execute proposal '%s' here.", pim_proposal_name)
-            # After execution, reload the output
-            if not pim_output_path.exists():
-                raise FileNotFoundError(
-                    f"Proposal output not found after execution: {pim_output_path}. "
-                    f"Check proposal execution logic."
+            if self.app_config is None:
+                raise RuntimeError(
+                    "execute_proposal_first requires app_config to be set on PipelineOrchestrator. "
+                    "Pass app_config when constructing the orchestrator."
                 )
-            pim_content = read_text(pim_output_path)
+            self.logger.info("Auto-executing proposal '%s' (execute_proposal_first=true)", pim_proposal_name)
+            from src.planbot.crew_workflow import run_crew_planbot
+
+            try:
+                result = run_crew_planbot(
+                    self.app_config,
+                    str(self.config_path),
+                    pim_proposal_name,
+                )
+                self.logger.info(
+                    "Proposal '%s' completed, output at %s. Loading for filter pipeline.",
+                    pim_proposal_name,
+                    result.output_path,
+                )
+                pim_content = read_text(result.output_path)
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Failed to execute proposal '{pim_proposal_name}' via execute_proposal_first: {exc}"
+                ) from exc
         else:
             # Only use existing output, do not re-run proposal
             if not pim_output_path.exists():
@@ -320,10 +449,25 @@ class PipelineOrchestrator:
 
         holdings_map = FilterBuilder.client_holdings_filter(csv_file_path, client_ids_list)
 
+        # Run client_profile_filter
+        cpf_filter_cfg = filters_config.get("client_profile_filter", {})
+        cpf_input = cpf_filter_cfg.get("input", {})
+        profile_csv_rel = cpf_input.get("file", "data/planbot/shared/client_profile/client_profile.csv")
+        profile_csv_path = self.root_dir / profile_csv_rel
+        holdings_csv_rel = cpf_input.get("holdings_file", "data/planbot/shared/client_profile/client_list.csv")
+        holdings_csv_path_for_profile = self.root_dir / holdings_csv_rel
+
+        profile_data_map = FilterBuilder.client_profile_filter(
+            profile_csv_path=profile_csv_path,
+            holdings_csv_path=holdings_csv_path_for_profile,
+            client_ids=client_ids_list,
+        )
+
         return FilterOutput(
             client_profiles=client_profiles_dict,
             client_ids=client_ids_list,
             by_client_id=holdings_map,
+            client_profile_data=profile_data_map,
         )
 
     def execute_fan_out(
@@ -377,6 +521,7 @@ class PipelineOrchestrator:
             # Build execution context
             client_profile = filter_output.client_profiles.get(client_id, "") if isinstance(filter_output.client_profiles, dict) else ""
             client_holding = filter_output.by_client_id.get(client_id, {})
+            client_profile_data = filter_output.client_profile_data.get(client_id, {})
 
             ctx = ExecutionContext(
                 run_id=self.run_id,
@@ -385,6 +530,7 @@ class PipelineOrchestrator:
                 client_profile=client_profile,
                 client_holding=client_holding,
                 bindings=bindings,
+                client_profile_data=client_profile_data,
             )
 
             # Execute proposals for this client

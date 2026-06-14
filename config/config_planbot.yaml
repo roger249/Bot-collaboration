@@ -40,13 +40,13 @@ reinvestment_proposal:
         purpose: Guidelines on financial needs analysis and common financial needs
       - name: ../shared/common/general_guideline.md
         purpose: Strict guidelines on all tasks.  No exception allowed
+      - name: ../shared/market_outlook/*.md
+        purpose: Market outlook and sentiment analysis for the recommendation
     client_profiles:
       - name: clients/*.md
         purpose: Client profiles and suggested product for each client in markdown format
       - name: clients/*.csv
         purpose: Client profiles and suggested product for each client in csv format
-      - name: ../shared/market_outlook/*.md
-        purpose: Market outlook and sentiment analysis for the recommendation
     product_catalogs: 
       - name: ../shared/product_catalog/*.md
         purpose: Overview of the CSV file and the structure of the product catalogs
@@ -217,6 +217,7 @@ run_configurations:
         - client_holdings_filter.output.by_client_id.{client_id}.md
       execute:
         - proposal: client_product_fit_analysis
+          enabled: true
           output_file: runs/sample_outputs/client_product_fit_analysis_{client_id}.md
         # Keep this as optional while validating first integrated flow.
         - proposal: portfolio_review
@@ -247,6 +248,16 @@ run_configurations:
     client_holdings_filter:
       input:
         file: data/planbot/shared/client_profile/client_list.csv
+        client_ids: product_investor_matching_filter.output.client_ids
+      output:
+        by_client_id: map
+
+    # This filter enriches client data with demographic profiles from client_profile.csv
+    # (birthdate, occupation, risk rating, marital status, etc.)
+    client_profile_filter:
+      input:
+        file: data/planbot/shared/client_profile/client_profile.csv
+        holdings_file: data/planbot/shared/client_profile/client_list.csv
         client_ids: product_investor_matching_filter.output.client_ids
       output:
         by_client_id: map

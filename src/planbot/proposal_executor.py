@@ -60,17 +60,21 @@ class ProposalExecutor:
         )
 
         try:
-            profile_file, holdings_file = self._create_client_reference_files(
+            profile_file, holdings_file, demographics_file = self._create_client_reference_files(
                 client_id=context.client_id,
                 profile=context.client_profile,
                 holdings=context.client_holding,
+                profile_data=context.client_profile_data,
             )
 
+            overrides_list = [
+                self._to_relative_path(profile_file),
+                self._to_relative_path(holdings_file),
+            ]
+            if demographics_file:
+                overrides_list.append(self._to_relative_path(demographics_file))
             runtime_overrides = {
-                "client_profiles": [
-                    self._to_relative_path(profile_file),
-                    self._to_relative_path(holdings_file),
-                ]
+                "client_profiles": overrides_list,
             }
             output_path = self._resolve_output_path(output_file_template)
 
@@ -105,12 +109,13 @@ class ProposalExecutor:
         client_id: str,
         profile: str,
         holdings: dict[str, Any],
-    ) -> tuple[Path, Path]:
+        profile_data: dict[str, str] | None = None,
+    ) -> tuple[Path, Path, Path | None]:
         """
         Create generated reference files for one client.
         
         Returns:
-            (profile_file_path, holdings_file_path)
+            (profile_file_path, holdings_file_path, demographics_file_path_or_None)
         """
         generated_root = self._resolve_generated_inputs_root()
         generated_dir = generated_root / self.run_id / client_id
@@ -127,7 +132,15 @@ class ProposalExecutor:
         write_text(holdings_file, self._format_holdings_as_csv(client_id, holdings))
         self.generated_files.append(holdings_file)
 
-        return profile_file, holdings_file
+        # Write demographics as Markdown table when available
+        demographics_file: Path | None = None
+        if profile_data:
+            demographics_file = generated_dir / f"{client_id}_demographics.md"
+            write_text(demographics_file, self._format_profile_data_as_markdown(profile_data))
+            self.generated_files.append(demographics_file)
+            LOGGER.info("Wrote demographics file for client %s", client_id)
+
+        return profile_file, holdings_file, demographics_file
 
     @staticmethod
     def _format_holdings_as_csv(client_id: str, holdings: dict[str, Any]) -> str:
@@ -144,6 +157,19 @@ class ProposalExecutor:
         writer.writeheader()
         writer.writerow(row)
         return buffer.getvalue()
+
+    @staticmethod
+    def _format_profile_data_as_markdown(profile_data: dict[str, str]) -> str:
+        """Format client demographics as a Markdown table for LLM consumption."""
+        lines = ["## Client Demographics", ""]
+        lines.append("| Field | Value |")
+        lines.append("|-------|-------|")
+        # Omit Client Name since it's already in the main profile text
+        for key, value in profile_data.items():
+            if key.lower() in ("client name", "client_name"):
+                continue
+            lines.append(f"| {key} | {value} |")
+        return "\n".join(lines) + "\n"
 
     def _resolve_generated_inputs_root(self) -> Path:
         if self.generated_inputs_root.is_absolute():
