@@ -166,7 +166,7 @@ Normal ($504) + Upside ($280) + Downside (-$760) = **$24 per year** (near zero).
 
 # References
 
-- **Client Profile:** wl-2_profile.md (Rachel Ho – $2.8M AUM, 20% cash, need for cash efficiency and floating‑rate income)
+- **Client Profile:** PB-HK-000023-2_profile.md (Rachel Ho – $2.8M AUM, 20% cash, need for cash efficiency and floating‑rate income)
 - **Product Catalog:** demo-market-1Jun26.csv (historical returns, risk ratings, certainties for all securities)
 - **Selected ETFs:** selected_etf.csv (FLOT, SRLN, JPST performance and risk data)
 - **Market Data:** Current prices and yields as of 1 Jun 2026 (source: Planbot Internal Data)

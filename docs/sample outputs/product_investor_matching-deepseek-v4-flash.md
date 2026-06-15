@@ -8,12 +8,12 @@ This report identifies the top 10 clients with the highest propensity to purchas
 |:----:|:---------:|:------------|:----------------|:------------:|:----------|:-------------------------:|:---------------:|
 | 1 | 8 | David Kim | iShares Broad USD High Yield Corporate Bond ETF (USHY) | 5 | 45% cash allocation; switching from low-yield cash (US3MT) to high-yield bonds for meaningful income pickup with manageable risk. | 4.24% | 3.46% |
 | 2 | 4 | Emma Thompson | SPDR Blackstone Senior Loan ETF (SRLN) | 5 | 32% cash; senior loans offer floating-rate protection in a higher-for-longer rate environment, improving yield by >1%. | 4.57% | 3.46% |
-| 3 | zw-5 | Emily Zhang | Invesco Senior Loan ETF (BKLN) | 5 | 22% cash; bank loans provide attractive carry and floating-rate insulation; yield pickup of 1.67% vs. cash. | 5.13% | 3.46% |
-| 4 | zw-7 | David Wu | iShares Floating Rate Bond ETF (FLOT) | 5 | 28% cash; floating-rate exposure mitigates interest rate risk while delivering a 0.66% yield advantage over cash. | 4.12% | 3.46% |
+| 3 | PB-HK-000018-2 | Emily Zhang | Invesco Senior Loan ETF (BKLN) | 5 | 22% cash; bank loans provide attractive carry and floating-rate insulation; yield pickup of 1.67% vs. cash. | 5.13% | 3.46% |
+| 4 | PB-HK-000020-8 | David Wu | iShares Floating Rate Bond ETF (FLOT) | 5 | 28% cash; floating-rate exposure mitigates interest rate risk while delivering a 0.66% yield advantage over cash. | 4.12% | 3.46% |
 | 5 | 2 | Sarah Chen | SPDR Blackstone Senior Loan ETF (SRLN) | 5 | 22.5% cash; senior loans align with moderate risk profile and offer a 1.11% yield improvement. | 4.57% | 3.46% |
 | 6 | 13 | Harrison Jr. Education Trust | JPMorgan USD Callable Range Accrual Note (N02952) | 4 | 25% cash; structured note provides a conditional 5.94% p.a. coupon with principal protection at maturity, suitable for conservative trust. | 5.94% (coupon) | 3.46% |
-| 7 | wl-2 | Rachel Ho | iShares Floating Rate Bond ETF (FLOT) | 4 | 20% cash; floating-rate bonds offer better returns than cash with similar low duration risk. | 4.12% | 3.46% |
-| 8 | zw-4 | Catherine Li | iShares Broad USD High Yield Corporate Bond ETF (USHY) | 4 | 18% cash; high yield bonds enhance portfolio yield while maintaining reasonable credit quality. | 4.24% | 3.46% |
+| 7 | PB-HK-000023-2 | Rachel Ho | iShares Floating Rate Bond ETF (FLOT) | 4 | 20% cash; floating-rate bonds offer better returns than cash with similar low duration risk. | 4.12% | 3.46% |
+| 8 | PB-HK-000017-4 | Catherine Li | iShares Broad USD High Yield Corporate Bond ETF (USHY) | 4 | 18% cash; high yield bonds enhance portfolio yield while maintaining reasonable credit quality. | 4.24% | 3.46% |
 | 9 | 11 | Emily Harrison | iShares J.P. Morgan USD Emerging Markets Bond ETF (EMB) | 4 | High concentration in long-duration TLT (-6.30% 5Y CAGR); swap to EM debt for a significant return improvement (+8.15%) and better diversification. | 1.85% | -6.30% |
 | 10 | 10 | William Turner | JPMorgan USD Callable Range Accrual Note (N02952) | 3 | 10% cash, heavy fixed income portfolio; structured note adds a high-carry component with lower correlation to traditional bonds. | 5.94% (coupon) | 3.46% |
 
@@ -21,7 +21,7 @@ This report identifies the top 10 clients with the highest propensity to purchas
 
 # Top 10 clients with detail analysis
 
-## Client: 8 (David Kim)
+## Client: PB-HK-000001-8 (David Kim)
 
 ### Potential needs
 - **Idle Cash:** 45% of $950k AUM held in US 3-Month T-Bill, earning ~3.46% – far below inflation.
@@ -69,7 +69,7 @@ David Kim has an unusually high cash allocation (45%) which erodes purchasing po
 
 ---
 
-## Client: 4 (Emma Thompson)
+## Client: PB-HK-000005-9 (Emma Thompson)
 
 ### Potential needs
 - **Cash deployment:** 32% cash ($992k) in SPAXX yields 3.46% – below inflation.
@@ -117,7 +117,7 @@ Emma Thompson’s portfolio is overweight cash (32%), which dampens total return
 
 ---
 
-## Client: zw-5 (Emily Zhang)
+## Client: PB-HK-000018-2 (Emily Zhang)
 
 ### Potential needs
 - **Cash reduction:** 22% cash ($924k) in US1MT yields ~3.46%.
@@ -165,7 +165,7 @@ Emily Zhang holds 22% cash, presenting a clear opportunity for yield enhancement
 
 ---
 
-## Client: zw-7 (David Wu)
+## Client: PB-HK-000020-8 (David Wu)
 
 ### Potential needs
 - **High cash drag:** 28% cash ($868k) in US3MT.
@@ -213,7 +213,7 @@ David Wu’s 28% cash is inefficient. FLOT is chosen over other floating-rate fu
 
 ---
 
-## Client: 2 (Sarah Chen)
+## Client: PB-HK-000002-6 (Sarah Chen)
 
 ### Potential needs
 - **Excess cash:** 22.5% ($720k) in VMRXX.
@@ -261,7 +261,7 @@ Sarah Chen’s portfolio is 77.5% equities, creating concentration risk. Adding 
 
 ---
 
-## Client: 13 (Harrison Jr. Education Trust)
+## Client: PB-HK-000013-3 (Harrison Jr. Education Trust)
 
 ### Potential needs
 - **Cash deployment:** 25% cash ($500k) in US2MT.
@@ -310,7 +310,7 @@ The trust’s objectives are long-term capital growth with high certainty (targe
 
 ---
 
-## Client: wl-2 (Rachel Ho)
+## Client: PB-HK-000023-2 (Rachel Ho)
 
 ### Potential needs
 - **Cash efficiency:** 20% cash ($560k) in SPAXX.
@@ -358,7 +358,7 @@ Rachel Ho’s 20% cash is underperforming. FLOT offers a higher yield with simil
 
 ---
 
-## Client: zw-4 (Catherine Li)
+## Client: PB-HK-000017-4 (Catherine Li)
 
 ### Potential needs
 - **Cash reduction:** 18% cash ($2.916M) in SGOV.
@@ -406,7 +406,7 @@ Catherine Li holds 18% cash, which is high for a $16.2M portfolio. USHY provides
 
 ---
 
-## Client: 11 (Emily Harrison)
+## Client: PB-HK-000011-7 (Emily Harrison)
 
 ### Potential needs
 - **Underperforming long-duration Treasury:** TLT has a 5Y CAGR of -6.30% and 1Y return of 4.69% (volatile). 
@@ -458,7 +458,7 @@ Emily Harrison’s TLT position has been a significant drag due to rising rates.
 
 ---
 
-## Client: 10 (William Turner)
+## Client: PB-HK-000010-9 (William Turner)
 
 ### Potential needs
 - **Low return in fixed income:** Current portfolio is 90% fixed income (SRLN, VCIT, AGG, GOVT, USHY, HYG, GOOGL – but GOOGL is equity) with a 1Y return roughly 6.5% but 5Y CAGR of many products is low (e.g., AGG 0.10%, VCIT 1.21%).

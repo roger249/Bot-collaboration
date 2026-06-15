@@ -146,7 +146,7 @@ Assumptions: Equity -20%, bonds +2% (flight to quality), cash +3%, EM debt -5%, 
 # References
 
 - Product Catalog: selected_etf.csv, CMT_note_N02952.md (Planbot Internal Data)  
-- Client Profiles: zw-4_demographics.md, zw-4_holdings.csv, zw-4_profile.md (Planbot Internal Data)  
+- Client Profiles: PB-HK-000017-4_demographics.md, PB-HK-000017-4_holdings.csv, PB-HK-000017-4_profile.md (Planbot Internal Data)  
 - Market Outlook: asset_classes_outlook.md, macro_outlook.md (Planbot Shared Data)  
 - Financial Needs Framework: common_needs.md (Planbot Shared Data)  
 - Web References: N/A – All data sourced from internal Planbot datasets.

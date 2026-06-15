@@ -1,4 +1,4 @@
-Portfolio Health Review for Rachel Ho (Client ID: wl-2)  
+Portfolio Health Review for Rachel Ho (Client ID: PB-HK-000023-2)  
 =========================================================  
 
 # Summary  
@@ -172,7 +172,7 @@ Three scenarios are modelled using historical data and current market sentiment.
 
 # References  
 
-- **Client Profiles:** `wl-2_demographics.md`, `wl-2_holdings.csv` (Planbot Internal Data)  
+- **Client Profiles:** `PB-HK-000023-2_demographics.md`, `PB-HK-000023-2_holdings.csv` (Planbot Internal Data)  
 - **Product Catalog:** `selected_etf.csv`, `CMT_note_N02952.md` (not used in this recommendation), `Overview of product catalog.md`  
 - **Market Outlook:** `asset_classes_outlook.md`, `macro_outlook.md`  
 - **Guidelines & Instructions:** `general_guideline.md`, `common_needs.md`, `proposal_format.md`, `suggested_portfolio_instruction.md`, `scenario_analysis_instruction.md`, `risk_disclosure_instruction.md`, `references_instruction.md`  

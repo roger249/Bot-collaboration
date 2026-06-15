@@ -1,4 +1,4 @@
-Portfolio Health Review for Emily Zhang (zw-5)
+Portfolio Health Review for Emily Zhang (PB-HK-000018-2)
 ===============================================
 
 # Summary
@@ -198,7 +198,7 @@ The suggested portfolio provides superior outcomes across all scenarios, with th
 
 # References
 
-- **Client Profile:** zw-5_demographics.md, zw-5_holdings.csv (Source: Planbot Internal Data)
+- **Client Profile:** PB-HK-000018-2_demographics.md, PB-HK-000018-2_holdings.csv (Source: Planbot Internal Data)
 - **Product Catalog:** selected_etf.csv, CMT_note_N02952.md (Source: Planbot Internal Data)
 - **Market Outlook:** asset_classes_outlook.md, macro_outlook.md (Source: Planbot Shared Market Outlook)
 - **Web References:** N/A (no external web search performed)

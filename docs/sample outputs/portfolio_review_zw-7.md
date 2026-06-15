@@ -161,5 +161,5 @@ Assumption: Fixed income returns are 0.5x normal; IEF assumed -5% (rate shock), 
 
 - Product Catalog: selected_etf.csv (Planbot Internal Data)
 - Structured Product FactSheet: CMT_note_N02952.md (JPMorgan Callable Range Accrual Note)
-- Client Profile: zw-7_demographics.md, zw-7_holdings.csv, zw-7_profile.md (Planbot Internal Data)
+- Client Profile: PB-HK-000020-8_demographics.md, PB-HK-000020-8_holdings.csv, PB-HK-000020-8_profile.md (Planbot Internal Data)
 - Web References: N/A (no web search used)

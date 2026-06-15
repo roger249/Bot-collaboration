@@ -75,7 +75,7 @@ product_investor_matching:
       - name: ../shared/market_outlook/*.md
         purpose: Market outlook and sentiment analysis for the recommendation
     client_profiles:
-      - name: clients/*.csv
+      - name: ../shared/client_profile/*.csv
         purpose: Client profiles and suggested product for each client in csv format
     product_catalogs: 
       - name: ../shared/product_catalog/*.md
@@ -221,7 +221,7 @@ run_configurations:
           output_file: runs/sample_outputs/client_product_fit_analysis_{client_id}.md
         # Keep this as optional while validating first integrated flow.
         - proposal: portfolio_review
-          enabled: false
+          enabled: true
           output_file: runs/sample_outputs/portfolio_review_{client_id}.md
 
   filters:

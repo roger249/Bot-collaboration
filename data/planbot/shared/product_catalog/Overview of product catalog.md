@@ -4,6 +4,8 @@ Product data is sourced from
 - demo-market-1Jun26.csv, which contains the master list of available instruments, historical performance metrics, and risk classifications. 
 - Sector ETF that that gives the product with bank's preference
     - selected_etf.csv
+- OTC products including fund, structured product, bond, insurance and alternative.
+  - otc_products.md
 - Structured products
     - CMT_note.md
 

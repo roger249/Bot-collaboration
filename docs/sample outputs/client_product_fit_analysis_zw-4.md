@@ -147,6 +147,6 @@ High‑yield bonds (USHY) carry credit risk and may decline in value during econ
 
 # References
 
-- Client Profile: zw-4 (Catherine Li) – Planbot Internal Data  
+- Client Profile: PB-HK-000017-4 (Catherine Li) – Planbot Internal Data  
 - Product Catalog: demo-market-1Jun26.csv, selected_etf.csv, CMT_note_N02952.md – Planbot Internal Data  
 - No web references used (N/A).

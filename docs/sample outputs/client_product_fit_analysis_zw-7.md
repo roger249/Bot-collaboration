@@ -181,8 +181,8 @@ Assumptions based on historical returns (2016–2026) from the product catalog a
 # References
 
 - Product Catalog: demo-market-1Jun26.csv, selected_etf.csv (Source: Planbot Internal Data)
-- Client Profile: zw-7_profile.md (Source: Planbot Internal Data)
-- Client Holdings: zw-7_holdings.csv (Source: Planbot Internal Data)
+- Client Profile: PB-HK-000020-8_profile.md (Source: Planbot Internal Data)
+- Client Holdings: PB-HK-000020-8_holdings.csv (Source: Planbot Internal Data)
 - Web References: N/A (no web search capability used)
 
 **Risk Disclosure:** Past performance does not guarantee future returns. Projected returns are estimates based on historical data and current market sentiment; they are not promises. Structured products and ETFs carry market risk, including the potential for principal loss. FLOT’s floating-rate coupon may decline in a falling rate environment. This analysis is for informational purposes and does not constitute investment advice.
