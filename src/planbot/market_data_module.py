@@ -43,7 +43,7 @@ class MarketDataConfig(BaseModel):
         {"5": -2}, {"4": -1}, {"3": 0.5}, {"2": 1.5}, {"1": None}
     ])
     certainty_period: list[str] = Field(default_factory=lambda: ["1y", "3y", "5y"])
-    certainty_method: str = "zscore"  # "zscore" or "risk_derived"
+    certainty_method: str = "zscore"
     certainty_target_return: float = 0.0  # Fixed target return % for z-score; used when certainty_method == "zscore"
     certainty_enabled: bool = True    # Set false to skip generating certainty columns
     liquidity_rating: dict[str, int] = Field(default_factory=dict)
@@ -162,8 +162,8 @@ class MarketDataConfig(BaseModel):
     @classmethod
     def _validate_certainty_method(cls, value: str) -> str:
         normalized = str(value).strip().lower()
-        if normalized not in {"zscore", "risk_derived"}:
-            raise ValueError("certainty_method must be either 'zscore' or 'risk_derived'")
+        if normalized != "zscore":
+            raise ValueError("certainty_method must be 'zscore'")
         return normalized
 
 
@@ -362,17 +362,12 @@ def get_market_data(
         # Dynamic certainty columns from config
         if certainty_enabled:
             for cert_period in effective_certainty_periods:
-                if effective_certainty_method == "risk_derived":
-                    # Legacy: derive certainty from risk_rating alone
-                    certainty_val = _estimate_certainty_score(risk_rating, horizon=cert_period)
-                else:
-                    # New: z-score based certainty; r = fixed target_return %
-                    certainty_val = _estimate_certainty_rating(
-                        horizon=cert_period,
-                        period_results=period_results,
-                        certainty_rating_table=parsed_certainty_rating,
-                        target_return=effective_target_return,
-                    )
+                certainty_val = _estimate_certainty_rating(
+                    horizon=cert_period,
+                    period_results=period_results,
+                    certainty_rating_table=parsed_certainty_rating,
+                    target_return=effective_target_return,
+                )
                 # Apply certainty boundary caps (same rule: cap at 3 for bonds / risk>2)
                 certainty_val = _apply_certainty_cap(
                     certainty_score=certainty_val,
@@ -956,19 +951,6 @@ def _enforce_sgov_return_ratio_rule(
     return max(risk_rating, required_risk_rating)
 
 
-def _estimate_certainty_score(risk_rating: int, horizon: str) -> int:
-    """Legacy certainty: derived from risk_rating with horizon adjustment.
-
-    Used when certainty_method == 'risk_derived'.
-    """
-    base = 6 - int(risk_rating)
-    if horizon == "1y":
-        base -= 1
-    elif horizon in ("5y", "8y"):
-        base += 1
-    return max(1, min(5, base))
-
-
 def _apply_certainty_cap(
     certainty_score: int,
     risk_rating: int,
@@ -1034,23 +1016,8 @@ def _estimate_liquidity_rating(
             if key in asset_class or key in quote_type:
                 return rating
 
-    # Fallback: volume-based estimation
-    volume = _as_float(
-        info.get("averageVolume")
-        or info.get("averageDailyVolume10Day")
-        or info.get("averageVolume10days")
-    )
-    if volume is None:
-        return 3
-    if volume >= 5_000_000:
-        return 5
-    if volume >= 1_000_000:
-        return 4
-    if volume >= 200_000:
-        return 3
-    if volume >= 50_000:
-        return 2
-    return 1
+    # No mapping matched — default neutral
+    return 3
 
 
 def _period_to_months(period: str) -> int:

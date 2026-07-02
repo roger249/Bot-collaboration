@@ -168,13 +168,11 @@ certainty_period:
 - 3y
 - 8y
 
-# Certainty computation method:
-#   set certainty_enabled: false to skip generating certainty columns entirely
-#   "zscore"       — (default) z-score based: z = √T · (r − μ) / σ, rated via certainty_rating table
-#                     r = certainty_target_return  (fixed target %, e.g. 0 = break-even)
-#   "risk_derived" — legacy: derived from risk_rating alone (base = 6 − risk_rating ± horizon adjustment)
+# Certainty computation:
+#   certainty_enabled: false skips generating certainty columns entirely.
+#   Formula: z = √T · (r − μ) / σ, where r = certainty_target_return (fixed target %, e.g. 0 = break-even).
+#   The z-score is rated via the certainty_rating table (top-to-bottom first-match).
 certainty_enabled: false
-certainty_method: zscore
 certainty_target_return: 0
 
 # Liquidity rating based on asset type / quote type from Yahoo Finance.
