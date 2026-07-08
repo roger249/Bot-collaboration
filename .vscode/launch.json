@@ -114,20 +114,6 @@
       ]
     },
     {
-      "name": "PlanBot: Mock",
-      "type": "python",
-      "request": "launch",
-      "module": "src.main",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "justMyCode": true,
-      "args": [
-        "run-planbot",
-        "--config",
-        "config/config.mocktest.yaml"
-      ]
-    },
-    {
       "name": "Generate Product Catalog",
       "type": "python",
       "request": "launch",

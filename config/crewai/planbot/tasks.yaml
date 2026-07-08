@@ -3,8 +3,8 @@
   agent: investment_advisor_agent
 
   description: |
-    Generate a complete investment advice proposal using the provided reference materials.
+    Generate a investment advice proposal using the provided reference materials.
 
   expected_output: |
-    A complete investment proposal in markdown format that:
-    - Begins exactly with the line: "---** Output of suggestion as below **---"
+    A complete investment proposal in markdown format that begins exactly with the line: 
+      "---** Output of suggestion as below **---"
