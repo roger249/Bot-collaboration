@@ -1,0 +1,98 @@
+instrument:
+  type: "debt"
+  sub_type: "structured_note"  # Distinguishes from standard bonds
+  product_name: "Callable Range Accrual Notes Linked to the 10-Year CMT Rate" # A common issuer name for such products [citation:7]
+
+  # === IDENTIFIERS ===
+  identifiers:
+    isin: ""
+    cusip: "46660NCV3" # Example CUSIP for a JPMorgan RA note [citation:7]
+    figi: ""
+
+  # === ISSUER & GUARANTOR ===
+  issuer:
+    legal_name: "JPMorgan Chase Financial Company LLC" # A typical issuer for this product type [citation:1][citation:7]
+    lei: ""
+    country: "US"
+    risk_free: false
+  guarantor:
+    name: "JPMorgan Chase & Co." # Notes are often guaranteed by the parent holding company [citation:1]
+
+  # === CREDIT RATINGS ===
+  credit_ratings: {} # Ratings of the issuer/guarantor would go here
+
+  # === TERMS ===
+  terms:
+    issue_date: "2026-07-07" # Example from search results [citation:7]
+    maturity_date: "2031-07-07" # Example from search results [citation:7]
+    term_years: 5.0
+    principal_amount: 1000.00 # USD per note [citation:1]
+    currency: "USD"
+    denomination: 1000.00
+    minimum_increment: 1.00
+
+  # === COUPON (The core of a Range Accrual Note) ===
+  coupon:
+    type: "range_accrual"  # New coupon type for this instrument
+    
+    # The fixed rate paid if accrual conditions are met on a given day [citation:7]
+    interest_factor: 0.08 # 8.00% per annum [citation:7]
+    
+    # The range that defines an "Accrual Day"
+    accrual_condition:
+      reference_rate: "CMT_10Y" # References the underlying
+      lower_barrier: 0.00 # 0.00% [citation:5]
+      upper_barrier: 0.0496 # 4.96% [citation:7]
+      condition: "greater_than_or_equal_to_lower_and_less_than_or_equal_to_upper" # Standard condition [citation:5]
+
+    # Formula for interest rate: Interest Rate = Interest Factor * (Variable Days / Actual Days) [citation:1][citation:7]
+    interest_rate_formula: "Interest_Factor * (Variable_Days / Actual_Days)"
+    
+    minimum_interest_rate: 0.0 # 0% per annum [citation:7]
+    maximum_interest_rate: 0.08 # 8.00% per annum, equal to the factor in this case [citation:7]
+    
+    payment_frequency: "monthly" # e.g., 7th of each month [citation:7]
+    day_count_convention: "30/360" # Common convention for these notes [citation:1][citation:7]
+    initial_interest_period_end: "2026-08-07" # First payment date [citation:7]
+
+  # === UNDERLYING ASSET ===
+  underlying:
+    # The asset is the 10-Year CMT Rate, which is an interest rate index
+    assets:
+      - asset_id: "cmt_001"
+        name: "10-Year Constant Maturity Treasury Rate"
+        type: "interest_rate_index"  # New asset type for this schema
+        
+        # Specifics for CMT rate
+        reference_rate: "CMT_10Y"
+        source: "H.15(519)" # The Federal Reserve Statistical Release [citation:1]
+        display_page: "Refinitiv page FRBCMT" # Common display page [citation:1]
+        designated_maturity: "10 years" # The maturity of the underlying Treasury [citation:1]
+        rate_cut_off_date: "fifth_business_day_prior" # Common definition [citation:3][citation:5]
+        
+        fallback_provisions: "If the rate is not published, the Calculation Agent will determine a successor or substitute rate." [citation:1]
+
+  # === REDEMPTION FEATURES ===
+  redemption:
+    type: "bullet"
+    redemption_value: 100.00 # Repayment of principal at maturity [citation:1]
+    
+    # Call features are common for this type [citation:3][citation:7]
+    call_features:
+      - call_date: "2027-07-07" # First call date, often one year after issue [citation:3][citation:7]
+        call_price: 100.00 # Redeemed at par
+        call_type: "american" # Callable on any payment date after the first call date [citation:7]
+        notice_period_days: 5
+
+  # === SENIORITY & SECURITY ===
+  seniority: "senior_unsecured" # These are typically unsubordinated obligations [citation:1]
+
+  # === OTHER ATTRIBUTES ===
+  pricing:
+    price: 100.00 # Issued at par
+    estimated_value: 964.20 # Estimated value can be below par due to embedded features [citation:7]
+
+  listing: {} # Typically not listed on an exchange [citation:10]
+  tax: {}
+  documentation: {}
+  cashflows: []

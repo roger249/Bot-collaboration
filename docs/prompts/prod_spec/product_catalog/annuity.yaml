@@ -1,0 +1,71 @@
+instrument:
+  type: "annuity"
+  product_name: "HKMC Annuity Plan"  # or "LionHarvest Prime Deferred Annuity", etc.
+  provider_type: "government" | "private"  # Discriminator for the provider
+
+  # === IDENTIFIERS ===
+  identifiers:
+    policy_number: ""
+    product_code: ""  # e.g., QDAP certification number
+
+  # === KEY CLASSIFICATIONS ===
+  classifications:
+    timing: "immediate" | "deferred"  # Income start time [citation:3][citation:7]
+    duration: "life" | "term"  # How long income lasts [citation:1][citation:3]
+    tax_qualifying: true | false  # Is it a QDAP? [citation:2][citation:5][citation:7]
+
+  # === ELIGIBILITY ===
+  eligibility:
+    min_age: 60  # For HKMC Annuity [citation:1]
+    max_age: 75  # For some QDAPs [citation:5]
+    residency_requirement: "Hong Kong Permanent Resident"  # Specific to HKMC Annuity [citation:1]
+
+  # === PREMIUM / PAYMENT ===
+  premium:
+    payment_mode: "single" | "installment"  # Single for immediate, installments for deferred [citation:3][citation:7]
+    payment_term_years: 5  # For installment plans [citation:2][citation:5]
+    currency: "HKD"  # or USD [citation:5][citation:6]
+    min_premium: 50000  # In HKD for HKMC Annuity [citation:1]
+    max_premium: 5000000  # In HKD for HKMC Annuity [citation:1]
+    tax_deductible_premium: 60000  # Max annual deductible for QDAP [citation:2][citation:7]
+
+  # === ACCUMULATION PERIOD (For Deferred Annuities) ===
+  accumulation:
+    period_years: 5  # From premium payment to income start [citation:5]
+    start_age: 50  # Earliest age to start receiving income (for QDAP) [citation:7]
+
+  # === INCOME / PAYOUT PHASE ===
+  income:
+    start_age: 60  # Age at which payouts begin [citation:1]
+    payout_frequency: "monthly"  # Typically monthly for HK annuities
+    guaranteed_period_years: 10  # E.g., 10 or 20 years for QDAPs [citation:2][citation:5]
+    
+    # Payout Amounts
+    payout_rate: 0.061  # 6.1% for a 60-year-old under HKMC Annuity [citation:1]
+    monthly_amount: 4700  # Example for HK$1M premium at age 60 [citation:1]
+    total_irr:  # Internal Rate of Return
+      guaranteed_min: 0.0105  # Guaranteed IRR [citation:2]
+      projected_max: 0.036  # Total projected IRR [citation:2]
+    
+    # Structure of Payouts
+    payout_structure:
+      guaranteed: true  # Is there a fixed, guaranteed component? [citation:1]
+      variable_component: false  # Does it include non-guaranteed bonuses? [citation:7]
+
+  # === BENEFITS & FEATURES ===
+  benefits:
+    death_benefit: "105% of premium paid"  # Common for HKMC Annuity [citation:7]
+    special_withdrawal:  # Unique to HKMC Annuity for medical expenses [citation:1][citation:7]
+      purpose: "medical_expenses"
+      max_lifetime_limit: 1000000  # HKD [citation:1]
+      conditions: "Can withdraw up to 100% of remaining premium balance for approved medical expenses"
+    additional_coverage:  # For some QDAPs [citation:5]
+      - "Accidental Death Benefit"
+      - "Unemployment Cover"
+
+  # === RISK & RETURN PROFILE ===
+  risk_factors:
+    - "Longevity risk is mitigated as income is guaranteed for life (for life annuities)" [citation:1][citation:9]
+    - "Inflation risk for fixed-payout annuities (HKMC Annuity)" [citation:7]
+    - "Credit risk of the issuer (government-backed vs. private insurer)" [citation:4][citation:7]
+    - "Non-guaranteed returns for some QDAPs are subject to market performance" [citation:7]

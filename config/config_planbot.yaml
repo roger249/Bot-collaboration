@@ -2,7 +2,7 @@
 
 common:
 # Below are default folder locations to use unless it's specified in the individual proposal section.  In such case, the
-# setting in the proposla section will override the common setting
+# setting in the proposal section will override the common setting
   crewai_config_folder: config/crewai/planbot
 
 stock_analysis_proposal:

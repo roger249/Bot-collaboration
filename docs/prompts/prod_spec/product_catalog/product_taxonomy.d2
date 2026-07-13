@@ -1,0 +1,66 @@
+grid-rows :  4
+
+common : {
+    product_id
+    risk_rating
+    expected_return
+}
+
+fund : {
+    vehicle: etf | mutual_fund | hedge_fund
+}
+
+cash : {
+    type: money_market | cash | deposit
+    money_market_id
+}
+
+cash -> common : {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+}
+
+fund -> common : {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+}
+
+bond_fund -> fund : {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+}
+
+equity_fund -> fund : {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+}
+
+balanced_fund -> fund : {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+}
+
+money_market_fund -> fund : {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+}
+
+precious_metal_fund -> fund : {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+}
+
+insurance : {
+    type: life | critical_illness | hospital | accident | annuity
+}
+
+insurance -> common : {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+}
+
+bond
+equity
+structured_product
+future_and_option 
+crypto
