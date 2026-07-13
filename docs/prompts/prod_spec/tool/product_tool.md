@@ -1,3 +1,22 @@
+# API
+
+1. search by product_id
+2. search by following attributes
+  This shall be proximity search that return top n products with 
+    - Risk rating
+    - Expected return
+    - Asset class
+    - Region
+    - Industry
+    - Time to maturity
+    - Coupon
+
+1. Search products for reinvestment purpose.  This will leverage the search in 2 but input is a product_id that used to provide the product attributes to search similar product
+
+For the same asset class, at most three shall be in the same industry or same region to maintain diversification
+
+4. search by product_fitness_score
+
 It returns the product_id grouped by risk_rating, with each group listed in descending order of expected_return 
 
 {

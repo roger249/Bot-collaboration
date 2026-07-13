@@ -192,6 +192,40 @@ llm_models:
     provider: mock
     model: mock
 
+investor_readiness_score:
+  output:
+    file: runs/investor_readiness_score/scores.csv
+    duckdb: data/planbot/db/planbot.duckdb
+  score_cash_drag:
+    weight: 1
+    pivot:
+      0.0: 0
+      0.2: 3
+      0.5: 9
+      1.0: 10
+  score_concentration_risk:
+    weight: 1
+    s_single_holding:
+      0.2: 0
+      1.0: 10
+    s_region_exposure:
+      0.4: 0
+      1.0: 10
+    s_asset_class_exposure:
+      0.6: 0
+      1.0: 10
+  score_active_manage:
+    weight: 1
+    has_fund: 3
+  score_life_stage:
+    weight: 1
+    pivot:
+      25: 0
+      35: 5
+      45: 10
+      65: 10
+      80: 5
+
 run_configurations:
   schema_version: 1
   # Pydantic model is built with the following defaults.

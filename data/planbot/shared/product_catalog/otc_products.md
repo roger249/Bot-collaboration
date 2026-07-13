@@ -51,20 +51,20 @@
 
 ## Bond (12)
 
-| id | name | nameZh | code | category | riskLevel | expectedReturn | term | minInvestment | monthlySales | popularity | isHot | isFavorite | sector | sectorZh | issuer | bondRating | couponRate | rating |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| PROD003 | US Corporate Bond Fund | 美国公司债基金 | #PROD003 | bond | 2 | 5.2 | 5 Years | $30K | $6.8M | 78 | - | - | Financial | 金融 | US Corp | A | 4.8% | 4.2 |
-| PROD007 | Asia Pacific Bond Fund | 亚太债券基金 | #PROD007 | bond | 2 | 4.5 | 3 Years | $25K | $5.1M | 70 | - | - | Financial | 金融 | APAC | BBB+ | 4.2% | 4.1 |
-| PROD011 | Green Energy Bond | 绿色能源债券 | #PROD011 | bond | 2 | 5.8 | 4 Years | $35K | $6.3M | 72 | - | - | Energy | 能源 | Green Energy Ltd | A- | 5.5% | 4.3 |
-| PROD044 | China Government Bond | 中国政府债券 | #PROD044 | bond | 1 | 3.5 | 10 Years | $20K | $9.2M | 91 | - | Y | Government | 政府 | China Government | A+ | 3.2% | 4.5 |
-| PROD045 | High Yield Corporate Bond | 高收益公司债 | #PROD045 | bond | 4 | 8.5 | 3 Years | $50K | $7.8M | 83 | Y | - | Corporate | 公司 | Multiple Issuers | BB+ | 8.0% | 4.0 |
-| PROD046 | Municipal Bond Fund | 市政债券基金 | #PROD046 | bond | 1 | 3.8 | 7 Years | $30K | $5.5M | 75 | - | - | Municipal | 市政 | US Municipalities | AA | 3.5% | 4.2 |
-| PROD047 | Emerging Market Bond | 新兴市场债券 | #PROD047 | bond | 3 | 7.2 | 5 Years | $40K | $6.1M | 77 | - | - | Emerging Markets | 新兴市场 | EM Sovereign | BBB | 6.8% | 4.1 |
-| PROD048 | Investment Grade Bond | 投资级债券 | #PROD048 | bond | 2 | 4.8 | 5 Years | $35K | $7.2M | 84 | - | Y | Corporate | 公司 | Multiple Issuers | A | 4.5% | 4.3 |
-| PROD049 | Convertible Bond Fund | 可转换债券基金 | #PROD049 | bond | 3 | 6.5 | 3 Years | $45K | $5.8M | 71 | - | - | Convertible | 可转债 | Multiple Issuers | BBB+ | 6.0% | 4.0 |
-| PROD050 | Short Duration Bond | 短期债券 | #PROD050 | bond | 1 | 3.2 | 1 Year | $20K | $8.5M | 86 | - | Y | Short Duration | 短期 | Multiple Issuers | AA- | 3.0% | 4.4 |
-| PROD051 | Infrastructure Bond | 基础设施债券 | #PROD051 | bond | 2 | 5.5 | 10 Years | $50K | $4.9M | 68 | - | - | Infrastructure | 基建 | Infrastructure Co | A | 5.2% | 4.2 |
-| PROD052 | Floating Rate Bond | 浮动利率债券 | #PROD052 | bond | 2 | 4.5 | 3 Years | $30K | $6.7M | 79 | - | - | Floating Rate | 浮动利率 | Multiple Issuers | A- | LIBOR+2% | 4.1 |
+| id | name | nameZh | code | category | riskLevel | expectedReturn | term | maturity | minInvestment | monthlySales | popularity | isHot | isFavorite | sector | sectorZh | issuer | bondRating | couponRate | rating |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| PROD003 | US Corporate Bond Fund | 美国公司债基金 | #PROD003 | bond | 2 | 5.2 | 5 Years | 2031-07-01 | $30K | $6.8M | 78 | - | - | Financial | 金融 | US Corp | A | 4.8% | 4.2 |
+| PROD007 | Asia Pacific Bond Fund | 亚太债券基金 | #PROD007 | bond | 2 | 4.5 | 3 Years | 2029-07-01 | $25K | $5.1M | 70 | - | - | Financial | 金融 | APAC | BBB+ | 4.2% | 4.1 |
+| PROD011 | Green Energy Bond | 绿色能源债券 | #PROD011 | bond | 2 | 5.8 | 4 Years | 2030-07-01 | $35K | $6.3M | 72 | - | - | Energy | 能源 | Green Energy Ltd | A- | 5.5% | 4.3 |
+| PROD044 | China Government Bond | 中国政府债券 | #PROD044 | bond | 1 | 3.5 | 10 Years | 2036-07-01 | $20K | $9.2M | 91 | - | Y | Government | 政府 | China Government | A+ | 3.2% | 4.5 |
+| PROD045 | High Yield Corporate Bond | 高收益公司债 | #PROD045 | bond | 4 | 8.5 | 3 Years | 2029-07-01 | $50K | $7.8M | 83 | Y | - | Corporate | 公司 | Multiple Issuers | BB+ | 8.0% | 4.0 |
+| PROD046 | Municipal Bond Fund | 市政债券基金 | #PROD046 | bond | 1 | 3.8 | 7 Years | 2033-07-01 | $30K | $5.5M | 75 | - | - | Municipal | 市政 | US Municipalities | AA | 3.5% | 4.2 |
+| PROD047 | Emerging Market Bond | 新兴市场债券 | #PROD047 | bond | 3 | 7.2 | 5 Years | 2031-07-01 | $40K | $6.1M | 77 | - | - | Emerging Markets | 新兴市场 | EM Sovereign | BBB | 6.8% | 4.1 |
+| PROD048 | Investment Grade Bond | 投资级债券 | #PROD048 | bond | 2 | 4.8 | 5 Years | 2031-07-01 | $35K | $7.2M | 84 | - | Y | Corporate | 公司 | Multiple Issuers | A | 4.5% | 4.3 |
+| PROD049 | Convertible Bond Fund | 可转换债券基金 | #PROD049 | bond | 3 | 6.5 | 3 Years | 2029-07-01 | $45K | $5.8M | 71 | - | - | Convertible | 可转债 | Multiple Issuers | BBB+ | 6.0% | 4.0 |
+| PROD050 | Short Duration Bond | 短期债券 | #PROD050 | bond | 1 | 3.2 | 1 Year | 2026-07-25 | $20K | $8.5M | 86 | - | Y | Short Duration | 短期 | Multiple Issuers | AA- | 3.0% | 4.4 |
+| PROD051 | Infrastructure Bond | 基础设施债券 | #PROD051 | bond | 2 | 5.5 | 10 Years | 2036-07-01 | $50K | $4.9M | 68 | - | - | Infrastructure | 基建 | Infrastructure Co | A | 5.2% | 4.2 |
+| PROD052 | Floating Rate Bond | 浮动利率债券 | #PROD052 | bond | 2 | 4.5 | 3 Years | 2026-07-20 | $30K | $6.7M | 79 | - | - | Floating Rate | 浮动利率 | Multiple Issuers | A- | LIBOR+2% | 4.1 |
 
 ## Insurance (7)
 

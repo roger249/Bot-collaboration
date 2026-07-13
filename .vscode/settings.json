@@ -18,7 +18,14 @@
             "path": "/Users/roger/Documents/GitHub/Bot collaboration/runs/test_data/products.duckdb",
             "readOnly": true,
             "attached": true
+        },
+        {
+            "alias": "clients",
+            "type": "file",
+            "path": "/Users/roger/Documents/GitHub/Bot collaboration/data/planbot/shared/client_profile/clients.duckdb",
+            "readOnly": true,
+            "attached": true
         }
     ],
-    "duckdb.defaultDatabase": "products"
+    "duckdb.defaultDatabase": "clients"
 }
