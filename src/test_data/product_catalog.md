@@ -1,7 +1,7 @@
 # Product Catalog — DuckDB Seed Utility
 
 > **Location:** `src/test_data/`  
-> **Output:** `runs/test_data/products.duckdb`  
+> **Output:** `data/planbot/db/planbot.duckdb`
 > **Last updated:** 2026-07-10
 
 ---
@@ -18,7 +18,7 @@ Seeds a DuckDB product catalog from three data sources:
 
 ## Database Schema
 
-Single-file DuckDB at `runs/test_data/products.duckdb`. **Single-table design with two JSON columns:**
+Single-file DuckDB at `data/planbot/db/planbot.duckdb`. **Single-table design with two JSON columns:**
 
 ```sql
 CREATE TABLE products (
@@ -86,7 +86,7 @@ Populated for CSV-derived products only (95 of 122). OTC products have `{}`.
 ### Re-seed from scratch
 
 ```bash
-rm runs/test_data/products.duckdb
+rm data/planbot/db/planbot.duckdb
 .venv/bin/python -m src.test_data.product_catalog_seed
 ```
 
@@ -193,7 +193,7 @@ src/test_data/
 └── product_catalog.md          # This file
 
 runs/test_data/
-├── products.duckdb             # Generated DuckDB database
+├── planbot.duckdb              # Unified DuckDB database (clients + holdings + products)
 └── .yahoo_cache.json           # Yahoo Finance info cache (95 entries)
 ```
 

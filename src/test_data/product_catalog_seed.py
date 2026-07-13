@@ -1,6 +1,6 @@
 """
 One-shot seeder:  reads selected_etf.csv + Yahoo Finance + otc_products.md
-and populates runs/test_data/products.duckdb (single-table with JSON columns).
+and populates data/planbot/db/planbot.duckdb (products table; coexists with clients/holdings/profiles).
 
 Usage:
     python -m src.test_data.product_catalog_seed
@@ -394,7 +394,7 @@ def _synthesize_bond(otc: dict) -> dict:
         "coupon_frequency": "semi-annual",
         "day_count_convention": "thirty_360",
         "credit_rating": otc.get("bondRating"),
-        "maturity": otc.get("term"),
+        "maturity": otc.get("maturity", otc.get("term")),
         "seniority": "senior",
         "callable": False,
         "puttable": False,
@@ -595,12 +595,12 @@ DDL_COLUMNS = [
 def seed(use_yahoo: bool = True) -> None:
     """Main entry point: read CSV + OTC, enrich, insert single-table into DuckDB."""
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    if DB_PATH.exists():
-        DB_PATH.unlink()
-        print(f"Deleted existing {DB_PATH}")
 
     conn = get_conn(read_only=False)
     init_db(conn)
+
+    # Clear products table only (not clients/holdings/profiles)
+    conn.execute("DELETE FROM products")
     yahoo_cache = _load_yahoo_cache() if use_yahoo else {}
     counts: dict[str, int] = {}
 
@@ -650,7 +650,7 @@ def seed(use_yahoo: bool = True) -> None:
                 "performance_history": json.dumps(perf, ensure_ascii=False),
             }
             conn.execute(
-                "INSERT INTO products VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT OR REPLACE INTO products VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 [row_data[k] for k in DDL_COLUMNS],
             )
             counts[pt] = counts.get(pt, 0) + 1
@@ -670,7 +670,7 @@ def seed(use_yahoo: bool = True) -> None:
             g["type_specific"] = json.dumps(_synth_otc_equity_fund(otc), ensure_ascii=False)
         g["performance_history"] = json.dumps({})
         conn.execute(
-            "INSERT INTO products VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT OR REPLACE INTO products VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             [g[k] for k in DDL_COLUMNS],
         )
         counts[pt] = counts.get(pt, 0) + 1
@@ -683,7 +683,7 @@ def seed(use_yahoo: bool = True) -> None:
         g["type_specific"] = json.dumps(_synthesize_bond(otc), ensure_ascii=False)
         g["performance_history"] = json.dumps({})
         conn.execute(
-            "INSERT INTO products VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT OR REPLACE INTO products VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             [g[k] for k in DDL_COLUMNS],
         )
         counts["bond"] = counts.get("bond", 0) + 1

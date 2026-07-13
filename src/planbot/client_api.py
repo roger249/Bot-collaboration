@@ -271,6 +271,7 @@ def search_holdings_maturing(
         ref = as_of_date or date.today().isoformat()
         ph = ",".join("?" for _ in product_types)
 
+        # DuckDB supports date + integer for day arithmetic (unlike INTERVAL with params)
         query = f"""
             SELECT h.client_id, h.product_id, h.market_value,
                    DATEDIFF('day', CAST(? AS DATE),
@@ -279,7 +280,7 @@ def search_holdings_maturing(
             WHERE p.product_type IN ({ph})
               AND json_extract_string(p.type_specific, '$.maturity') IS NOT NULL
               AND CAST(json_extract_string(p.type_specific, '$.maturity') AS DATE)
-                  BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) + INTERVAL ? DAY
+                  BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) + ?
             ORDER BY 4 ASC
         """
         params = [ref] + list(product_types) + [ref, ref, within_days]

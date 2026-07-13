@@ -1,7 +1,7 @@
 """
 Product Catalog — DuckDB schema, query helpers.
 
-Database location:  runs/test_data/products.duckdb
+Database location:  data/planbot/db/planbot.duckdb
 Single-table design with two JSON columns:
   - type_specific        Product-type-specific fields
   - performance_history  Historical return/risk metrics by period
@@ -15,7 +15,7 @@ from typing import Any
 
 import duckdb
 
-DB_PATH = Path("runs/test_data/products.duckdb")
+DB_PATH = Path("data/planbot/db/planbot.duckdb")
 
 DDL_PRODUCTS = """
 CREATE TABLE IF NOT EXISTS products (

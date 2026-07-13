@@ -211,6 +211,98 @@ def init_client_db(conn: duckdb.DuckDBPyConnection) -> None:
         conn.execute("SELECT COUNT(*) FROM profiles").fetchone()[0],
     )
 
+    # Normalize holdings.product_id to match products.product_id via ticker lookup
+    _normalize_holdings_product_ids(conn)
+
+
+# ---------------------------------------------------------------------------
+# Product ID normalization
+# ---------------------------------------------------------------------------
+
+# Known market suffixes in holdings productId values from the source CSV.
+# e.g. 'aapl-o' → base ticker 'AAPL' → product 'STOCK-AAPL'
+_MARKET_SUFFIXES = ["-O", "-K", "-HK", "-RR", "-X"]
+
+
+def _normalize_holdings_product_ids(conn: duckdb.DuckDBPyConnection) -> None:
+    """Update holdings.product_id to match the actual products.product_id.
+
+    Source CSV productId values are ticker+market-suffix (e.g. 'aapl-o'),
+    while the product catalog uses 'ETF-{TICKER}' or 'STOCK-{TICKER}'.
+    This function resolves holdings → products FK by stripping the market
+    suffix and matching on the products.ticker column.
+    """
+    # Only normalize if products table exists and has data
+    product_count = conn.execute(
+        "SELECT COUNT(*) FROM information_schema.tables "
+        "WHERE table_name='products'"
+    ).fetchone()[0]
+    if product_count == 0:
+        LOGGER.info("Products table not found — skipping product_id normalization")
+        return
+
+    actual_count = conn.execute("SELECT COUNT(*) FROM products").fetchone()[0]
+    if actual_count == 0:
+        LOGGER.info("Products table is empty — skipping product_id normalization")
+        return
+
+    # Build ticker → product_id map from products table
+    product_rows = conn.execute(
+        "SELECT product_id, ticker FROM products WHERE ticker IS NOT NULL AND ticker != ''"
+    ).fetchall()
+    ticker_to_pid: dict[str, str] = {}
+    for pid, ticker in product_rows:
+        ticker_to_pid[ticker.upper().strip()] = pid
+
+    # Fetch all holdings to normalize
+    holdings_rows = conn.execute(
+        "SELECT client_id, holding_idx, product_id FROM holdings"
+    ).fetchall()
+
+    updates: list[tuple[str, int, str]] = []  # (new_pid, client_id, holding_idx)
+    unmatched: set[str] = set()
+    matched_count = 0
+
+    for client_id, holding_idx, source_pid in holdings_rows:
+        if not source_pid:
+            continue
+        upper = source_pid.upper().strip()
+        new_pid = None
+
+        # 1) Direct ticker match (case-insensitive)
+        if upper in ticker_to_pid:
+            new_pid = ticker_to_pid[upper]
+        else:
+            # 2) Strip known market suffix and try again
+            for suffix in _MARKET_SUFFIXES:
+                if upper.endswith(suffix):
+                    base = upper[: -len(suffix)]
+                    if base in ticker_to_pid:
+                        new_pid = ticker_to_pid[base]
+                    break
+
+        if new_pid:
+            if new_pid != source_pid:
+                updates.append((new_pid, client_id, holding_idx))
+            matched_count += 1
+        else:
+            unmatched.add(source_pid)
+
+    # Apply updates
+    for new_pid, client_id, holding_idx in updates:
+        conn.execute(
+            "UPDATE holdings SET product_id = ? WHERE client_id = ? AND holding_idx = ?",
+            [new_pid, client_id, holding_idx],
+        )
+
+    LOGGER.info(
+        "Product ID normalization: %d matched, %d updated, %d unmatched (%s)",
+        matched_count,
+        len(updates),
+        len(unmatched),
+        ", ".join(sorted(unmatched)) if unmatched else "none",
+    )
+
 
 # ---------------------------------------------------------------------------
 # Score interpolation helper

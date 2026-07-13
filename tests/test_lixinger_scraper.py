@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import os
 import time
 import pytest
 import src.planbot.lixinger_scraper as lixinger_scraper_module
 
-@pytest.mark.skip(reason="Don't do any lixinger crawling in CI until we have a more robust CF challenge solution in place.")
+pytestmark= pytest.mark.skip(reason="Skip entire lixinger test as the module will be deprecated soon.")
+
 from src.planbot.lixinger_scraper import (
     BotBlockedError,
     DataPageNotReadyError,

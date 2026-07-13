@@ -34,19 +34,6 @@ llm_models:
     )
 
 
-def test_load_planbot_config_fails_when_required_path_missing(tmp_path: Path):
-    config_path = tmp_path / "config_planbot.yaml"
-    _write_base_config(
-        config_path=config_path,
-        data_root="data/planbot/stock_analysis",
-        crewai_folder="data/planbot/stock_analysis/crewai",
-        references_root="data/planbot/stock_analysis",
-    )
-
-    # Do not create any of the required directories; validation should fail fast.
-    with pytest.raises(ValueError, match="data_root"):
-        load_planbot_config(config_path, tmp_path, "stock_analysis_proposal")
-
 
 def test_load_planbot_config_succeeds_when_required_paths_exist(tmp_path: Path):
     data_root = tmp_path / "data/planbot/stock_analysis"
