@@ -25,6 +25,7 @@ from src.planbot.investor_readiness_score import (
     compute_total_scores,
     run_score_card,
 )
+from src.shared.product_family import get_product_family
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,16 +56,6 @@ def _get_conn(read_only: bool = True) -> duckdb.DuckDBPyConnection:
 def _load_score_config() -> dict:
     raw = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8")) or {}
     return raw.get("investor_readiness_score", {})
-
-
-_CATEGORY_MAP: dict[str, str] = {
-    "bond": "bond",
-    "bond_fund": "bond",
-    "equity_fund": "equity",
-    "stock": "equity",
-    "money_market_fund": "cash",
-    "balanced_fund": "balanced",
-}
 
 
 # ---------------------------------------------------------------------------
@@ -128,7 +119,7 @@ def _compute_derived_fields(conn: duckdb.DuckDBPyConnection) -> dict[str, dict[s
     for cid, c in clients.items():
         pts = pt_map.get(cid, set())
         c["product_types_in_holdings"] = sorted(pts)
-        c["product_types_in_holdings_categories"] = sorted({_CATEGORY_MAP.get(p, p) for p in pts})
+        c["product_types_in_holdings_product_families"] = sorted({get_product_family(p) for p in pts})
 
     # cash_pct
     cpr = conn.execute("""
@@ -233,7 +224,7 @@ def search(**criteria: Any) -> list[dict]:
     Parameters (all optional except risk_rating):
         risk_rating: int or [min, max]
         age: int or [min, max]
-        product_types_in_holdings: str or [str] — category values
+        product_types_in_holdings: str or [str] — product_family values
         concentration_score: float or [min, max]
         cash_score: float or [min, max]
     """
@@ -249,7 +240,7 @@ def search(**criteria: Any) -> list[dict]:
                 if not _match_range(c.get("age"), criteria["age"]):
                     continue
             if "product_types_in_holdings" in criteria and criteria["product_types_in_holdings"] is not None:
-                cats = set(c.get("product_types_in_holdings_categories", []))
+                cats = set(c.get("product_types_in_holdings_product_families", []))
                 req = criteria["product_types_in_holdings"]
                 if isinstance(req, str):
                     req = [req]

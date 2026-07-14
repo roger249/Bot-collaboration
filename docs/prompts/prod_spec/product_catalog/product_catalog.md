@@ -162,7 +162,7 @@ product_type:
   insurance:
     - insurance_type          # life, term, whole, critical_illness, annuity
     - provider                # Insurance underwriting carrier
-    - description.            # Explicit text for LLM/RAG embedding lookups
+    - description             # Explicit text for LLM/RAG embedding lookups
     - premium_mode            # single, annual, quarterly, monthly
     - premium_amount
     - coverage_amount

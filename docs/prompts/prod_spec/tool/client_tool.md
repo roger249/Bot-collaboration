@@ -164,7 +164,7 @@ Both tables live in the same DuckDB file (`data/planbot/db/planbot.duckdb`), so 
 
 The product catalog defines these `product_type` values:
 
-| `product_type` | Category (for filter API) |
+| `product_type` | product_family (for filter API) |
 |---|---|
 | `bond` | bond |
 | `bond_fund` | bond |
@@ -173,7 +173,7 @@ The product catalog defines these `product_type` values:
 | `money_market_fund` | cash |
 | `balanced_fund` | balanced |
 
-The filter API parameter `product_types_in_holdings` accepts the **category** values (`bond`, `equity`, `cash`, `balanced`) and maps them to the underlying `product_type` values.
+The filter API parameter `product_types_in_holdings` accepts the **product_family** values (`bond`, `equity`, `cash`, `balanced`) and maps them to the underlying `product_type` values.
 
 The product catalog schema is defined in `src/test_data/product_catalog.md`.
 
@@ -285,4 +285,4 @@ Once above are done, we will work on
 | `has_fund` precision | ✅ Done | Now uses product catalog JOIN instead of `asset_class ≠ "Cash"` |
 | `product_id` key alignment | ⚠️ Verify | Confirm CSV `productId` values match `products.product_id` keys |
 | LLM tool interface | 🔮 Future | Python method doubles as LLM tool base (line 19) |
-| `config_planbot.yaml` client_api section | 🔜 Planned | `income_stability_mapping`, `product_type` category mapping |
+| `config_planbot.yaml` client_api section | 🔜 Planned | `income_stability_mapping`, `product_family` mapping |
