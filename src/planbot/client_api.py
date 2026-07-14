@@ -77,11 +77,10 @@ def _compute_derived_fields(conn: duckdb.DuckDBPyConnection) -> dict[str, dict[s
     score_config = _load_score_config()
 
     rows = conn.execute("""
-        SELECT c.client_id, c.name, c.aum, c.cash_pct, c.region,
-               p.birthdate, p.occupation, p.risk_rating, p.marital_status,
-               p.children_info
-        FROM clients c
-        LEFT JOIN profiles p ON c.name = p.client_name
+        SELECT client_id, name, aum, cash_pct, region,
+               birthdate, occupation, risk_rating, marital_status,
+               children_info
+        FROM clients
     """).fetchall()
 
     cols = ["client_id", "name", "aum", "cash_pct", "region",
@@ -90,6 +89,13 @@ def _compute_derived_fields(conn: duckdb.DuckDBPyConnection) -> dict[str, dict[s
 
     today = date.today()
     for c in clients.values():
+        # Normalize risk_rating to int (may be stored as VARCHAR after migration)
+        rr = c.get("risk_rating")
+        if rr is not None and not isinstance(rr, int):
+            try:
+                c["risk_rating"] = int(rr)
+            except (ValueError, TypeError):
+                c["risk_rating"] = None
         bd = c.get("birthdate")
         if not bd or str(bd).upper() in ("N/A", ""):
             c["age"] = None
@@ -187,11 +193,11 @@ def search_by_id(client_id: str) -> dict | None:
     conn = _get_conn(read_only=True)
     try:
         row = conn.execute("""
-            SELECT c.client_id, c.name, c.aum, c.cash_pct, c.region,
-                   p.birthdate, p.occupation, p.risk_rating, p.marital_status,
-                   p.children_info
-            FROM clients c LEFT JOIN profiles p ON c.name = p.client_name
-            WHERE c.client_id = ?
+            SELECT client_id, name, aum, cash_pct, region,
+                   birthdate, occupation, risk_rating, marital_status,
+                   children_info
+            FROM clients
+            WHERE client_id = ?
         """, [client_id]).fetchone()
         if row is None:
             return None
@@ -199,6 +205,14 @@ def search_by_id(client_id: str) -> dict | None:
         cols = ["client_id", "name", "aum", "cash_pct", "region",
                 "birthdate", "occupation", "risk_rating", "marital_status", "children_info"]
         client = dict(zip(cols, row))
+
+        # Normalize risk_rating to int
+        rr = client.get("risk_rating")
+        if rr is not None and not isinstance(rr, int):
+            try:
+                client["risk_rating"] = int(rr)
+            except (ValueError, TypeError):
+                client["risk_rating"] = None
 
         derived = _compute_derived_fields(conn)
         cid = client["client_id"]

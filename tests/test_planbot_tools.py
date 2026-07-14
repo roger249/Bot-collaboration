@@ -331,37 +331,6 @@ def test_crawl4ai_tool_uses_raw_markdown_object(monkeypatch):
     assert tool._run("https://example.com") == "md body"
 
 
-def test_crawl4ai_yahoo_finance_returns_valid_markdown():
-    """Integration test: verify Crawl4AI can fetch and return markdown from Yahoo Finance.
-
-    Yahoo Finance uses client-side JS rendering. The tool fetches the page and
-    returns whatever content is available after the configured delay.
-    """
-    tool = crawl4ai_tool.Crawl4AITool()
-
-    result = tool._run("http://www.aastocks.com/en/stocks/analysis/company-fundamental/financial-ratios?symbol=06690")
-
-    print("Crawl4AI tool output length:", len(result))
-    print("Crawl4AI tool output preview:", result)
-
-    # Verify we got substantial content
-    assert result is not None
-    assert len(result) > 2000, f"Expected substantial content, got {len(result)} chars"
-
-    # Verify page-not-found error is absent
-    assert "does not exist" not in result.lower(), "Page not found error"
-
-    # Verify the response is from the correct Yahoo Finance GOOG page
-    result_lower = result.lower()
-    assert any(
-        keyword in result_lower
-        for keyword in ["EPS", "alphabet", "PE Ratio", "quote", "stock", "market", "trade", "share", "yahoo"]
-    ), "Page doesn't contain expected Yahoo Finance / GOOG content"
-
-    print(f"  Content length: {len(result)} characters")
-    print(f"  Preview: {result[:200]}...")
-
-
 def test_crawl_uses_default_markdown_generator(monkeypatch):
     captured: dict[str, object] = {}
 

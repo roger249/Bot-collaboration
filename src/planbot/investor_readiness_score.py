@@ -34,24 +34,18 @@ CLIENT_PROFILE_CSV = Path("data/planbot/shared/client_profile/client_profile.csv
 
 DDL_CLIENTS = """
 CREATE TABLE IF NOT EXISTS clients (
-    client_id   TEXT PRIMARY KEY,
-    name        TEXT NOT NULL,
-    aum         DOUBLE,
-    cash_pct    DOUBLE,
-    region      TEXT
-);
-"""
-
-DDL_PROFILES = """
-CREATE TABLE IF NOT EXISTS profiles (
-    client_name TEXT PRIMARY KEY,
-    birthdate   TEXT,
-    occupation  TEXT,
-    risk_rating INTEGER,
-    marital_status TEXT,
-    children_info TEXT,
-    liquidity_need TEXT,
-    income_stability TEXT,
+    client_id         TEXT PRIMARY KEY,
+    name              TEXT NOT NULL,
+    aum               DOUBLE,
+    cash_pct          DOUBLE,
+    region            TEXT,
+    birthdate         TEXT,
+    occupation        TEXT,
+    risk_rating       INTEGER,
+    marital_status    TEXT,
+    children_info     TEXT,
+    liquidity_need    TEXT,
+    income_stability  TEXT,
     investment_objective TEXT
 );
 """
@@ -118,13 +112,11 @@ def _parse_int(val: str | None) -> int | None:
 def init_client_db(conn: duckdb.DuckDBPyConnection) -> None:
     """Create all client tables and populate from CSV sources."""
     conn.execute(DDL_CLIENTS)
-    conn.execute(DDL_PROFILES)
     conn.execute(DDL_HOLDINGS)
 
     # Clear existing data for idempotent rebuild
     conn.execute("DELETE FROM holdings")
     conn.execute("DELETE FROM clients")
-    conn.execute("DELETE FROM profiles")
 
     # -------------------------------------------------------------------
     # Load client_list.csv (wide-format: one row per client with nested holdings)
@@ -142,8 +134,12 @@ def init_client_db(conn: duckdb.DuckDBPyConnection) -> None:
                 continue
 
             conn.execute(
-                "INSERT OR REPLACE INTO clients VALUES (?, ?, ?, ?, ?)",
-                [client_id, name, aum, cash_pct, region],
+                "INSERT OR REPLACE INTO clients VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                [
+                    client_id, name, aum, cash_pct, region,
+                    None, None, None, None, None,  # birthdate, occupation, risk_rating, marital_status, children_info
+                    None, None, None,              # liquidity_need, income_stability, investment_objective
+                ],
             )
 
             # Unpivot holdings (up to 10 per client: holdings/0 … holdings/9)
@@ -179,7 +175,7 @@ def init_client_db(conn: duckdb.DuckDBPyConnection) -> None:
                 )
 
     # -------------------------------------------------------------------
-    # Load client_profile.csv
+    # Load client_profile.csv and UPDATE existing clients by name
     # -------------------------------------------------------------------
     with open(CLIENT_PROFILE_CSV, encoding="utf-8", newline="") as f:
         reader = csv.DictReader(f)
@@ -189,10 +185,17 @@ def init_client_db(conn: duckdb.DuckDBPyConnection) -> None:
                 continue
 
             conn.execute(
-                """INSERT OR REPLACE INTO profiles VALUES
-                   (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                """UPDATE clients SET
+                    birthdate = ?,
+                    occupation = ?,
+                    risk_rating = ?,
+                    marital_status = ?,
+                    children_info = ?,
+                    liquidity_need = ?,
+                    income_stability = ?,
+                    investment_objective = ?
+                 WHERE name = ?""",
                 [
-                    client_name,
                     row.get("Birthdate", "").strip(),
                     row.get("Occupation", "").strip(),
                     _parse_int(row.get("Risk Rating")),
@@ -201,14 +204,14 @@ def init_client_db(conn: duckdb.DuckDBPyConnection) -> None:
                     row.get("Liquidity Need", "").strip(),
                     row.get("Income Stability", "").strip(),
                     row.get("Investment Objective", "").strip(),
+                    client_name,
                 ],
             )
 
     LOGGER.info(
-        "Client DB initialised: %s clients, %s holdings, %s profiles",
+        "Client DB initialised: %s clients, %s holdings",
         conn.execute("SELECT COUNT(*) FROM clients").fetchone()[0],
         conn.execute("SELECT COUNT(*) FROM holdings").fetchone()[0],
-        conn.execute("SELECT COUNT(*) FROM profiles").fetchone()[0],
     )
 
     # Normalize holdings.product_id to match products.product_id via ticker lookup
@@ -513,7 +516,7 @@ def score_life_stage(
     """Score each client on life stage.
 
     Uses age interpolated through pivot.
-    Joins clients→profiles on name to get birthdate.
+    Reads birthdate directly from the unified clients table.
 
     Returns {client_id: score_0_10}.
     """
@@ -525,9 +528,8 @@ def score_life_stage(
     today = date.today()
 
     rows = conn.execute("""
-        SELECT c.client_id, p.birthdate
-        FROM clients c
-        LEFT JOIN profiles p ON c.name = p.client_name
+        SELECT client_id, birthdate
+        FROM clients
     """).fetchall()
 
     scores: dict[str, float] = {}

@@ -31,19 +31,24 @@ from src.planbot.investor_readiness_score import (
 
 @pytest.fixture
 def empty_db(tmp_path: Path) -> duckdb.DuckDBPyConnection:
-    """Empty DuckDB with just the clients/holdings/profiles/products schema."""
+    """Empty DuckDB with just the clients/holdings/products schema."""
     db_path = tmp_path / "test_score.duckdb"
     conn = duckdb.connect(str(db_path))
     conn.execute("""
         CREATE TABLE IF NOT EXISTS clients (
-            client_id TEXT PRIMARY KEY, name TEXT, aum DOUBLE, cash_pct DOUBLE, region TEXT
-        )
-    """)
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS profiles (
-            client_name TEXT PRIMARY KEY, birthdate TEXT, occupation TEXT,
-            risk_rating INTEGER, marital_status TEXT, children_info TEXT,
-            liquidity_need TEXT, income_stability TEXT, investment_objective TEXT
+            client_id          TEXT PRIMARY KEY,
+            name               TEXT,
+            aum                DOUBLE,
+            cash_pct           DOUBLE,
+            region             TEXT,
+            birthdate          TEXT,
+            occupation         TEXT,
+            risk_rating        INTEGER,
+            marital_status     TEXT,
+            children_info      TEXT,
+            liquidity_need     TEXT,
+            income_stability   TEXT,
+            investment_objective TEXT
         )
     """)
     conn.execute("""
@@ -69,23 +74,18 @@ def empty_db(tmp_path: Path) -> duckdb.DuckDBPyConnection:
 
 @pytest.fixture
 def seeded_db(empty_db: duckdb.DuckDBPyConnection) -> duckdb.DuckDBPyConnection:
-    """DB with test clients, profiles, holdings, and products."""
+    """DB with test clients, holdings, and products."""
     conn = empty_db
 
     conn.executemany(
-        "INSERT INTO clients VALUES (?,?,?,?,?)",
+        "INSERT INTO clients VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
         [
-            ("PB-S-001", "Alice Std", 1_000_000.0, 5.0, "North America"),
-            ("PB-S-002", "Bob Heavy", 500_000.0, 30.0, "Europe"),
-            ("PB-S-003", "Carol Cash", 100_000.0, 80.0, "Asia"),
-        ],
-    )
-    conn.executemany(
-        "INSERT INTO profiles VALUES (?,?,?,?,?,?,?,?,?)",
-        [
-            ("Alice Std", "1980-06-15", "Engineer", 4, "Married", "2", None, None, None),
-            ("Bob Heavy", "1970-01-01", "Executive", 3, "Married", "1", None, None, None),
-            ("Carol Cash", "1995-12-25", "Student", 1, "Single", "0", None, None, None),
+            ("PB-S-001", "Alice Std", 1_000_000.0, 5.0, "North America",
+             "1980-06-15", "Engineer", 4, "Married", "2", None, None, None),
+            ("PB-S-002", "Bob Heavy", 500_000.0, 30.0, "Europe",
+             "1970-01-01", "Executive", 3, "Married", "1", None, None, None),
+            ("PB-S-003", "Carol Cash", 100_000.0, 80.0, "Asia",
+             "1995-12-25", "Student", 1, "Single", "0", None, None, None),
         ],
     )
     conn.executemany(
@@ -280,7 +280,7 @@ class TestNormalizeHoldingsProductIds:
         """holdings.product_id 'aapl-o' should become 'STOCK-AAPL'."""
         conn = empty_db
         conn.execute("INSERT INTO products VALUES ('STOCK-AAPL', NULL, 'Apple', 'AAPL', 'USD', 4, NULL, NULL, NULL, NULL, NULL, 'stock', NULL, NULL, NULL)")
-        conn.execute("INSERT INTO clients VALUES ('PB-N-001', 'Test', 1000, 0, 'NA')")
+        conn.execute("INSERT INTO clients VALUES ('PB-N-001', 'Test', 1000, 0, 'NA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)")
         conn.execute("INSERT INTO holdings VALUES ('PB-N-001', 0, 'h1', 'aapl-o', 'Apple', 'AAPL', 'Equities', 'NA', 'USD', 10, 100, 100, 0, 0, 0, NULL, NULL, NULL)")
 
         _normalize_holdings_product_ids(conn)
@@ -292,7 +292,7 @@ class TestNormalizeHoldingsProductIds:
         """holdings.product_id that already matches should not change."""
         conn = empty_db
         conn.execute("INSERT INTO products VALUES ('STOCK-AAPL', NULL, 'Apple', 'AAPL', 'USD', 4, NULL, NULL, NULL, NULL, NULL, 'stock', NULL, NULL, NULL)")
-        conn.execute("INSERT INTO clients VALUES ('PB-N-002', 'Test', 1000, 0, 'NA')")
+        conn.execute("INSERT INTO clients VALUES ('PB-N-002', 'Test', 1000, 0, 'NA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)")
         conn.execute("INSERT INTO holdings VALUES ('PB-N-002', 0, 'h1', 'AAPL', 'Apple', 'AAPL', 'Equities', 'NA', 'USD', 10, 100, 100, 0, 0, 0, NULL, NULL, NULL)")
 
         _normalize_holdings_product_ids(conn)
@@ -304,7 +304,7 @@ class TestNormalizeHoldingsProductIds:
         """Unknown product IDs like FX or treasuries are left unchanged."""
         conn = empty_db
         conn.execute("INSERT INTO products VALUES ('ETF-BND', NULL, 'Vanguard Bond', 'BND', 'USD', 2, NULL, NULL, NULL, NULL, NULL, 'bond_fund', NULL, NULL, NULL)")
-        conn.execute("INSERT INTO clients VALUES ('PB-N-003', 'Test', 1000, 0, 'NA')")
+        conn.execute("INSERT INTO clients VALUES ('PB-N-003', 'Test', 1000, 0, 'NA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)")
         conn.execute(
             "INSERT INTO holdings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             ['PB-N-003', 0, 'h1', 'eur-usd', 'EUR/USD', None, 'Currency', 'EU', 'EUR', 1000, 1000, 1000, 0, 0, 0, None, None, None],
@@ -319,7 +319,7 @@ class TestNormalizeHoldingsProductIds:
         """Should not crash when products table doesn't exist yet."""
         conn = empty_db
         conn.execute("DROP TABLE IF EXISTS products")
-        conn.execute("INSERT INTO clients VALUES ('PB-N-004', 'Test', 1000, 0, 'NA')")
+        conn.execute("INSERT INTO clients VALUES ('PB-N-004', 'Test', 1000, 0, 'NA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)")
         conn.execute(
             "INSERT INTO holdings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             ['PB-N-004', 0, 'h1', 'aapl-o', 'Apple', 'AAPL', 'Equities', 'NA', 'USD', 10, 100, 100, 0, 0, 0, None, None, None],

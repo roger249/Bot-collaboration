@@ -32,7 +32,7 @@ from src.planbot.investor_readiness_score import (
 
 
 def _seed_minimal_db(db_path: Path) -> None:
-    """Create a temporary DuckDB with clients, profiles, holdings, and products."""
+    """Create a temporary DuckDB with clients, holdings, and products."""
     conn = duckdb.connect(str(db_path))
 
     # Products
@@ -71,35 +71,33 @@ def _seed_minimal_db(db_path: Path) -> None:
         products,
     )
 
-    # Clients
+    # Clients (unified — includes all profile fields)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS clients (
-            client_id TEXT PRIMARY KEY, name TEXT NOT NULL, aum DOUBLE, cash_pct DOUBLE, region TEXT
+            client_id          TEXT PRIMARY KEY,
+            name               TEXT NOT NULL,
+            aum                DOUBLE,
+            cash_pct           DOUBLE,
+            region             TEXT,
+            birthdate          TEXT,
+            occupation         TEXT,
+            risk_rating        INTEGER,
+            marital_status     TEXT,
+            children_info      TEXT,
+            liquidity_need     TEXT,
+            income_stability   TEXT,
+            investment_objective TEXT
         )
     """)
     conn.executemany(
-        "INSERT OR REPLACE INTO clients VALUES (?,?,?,?,?)",
+        "INSERT OR REPLACE INTO clients VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
         [
-            ("PB-TEST-001", "Alice Alpha", 1_000_000.0, 5.0, "North America"),
-            ("PB-TEST-002", "Bob Beta", 500_000.0, 20.0, "Europe"),
-            ("PB-TEST-003", "Carol Gamma", 2_000_000.0, 1.0, "Asia"),
-        ],
-    )
-
-    # Profiles
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS profiles (
-            client_name TEXT PRIMARY KEY, birthdate TEXT, occupation TEXT,
-            risk_rating INTEGER, marital_status TEXT, children_info TEXT,
-            liquidity_need TEXT, income_stability TEXT, investment_objective TEXT
-        )
-    """)
-    conn.executemany(
-        "INSERT OR REPLACE INTO profiles VALUES (?,?,?,?,?,?,?,?,?)",
-        [
-            ("Alice Alpha", "1980-06-15", "Engineer", 4, "Married", "2 children", "Low", "High", "Growth"),
-            ("Bob Beta", "1955-03-20", "Retired", 2, "Married", "0 children", "Medium", "Low", "Income"),
-            ("Carol Gamma", "1990-11-01", "Entrepreneur", 5, "Single", "0 children", "High", "Variable", "Aggressive Growth"),
+            ("PB-TEST-001", "Alice Alpha", 1_000_000.0, 5.0, "North America",
+             "1980-06-15", "Engineer", 4, "Married", "2 children", "Low", "High", "Growth"),
+            ("PB-TEST-002", "Bob Beta", 500_000.0, 20.0, "Europe",
+             "1955-03-20", "Retired", 2, "Married", "0 children", "Medium", "Low", "Income"),
+            ("PB-TEST-003", "Carol Gamma", 2_000_000.0, 1.0, "Asia",
+             "1990-11-01", "Entrepreneur", 5, "Single", "0 children", "High", "Variable", "Aggressive Growth"),
         ],
     )
 

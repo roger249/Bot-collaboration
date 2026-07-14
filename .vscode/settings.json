@@ -13,19 +13,12 @@
     },
     "duckdb.databases": [
         {
-            "alias": "products",
+            "alias": "planbot",
             "type": "file",
-            "path": "/Users/roger/Documents/GitHub/Bot collaboration/runs/test_data/products.duckdb",
-            "readOnly": true,
-            "attached": true
-        },
-        {
-            "alias": "clients",
-            "type": "file",
-            "path": "/Users/roger/Documents/GitHub/Bot collaboration/data/planbot/shared/client_profile/clients.duckdb",
+            "path": "/Users/roger/Documents/GitHub/Bot collaboration/data/planbot/db/planbot.duckdb",
             "readOnly": true,
             "attached": true
         }
     ],
-    "duckdb.defaultDatabase": "clients"
+    "duckdb.defaultDatabase": "planbot"
 }
