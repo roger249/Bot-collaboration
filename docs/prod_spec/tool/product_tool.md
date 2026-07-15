@@ -231,7 +231,7 @@ Request:
 - `risk_rating_hard_filter = true`: enforce `product.risk_rating <= query.risk_rating` as a hard eligibility filter.
 - `risk_rating_hard_filter = false` (default): no hard filter; include `risk_rating` in similarity score.
 - `w_i` are read from YAML config (`config/config_planbot.yaml`), not from API request payload.
-- Both methods read their respective weight sets from `config/config_planbot.yaml` under `product_scoring.search_similar_weights` and `product_scoring.product_fitness_weights`.
+- Both methods read their respective weight sets from `config/config_planbot.yaml` under `product_fitness_score.search_similar_weights` and `product_fitness_score.product_fitness_weights`.
 - If any dimension is not specified in `query`, remove that dimension from scoring and renormalize remaining weights to sum to 1.
 - Ranking is by descending similarity score only (relative ranking semantics).
 
@@ -284,7 +284,7 @@ Consumers needing full product details should call `search_by_product_id` with t
 
 | Precedence | Source | Description |
 |---|---|---|
-| 1 (primary) | YAML config `product_scoring.search_similar_sigmas` | Explicit per-dimension sigma values |
+| 1 (primary) | YAML config `product_fitness_score.search_similar_sigmas` | Explicit per-dimension sigma values |
 | 2 (fallback) | Population standard deviation from `products` table | Computed dynamically per dimension when YAML value is absent |
 
 Behavior:
@@ -406,7 +406,7 @@ Response:
 ## YAML configuration
 
 ```yaml
-product_scoring:
+product_fitness_score:
   search_similar_weights:
     risk_rating: 0.25
     expected_return: 0.20
@@ -444,7 +444,7 @@ All acceptance criteria except AC1 require a corresponding unit test.
 
 | # | Criterion | Verification |
 |---|---|---|
-| AC1 | `config/config_planbot.yaml` contains the `product_scoring` section with all weights, sigmas, and params defined above | Manual review of YAML file |
+| AC1 | `config/config_planbot.yaml` contains the `product_fitness_score` section with all weights, sigmas, and params defined above | Manual review of YAML file |
 | AC2 | `search_similar()` returns products ranked by similarity score; unspecified query dimensions are excluded and weights renormalized | Unit test: call with partial query, verify excluded dimensions not in scoring |
 | AC3 | `sigma_i` uses YAML value when present, falls back to population std dev otherwise | Unit test: remove one sigma from YAML, verify fallback value computed from DB |
 | AC4 | `product_type` is always soft-scored only (never a hard filter in `search_similar`) | Unit test: query with `product_type`, verify products with different type still appear (with lower score) |

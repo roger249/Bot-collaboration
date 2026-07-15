@@ -14,7 +14,7 @@ import duckdb
 import pytest
 import yaml
 
-from src.planbot.client_api import (
+from src.integrations.client_api import (
     search,
     search_by_id,
     search_by_investor_readiness_score,

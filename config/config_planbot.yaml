@@ -29,6 +29,7 @@ reinvestment_proposal:
   references_root: data/planbot/reinvestment_proposal
   output_root: runs/reinvestment_proposal
   output_filename: reinvestment_proposal.md
+  # get_client_product_from_db: true
   references:
     proposal_instructions_and_format:
       - name: proposal_instructions/*.md
@@ -42,6 +43,8 @@ reinvestment_proposal:
         purpose: Strict guidelines on all tasks.  No exception allowed
       - name: ../shared/market_outlook/*.md
         purpose: Market outlook and sentiment analysis for the recommendation
+    # client_profiles and product_catalogs will be retrieved via API when invoked in production
+    # The following files are used in prototype and kept as backward compatibility, will deprecated.
     client_profiles:
       - name: clients/*.md
         purpose: Client profiles and suggested product for each client in markdown format
@@ -225,6 +228,41 @@ investor_readiness_score:
       45: 10
       65: 10
       80: 5
+
+product_fitness_score:
+# Product fitness score configuration — weights, sigmas, and parameters for
+# search_similar, search_reinvestment_candidates, and search_product_by_fitness_score.
+# All score constants are defined here; the implementation must not hard-code them.
+  search_similar_weights:
+    risk_rating: 0.25
+    expected_return: 0.20
+    product_type: 0.15       # soft-scored only — never a hard filter
+    asset_class: 0.10
+    region: 0.10
+    sector: 0.05
+    time_to_maturity: 0.10
+    coupon: 0.05
+  search_similar_sigmas:
+# Per-dimension scale for numeric similarity: s_i = 1 - min(|x - q| / sigma, 1).
+# If omitted, sigma_i falls back to population std dev from the products table.
+    risk_rating: 2.0
+    expected_return: 5.0
+    time_to_maturity: 730.0   # days (~2 years)
+    coupon: 2.0
+  product_fitness_weights:
+# Weights for the 4 PFS dimensions.  Renormalized when dimensions are excluded.
+    risk_rating_match_score: 0.30
+    concentration_score: 0.30
+    has_similar_investment_experience_score: 0.20
+    better_product_score: 0.20
+  product_fitness_params:
+    better_product_score_scale: 10
+    better_product_score_uplift_cap: 0.30
+    better_product_score_eps: 0.01
+    concentration_test_position_pct_aum: 0.10  # % of AUM used as hypothetical test position
+    experience_score_same_type: 10.0            # high: same product_type held
+    experience_score_same_family: 6.0           # medium: same product_family held
+    experience_score_none: 0.0                  # low: no match
 
 run_configurations:
   schema_version: 1
