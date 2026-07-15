@@ -236,7 +236,7 @@ def _compute_similarity_score(
     sigmas: dict[str, float],
     weights: dict[str, float],
     *,
-    risk_rating_hard_filter: bool = False,
+    risk_rating_hard_filter: bool = True,
     trade_date: str = "",
 ) -> float:
     """Compute similarity score for a single product against the query."""
@@ -304,7 +304,7 @@ def search_similar(
     query: dict | None = None,
     *,
     top_n: int = 3,
-    risk_rating_hard_filter: bool = False,
+    risk_rating_hard_filter: bool = True,
     diversification: bool = True,
     max_per_product_type: int = 2,
     exclude_product_ids: list[str] | None = None,
@@ -428,7 +428,7 @@ def search_reinvestment_candidates(
     *,
     max_per_product_type: int = 2,
     top_n_per_client: int | None = None,
-    risk_rating_hard_filter: bool = False,
+    risk_rating_hard_filter: bool = True,
     exclude_product_ids: list[str] | None = None,
 ) -> dict:
     """Find reinvestment candidates per client using search_similar.

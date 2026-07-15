@@ -141,7 +141,7 @@ def search_products(body: dict) -> dict:
     return search_similar(
         query=query,
         top_n=body.get("top_n", 3),
-        risk_rating_hard_filter=body.get("risk_rating_hard_filter", False),
+        risk_rating_hard_filter=body.get("risk_rating_hard_filter", True),
         diversification=body.get("diversification", True),
         max_per_product_type=body.get("max_per_product_type", 2),
         exclude_product_ids=body.get("exclude_product_ids"),
@@ -159,7 +159,7 @@ def get_reinvestment_candidates(body: dict) -> dict:
         source_product_id=body["source_product_id"],
         max_per_product_type=body.get("max_per_product_type", 2),
         top_n_per_client=body.get("top_n_per_client"),
-        risk_rating_hard_filter=body.get("risk_rating_hard_filter", False),
+        risk_rating_hard_filter=body.get("risk_rating_hard_filter", True),
         exclude_product_ids=body.get("exclude_product_ids"),
     )
 
