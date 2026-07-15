@@ -17,6 +17,9 @@ Products:
 
 Start with:
   .venv/bin/uvicorn src.integrations.server:app --reload
+
+Reinvestment Proposals:
+  POST /api/v1/reinvestment-proposals
 """
 
 from __future__ import annotations
@@ -36,6 +39,7 @@ from src.integrations.product_tool import (
     search_reinvestment_candidates,
     search_product_by_fitness_score,
 )
+from src.integrations.reinvestment_proposal import generate_reinvestment_proposal
 
 app = FastAPI(
     title="PlanBot API",
@@ -176,4 +180,28 @@ def get_product_fitness_score(body: dict) -> dict:
         top_n=body.get("top_n", 10),
         risk_rating_hard_filter=body.get("risk_rating_hard_filter", True),
         exclude_dimensions=body.get("exclude_dimensions"),
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Reinvestment proposal endpoints
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+@app.post("/api/v1/reinvestment-proposals")
+def get_reinvestment_proposals(body: dict) -> dict:
+    """Generate reinvestment proposals for one or more target pairs.
+
+    Request body matches the ``generate_reinvestment_proposal`` contract.
+    """
+    return generate_reinvestment_proposal(
+        reinvestment_targets=body["reinvestment_targets"],
+        max_per_product_type=body.get("max_per_product_type", 2),
+        top_n_per_client=body.get("top_n_per_client", 10),
+        risk_rating_hard_filter=body.get("risk_rating_hard_filter", True),
+        response_mode=body.get("response_mode", "path"),
+        include_llm_input=body.get("include_llm_input", False),
+        include_market_outlook=body.get("include_market_outlook", True),
+        include_candidate_explanations=body.get("include_candidate_explanations", True),
+        include_debug_scores=body.get("include_debug_scores", False),
     )
