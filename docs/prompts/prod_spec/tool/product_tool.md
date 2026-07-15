@@ -16,6 +16,8 @@ Steps 1-3 shall have finished from the spec docs/prompts/product_catalog.md
 
 This document focus on step 4.
 
+All score (constant) used in the computation shall be defined in yaml and not hard coded.
+
 ## Python methods for search products
 
 Below are the API exposed to search the product catalog, it returns a list of the products in JSON format
@@ -44,24 +46,29 @@ search_similar filtering rules:
 - `risk_rating` behavior is controlled by API input `risk_rating_hard_filter`
   - `true`: enforce `risk_rating` as a hard filter constraint
   - `false`: include `risk_rating` in similarity scoring only
+- `diversification`
+  - if true (default), 
+    Diversification selection algorithm:
+    - Group the `search_similar` ranked results by `product_type`.
+    - From each group, select the top-*max_per_product_type* products by similarity score.
+    - *max_per_product_type* is an input parameter, default to 2.
+    - The diversification rule is applied per query.
+  - false
+    - return the list of product ordered by score in descending order
 - If a dimension is not specified in the input, exclude that dimension from scoring
-- Final score is used as relative ranking only (not an absolute score threshold)
 - Score weights are normalized by the included dimensions only
+- Final score is used as relative ranking only (not an absolute score threshold)
+
 
 ### search_reinvestment_candidates
 
 Leverages `search_similar` but the input is a `product_id` whose attributes are used as the similarity query.
 
-Diversification selection algorithm:
+Diversification rule also applies.
 
-- Group the `search_similar` ranked results by `product_type`.
-- From each group, select the top-*k* products by similarity score.
-- *k* is an input parameter, default to 2.
-- The diversification rule is applied per client.
+### search_product_by_fitness_score
 
-### product_fitness_score
-
-Accepts lists of `client_id` (m) and `product_id` (n), computes a fitness score for each client×product pair, and returns the top-*k* results ranked by descending score.
+Accepts lists of `client_id` (m) and `product_id` (n), computes a fitness score for each client×product pair, and returns the top-*n* results ranked by descending score
 
 Output shape: `(client_id, product_id, score, component_scores)`
 
@@ -74,7 +81,8 @@ The score measures how fit a product is for a particular investor, computed acro
 ### Dimensions
 
 1. **risk_rating_match** — `product.risk_rating <= client.risk_rating`
-2. **concentration** — provides diversification to the current portfolio
+2. **concentration** — the product, when fit to the portfolio, will not create concentration issue
+   - It's computed as the concentration by adding the product to the portfolio by an amount concentration_test_position_pct_aum (defined in yaml)
 3. **has_similar_investment_experience**
    - holding of same `product_type`
    - holding of the same `product_family` as the `product_type`
@@ -86,9 +94,9 @@ The score measures how fit a product is for a particular investor, computed acro
 
 - All four PFS dimensions are included by default.
 - API callers may remove dimensions explicitly via `exclude_dimensions`.
-- The final score is used for relative ranking across candidate products, not as a hard pass/fail score.
 - The final score must be computed from included dimensions only (renormalized weights).
-- For concentration, use the same concentration method configured in `config/config_planbot.yaml` under `investor_readiness_score.score_concentration_risk`, but evaluate it on a hypothetical post-add portfolio:
+- The final score is used for relative ranking across candidate products, not as a hard pass/fail score.
+- For concentration, reuse the concentration method configured in `config/config_planbot.yaml` under `investor_readiness_score.score_concentration_risk`, but evaluate it on a hypothetical post-add portfolio:
   - `s_single_holding`
   - `s_region_exposure`
   - `s_asset_class_exposure`
@@ -111,7 +119,11 @@ Per pair `(client_id, product_id)`, compute:
 
 **1) Hard risk gate**
 
-- if `product.risk_rating > client.risk_rating`, then score is 0 and row is ranked at bottom.
+The computing logic depends on the input parameter `risk_rating_hard_filter`.
+- default to true
+  - if `product.risk_rating > client.risk_rating`, then score is 0 and row is ranked at bottom.
+- false
+  - above checking is bypassed and score is computed as normal
 
 **2) Component scores (0 to 10 scale before weighting)**
 
@@ -119,9 +131,12 @@ Per pair `(client_id, product_id)`, compute:
   - if gate passes, score by closeness of `product.risk_rating` to `client.risk_rating`
   - use:
 
-    `risk_rating_match_score = 10 * (1 - (client.risk_rating - product.risk_rating) / 4)`
+    `risk_rating_match_score = 10 * (1 - |client.risk_rating - product.risk_rating| / 4)`
 
   - clip to `[0, 10]`
+
+The above logic may change to yaml table definition later after empirical test.
+
 - **concentration_score**
   - computed using the same concentration method/pivots in `investor_readiness_score.score_concentration_risk`
   - sub-scores from `s_single_holding`, `s_region_exposure`, `s_asset_class_exposure`
@@ -197,13 +212,15 @@ Request:
     "product_type": "bond_fund",
     "asset_class": "fixed_income",
     "region": "north_america",
-    "industry": "government",
+    "sector": "government",
     "time_to_maturity": "2y",
     "coupon": 4.2,
     "trade_date": "2026-07-14"
   },
-  "top_n": 20,
+  "top_n": 3,
   "risk_rating_hard_filter": false,
+  "diversification": true,
+  "max_per_product_type": 2,
   "exclude_product_ids": ["PROD001"]
 }
 ```
@@ -212,11 +229,13 @@ Request:
 
 - `product_type` is always soft scoring only.
 - `risk_rating_hard_filter = true`: enforce `product.risk_rating <= query.risk_rating` as a hard eligibility filter.
-- `risk_rating_hard_filter = false`: no hard filter; include `risk_rating` in similarity score.
+- `risk_rating_hard_filter = false` (default): no hard filter; include `risk_rating` in similarity score.
 - `w_i` are read from YAML config (`config/config_planbot.yaml`), not from API request payload.
-- The same configured `w_i` source is used for both `search_similar` and `product_fitness_score`.
+- Both methods read their respective weight sets from `config/config_planbot.yaml` under `product_scoring.search_similar_weights` and `product_scoring.product_fitness_weights`.
 - If any dimension is not specified in `query`, remove that dimension from scoring and renormalize remaining weights to sum to 1.
 - Ranking is by descending similarity score only (relative ranking semantics).
+
+- `top_n` is optional; if omitted, defaults to 3.
 
 #### Similarity score
 
@@ -231,6 +250,33 @@ Request:
 - Final similarity score:
 
   `similarity_score = sum(w_i * s_i)` over included dimensions only.
+
+#### Response
+
+```json
+{
+  "results": [
+    {
+      "product_id": "ETF-HYG",
+      "name": "iShares iBoxx High Yield Corporate Bond ETF",
+      "product_type": "bond_fund",
+      "risk_rating": 3,
+      "expected_return": 6.2,
+      "similarity_score": 0.92
+    },
+    {
+      "product_id": "ETF-BND",
+      "name": "Vanguard Total Bond Market ETF",
+      "product_type": "bond_fund",
+      "risk_rating": 2,
+      "expected_return": 4.8,
+      "similarity_score": 0.84
+    }
+  ]
+}
+```
+
+Consumers needing full product details should call `search_by_product_id` with the returned `product_id` values.
 
 #### sigma_i — per-dimension scale for numeric similarity
 
@@ -259,7 +305,7 @@ Some query dimensions do not map 1:1 to a single `products` column. The table be
 | `product_type` | `products.product_type` | Direct column (categorical) |
 | `asset_class` | Derived: mapped from `products.product_type` | `bond_fund`, `bond` → `fixed_income`; `equity_fund`, `stock` → `equity`; `money_market_fund` → `cash`; `balanced_fund` → `balanced` |
 | `region` | `products.region` | Direct column (categorical) |
-| `industry` | `products.sector` | Direct column (categorical). The query key `industry` maps to the DB column `sector`. |
+| `sector` | `products.sector` | Direct column (categorical). |
 | `time_to_maturity` | Derived: `json_extract(type_specific, '$.maturity')` for bonds; `json_extract(type_specific, '$.effective_duration')` for bond funds | For `bond`: `DATEDIFF('day', trade_date, CAST(json_extract_string(type_specific, '$.maturity') AS DATE))`. For `bond_fund`: use `effective_duration * 365` (years→days). For other product types: dimension is excluded from scoring (no meaningful maturity concept). |
 | `coupon` | Derived: `json_extract(type_specific, '$.coupon_rate')` for bonds; `json_extract(type_specific, '$.dividend_yield')` or `performance_history` yield for equity/balanced funds | For `bond`: `CAST(json_extract_string(type_specific, '$.coupon_rate') AS DOUBLE)`. For `equity_fund`, `stock`, `balanced_fund`: `CAST(json_extract_string(type_specific, '$.dividend_yield') AS DOUBLE)`. For `bond_fund`: use `json_extract(type_specific, '$.ytm')` as coupon proxy. For `money_market_fund`: use `json_extract(type_specific, '$.yield_type')` as proxy. If extracted value is NULL for a given product, exclude that product from `coupon` dimension scoring. |
 | `trade_date` | API input only | Not a product column. Used to compute `time_to_maturity` (see above). Defaults to `CURRENT_DATE` if not specified. |
@@ -283,16 +329,18 @@ Request:
 {
   "client_ids": ["PB-HK-000001-8", "PB-HK-000002-6"],
   "source_product_id": "ETF-HYG",
-  "top_k_per_product_type": 2,
+  "max_per_product_type": 2,
   "top_n_per_client": 10,
   "risk_rating_hard_filter": false,
   "exclude_product_ids": ["ETF-HYG"]
 }
 ```
 
+- All `search_similar` parameters are passed through: `risk_rating_hard_filter`, `exclude_product_ids`, `diversification`, and `max_per_product_type` are forwarded directly with the same names. `top_n_per_client` maps to `top_n`.
+- `risk_rating_hard_filter` is optional; if omitted, defaults to `false`.
 - For each client, use the source product attributes as the `search_similar` query.
-- Apply diversification selection per client: group ranked results by `product_type`, pick top-*k* from each group.
-- `top_k_per_product_type` is optional; if omitted, defaults to 2.
+- Apply diversification selection per client: group ranked results by `product_type`, pick top-*max_per_product_type* from each group.
+- `max_per_product_type` is optional; if omitted, defaults to 2.
 - `top_n_per_client` is optional; if omitted, return all selected products after diversification grouping.
 
 Response:
@@ -316,7 +364,9 @@ Response:
 }
 ```
 
-### product_fitness_score
+Consumers needing full product details should call `search_by_product_id` with the returned `product_id` values.
+
+### search_product_by_fitness_score
 
 Request:
 
@@ -325,6 +375,7 @@ Request:
   "client_ids": ["PB-HK-000001-8", "PB-HK-000002-6"],
   "product_ids": ["ETF-HYG", "ETF-BND", "ETF-VOO", "PROD003"],
   "top_n": 10,
+  "risk_rating_hard_filter": true,
   "exclude_dimensions": ["better_product_than_existing"]
 }
 ```
@@ -362,7 +413,7 @@ product_scoring:
     product_type: 0.15
     asset_class: 0.10
     region: 0.10
-    industry: 0.05
+    sector: 0.05
     time_to_maturity: 0.10
     coupon: 0.05
   search_similar_sigmas:
@@ -389,6 +440,8 @@ product_scoring:
 
 The following must be satisfied for this spec to be considered implemented.
 
+All acceptance criteria except AC1 require a corresponding unit test.
+
 | # | Criterion | Verification |
 |---|---|---|
 | AC1 | `config/config_planbot.yaml` contains the `product_scoring` section with all weights, sigmas, and params defined above | Manual review of YAML file |
@@ -398,18 +451,20 @@ The following must be satisfied for this spec to be considered implemented.
 | AC5 | `risk_rating_hard_filter=true` enforces `product.risk_rating <= query.risk_rating`; `false` includes `risk_rating` in similarity score only | Unit test: compare result counts for both modes |
 | AC6 | `time_to_maturity` and `coupon` are correctly extracted from `type_specific` JSON per the extraction mapping table | Unit test: query bonds/bond funds, verify derived values |
 | AC7 | Products where a numeric dimension cannot be extracted (NULL JSON path) are excluded from that dimension's scoring but not from the result set | Unit test: include a product with NULL coupon, verify it ranks but coupon dimension excluded |
-| AC8 | `search_reinvestment_candidates()` accepts `client_ids` and `source_product_id`, groups by `product_type`, and selects top-*k* per group with *k* defaulting to 2 | Unit test: verify request/response contract and group counts ≤ k per client |
-| AC9 | `product_fitness_score()` applies hard risk gate (`product.risk_rating > client.risk_rating → score=0`), computes all 4 component scores (0-10 scale), and returns `(client_id, product_id, score, component_scores)` | Unit test: verify gate, verify component score ranges |
-| AC10 | `risk_rating_match_score` uses the explicit closeness formula `10 * (1 - (client.risk_rating - product.risk_rating) / 4)`, clipped to `[0, 10]` after the hard gate passes | Unit test: verify exact-match = 10 and lower-risk products score proportionally lower |
+| AC8 | `search_reinvestment_candidates()` accepts `client_ids` and `source_product_id`, groups by `product_type`, and selects top-*max_per_product_type* per group with *max_per_product_type* defaulting to 2 | Unit test: verify request/response contract and group counts ≤ max_per_product_type per client |
+| AC9 | `product_fitness_score()` when `risk_rating_hard_filter=true` (default), applies hard risk gate (`product.risk_rating > client.risk_rating → score=0`); when `false`, bypasses the gate. Computes all 4 component scores (0-10 scale), and returns `(client_id, product_id, score, component_scores)` | Unit test: verify gate behavior for both modes, verify component score ranges |
+| AC10 | `risk_rating_match_score` uses the explicit closeness formula `10 * (1 - |client.risk_rating - product.risk_rating| / 4)`, clipped to `[0, 10]` after the hard gate passes | Unit test: verify exact-match = 10 and lower-risk products score proportionally lower |
 | AC11 | `concentration_score` in PFS reuses `score_concentration_risk()` pivots on a hypothetical post-add portfolio using `concentration_test_position_pct_aum * client.aum`, then converts to `10 - hypothetical_concentration_risk_score` | Unit test: compare concentration score for diversified vs concentrated candidate additions |
 | AC12 | `better_product_score` uses notional-weighted uplift with `eps` from YAML; scores 0 when no comparable holdings exist (no baseline) | Unit test: client with no matching product_type holdings → 0; client with holdings → computed score |
 | AC13 | Renormalized weights sum to 1 when dimensions are excluded via `exclude_dimensions` | Unit test: call with excluded dimensions, verify weights sum to 1 |
 | AC14 | Ties in PFS ranking break by `expected_return` desc, then `product_id` asc | Unit test: two products with equal fitness score, verify ordering |
+| AC15 | `search_similar()` with `diversification=true` groups results by `product_type` and selects top-*max_per_product_type* per group with *max_per_product_type* defaulting to 2; with `diversification=false` returns a flat list ordered by similarity score desc | Unit test: compare result shapes for both modes, verify group counts ≤ max_per_product_type |
 
 ## Outstanding
 
-Items intentionally deferred from this spec. Tracked here for follow-up.
+Items identified during review. Tracked here for follow-up.
 
-| # | Item | Rationale | Suggested Approach |
-|---|---|---|---|
-| O5 | Goal alignment dimension | The existing `docs/prompts/prod_spec/goal_based_investing.md` suggests a potential 5th PFS dimension for matching products to client financial goals. | Future consideration. Not in v1 scope. |
+All known issues have been resolved. This section is intentionally left empty.
+
+| # | Item | Suggested Approach |
+|---|---|---|
