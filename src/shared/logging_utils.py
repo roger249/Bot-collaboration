@@ -55,6 +55,7 @@ def configure_logging(
     chat_history_enabled: bool = True,
     chat_history_max_bytes: int = 5_000_000,
     chat_history_backup_count: int = 5,
+    api_debug_level: str = "INFO",
 ) -> None:
     global _LAST_LOG_FILE, _LAST_CHAT_HISTORY_LOG_FILE
 
@@ -85,6 +86,7 @@ def configure_logging(
                 "log_level": level.upper(),
                 "log_file": str(log_file),
                 "chat_history_log_file": str(chat_history_log_file),
+                "api_debug_level": api_debug_level.upper(),
             },
             disable_existing_loggers=False,
         )

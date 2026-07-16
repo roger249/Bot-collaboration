@@ -2,7 +2,10 @@ import pytest
 
 from src import main
 from src.integrations.client_api import search_holdings_maturing
-from src.integrations.reinvestment_proposal import generate_reinvestment_proposal
+from src.integrations.reinvestment_proposal import (
+    propose_reinvestment,
+    propose_reinvestment_for_maturing_holdings,
+)
 
 
 def test_run_client_product_fit_analysis_monkeypatched(monkeypatch):
@@ -29,115 +32,27 @@ def test_run_client_product_fit_analysis_monkeypatched(monkeypatch):
     assert result is not None
 
 
-def test_maturing_to_reinvestment_pipeline():
-    """Integration test: maturing API → reinvestment proposal.
-
-    1. Call search_holdings_maturing to discover maturing bonds/bond funds.
-    2. Derive reinvestment_targets from results.
-    3. Call generate_reinvestment_proposal.
-    4. Verify response structure and non-empty candidate_products.
-    """
-    # 1 ─ Discover maturing holdings (bond + bond_fund) ───────────────
-    maturing = search_holdings_maturing(
-        product_types=["bond", "bond_fund"], within_days=365 * 10
-    )
-
-    # 2 ─ Derive reinvestment_targets ─────────────────────────────────
-    seen_clients: set = set()
-    targets: list[dict[str, str]] = []
-    for row in maturing:
-        cid = row["client_id"]
-        if cid not in seen_clients:
-            seen_clients.add(cid)
-            targets.append({
-                "client_id": cid,
-                "source_product_id": row["product_id"],
-            })
-
-    # Fallback: pick a known client+holding pair from the test DB
-    if not targets:
-        targets = [
-            {"client_id": "PB-HK-000010-9", "source_product_id": "ETF-HYG"},
-        ]
-
-    assert len(targets) > 0, "Expected at least one reinvestment target"
-
-    # 3 ─ Call reinvestment proposal ──────────────────────────────────
-    result = generate_reinvestment_proposal(
-        reinvestment_targets=targets,
-        response_mode="path",
-        include_debug_scores=True,
-    )
-
-    # 4 ─ Verify response structure ───────────────────────────────────
-    assert result["status"] == "success"
-    assert "results_by_client" in result
-    assert len(result["results_by_client"]) == len(targets)
-
-    for item in result["results_by_client"]:
-        assert "client_id" in item
-        assert "source_product_id" in item
-        assert "candidate_products" in item
-        assert "output_path" in item
-        assert "debug_scores" in item
-
-        # Non-empty unless client/source product lookup failed
-        if item["candidate_products"]:
-            cp = item["candidate_products"][0]
-            assert "product_id" in cp
-            assert "similarity_score" in cp
-
-        # debug_scores structure
-        ds = item["debug_scores"]
-        assert "investor_readiness_score" in ds
-        assert "product_fitness_scores" in ds
-
-
 # ---------------------------------------------------------------------------
 # Real end-to-end pipeline: maturing API → CrewAI LLM proposal
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.slow
-def test_maturing_to_llm_reinvestment_proposal():
-    """The API does all the work — consumer just discovers targets and calls it.
+def test_propose_reinvestment_for_maturing_holdings():
+    """The convenience API discovers maturing holdings and generates one proposal.
 
-    1. Discover maturing bonds/bond funds via ``search_holdings_maturing``.
-    2. Call ``generate_reinvestment_proposal`` — the API handles
-       client/profile/holdings composition, candidate scoring, and LLM invocation.
-    3. Verify the output file exists and contains required section headers.
+    1. Call ``propose_reinvestment_for_maturing_holdings`` — discovers
+       maturing bonds, caps at 1 client, and invokes the LLM.
+    2. Verify the output file exists and contains required section headers.
     """
-    # 1 ─ Discover maturing holdings ──────────────────────────────────
-    maturing = search_holdings_maturing(
-        product_types=["bond", "bond_fund"], within_days=365 * 10
-    )
-
-    seen_clients: set[str] = set()
-    targets: list[dict[str, str]] = []
-    for row in maturing:
-        cid = row["client_id"]
-        if cid not in seen_clients:
-            seen_clients.add(cid)
-            targets.append({
-                "client_id": cid,
-                "source_product_id": row["product_id"],
-            })
-
-    if not targets:
-        targets = [
-            {"client_id": "PB-HK-000010-9", "source_product_id": "ETF-HYG"},
-        ]
-
-    assert len(targets) > 0, "Expected at least one reinvestment target"
-
-    # 2 ─ Call the API — it handles everything ─────────────────────────
-    result = generate_reinvestment_proposal(
-        reinvestment_targets=targets[:1],
+    result = propose_reinvestment_for_maturing_holdings(
+        within_days=365 * 10,
+        max_clients=1,
         response_mode="both",
         include_debug_scores=True,
     )
 
-    # 3 ─ Verify output ───────────────────────────────────────────────
+    # Verify output
     assert result["status"] == "success"
     assert len(result["results_by_client"]) == 1
 
@@ -158,7 +73,7 @@ def test_maturing_to_llm_reinvestment_proposal():
 
 
 @pytest.mark.slow
-def test_maturing_multi_client_llm_reinvestment_proposal():
+def test_multi_client_propose_reinvestment_for_maturing_holdings():
     """Chain all clients with maturing bonds, up to 5, through the API at once.
 
     1. Discover all maturing bonds/bond funds.
@@ -194,7 +109,7 @@ def test_maturing_multi_client_llm_reinvestment_proposal():
     print(f"Processing {len(targets)} client(s): {[t['client_id'] for t in targets]}")
 
     # 2 ─ Call the API with ALL targets ────────────────────────────────
-    result = generate_reinvestment_proposal(
+    result = propose_reinvestment(
         reinvestment_targets=targets,
         response_mode="both",
         include_debug_scores=True,

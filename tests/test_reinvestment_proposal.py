@@ -15,7 +15,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from src.integrations.reinvestment_proposal import (
-    generate_reinvestment_proposal,
+    propose_reinvestment,
     _build_llm_input,
     _build_debug_scores,
     _summarize_holdings,
@@ -92,7 +92,7 @@ class TestReinvestmentProposal(unittest.TestCase):
         mock_product.side_effect = product_side_effect
         mock_candidates.return_value = SAMPLE_CANDIDATES
 
-        result = generate_reinvestment_proposal(
+        result = propose_reinvestment(
             reinvestment_targets=[
                 {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
             ],
@@ -115,7 +115,7 @@ class TestReinvestmentProposal(unittest.TestCase):
         """Missing client returns empty candidate_products and empty output_path."""
         mock_client.return_value = None
 
-        result = generate_reinvestment_proposal(
+        result = propose_reinvestment(
             reinvestment_targets=[
                 {"client_id": "NONEXISTENT", "source_product_id": "ETF-HYG"},
             ],
@@ -133,7 +133,7 @@ class TestReinvestmentProposal(unittest.TestCase):
         mock_client.return_value = SAMPLE_CLIENT
         mock_product.return_value = None
 
-        result = generate_reinvestment_proposal(
+        result = propose_reinvestment(
             reinvestment_targets=[
                 {"client_id": "PB-HK-000001-8", "source_product_id": "NONEXISTENT"},
             ],
@@ -154,7 +154,7 @@ class TestReinvestmentProposal(unittest.TestCase):
         )
         mock_candidates.return_value = SAMPLE_CANDIDATES
 
-        result = generate_reinvestment_proposal(
+        result = propose_reinvestment(
             reinvestment_targets=[
                 {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
             ],
@@ -176,7 +176,7 @@ class TestReinvestmentProposal(unittest.TestCase):
         )
         mock_candidates.return_value = SAMPLE_CANDIDATES
 
-        result = generate_reinvestment_proposal(
+        result = propose_reinvestment(
             reinvestment_targets=[
                 {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
             ],
@@ -198,7 +198,7 @@ class TestReinvestmentProposal(unittest.TestCase):
         )
         mock_candidates.return_value = SAMPLE_CANDIDATES
 
-        result = generate_reinvestment_proposal(
+        result = propose_reinvestment(
             reinvestment_targets=[
                 {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
             ],
@@ -220,7 +220,7 @@ class TestReinvestmentProposal(unittest.TestCase):
         )
         mock_candidates.return_value = SAMPLE_CANDIDATES
 
-        result = generate_reinvestment_proposal(
+        result = propose_reinvestment(
             reinvestment_targets=[
                 {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
             ],
@@ -243,7 +243,7 @@ class TestReinvestmentProposal(unittest.TestCase):
         )
         mock_candidates.return_value = SAMPLE_CANDIDATES
 
-        result = generate_reinvestment_proposal(
+        result = propose_reinvestment(
             reinvestment_targets=[
                 {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
             ],
@@ -264,7 +264,7 @@ class TestReinvestmentProposal(unittest.TestCase):
         )
         mock_candidates.return_value = SAMPLE_CANDIDATES
 
-        result = generate_reinvestment_proposal(
+        result = propose_reinvestment(
             reinvestment_targets=[
                 {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
             ],
@@ -287,7 +287,7 @@ class TestReinvestmentProposal(unittest.TestCase):
         )
         mock_candidates.return_value = SAMPLE_CANDIDATES
 
-        result = generate_reinvestment_proposal(
+        result = propose_reinvestment(
             reinvestment_targets=[
                 {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
             ],
@@ -308,7 +308,7 @@ class TestReinvestmentProposal(unittest.TestCase):
         )
         mock_candidates.return_value = SAMPLE_CANDIDATES
 
-        result = generate_reinvestment_proposal(
+        result = propose_reinvestment(
             reinvestment_targets=[
                 {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
                 {"client_id": "PB-HK-000002-6", "source_product_id": "ETF-HYG"},
@@ -328,7 +328,7 @@ class TestReinvestmentProposal(unittest.TestCase):
         )
         mock_candidates.return_value = SAMPLE_CANDIDATES
 
-        result = generate_reinvestment_proposal(
+        result = propose_reinvestment(
             reinvestment_targets=[
                 {"client_id": "", "source_product_id": "ETF-HYG"},
                 {"client_id": "PB-HK-000001-8", "source_product_id": ""},
@@ -343,7 +343,7 @@ class TestReinvestmentProposal(unittest.TestCase):
     def test_invalid_response_mode(self):
         """Invalid response_mode raises ValueError."""
         with self.assertRaises(ValueError):
-            generate_reinvestment_proposal(
+            propose_reinvestment(
                 reinvestment_targets=[
                     {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
                 ],
@@ -361,7 +361,6 @@ class TestLLMInputBuilder(unittest.TestCase):
             source_product=SAMPLE_PRODUCT,
             candidate_products=[SAMPLE_CANDIDATE_PRODUCT],
             include_market_outlook=True,
-            include_candidate_explanations=True,
         )
 
         self.assertIn("client_profile", payload)
@@ -378,7 +377,6 @@ class TestLLMInputBuilder(unittest.TestCase):
             source_product=SAMPLE_PRODUCT,
             candidate_products=[],
             include_market_outlook=True,
-            include_candidate_explanations=False,
         )
         self.assertIn("market_outlook", payload_with)
 
@@ -387,7 +385,6 @@ class TestLLMInputBuilder(unittest.TestCase):
             source_product=SAMPLE_PRODUCT,
             candidate_products=[],
             include_market_outlook=False,
-            include_candidate_explanations=False,
         )
         self.assertNotIn("market_outlook", payload_without)
 

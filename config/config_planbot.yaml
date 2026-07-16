@@ -52,9 +52,11 @@ reinvestment_proposal:
         purpose: Client profiles and suggested product for each client in csv format
     product_catalogs: 
       - name: ../shared/product_catalog/*.md
-        purpose: Overview of the CSV file and the structure of the product catalogs
+        purpose: Selected products to consider for reinvestment recommendation in markdown format
       - name: ../shared/product_catalog/*.csv
-        purpose: Details of the investable assets available for recommendation in csv format
+        purpose: Full list of the investable assets available for recommendation in csv format
+      - name: ../shared/product_catalog/*.json
+        purpose: Full product details including type_specific attributes in JSON format
   llm_model: deepseek_tool
 
 product_investor_matching:
@@ -82,7 +84,7 @@ product_investor_matching:
         purpose: Client profiles and suggested product for each client in csv format
     product_catalogs: 
       - name: ../shared/product_catalog/*.md
-        purpose: Overview of the CSV file and the structure of the product catalogs
+        purpose: Selected products to consider for reinvestment recommendation in markdown format
       - name: ../shared/product_catalog/*.csv
         purpose: Details of the investable assets available for recommendation in csv format
   llm_model: deepseek_tool
@@ -114,7 +116,7 @@ client_product_fit_analysis:
         purpose: Market outlook and sentiment analysis for the recommendation
     product_catalogs: 
       - name: ../shared/product_catalog/*.md
-        purpose: Overview of the CSV file and the structure of the product catalogs
+        purpose: Selected products to consider for reinvestment recommendation in markdown format
       - name: ../shared/product_catalog/*.csv
         purpose: Details of the investable assets available for recommendation in csv format
   llm_model: deepseek_tool
@@ -146,7 +148,7 @@ portfolio_review:
         purpose: Client profiles and suggested product for each client in csv format
     product_catalogs: 
       - name: ../shared/product_catalog/*.md
-        purpose: Overview of the CSV file and the structure of the product catalogs
+        purpose: Selected products to consider for reinvestment recommendation in markdown format
       - name: ../shared/product_catalog/*.csv
         purpose: Details of the investable assets available for recommendation in csv format
   llm_model: deepseek_tool

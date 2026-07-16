@@ -103,6 +103,7 @@ def run_workflow(app_config: AppConfig) -> WorkflowResult:
         chat_history_enabled=app_config.logging_chat_history_enabled,
         chat_history_max_bytes=app_config.logging_chat_history_max_bytes,
         chat_history_backup_count=app_config.logging_chat_history_backup_count,
+        api_debug_level=app_config.logging_api_debug_level,
     )
 
     current_spec_name = app_config.workflow.spec_file.name

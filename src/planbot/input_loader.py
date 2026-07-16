@@ -89,6 +89,10 @@ def load_references(root_dir: Path, glob_pattern: str | list[str]) -> list[Refer
             references.append(
                 ReferenceDocument(path=resolved, content=read_text(resolved), source_type="csv")
             )
+        elif suffix == ".json":
+            references.append(
+                ReferenceDocument(path=resolved, content=read_text(resolved), source_type="json")
+            )
         elif suffix == ".pdf":
             references.append(
                 ReferenceDocument(path=resolved, content=_convert_pdf_to_text(resolved), source_type="pdf")

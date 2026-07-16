@@ -181,6 +181,7 @@ def _enrich_holdings(conn: duckdb.DuckDBPyConnection, client_id: str) -> list[di
 
 def search_by_id(client_id: str) -> dict | None:
     """Return full client profile with nested holdings."""
+    LOGGER.debug("search_by_id input: client_id=%s", client_id)
     conn = _get_conn(read_only=True)
     try:
         row = conn.execute("""
@@ -213,6 +214,7 @@ def search_by_id(client_id: str) -> dict | None:
                     client[k] = v
 
         client["holdings"] = _enrich_holdings(conn, cid)
+        LOGGER.debug("search_by_id output: %s", client)
         return client
     finally:
         conn.close()
@@ -228,6 +230,7 @@ def search(**criteria: Any) -> list[dict]:
         concentration_score: float or [min, max]
         cash_score: float or [min, max]
     """
+    LOGGER.debug("search input: criteria=%s", criteria)
     conn = _get_conn(read_only=True)
     try:
         all_clients = _compute_derived_fields(conn)
@@ -255,6 +258,7 @@ def search(**criteria: Any) -> list[dict]:
             results.append(c)
 
         results.sort(key=lambda x: x.get("investor_readiness_score", 0), reverse=True)
+        LOGGER.debug("search output: %s", results)
         return results
     finally:
         conn.close()
@@ -269,6 +273,7 @@ def search_holdings_maturing(
 
     Joins holdings → products, extracts $.maturity from type_specific JSON.
     """
+    LOGGER.debug("search_holdings_maturing input: product_types=%s within_days=%s as_of_date=%s", product_types, within_days, as_of_date)
     conn = _get_conn(read_only=True)
     try:
         if product_types is None:
@@ -291,18 +296,21 @@ def search_holdings_maturing(
         params = [ref] + list(product_types) + [ref, ref, within_days]
         rows = conn.execute(query, params).fetchall()
 
-        return [{"client_id": r[0], "product_id": r[1], "notional": r[2], "days_to_mature": r[3]} for r in rows]
+        result = [{"client_id": r[0], "product_id": r[1], "notional": r[2], "days_to_mature": r[3]} for r in rows]
+        LOGGER.debug("search_holdings_maturing output: %s", result)
+        return result
     finally:
         conn.close()
 
 
 def search_by_investor_readiness_score(top_n: int | None = None) -> list[dict]:
     """Return clients ranked by investor readiness score."""
+    LOGGER.debug("search_by_investor_readiness_score input: top_n=%s", top_n)
     scores = run_score_card()
     if top_n is not None and top_n > 0:
         scores = scores[:top_n]
 
-    return [
+    result = [
         {
             "rank": i, "client_id": s.client_id, "name": s.name,
             "total_score": s.total_score, "s_cash": s.s_cash,
@@ -311,6 +319,8 @@ def search_by_investor_readiness_score(top_n: int | None = None) -> list[dict]:
         }
         for i, s in enumerate(scores, 1)
     ]
+    LOGGER.debug("search_by_investor_readiness_score output: %s", result)
+    return result
 
 
 def _match_range(value: Any, criterion: Any) -> bool:

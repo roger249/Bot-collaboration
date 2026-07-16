@@ -6,7 +6,7 @@ Reinvestment Analysis: "<Client>"
 instructions: |
 Summarize in 3-4 sentences:
 - The current product will be matured.
-- Recommended product for the reinvestment after the funding released from the maturing product.  Preferably on JP Morgagn Range Accrual Note (N02952)
+- Recommended product for the reinvestment after the funding released from the maturing product.  
 - Why the product is recommended.
 - Expected outcome (e.g., "improve long-term growth while managing downside risk")
 ```
@@ -24,6 +24,7 @@ Provide the terms of the recommended product with the following sections
 # Suggested Portfolio
 ```yaml
 instructions: |
+Assume a 1% yield of the cash position from maturing product if no investment been made.
 Please refer to the proposal_section_instructions/suggested_portfolio_instruction.md for the instruction to complete this section.
 ```
 

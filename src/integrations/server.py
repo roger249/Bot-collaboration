@@ -39,7 +39,7 @@ from src.integrations.product_tool import (
     search_reinvestment_candidates,
     search_product_by_fitness_score,
 )
-from src.integrations.reinvestment_proposal import generate_reinvestment_proposal
+from src.integrations.reinvestment_proposal import propose_reinvestment
 
 app = FastAPI(
     title="PlanBot API",
@@ -194,7 +194,7 @@ def get_reinvestment_proposals(body: dict) -> dict:
 
     Request body matches the ``generate_reinvestment_proposal`` contract.
     """
-    return generate_reinvestment_proposal(
+    return propose_reinvestment(
         reinvestment_targets=body["reinvestment_targets"],
         max_per_product_type=body.get("max_per_product_type", 2),
         top_n_per_client=body.get("top_n_per_client", 10),
@@ -202,6 +202,5 @@ def get_reinvestment_proposals(body: dict) -> dict:
         response_mode=body.get("response_mode", "path"),
         include_llm_input=body.get("include_llm_input", False),
         include_market_outlook=body.get("include_market_outlook", True),
-        include_candidate_explanations=body.get("include_candidate_explanations", True),
         include_debug_scores=body.get("include_debug_scores", False),
     )

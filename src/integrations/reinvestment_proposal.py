@@ -17,7 +17,7 @@ from io import StringIO
 from pathlib import Path
 from typing import Any
 
-from src.integrations.client_api import search_by_id
+from src.integrations.client_api import search_by_id, search_holdings_maturing
 from src.integrations.product_tool import (
     search_by_product_id,
     search_reinvestment_candidates,
@@ -36,7 +36,7 @@ _CONFIG_PATH = _ROOT_DIR / "config" / "config_planbot.yaml"
 # ---------------------------------------------------------------------------
 
 
-def generate_reinvestment_proposal(
+def propose_reinvestment(
     reinvestment_targets: list[dict[str, str]],
     max_per_product_type: int = 2,
     top_n_per_client: int = 10,
@@ -44,7 +44,6 @@ def generate_reinvestment_proposal(
     response_mode: str = "path",
     include_llm_input: bool = False,
     include_market_outlook: bool = True,
-    include_candidate_explanations: bool = True,
     include_debug_scores: bool = False,
 ) -> dict:
     """Generate reinvestment proposals for one or more target pairs.
@@ -65,8 +64,6 @@ def generate_reinvestment_proposal(
         Whether to include the assembled LLM input block in API output.
     include_market_outlook : bool
         Whether to attach market outlook references.
-    include_candidate_explanations : bool
-        Whether to attach scoring and shortlist rationale.
     include_debug_scores : bool
         Whether to return intermediate score-card output.
 
@@ -106,12 +103,99 @@ def generate_reinvestment_proposal(
             response_mode=response_mode,
             include_llm_input=include_llm_input,
             include_market_outlook=include_market_outlook,
-            include_candidate_explanations=include_candidate_explanations,
             include_debug_scores=include_debug_scores,
         )
         results.append(result)
 
     return {"status": "success", "results_by_client": results}
+
+
+# ---------------------------------------------------------------------------
+# Convenience: discover maturing → propose reinvestment
+# ---------------------------------------------------------------------------
+
+
+def propose_reinvestment_for_maturing_holdings(
+    *,
+    within_days: int = 365,
+    as_of_date: str | None = None,
+    max_clients: int = 5,
+    max_per_product_type: int = 2,
+    top_n_per_client: int = 10,
+    risk_rating_hard_filter: bool = True,
+    response_mode: str = "path",
+    include_llm_input: bool = False,
+    include_market_outlook: bool = True,
+    include_debug_scores: bool = False,
+) -> dict:
+    """Discover maturing bond/bond fund holdings and generate reinvestment proposals.
+
+    Calls :func:`search_holdings_maturing` internally, deduplicates by
+    client, caps at ``max_clients``, and delegates to
+    :func:`propose_reinvestment`.
+
+    Parameters
+    ----------
+    within_days : int
+        Maturity window in days (default 365).
+    as_of_date : str | None
+        Reference date for maturity calculation (default today).
+    max_clients : int
+        Safety cap on the number of clients to process (default 5).
+    max_per_product_type : int
+        Passed to :func:`propose_reinvestment`.
+    top_n_per_client : int
+        Passed to :func:`propose_reinvestment`.
+    risk_rating_hard_filter : bool
+        Passed to :func:`propose_reinvestment`.
+    response_mode : str
+        Passed to :func:`propose_reinvestment`.
+    include_llm_input : bool
+        Passed to :func:`propose_reinvestment`.
+    include_market_outlook : bool
+        Passed to :func:`propose_reinvestment`.
+    include_debug_scores : bool
+        Passed to :func:`propose_reinvestment`.
+
+    Returns
+    -------
+    dict
+        Same as :func:`propose_reinvestment`.
+    """
+    maturing = search_holdings_maturing(
+        product_types=["bond", "bond_fund"],
+        within_days=within_days,
+        as_of_date=as_of_date,
+    )
+
+    seen_clients: set[str] = set()
+    targets: list[dict[str, str]] = []
+    for row in maturing:
+        cid = row["client_id"]
+        if cid not in seen_clients:
+            seen_clients.add(cid)
+            targets.append({
+                "client_id": cid,
+                "source_product_id": row["product_id"],
+            })
+
+    targets = targets[:max_clients]
+
+    LOGGER.info(
+        "reinvest_maturing: discovered %d maturing across %d clients, processing %d",
+        len(maturing), len(seen_clients), len(targets),
+    )
+
+    return propose_reinvestment(
+        reinvestment_targets=targets,
+        max_per_product_type=max_per_product_type,
+        top_n_per_client=top_n_per_client,
+        risk_rating_hard_filter=risk_rating_hard_filter,
+        response_mode=response_mode,
+        include_llm_input=include_llm_input,
+        include_market_outlook=include_market_outlook,
+        include_debug_scores=include_debug_scores,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -129,7 +213,6 @@ def _process_one_target(
     response_mode: str,
     include_llm_input: bool,
     include_market_outlook: bool,
-    include_candidate_explanations: bool,
     include_debug_scores: bool,
 ) -> dict:
     """Fetch data, build reference files, invoke CrewAI, return result object."""
@@ -169,14 +252,10 @@ def _process_one_target(
     for c in candidates_raw:
         pid = c.get("product_id", "")
         prod = search_by_product_id(pid) or {}
-        candidate_products.append({
-            "product_id": pid,
-            "name": prod.get("name", ""),
-            "product_type": prod.get("product_type", ""),
-            "risk_rating": prod.get("risk_rating"),
-            "expected_return": prod.get("expected_return"),
-            "similarity_score": c.get("similarity_score"),
-        })
+        # Pass the full product dict (all 15 columns) plus similarity_score
+        full = dict(prod)  # shallow copy
+        full["similarity_score"] = c.get("similarity_score")
+        candidate_products.append(full)
 
     item["candidate_products"] = candidate_products
 
@@ -184,7 +263,7 @@ def _process_one_target(
     profile_md_abs, holdings_csv_abs = _build_client_reference_files(
         client_id, client_profile, source_product, source_product_id
     )
-    catalog_md_abs, catalog_csv_abs = _build_product_catalog_files(
+    catalog_json_abs = _build_product_catalog_files(
         client_id, source_product, candidate_products
     )
 
@@ -196,14 +275,14 @@ def _process_one_target(
             proposal_name="reinvestment_proposal",
             runtime_reference_overrides={
                 "client_profiles": [profile_md_abs, holdings_csv_abs],
-                "product_catalogs": [catalog_md_abs, catalog_csv_abs],
+                "product_catalogs": [catalog_json_abs],
             },
         )
         output_path = str(crew_result.output_path)
         markdown_output = crew_result.output_path.read_text()
     finally:
         # Clean up temp reference files
-        _cleanup_temp_files(profile_md_abs, holdings_csv_abs, catalog_md_abs, catalog_csv_abs)
+        _cleanup_temp_files(profile_md_abs, holdings_csv_abs, catalog_json_abs)
 
     if response_mode in ("path", "both"):
         item["output_path"] = output_path
@@ -218,7 +297,6 @@ def _process_one_target(
             source_product=source_product,
             candidate_products=candidate_products,
             include_market_outlook=include_market_outlook,
-            include_candidate_explanations=include_candidate_explanations,
         )
 
     # 7 ─ Debug scores (optional) ───────────────────────────────────────
@@ -324,74 +402,47 @@ def _build_product_catalog_files(
     client_id: str,
     source_product: dict,
     candidate_products: list[dict],
-) -> tuple[str, str]:
-    """Generate API-backed product catalog Markdown + CSV in the _generated dir.
+) -> str:
+    """Generate API-backed product catalog JSON in the _generated dir.
 
-    Returns paths relative to project root.
+    Returns path relative to project root.
     """
     root = _RUNS_DIR / client_id
     root.mkdir(parents=True, exist_ok=True)
 
-    # ── Catalog markdown ───────────────────────────────────────────────
-    lines = [
-        "# Product Catalog (API)",
-        "",
-        "The following products are the only investable candidates for this reinvestment proposal.",
-        "Do not recommend any product not listed below.",
-        "",
-        "## Source (Maturing) Product",
-        "",
-        f"- Product ID: {source_product.get('product_id', '')}",
-        f"- Name: {source_product.get('name', '')}",
-        f"- Product Type: {source_product.get('product_type', '')}",
-        f"- Risk Rating: {source_product.get('risk_rating', '')}",
-        f"- Expected Return: {source_product.get('expected_return', '')}%",
-        "",
-        "## Candidate Products",
-        "",
-    ]
-    for i, cp in enumerate(candidate_products, 1):
-        lines += [
-            f"### {i}. {cp.get('name', cp.get('product_id', ''))}",
-            "",
-            f"- Product ID: {cp.get('product_id', '')}",
-            f"- Product Type: {cp.get('product_type', '')}",
-            f"- Risk Rating: {cp.get('risk_rating', '')}",
-            f"- Expected Return: {cp.get('expected_return', '')}%",
-            f"- Similarity Score: {cp.get('similarity_score', '')}",
-            "",
-        ]
+    # ── Build full JSON payload ────────────────────────────────────────
+    # Serialize type_specific / performance_history for all three sections
+    def _serialize_json_fields(d: dict) -> dict:
+        out = dict(d)
+        for field in ("type_specific", "performance_history"):
+            val = out.get(field)
+            if isinstance(val, str):
+                try:
+                    out[field] = json.loads(val)
+                except (json.JSONDecodeError, TypeError):
+                    pass
+        return out
 
-    catalog_md = root / f"{client_id}_catalog.md"
-    catalog_md.write_text("\n".join(lines) + "\n")
-
-    # ── Catalog CSV ────────────────────────────────────────────────────
-    csv_buf = StringIO()
-    writer = csv.DictWriter(
-        csv_buf,
-        fieldnames=[
-            "product_id", "name", "product_type",
-            "risk_rating", "expected_return", "similarity_score",
+    payload = {
+        "catalog_version": "1.0",
+        "generated_for": client_id,
+        "instruction": (
+            "The following products are the only investable candidates "
+            "for this reinvestment proposal. Do not recommend any product "
+            "not listed below."
+        ),
+        "source_product": _serialize_json_fields(source_product),
+        "candidate_products": [
+            _serialize_json_fields(cp) for cp in candidate_products
         ],
-    )
-    writer.writeheader()
-    for cp in candidate_products:
-        writer.writerow({
-            "product_id": cp.get("product_id", ""),
-            "name": cp.get("name", ""),
-            "product_type": cp.get("product_type", ""),
-            "risk_rating": cp.get("risk_rating", ""),
-            "expected_return": cp.get("expected_return", ""),
-            "similarity_score": cp.get("similarity_score", ""),
-        })
+    }
 
-    catalog_csv = root / f"{client_id}_catalog.csv"
-    catalog_csv.write_text(csv_buf.getvalue())
-
-    return (
-        str(catalog_md.resolve().relative_to(_ROOT_DIR)),
-        str(catalog_csv.resolve().relative_to(_ROOT_DIR)),
+    catalog_json = root / f"{client_id}_catalog.json"
+    catalog_json.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, default=str) + "\n"
     )
+
+    return str(catalog_json.resolve().relative_to(_ROOT_DIR))
 
 
 # ---------------------------------------------------------------------------
@@ -404,7 +455,6 @@ def _build_llm_input(
     source_product: dict,
     candidate_products: list[dict],
     include_market_outlook: bool,
-    include_candidate_explanations: bool,
 ) -> dict:
     """Assemble the structured ``llm_input`` payload for the LLM."""
     payload: dict[str, Any] = {
@@ -445,9 +495,6 @@ def _build_llm_input(
 
     if include_market_outlook:
         payload["market_outlook"] = {"note": "market outlook not yet configured"}
-
-    if include_candidate_explanations:
-        payload["candidate_rationale"] = "Candidate rationales not yet assembled."
 
     return payload
 

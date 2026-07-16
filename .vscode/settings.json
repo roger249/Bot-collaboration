@@ -23,5 +23,15 @@
             "attached": true
         }
     ],
-    "duckdb.defaultDatabase": "planbot"
+    "duckdb.defaultDatabase": "planbot",
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "DuckDB",
+            "name": "PlanBot",
+            "group": "PlanBot",
+            "database": "${workspaceFolder:Bot collaboration}/data/planbot/db/planbot.duckdb"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
 }

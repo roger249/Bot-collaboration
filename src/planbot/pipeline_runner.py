@@ -124,6 +124,7 @@ class PipelineRunner:
             chat_history_enabled=self.app_config.logging_chat_history_enabled,
             chat_history_max_bytes=self.app_config.logging_chat_history_max_bytes,
             chat_history_backup_count=self.app_config.logging_chat_history_backup_count,
+            api_debug_level=self.app_config.logging_api_debug_level,
         )
 
         raw_config = orchestrator.load_config()

@@ -216,13 +216,17 @@ def _row_to_dict(row: tuple, cols: list[str] = COLUMNS) -> dict:
 
 def search_by_product_id(product_id: str) -> dict | None:
     """Look up a single product by its ``product_id``."""
+    LOGGER.debug("search_by_product_id input: product_id=%s", product_id)
     conn = _get_conn(read_only=True)
     try:
         sql = f"SELECT {', '.join(COLUMNS)} FROM products WHERE product_id = ?"
         row = conn.execute(sql, [product_id]).fetchone()
         if row is None:
+            LOGGER.debug("search_by_product_id output: product_id=%s found=False", product_id)
             return None
-        return _row_to_dict(row)
+        result = _row_to_dict(row)
+        LOGGER.debug("search_by_product_id output: %s", result)
+        return result
     finally:
         conn.close()
 
@@ -334,6 +338,9 @@ def search_similar(
     query = query or {}
     trade_date_str = query.get("trade_date", date.today().isoformat())
 
+    LOGGER.debug("search_similar input: top_n=%s risk_rating_hard_filter=%s diversification=%s max_per_product_type=%s exclude=%s query=%s",
+                 top_n, risk_rating_hard_filter, diversification, max_per_product_type, exclude_product_ids, query)
+
     conn = _get_conn(read_only=True)
     try:
         # Fetch all products
@@ -404,7 +411,7 @@ def search_similar(
         result = scored[:top_n]
 
     # Build response — minimal fields
-    return {
+    response = {
         "results": [
             {
                 "product_id": p["product_id"],
@@ -417,6 +424,8 @@ def search_similar(
             for p in result
         ],
     }
+    LOGGER.debug("search_similar output: %s", response)
+    return response
 
 
 # ── 3. search_reinvestment_candidates ─────────────────────────────────────
@@ -448,6 +457,8 @@ def search_reinvestment_candidates(
     exclude_product_ids : list[str] | None
         Passed through to search_similar.
     """
+    LOGGER.debug("search_reinvestment_candidates input: client_ids=%s source_product_id=%s max_per_product_type=%s top_n_per_client=%s risk_rating_hard_filter=%s exclude=%s",
+                 client_ids, source_product_id, max_per_product_type, top_n_per_client, risk_rating_hard_filter, exclude_product_ids)
     source = search_by_product_id(source_product_id)
     if source is None:
         raise ValueError(f"Source product not found: {source_product_id}")
@@ -497,7 +508,9 @@ def search_reinvestment_candidates(
             for r in client_results
         ]
 
-    return {"results_by_client": results}
+    response = {"results_by_client": results}
+    LOGGER.debug("search_reinvestment_candidates output: %s", response)
+    return response
 
 
 # ── 4. search_product_by_fitness_score ────────────────────────────────────

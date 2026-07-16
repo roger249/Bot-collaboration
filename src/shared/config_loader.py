@@ -44,6 +44,7 @@ class AppConfig(BaseModel):
     logging_chat_history_backup_count: int
     logging_chat_history_body_max_chars: int
     logging_chat_history_redact_fields: list[str]
+    logging_api_debug_level: str
     logging_crewai_verbose: bool
     author: BotConfig
     reviewer: BotConfig
@@ -85,6 +86,7 @@ def load_config(config_path: str | Path) -> AppConfig:
             chat_history_backup_count: int | None = None
             chat_history_body_max_chars: int | None = None
             chat_history_redact_fields: list[str] | None = None
+            api_debug_level: str | None = None
             crewai_verbose: bool | None = None
 
         class RawApp(BaseModel):
@@ -137,6 +139,7 @@ def load_config(config_path: str | Path) -> AppConfig:
         logging_chat_history_max_bytes=int(logging_data.get("chat_history_max_bytes", 5_000_000)),
         logging_chat_history_backup_count=int(logging_data.get("chat_history_backup_count", 5)),
         logging_chat_history_body_max_chars=int(logging_data.get("chat_history_body_max_chars", 20_000)),
+        logging_api_debug_level=logging_data.get("api_debug_level", "INFO"),
         logging_chat_history_redact_fields=[
             str(item).strip()
             for item in logging_data.get("chat_history_redact_fields", ["authorization", "api_key"])

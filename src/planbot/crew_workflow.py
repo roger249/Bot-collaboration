@@ -442,6 +442,7 @@ def run_crew_planbot(
         chat_history_enabled=app_config.logging_chat_history_enabled,
         chat_history_max_bytes=app_config.logging_chat_history_max_bytes,
         chat_history_backup_count=app_config.logging_chat_history_backup_count,
+        api_debug_level=app_config.logging_api_debug_level,
     )
     configure_transport_logging(
         body_max_chars=app_config.logging_chat_history_body_max_chars,
