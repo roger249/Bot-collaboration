@@ -143,8 +143,8 @@ def test_db_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     db_path = tmp_path / "test_planbot.duckdb"
     _seed_minimal_db(db_path)
 
-    # Patch DB_PATH in client_api
-    monkeypatch.setattr("src.planbot.client_api.DB_PATH", db_path)
+    # Patch DB_PATH and CONFIG_PATH in client_api
+    monkeypatch.setattr("src.integrations.client_api.DB_PATH", db_path)
 
     # Also write a minimal config for scoring
     config_path = tmp_path / "config_planbot.yaml"
@@ -165,7 +165,7 @@ def test_db_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         }),
         encoding="utf-8",
     )
-    monkeypatch.setattr("src.planbot.client_api.CONFIG_PATH", config_path)
+    monkeypatch.setattr("src.integrations.client_api.CONFIG_PATH", config_path)
 
     return db_path
 
@@ -311,7 +311,7 @@ class TestSearchByInvestorReadinessScore:
                 conn.close()
 
         monkeypatch.setattr(
-            "src.planbot.client_api.run_score_card", _fake_run_score_card
+            "src.integrations.client_api.run_score_card", _fake_run_score_card
         )
 
     def test_returns_ranked_clients(self, test_db_path: Path):

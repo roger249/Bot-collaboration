@@ -100,7 +100,7 @@ Return clients ranked by their investor readiness score.
 |---|---|---|---|
 | `top_n` | `int` | no | Number of top results to return.  Default returns all. |
 
-A prototype of the score card is implemented in `src/planbot/investor_readiness_score.py`.  Will refactor this to the API.
+A prototype of the score card has been implemented in `src/planbot/investor_readiness_score.py`.  Will refactor this to the API.
 
 ```
 search_by_investor_readiness_score(top_n=10) → list[{rank, client_id, name, total_score, …}]

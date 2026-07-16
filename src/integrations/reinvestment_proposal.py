@@ -17,6 +17,8 @@ from io import StringIO
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from src.integrations.client_api import search_by_id, search_holdings_maturing
 from src.integrations.product_tool import (
     search_by_product_id,
@@ -267,7 +269,14 @@ def _process_one_target(
         client_id, source_product, candidate_products
     )
 
-    # 5 ─ Invoke CrewAI with overrides pointing to generated files ───────
+    # 5 ─ Read cleanup preference from planbot config ────────────────────
+    planbot_config = yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
+    cleanup_temp = _nested_get(planbot_config, ["common", "cleanup_temp_files"], True)
+
+    # 6 ─ Build client-scoped output filename to avoid overwrites ────────
+    output_override = f"runs/reinvestment_proposal/reinvestment_proposal_{client_id}.md"
+
+    # 7 ─ Invoke CrewAI with overrides pointing to generated files ───────
     try:
         crew_result = run_crew_planbot(
             app_config=app_config,
@@ -277,12 +286,18 @@ def _process_one_target(
                 "client_profiles": [profile_md_abs, holdings_csv_abs],
                 "product_catalogs": [catalog_json_abs],
             },
+            output_file_override=output_override,
         )
         output_path = str(crew_result.output_path)
         markdown_output = crew_result.output_path.read_text()
     finally:
-        # Clean up temp reference files
-        _cleanup_temp_files(profile_md_abs, holdings_csv_abs, catalog_json_abs)
+        if cleanup_temp:
+            _cleanup_temp_files(profile_md_abs, holdings_csv_abs, catalog_json_abs)
+        else:
+            LOGGER.info(
+                "cleanup_temp_files=false; keeping temp files: %s, %s, %s",
+                profile_md_abs, holdings_csv_abs, catalog_json_abs,
+            )
 
     if response_mode in ("path", "both"):
         item["output_path"] = output_path
@@ -331,23 +346,55 @@ def _build_client_reference_files(
     root.mkdir(parents=True, exist_ok=True)
 
     # ── Profile markdown ───────────────────────────────────────────────
-    risk = client_profile.get("risk_rating", "N/A")
-    name = client_profile.get("name", client_id)
-    age = client_profile.get("age", "N/A")
-    occupation = client_profile.get("occupation", "N/A")
-    aum = client_profile.get("aum")
-    aum_str = f"- AUM: ${aum:,.0f}" if aum else ""
-
+    # Build a structured markdown section with ALL client fields
+    # Fields likely to be empty are listed but marked N/A when missing
+    cp = client_profile
     profile_lines = [
         "# Client Profile",
         "",
-        f"- Name: {name}",
-        f"- Age: {age}",
-        f"- Occupation: {occupation}",
-        f"- Risk tolerance: {risk}",
+        f"- Client ID: {cp.get('client_id', client_id)}",
+        f"- Name: {cp.get('name', 'N/A')}",
+        f"- Age: {cp.get('age', 'N/A')}",
+        f"- Birthdate: {cp.get('birthdate', 'N/A')}",
+        f"- Occupation: {cp.get('occupation', 'N/A')}",
+        f"- Marital Status: {cp.get('marital_status', 'N/A')}",
+        f"- Children Info: {cp.get('children_info', 'N/A')}",
     ]
-    if aum_str:
-        profile_lines.append(aum_str)
+
+    aum = cp.get('aum')
+    if aum:
+        profile_lines.append(f"- AUM: ${aum:,.0f}")
+    else:
+        profile_lines.append("- AUM: N/A")
+
+    profile_lines += [
+        f"- Risk Tolerance (1-5): {cp.get('risk_rating', 'N/A')}",
+        f"- Region: {cp.get('region', 'N/A')}",
+        f"- Cash %: {cp.get('cash_pct', 'N/A')}",
+        f"- Liquidity Need: {cp.get('liquidity_need', 'N/A')}",
+        f"- Income Stability: {cp.get('income_stability', 'N/A')}",
+        f"- Investment Objective: {cp.get('investment_objective', 'N/A')}",
+    ]
+
+    # Derived scores
+    irs = cp.get('investor_readiness_score')
+    if irs is not None:
+        profile_lines.append(f"- Investor Readiness Score: {irs}")
+    profile_lines += [
+        f"- Cash Score: {cp.get('cash_score', 'N/A')}",
+        f"- Concentration Score: {cp.get('concentration_score', 'N/A')}",
+        f"- Active Score: {cp.get('active_score', 'N/A')}",
+        f"- Life Stage Score: {cp.get('life_stage_score', 'N/A')}",
+    ]
+
+    # Portfolio composition
+    pt_holdings = cp.get('product_types_in_holdings', [])
+    if pt_holdings:
+        profile_lines.append(f"- Product Types Held: {', '.join(pt_holdings)}")
+    has_fund = cp.get('has_fund')
+    if has_fund is not None:
+        profile_lines.append(f"- Has Fund Holdings: {'Yes' if has_fund else 'No'}")
+
     profile_lines += [
         "",
         "# Wallet inflow Event",
@@ -361,14 +408,14 @@ def _build_client_reference_files(
 
     # ── Holdings CSV ───────────────────────────────────────────────────
     holdings = client_profile.get("holdings", [])
+    holdings_fieldnames = [
+        "client_id", "holding_id", "product_id", "instrument_name",
+        "symbol", "asset_class", "region", "currency", "quantity",
+        "book_cost", "market_value", "unrealized_pl", "unrealized_pl_pct",
+        "yield_pct", "risk_bucket", "esg_score", "liquidity",
+    ]
     csv_buf = StringIO()
-    writer = csv.DictWriter(
-        csv_buf,
-        fieldnames=[
-            "client_id", "holding_id", "product_id",
-            "instrument_name", "market_value", "asset_class",
-        ],
-    )
+    writer = csv.DictWriter(csv_buf, fieldnames=holdings_fieldnames)
     writer.writeheader()
     for h in holdings:
         writer.writerow({
@@ -376,8 +423,19 @@ def _build_client_reference_files(
             "holding_id": h.get("holding_id", ""),
             "product_id": h.get("product_id", ""),
             "instrument_name": h.get("instrument_name", ""),
-            "market_value": h.get("market_value", 0),
+            "symbol": h.get("symbol", ""),
             "asset_class": h.get("asset_class", ""),
+            "region": h.get("region", ""),
+            "currency": h.get("currency", ""),
+            "quantity": h.get("quantity", 0),
+            "book_cost": h.get("book_cost", 0),
+            "market_value": h.get("market_value", 0),
+            "unrealized_pl": h.get("unrealized_pl", 0),
+            "unrealized_pl_pct": h.get("unrealized_pl_pct", 0),
+            "yield_pct": h.get("yield_pct", 0),
+            "risk_bucket": h.get("risk_bucket", ""),
+            "esg_score": h.get("esg_score", ""),
+            "liquidity": h.get("liquidity", ""),
         })
     holdings_csv = root / f"{client_id}_holdings.csv"
     holdings_csv.write_text(csv_buf.getvalue())
@@ -387,6 +445,15 @@ def _build_client_reference_files(
         str(profile_md.resolve().relative_to(_ROOT_DIR)),
         str(holdings_csv.resolve().relative_to(_ROOT_DIR)),
     )
+
+
+def _nested_get(d: dict, keys: list[str], default: Any = None) -> Any:
+    """Safely traverse nested dict by a list of keys."""
+    for key in keys:
+        if not isinstance(d, dict):
+            return default
+        d = d.get(key, {})
+    return d if d != {} else default
 
 
 def _cleanup_temp_files(*paths: str) -> None:

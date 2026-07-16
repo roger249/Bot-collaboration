@@ -4,6 +4,7 @@ common:
 # Below are default folder locations to use unless it's specified in the individual proposal section.  In such case, the
 # setting in the proposal section will override the common setting
   crewai_config_folder: config/crewai/planbot
+  cleanup_temp_files: false # If true, temporary files generated during processing will be deleted after use.  If false, they will be kept for debugging.
 
 stock_analysis_proposal:
   task: stock_analysis_proposal_task

@@ -14,16 +14,30 @@ The goals are:
 
 This spec covers the reinvestment proposal only. It does not redesign the proposal text itself, only how the input data are gathered and assembled for the LLM.
 
+### Sprint 1 status (completed)
+
+| Deliverable | Status | Files |
+|---|---|---|
+| `generate_reinvestment_proposal(...)` builder | ✅ | `src/integrations/reinvestment_proposal.py` |
+| `POST /api/v1/reinvestment-proposals` endpoint | ✅ | `src/integrations/server.py` |
+| API-backed client/product catalog overrides for CrewAI | ✅ | generated under `runs/reinvestment_proposal/_generated/` |
+| Unit tests (mocked) | ✅ 17 tests | `tests/test_reinvestment_proposal.py` |
+| Integration test (single-client, real LLM) | ✅ | `tests/test_run_client_investment_proposal.py` |
+| Integration test (multi-client, up to 5, real LLM) | ✅ | `tests/test_run_client_investment_proposal.py` |
+| FastAPI HTTP switch for data retrieval | 🔜 Sprint 2 | `docs/prod_spec/reinvestment_proposal_sprint2.md` |
+
+**Implementation note (v1):** Data retrieval currently uses direct Python imports (`src.integrations.client_api`, `src.integrations.product_tool`). Switching to FastAPI HTTP calls is deferred to Sprint 2. The API contract and response shapes are identical regardless of transport.
+
 ## Scope
 
 ### In scope
 
 - Reinvestment proposal generation for one or more targets per request (`reinvestment_targets`), processed by iterating target pairs.
 - Current trigger mode for this API: caller provides `reinvestment_targets` directly (`client_id` + `source_product_id` per target).
-- Retrieval of client profile and holdings from the client API (FastAPI).
-- Retrieval of source products and candidate reinvestment products from the product API.
+- Retrieval of client profile and holdings from the integration APIs (local Python in v1; FastAPI HTTP in Sprint 2).
+- Retrieval of source products and candidate reinvestment products from the integration APIs (local Python in v1; FastAPI HTTP in Sprint 2).
 - Assembly of a structured `llm_input` payload for the LLM.
-- Local proposal builder with remote FastAPI data retrieval.
+- Local proposal builder with integration API data retrieval (local Python in v1; FastAPI HTTP target for Sprint 2).
 
 ### Out of scope
 
@@ -35,12 +49,14 @@ This spec covers the reinvestment proposal only. It does not redesign the propos
 
 ## Current state
 
-Today the reinvestment proposal is fed by files such as:
+**Before Sprint 1:** The reinvestment proposal was fed by files such as:
 
 - client profile markdown and CSV
 - product catalog markdown and CSV
 - market outlook markdown files
 - static proposal instructions and section templates
+
+**After Sprint 1:** The proposal builder now retrieves client/profile/holdings from the integration APIs, fetches reinvestment candidates via the product API, generates API-backed product catalog reference files, and invokes CrewAI with all references overridden. Both client profile and product catalog data come from the API layer — no static client/product files are read. Data retrieval uses direct Python imports in v1; FastAPI HTTP switch is deferred to Sprint 2.
 
 The generated output includes:
 
@@ -62,9 +78,9 @@ The proposal content should remain similar. The refactor only changes the data-l
 Implement a Python function that:
 
 1. Accepts a request payload containing reinvestment targets and proposal options.
-2. Fetches client profile and holdings from the client FastAPI endpoints.
+2. Fetches client profile and holdings from the integration APIs (local Python in v1).
 3. Accepts trigger inputs directly (`reinvestment_targets`) without doing maturity discovery internally.
-4. Fetches reinvestment candidate products from the product FastAPI endpoints.
+4. Fetches reinvestment candidate products from the integration APIs (local Python in v1).
 5. Builds a structured context payload for the LLM.
 6. Returns per-client generation outputs according to `response_mode`, plus optional debug/context fields controlled by include flags.
 
@@ -94,7 +110,7 @@ Later versions can add a separate orchestration endpoint that first calls maturi
 
 ### 2. Retrieve client context
 
-Use the client FastAPI endpoints to retrieve:
+Use the integration APIs to retrieve:
 
 - full client profile
 - holdings
@@ -104,7 +120,7 @@ The reinvestment proposal should not read client CSV files directly.
 
 ### 3. Retrieve candidate products
 
-Use the product FastAPI endpoints to retrieve:
+Use the integration APIs to retrieve:
 
 - source product metadata
 - reinvestment candidates from `search_reinvestment_candidates`
@@ -235,21 +251,21 @@ Response mode behavior:
 
 ## Data retrieval contract
 
-### Client API usage (remote FastAPI)
+### Client API usage (v1: local Python; Sprint 2: remote FastAPI)
 
-The reinvestment proposal generator should call the client FastAPI endpoints for:
+The reinvestment proposal generator should call the client APIs for:
 
-- `GET /api/v1/clients/{client_id}`
-- `GET /api/v1/clients/holdings/maturing` if needed for maturity-triggered reinvestment discovery
-- `POST /api/v1/clients/search` only if filtering by portfolio criteria is needed for shortlist selection
+- `search_by_id(client_id)` (v1) / `GET /api/v1/clients/{client_id}` (Sprint 2)
+- `search_holdings_maturing(...)` if needed for maturity-triggered reinvestment discovery
+- `search(...)` only if filtering by portfolio criteria is needed for shortlist selection
 
-### Product API usage (remote FastAPI)
+### Product API usage (v1: local Python; Sprint 2: remote FastAPI)
 
-The reinvestment proposal generator should call the product FastAPI endpoints for:
+The reinvestment proposal generator should call the product APIs for:
 
-- `GET /api/v1/products/{product_id}`
-- `POST /api/v1/products/reinvestment-candidates`
-- `POST /api/v1/products/search` only if direct similarity control is needed
+- `search_by_product_id(pid)` (v1) / `GET /api/v1/products/{product_id}` (Sprint 2)
+- `search_reinvestment_candidates(...)` (v1) / `POST /api/v1/products/reinvestment-candidates` (Sprint 2)
+- `search_similar(...)` only if direct similarity control is needed
 
 ## LLM context assembly
 
@@ -319,9 +335,9 @@ Use the product reinvestment candidate API to assemble the shortlist before invo
 
 Expose the same Python function through a thin HTTP layer.
 
-### Step 5: Implement reinvestment endpoint
+### Step 5: Implement reinvestment endpoint ✅ DONE
 
-Implement `POST /api/v1/reinvestment-proposals` as a thin endpoint wrapper that delegates to the proposal builder and enforces the documented request/response flags (`response_mode`, `include_llm_input`, `include_debug_scores`).
+Implemented `POST /api/v1/reinvestment-proposals` in `src/integrations/server.py` as a thin endpoint wrapper that delegates to the proposal builder. See Sprint 1 status above for details.
 
 ## Acceptance criteria
 
@@ -343,7 +359,7 @@ Items intentionally deferred from this spec. Tracked here for follow-up.
 
 | # | Item | Suggested Approach |
 |---|---|---|
-| None | No open outstanding items in this section. | Keep this section for future tracking if new open issues are identified. |
+| N/A | No open Sprint 1 items. | Sprint 2 scope is defined separately — see `docs/prod_spec/reinvestment_proposal_sprint2.md`. |
 
 ## Debug output
 
@@ -360,9 +376,14 @@ Required debug data:
 
 ## Recommendation
 
-Start with a local Python API that accepts `reinvestment_targets`, because that gives the cleanest migration path from file-backed generation to API-backed generation.
+Sprint 1 delivered a working end-to-end pipeline. The builder accepts `reinvestment_targets`, fetches all data from the integration APIs, overrides static reference files with API-backed content, and invokes CrewAI to generate real proposals.
 
-Once that is stable, wrap it in FastAPI with the same request/response schema so the main module can call it remotely without changing business logic.
+Sprint 2 priorities (see `docs/prod_spec/reinvestment_proposal_sprint2.md`):
+1. Switch data retrieval to FastAPI HTTP calls.
+2. Add a discovery/orchestration endpoint.
+3. Add bounded concurrency.
+4. Add compact LLM input format.
+5. Add deterministic candidate explanations.
 
 ## Not for implementation now
 

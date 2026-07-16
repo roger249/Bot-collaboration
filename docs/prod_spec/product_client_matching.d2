@@ -1,0 +1,87 @@
+direction: down
+# grid-rows: 6
+grid-columns: 2
+
+client_db -> irs -> potential_client
+
+product_db -> selected_products: bank, RM, top selling
+
+selected_products -> pfs
+potential_client -> pfs 
+pfs -> matching_scores -> llm
+llm -> proposal
+
+
+selected_products: Selected Products
+
+llm: |md
+    ## AI assisted proposal generation
+    - Refine fitness with the descriptive language in client, product, market outlook, analysis report.
+    - Pick the best product for each client based on the matching scores and the investor readiness scorecard.
+    - Scenario Analysis
+|
+llm.shape: rectangle
+
+proposal: Proposal
+
+client_db: |md
+    ## Client Database
+    - Age
+    - Gender
+    - Married
+    - Tax Residence
+    - Income
+    - Investment goals
+    - Holdings
+|
+
+potential_client: |md
+    ## Top-n Selected Clients
+    - Readiness Score
+|
+
+potential_client.shape: rectangle
+
+matching_scores: |md
+    ## Matching Scores
+    - (client1, product1, score 1)
+    - (client1, product2, score 2)
+    - (client2, product1, score 3)
+|
+
+matching_scores.shape: rectangle
+
+product_db: |md
+    ## Products Catalog
+    - Asset class
+    - Risk rating
+    - Liquidity
+    - Historical performance
+        - Expected return
+        - Volatility
+        - Max drawdown
+    - Complexity and other risk metrics
+|
+
+client_db.shape: rectangle
+
+product_db.shape: rectangle
+
+irs: |md
+    ## Investor Readiness Scorecard
+    - % Cash or equivalents
+    - Concentration Risk
+    - Investment experience
+    - Life stage (Number of potential needs)
+|
+irs.shape: step
+irs.style.fill: linen
+
+pfs: |md
+    ## Product Fitness Scorecard
+    - Concentration Risk
+    - Investment experience
+    - Life stage (Number of potential needs)
+|
+pfs.shape: step
+pfs.style.fill: linen

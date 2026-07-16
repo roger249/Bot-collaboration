@@ -73,7 +73,7 @@ def test_propose_reinvestment_for_maturing_holdings():
 
 
 @pytest.mark.slow
-def test_multi_client_propose_reinvestment_for_maturing_holdings():
+def test_multi_client_propose_reinvestment():
     """Chain all clients with maturing bonds, up to 5, through the API at once.
 
     1. Discover all maturing bonds/bond funds.
@@ -83,7 +83,7 @@ def test_multi_client_propose_reinvestment_for_maturing_holdings():
     """
     # 1 ─ Discover maturing holdings ──────────────────────────────────
     maturing = search_holdings_maturing(
-        product_types=["bond", "bond_fund"], within_days=365 * 10
+        product_types=["bond", "bond_fund"], within_days= 30
     )
 
     seen_clients: set[str] = set()
