@@ -8,6 +8,7 @@ import re
 import sys
 import time
 import uuid
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -411,6 +412,7 @@ def run_crew_planbot(
     proposal_name: str = "portfolio_review",
     runtime_reference_overrides: dict[str, list[str]] | None = None,
     output_file_override: str | Path | None = None,
+    api_resolver: Callable[[str], ReferenceDocument] | None = None,
 ) -> PlanBotResult:
     """
     This function will build the prompt payload as follow.
@@ -466,7 +468,7 @@ def run_crew_planbot(
                 effective_globs,
             )
 
-        docs = load_references(app_config.root_dir, effective_globs)
+        docs = load_references(app_config.root_dir, effective_globs, api_resolver=api_resolver)
         loaded_sections[section_name] = (section_cfg.purpose, docs)
         all_docs.extend(docs)
         LOGGER.info("Loaded %s document(s) for section '%s' using globs %s", len(docs), section_name, effective_globs)

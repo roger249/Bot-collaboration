@@ -1,11 +1,10 @@
 import pytest
 
+from fastapi.testclient import TestClient
 from src import main
 from src.integrations.client_api import search_holdings_maturing
-from src.integrations.reinvestment_proposal import (
-    propose_reinvestment,
-    propose_reinvestment_for_maturing_holdings,
-)
+from src.integrations.reinvestment_proposal import propose_reinvestment
+from src.integrations.server import app
 
 
 def test_run_client_product_fit_analysis_monkeypatched(monkeypatch):
@@ -38,19 +37,34 @@ def test_run_client_product_fit_analysis_monkeypatched(monkeypatch):
 
 
 @pytest.mark.slow
-def test_propose_reinvestment_for_maturing_holdings():
-    """The convenience API discovers maturing holdings and generates one proposal.
+def test_propose_reinvestment_for_maturing_holdings(monkeypatch):
+    """FastAPI endpoint for maturing holdings generates a reinvestment proposal.
 
-    1. Call ``propose_reinvestment_for_maturing_holdings`` — discovers
-       maturing bonds, caps at 1 client, and invokes the LLM.
+    1. Call ``POST .../propose_reinvestment_for_maturing_holdings`` via
+       TestClient — discovers maturing bonds, caps at 1 client, invokes LLM.
     2. Verify the output file exists and contains required section headers.
+
+    Uses Phase A (local imports) internally since TestClient runs in-process
+    without a real HTTP server on port 8000.
     """
-    result = propose_reinvestment_for_maturing_holdings(
-        within_days=365 * 10,
-        max_clients=1,
-        response_mode="both",
-        include_debug_scores=True,
+    monkeypatch.setattr(
+        "src.integrations.reinvestment_proposal._read_http_resolver_config",
+        lambda: None,
     )
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings",
+        json={
+            "within_days": 365 * 10,
+            "max_clients": 1,
+            "response_mode": "both",
+            "include_debug_scores": True,
+        },
+    )
+
+    assert response.status_code == 200
+    result = response.json()
 
     # Verify output
     assert result["status"] == "success"
@@ -73,14 +87,19 @@ def test_propose_reinvestment_for_maturing_holdings():
 
 
 @pytest.mark.slow
-def test_multi_client_propose_reinvestment():
+def test_multi_client_propose_reinvestment(monkeypatch):
     """Chain all clients with maturing bonds, up to 5, through the API at once.
 
     1. Discover all maturing bonds/bond funds.
     2. Deduplicate by client, cap at 5.
-    3. Call ``generate_reinvestment_proposal`` with ALL targets.
+    3. Call ``propose_reinvestment`` with ALL targets.
     4. Verify every client gets a non-empty proposal with required sections.
     """
+    monkeypatch.setattr(
+        "src.integrations.reinvestment_proposal._read_http_resolver_config",
+        lambda: None,
+    )
+
     # 1 ─ Discover maturing holdings ──────────────────────────────────
     maturing = search_holdings_maturing(
         product_types=["bond", "bond_fund"], within_days= 30

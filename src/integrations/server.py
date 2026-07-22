@@ -39,7 +39,10 @@ from src.integrations.product_tool import (
     search_reinvestment_candidates,
     search_product_by_fitness_score,
 )
-from src.integrations.reinvestment_proposal import propose_reinvestment
+from src.integrations.reinvestment_proposal import (
+    propose_reinvestment,
+    propose_reinvestment_for_maturing_holdings,
+)
 
 app = FastAPI(
     title="PlanBot API",
@@ -196,6 +199,26 @@ def get_reinvestment_proposals(body: dict) -> dict:
     """
     return propose_reinvestment(
         reinvestment_targets=body["reinvestment_targets"],
+        max_per_product_type=body.get("max_per_product_type", 2),
+        top_n_per_client=body.get("top_n_per_client", 10),
+        risk_rating_hard_filter=body.get("risk_rating_hard_filter", True),
+        response_mode=body.get("response_mode", "path"),
+        include_llm_input=body.get("include_llm_input", False),
+        include_market_outlook=body.get("include_market_outlook", True),
+        include_debug_scores=body.get("include_debug_scores", False),
+    )
+
+
+@app.post("/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings")
+def propose_for_maturing_holdings(body: dict) -> dict:
+    """Discover clients with maturing bond/bond-fund holdings and generate reinvestment proposals.
+
+    Delegates to :func:`propose_reinvestment_for_maturing_holdings`.
+    """
+    return propose_reinvestment_for_maturing_holdings(
+        within_days=body.get("within_days", 365),
+        as_of_date=body.get("as_of_date"),
+        max_clients=body.get("max_clients", 5),
         max_per_product_type=body.get("max_per_product_type", 2),
         top_n_per_client=body.get("top_n_per_client", 10),
         risk_rating_hard_filter=body.get("risk_rating_hard_filter", True),

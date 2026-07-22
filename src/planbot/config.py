@@ -28,6 +28,7 @@ class PlanBotConfig(BaseModel):
     temperature: float = 0.2
     web_access: bool = True
     urls: list[str]
+    get_client_product_from_db: bool = False
 
 
 def _resolve(root_dir: Path, raw_path: str) -> Path:
@@ -133,6 +134,10 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
     common_shared_no_web_note_file = common.shared_no_web_note_file
     common_crewai_config_folder = common.crewai_config_folder or "config/crewai/planbot"
 
+    # Read get_client_product_from_db from common section (defaults to False).
+    common_raw = data.get("common") or {}
+    get_client_product_from_db = bool(common_raw.get("get_client_product_from_db", False))
+
     llm_models: dict[str, Any] = {k: v.dict() for k, v in (parsed.llm_models or {}).items()}
 
     raw_proposal = parsed.proposals.get(proposal_name)
@@ -228,4 +233,5 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
         temperature=temperature_val,
         web_access=bool(raw_proposal.web_access) if raw_proposal.web_access is not None else False,
         urls=[str(item).strip() for item in (raw_proposal.urls or []) if str(item).strip()],
+        get_client_product_from_db=get_client_product_from_db,
     )

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 import re
@@ -12,6 +13,15 @@ class ReferenceDocument:
     path: Path
     content: str
     source_type: str
+
+
+# Known api:// scheme prefixes that the resolver handles.
+_API_SCHEME = "api://"
+
+# API path constants — used by callers to build runtime_reference_overrides.
+API_CLIENT_PROFILE = f"{_API_SCHEME}client_profile"
+API_HOLDINGS = f"{_API_SCHEME}holdings"
+API_PRODUCT_CATALOG = f"{_API_SCHEME}product_catalog"
 
 
 def _convert_pdf_to_text(path: Path) -> str:
@@ -54,10 +64,27 @@ def _derive_glob_search_folder(root_dir: Path, pattern: str) -> Path:
     return (root_dir / Path(pattern)).parent.resolve()
 
 
-def load_references(root_dir: Path, glob_pattern: str | list[str]) -> list[ReferenceDocument]:
+def load_references(
+    root_dir: Path,
+    glob_pattern: str | list[str],
+    api_resolver: Callable[[str], ReferenceDocument] | None = None,
+) -> list[ReferenceDocument]:
     patterns = glob_pattern if isinstance(glob_pattern, list) else [glob_pattern]
     paths_set: set[Path] = set()
+    api_docs: list[ReferenceDocument] = []
+
     for pattern in patterns:
+        # ── api:// scheme — delegate to resolver ──────────────────────
+        if pattern.startswith(_API_SCHEME):
+            if api_resolver is None:
+                raise ValueError(
+                    f"Pattern '{pattern}' uses {_API_SCHEME} scheme but no "
+                    f"api_resolver was provided to load_references."
+                )
+            api_docs.append(api_resolver(pattern))
+            continue
+
+        # ── filesystem glob ───────────────────────────────────────────
         matched_paths = {path for path in root_dir.glob(pattern) if path.is_file()}
         # If config is markdown-only, include sibling PDFs automatically.
         if pattern.endswith(".md"):
@@ -98,6 +125,8 @@ def load_references(root_dir: Path, glob_pattern: str | list[str]) -> list[Refer
                 ReferenceDocument(path=resolved, content=_convert_pdf_to_text(resolved), source_type="pdf")
             )
 
+    # Append api:// docs after filesystem docs (stable ordering).
+    references.extend(api_docs)
     return references
 
 

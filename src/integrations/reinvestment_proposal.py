@@ -10,10 +10,9 @@ The endpoint composes reference files, invokes CrewAI, and returns output paths.
 
 from __future__ import annotations
 
-import csv
 import json
 import logging
-from io import StringIO
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +24,14 @@ from src.integrations.product_tool import (
     search_reinvestment_candidates,
 )
 from src.planbot.crew_workflow import run_crew_planbot
+from src.planbot.http_resolver import HttpApiResolver
+from src.planbot.input_loader import (
+    API_CLIENT_PROFILE,
+    API_HOLDINGS,
+    API_PRODUCT_CATALOG,
+    ReferenceDocument,
+)
+from src.planbot.workflow import build_llm_input
 from src.shared.config_loader import load_config
 
 LOGGER = logging.getLogger(__name__)
@@ -201,8 +208,20 @@ def propose_reinvestment_for_maturing_holdings(
 
 
 # ---------------------------------------------------------------------------
-# Per-target processing — builds temp files → calls CrewAI → returns result
+# Per-target processing — builds in-memory resolver → calls CrewAI → returns result
 # ---------------------------------------------------------------------------
+
+
+def _read_http_resolver_config() -> dict | None:
+    """Read HTTP resolver settings from config_planbot.yaml common section.
+
+    Returns None if the section is absent (Phase A / local-import fallback).
+    """
+    planbot_config = yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
+    common = planbot_config.get("common") or {}
+    if not common.get("get_client_product_from_db"):
+        return None
+    return common.get("http_resolver")  # None if not configured → Phase A
 
 
 def _process_one_target(
@@ -217,87 +236,109 @@ def _process_one_target(
     include_market_outlook: bool,
     include_debug_scores: bool,
 ) -> dict:
-    """Fetch data, build reference files, invoke CrewAI, return result object."""
+    """Fetch data, build in-memory resolver, invoke CrewAI, return result object."""
 
     item: dict[str, Any] = {
         "client_id": client_id,
         "source_product_id": source_product_id,
     }
 
-    # 1 ─ Fetch client profile and holdings ──────────────────────────────
-    client_profile = search_by_id(client_id)
-    if client_profile is None:
-        LOGGER.warning("Client not found: %s", client_id)
-        item["candidate_products"] = []
-        item["output_path"] = ""
-        return item
+    http_cfg = _read_http_resolver_config()
 
-    # 2 ─ Fetch source product ───────────────────────────────────────────
-    source_product = search_by_product_id(source_product_id)
-    if source_product is None:
-        LOGGER.warning("Source product not found: %s", source_product_id)
-        item["candidate_products"] = []
-        item["output_path"] = ""
-        return item
+    if http_cfg is not None:
+        # ── Phase B: HTTP resolver ──────────────────────────────────
+        planbot_config = yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
+        base_url = (planbot_config.get("common") or {}).get("api_endpoints", "http://localhost:8000/api/v1")
+        # Strip /api/v1 if present — HttpApiResolver appends paths.
+        base_url = base_url.replace("/api/v1", "")
 
-    # 3 ─ Fetch reinvestment candidates ──────────────────────────────────
-    cand_result = search_reinvestment_candidates(
-        client_ids=[client_id],
-        source_product_id=source_product_id,
-        max_per_product_type=max_per_product_type,
-        top_n_per_client=top_n_per_client,
-        risk_rating_hard_filter=risk_rating_hard_filter,
-    )
-    candidates_raw = cand_result.get("results_by_client", {}).get(client_id, [])
+        resolver = HttpApiResolver(
+            client_id=client_id,
+            source_product_id=source_product_id,
+            base_url=base_url,
+            timeout=http_cfg.get("timeout_seconds", 30),
+            max_retries=http_cfg.get("max_retries", 3),
+            retry_backoff_factor=http_cfg.get("retry_backoff_factor", 0.5),
+        )
 
-    candidate_products: list[dict] = []
-    for c in candidates_raw:
-        pid = c.get("product_id", "")
-        prod = search_by_product_id(pid) or {}
-        # Pass the full product dict (all 15 columns) plus similarity_score
-        full = dict(prod)  # shallow copy
-        full["similarity_score"] = c.get("similarity_score")
-        candidate_products.append(full)
+        # Early-exit checks (same semantics as Phase A)
+        if resolver.client_profile is None:
+            LOGGER.warning("Client not found via HTTP: %s", client_id)
+            item["candidate_products"] = []
+            item["output_path"] = ""
+            return item
 
-    item["candidate_products"] = candidate_products
+        if resolver.source_product is None:
+            LOGGER.warning("Source product not found via HTTP: %s", source_product_id)
+            item["candidate_products"] = []
+            item["output_path"] = ""
+            return item
 
-    # 4 ─ Build reference files from API data ────────────────────────────
-    profile_md_abs, holdings_csv_abs = _build_client_reference_files(
-        client_id, client_profile, source_product, source_product_id
-    )
-    catalog_json_abs = _build_product_catalog_files(
-        client_id, source_product, candidate_products
-    )
+        candidate_products = resolver.candidate_products
+        item["candidate_products"] = candidate_products
 
-    # 5 ─ Read cleanup preference from planbot config ────────────────────
-    planbot_config = yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
-    cleanup_temp = _nested_get(planbot_config, ["common", "cleanup_temp_files"], True)
+        api_resolver = resolver.as_callable()
 
-    # 6 ─ Build client-scoped output filename to avoid overwrites ────────
+        # For llm_input / debug_scores, use the cached raw data
+        client_profile = resolver.client_profile
+        source_product = resolver.source_product
+    else:
+        # ── Phase A: local imports (fallback) ──────────────────────
+        client_profile = search_by_id(client_id)
+        if client_profile is None:
+            LOGGER.warning("Client not found: %s", client_id)
+            item["candidate_products"] = []
+            item["output_path"] = ""
+            return item
+
+        source_product = search_by_product_id(source_product_id)
+        if source_product is None:
+            LOGGER.warning("Source product not found: %s", source_product_id)
+            item["candidate_products"] = []
+            item["output_path"] = ""
+            return item
+
+        cand_result = search_reinvestment_candidates(
+            client_ids=[client_id],
+            source_product_id=source_product_id,
+            max_per_product_type=max_per_product_type,
+            top_n_per_client=top_n_per_client,
+            risk_rating_hard_filter=risk_rating_hard_filter,
+        )
+        candidates_raw = cand_result.get("results_by_client", {}).get(client_id, [])
+
+        candidate_products = []
+        for c in candidates_raw:
+            pid = c.get("product_id", "")
+            prod = search_by_product_id(pid) or {}
+            full = dict(prod)
+            full["similarity_score"] = c.get("similarity_score")
+            candidate_products.append(full)
+
+        item["candidate_products"] = candidate_products
+
+        api_resolver = _build_api_resolver(
+            client_id, client_profile, source_product, source_product_id,
+            candidate_products,
+        )
+
+    # 5 ─ Build client-scoped output filename ────────────────────────────
     output_override = f"runs/reinvestment_proposal/reinvestment_proposal_{client_id}.md"
 
-    # 7 ─ Invoke CrewAI with overrides pointing to generated files ───────
-    try:
-        crew_result = run_crew_planbot(
-            app_config=app_config,
-            config_path=str(_CONFIG_PATH),
-            proposal_name="reinvestment_proposal",
-            runtime_reference_overrides={
-                "client_profiles": [profile_md_abs, holdings_csv_abs],
-                "product_catalogs": [catalog_json_abs],
-            },
-            output_file_override=output_override,
-        )
-        output_path = str(crew_result.output_path)
-        markdown_output = crew_result.output_path.read_text()
-    finally:
-        if cleanup_temp:
-            _cleanup_temp_files(profile_md_abs, holdings_csv_abs, catalog_json_abs)
-        else:
-            LOGGER.info(
-                "cleanup_temp_files=false; keeping temp files: %s, %s, %s",
-                profile_md_abs, holdings_csv_abs, catalog_json_abs,
-            )
+    # 6 ─ Invoke CrewAI with api:// patterns (no temp files on disk) ─────
+    crew_result = run_crew_planbot(
+        app_config=app_config,
+        config_path=str(_CONFIG_PATH),
+        proposal_name="reinvestment_proposal",
+        runtime_reference_overrides={
+            "client_profiles": [API_CLIENT_PROFILE, API_HOLDINGS],
+            "product_catalogs": [API_PRODUCT_CATALOG],
+        },
+        output_file_override=output_override,
+        api_resolver=api_resolver,
+    )
+    output_path = str(crew_result.output_path)
+    markdown_output = crew_result.output_path.read_text()
 
     if response_mode in ("path", "both"):
         item["output_path"] = output_path
@@ -305,16 +346,16 @@ def _process_one_target(
     if response_mode in ("markdown", "both"):
         item["markdown_output"] = markdown_output
 
-    # 6 ─ llm_input (optional) ──────────────────────────────────────────
+    # 7 ─ llm_input (optional) ──────────────────────────────────────────
     if include_llm_input:
-        item["llm_input"] = _build_llm_input(
+        item["llm_input"] = build_llm_input(
             client_profile=client_profile,
             source_product=source_product,
             candidate_products=candidate_products,
             include_market_outlook=include_market_outlook,
         )
 
-    # 7 ─ Debug scores (optional) ───────────────────────────────────────
+    # 8 ─ Debug scores (optional) ───────────────────────────────────────
     if include_debug_scores:
         item["debug_scores"] = _build_debug_scores(
             client_profile=client_profile,
@@ -325,260 +366,141 @@ def _process_one_target(
 
 
 # ---------------------------------------------------------------------------
-# Reference file builder
+# In-memory API resolver (replaces temp-file approach)
 # ---------------------------------------------------------------------------
 
-_TEMP_DIR: Path | None = None  # kept alive for the lifetime of one request
-_RUNS_DIR = _ROOT_DIR / "runs" / "reinvestment_proposal" / "_generated"
 
-
-def _build_client_reference_files(
+def _build_api_resolver(
     client_id: str,
     client_profile: dict,
     source_product: dict,
     source_product_id: str,
-) -> tuple[str, str]:
-    """Create profile markdown + holdings CSV under runs/_generated/.
-
-    Returns paths relative to project root (required by CrewAI reference loader).
-    """
-    root = _RUNS_DIR / client_id
-    root.mkdir(parents=True, exist_ok=True)
-
-    # ── Profile markdown ───────────────────────────────────────────────
-    # Build a structured markdown section with ALL client fields
-    # Fields likely to be empty are listed but marked N/A when missing
-    cp = client_profile
-    profile_lines = [
-        "# Client Profile",
-        "",
-        f"- Client ID: {cp.get('client_id', client_id)}",
-        f"- Name: {cp.get('name', 'N/A')}",
-        f"- Age: {cp.get('age', 'N/A')}",
-        f"- Birthdate: {cp.get('birthdate', 'N/A')}",
-        f"- Occupation: {cp.get('occupation', 'N/A')}",
-        f"- Marital Status: {cp.get('marital_status', 'N/A')}",
-        f"- Children Info: {cp.get('children_info', 'N/A')}",
-    ]
-
-    aum = cp.get('aum')
-    if aum:
-        profile_lines.append(f"- AUM: ${aum:,.0f}")
-    else:
-        profile_lines.append("- AUM: N/A")
-
-    profile_lines += [
-        f"- Risk Tolerance (1-5): {cp.get('risk_rating', 'N/A')}",
-        f"- Region: {cp.get('region', 'N/A')}",
-        f"- Cash %: {cp.get('cash_pct', 'N/A')}",
-        f"- Liquidity Need: {cp.get('liquidity_need', 'N/A')}",
-        f"- Income Stability: {cp.get('income_stability', 'N/A')}",
-        f"- Investment Objective: {cp.get('investment_objective', 'N/A')}",
-    ]
-
-    # Derived scores
-    irs = cp.get('investor_readiness_score')
-    if irs is not None:
-        profile_lines.append(f"- Investor Readiness Score: {irs}")
-    profile_lines += [
-        f"- Cash Score: {cp.get('cash_score', 'N/A')}",
-        f"- Concentration Score: {cp.get('concentration_score', 'N/A')}",
-        f"- Active Score: {cp.get('active_score', 'N/A')}",
-        f"- Life Stage Score: {cp.get('life_stage_score', 'N/A')}",
-    ]
-
-    # Portfolio composition
-    pt_holdings = cp.get('product_types_in_holdings', [])
-    if pt_holdings:
-        profile_lines.append(f"- Product Types Held: {', '.join(pt_holdings)}")
-    has_fund = cp.get('has_fund')
-    if has_fund is not None:
-        profile_lines.append(f"- Has Fund Holdings: {'Yes' if has_fund else 'No'}")
-
-    profile_lines += [
-        "",
-        "# Wallet inflow Event",
-        "",
-        "The following product is maturing:",
-        f"- Product ID: {source_product_id}",
-        f"- Product Name: {source_product.get('name', source_product_id)}",
-    ]
-    profile_md = root / f"{client_id}_profile.md"
-    profile_md.write_text("\n".join(profile_lines) + "\n")
-
-    # ── Holdings CSV ───────────────────────────────────────────────────
-    holdings = client_profile.get("holdings", [])
-    holdings_fieldnames = [
-        "client_id", "holding_id", "product_id", "instrument_name",
-        "symbol", "asset_class", "region", "currency", "quantity",
-        "book_cost", "market_value", "unrealized_pl", "unrealized_pl_pct",
-        "yield_pct", "risk_bucket", "esg_score", "liquidity",
-    ]
-    csv_buf = StringIO()
-    writer = csv.DictWriter(csv_buf, fieldnames=holdings_fieldnames)
-    writer.writeheader()
-    for h in holdings:
-        writer.writerow({
-            "client_id": client_id,
-            "holding_id": h.get("holding_id", ""),
-            "product_id": h.get("product_id", ""),
-            "instrument_name": h.get("instrument_name", ""),
-            "symbol": h.get("symbol", ""),
-            "asset_class": h.get("asset_class", ""),
-            "region": h.get("region", ""),
-            "currency": h.get("currency", ""),
-            "quantity": h.get("quantity", 0),
-            "book_cost": h.get("book_cost", 0),
-            "market_value": h.get("market_value", 0),
-            "unrealized_pl": h.get("unrealized_pl", 0),
-            "unrealized_pl_pct": h.get("unrealized_pl_pct", 0),
-            "yield_pct": h.get("yield_pct", 0),
-            "risk_bucket": h.get("risk_bucket", ""),
-            "esg_score": h.get("esg_score", ""),
-            "liquidity": h.get("liquidity", ""),
-        })
-    holdings_csv = root / f"{client_id}_holdings.csv"
-    holdings_csv.write_text(csv_buf.getvalue())
-
-    # Return paths relative to project root (CrewAI glob requires relative)
-    return (
-        str(profile_md.resolve().relative_to(_ROOT_DIR)),
-        str(holdings_csv.resolve().relative_to(_ROOT_DIR)),
-    )
-
-
-def _nested_get(d: dict, keys: list[str], default: Any = None) -> Any:
-    """Safely traverse nested dict by a list of keys."""
-    for key in keys:
-        if not isinstance(d, dict):
-            return default
-        d = d.get(key, {})
-    return d if d != {} else default
-
-
-def _cleanup_temp_files(*paths: str) -> None:
-    """Remove generated reference files after proposal generation."""
-    for p in paths:
-        try:
-            (_ROOT_DIR / p).unlink(missing_ok=True)
-        except OSError:
-            pass
-
-
-def _build_product_catalog_files(
-    client_id: str,
-    source_product: dict,
     candidate_products: list[dict],
-) -> str:
-    """Generate API-backed product catalog JSON in the _generated dir.
+) -> Callable[[str], ReferenceDocument]:
+    """Build a resolver closure that returns ReferenceDocuments from pre-fetched data.
 
-    Returns path relative to project root.
+    The returned callable conforms to the ``api_resolver`` contract expected
+    by ``load_references``: ``(api_path: str) -> ReferenceDocument``.
+
+    Phase A (Sprint 2): data is pre-fetched and formatted in-memory.
+    Phase B (future): resolver switches to FastAPI HTTP calls without
+    changing the contract or any code in ``load_references`` / ``crew_workflow``.
     """
-    root = _RUNS_DIR / client_id
-    root.mkdir(parents=True, exist_ok=True)
 
-    # ── Build full JSON payload ────────────────────────────────────────
-    # Serialize type_specific / performance_history for all three sections
-    def _serialize_json_fields(d: dict) -> dict:
-        out = dict(d)
-        for field in ("type_specific", "performance_history"):
-            val = out.get(field)
-            if isinstance(val, str):
-                try:
-                    out[field] = json.loads(val)
-                except (json.JSONDecodeError, TypeError):
-                    pass
-        return out
+    def _format_profile_markdown() -> str:
+        cp = client_profile
+        lines = [
+            "# Client Profile",
+            "",
+            f"- Client ID: {cp.get('client_id', client_id)}",
+            f"- Name: {cp.get('name', 'N/A')}",
+            f"- Age: {cp.get('age', 'N/A')}",
+            f"- Birthdate: {cp.get('birthdate', 'N/A')}",
+            f"- Occupation: {cp.get('occupation', 'N/A')}",
+            f"- Marital Status: {cp.get('marital_status', 'N/A')}",
+            f"- Children Info: {cp.get('children_info', 'N/A')}",
+        ]
+        aum = cp.get('aum')
+        lines.append(f"- AUM: ${aum:,.0f}" if aum else "- AUM: N/A")
+        lines += [
+            f"- Risk Tolerance (1-5): {cp.get('risk_rating', 'N/A')}",
+            f"- Region: {cp.get('region', 'N/A')}",
+            f"- Cash %: {cp.get('cash_pct', 'N/A')}",
+            f"- Liquidity Need: {cp.get('liquidity_need', 'N/A')}",
+            f"- Income Stability: {cp.get('income_stability', 'N/A')}",
+            f"- Investment Objective: {cp.get('investment_objective', 'N/A')}",
+        ]
+        irs = cp.get('investor_readiness_score')
+        if irs is not None:
+            lines.append(f"- Investor Readiness Score: {irs}")
+        lines += [
+            f"- Cash Score: {cp.get('cash_score', 'N/A')}",
+            f"- Concentration Score: {cp.get('concentration_score', 'N/A')}",
+            f"- Active Score: {cp.get('active_score', 'N/A')}",
+            f"- Life Stage Score: {cp.get('life_stage_score', 'N/A')}",
+        ]
+        pt_holdings = cp.get('product_types_in_holdings', [])
+        if pt_holdings:
+            lines.append(f"- Product Types Held: {', '.join(pt_holdings)}")
+        has_fund = cp.get('has_fund')
+        if has_fund is not None:
+            lines.append(f"- Has Fund Holdings: {'Yes' if has_fund else 'No'}")
+        lines += [
+            "",
+            "# Wallet inflow Event",
+            "",
+            "The following product is maturing:",
+            f"- Product ID: {source_product_id}",
+            f"- Product Name: {source_product.get('name', source_product_id)}",
+        ]
+        return "\n".join(lines) + "\n"
 
-    payload = {
-        "catalog_version": "1.0",
-        "generated_for": client_id,
-        "instruction": (
-            "The following products are the only investable candidates "
-            "for this reinvestment proposal. Do not recommend any product "
-            "not listed below."
-        ),
-        "source_product": _serialize_json_fields(source_product),
-        "candidate_products": [
-            _serialize_json_fields(cp) for cp in candidate_products
-        ],
-    }
+    def _format_holdings_csv() -> str:
+        holdings = client_profile.get("holdings", [])
+        fieldnames = [
+            "client_id", "holding_id", "product_id", "instrument_name",
+            "symbol", "asset_class", "region", "currency", "quantity",
+            "book_cost", "market_value", "unrealized_pl", "unrealized_pl_pct",
+            "yield_pct", "risk_bucket", "esg_score", "liquidity",
+        ]
+        lines: list[str] = [",".join(fieldnames)]
+        for h in holdings:
+            row = ",".join(str(h.get(f, "")) for f in fieldnames)
+            lines.append(row)
+        return "\n".join(lines) + "\n"
 
-    catalog_json = root / f"{client_id}_catalog.json"
-    catalog_json.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, default=str) + "\n"
-    )
+    def _format_catalog_json() -> str:
+        def _serialize_json_fields(d: dict) -> dict:
+            out = dict(d)
+            for field in ("type_specific", "performance_history"):
+                val = out.get(field)
+                if isinstance(val, str):
+                    try:
+                        out[field] = json.loads(val)
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+            return out
 
-    return str(catalog_json.resolve().relative_to(_ROOT_DIR))
-
-
-# ---------------------------------------------------------------------------
-# llm_input builder
-# ---------------------------------------------------------------------------
-
-
-def _build_llm_input(
-    client_profile: dict,
-    source_product: dict,
-    candidate_products: list[dict],
-    include_market_outlook: bool,
-) -> dict:
-    """Assemble the structured ``llm_input`` payload for the LLM."""
-    payload: dict[str, Any] = {
-        "client_profile": {
-            "client_id": client_profile.get("client_id"),
-            "name": client_profile.get("name"),
-            "risk_rating": client_profile.get("risk_rating"),
-            "age": client_profile.get("age"),
-            "aum": client_profile.get("aum"),
-            "cash_score": client_profile.get("cash_score"),
-            "concentration_score": client_profile.get("concentration_score"),
-            "investor_readiness_score": client_profile.get("investor_readiness_score"),
-        },
-        "holdings": _summarize_holdings(client_profile.get("holdings", [])),
-        "source_product": {
-            "product_id": source_product.get("product_id"),
-            "name": source_product.get("name"),
-            "product_type": source_product.get("product_type"),
-            "risk_rating": source_product.get("risk_rating"),
-            "expected_return": source_product.get("expected_return"),
-            "region": source_product.get("region"),
-        },
-        "candidate_products": candidate_products,
-        "output_instructions": {
-            "sections": [
-                "executive summary",
-                "recommended product",
-                "risk characteristics",
-                "detailed justification",
-                "portfolio tables",
-                "scenario analysis",
-                "risk disclosures",
+        payload = {
+            "catalog_version": "1.0",
+            "generated_for": client_id,
+            "instruction": (
+                "The following products are the only investable candidates "
+                "for this reinvestment proposal. Do not recommend any product "
+                "not listed below."
+            ),
+            "source_product": _serialize_json_fields(source_product),
+            "candidate_products": [
+                _serialize_json_fields(cp) for cp in candidate_products
             ],
-            "tone": "professional advisory",
-            "format": "markdown",
-        },
-    }
-
-    if include_market_outlook:
-        payload["market_outlook"] = {"note": "market outlook not yet configured"}
-
-    return payload
-
-
-def _summarize_holdings(holdings: list[dict]) -> list[dict]:
-    """Create a minimal holdings summary for the llm_input."""
-    return [
-        {
-            "product_id": h.get("product_id"),
-            "instrument_name": h.get("instrument_name"),
-            "asset_class": h.get("asset_class"),
-            "market_value": h.get("market_value"),
-            "yield_pct": h.get("yield_pct"),
-            "risk_bucket": h.get("risk_bucket"),
         }
-        for h in holdings
-    ]
+        return json.dumps(payload, ensure_ascii=False, indent=2, default=str) + "\n"
+
+    def resolve(api_path: str) -> ReferenceDocument:
+        if api_path == API_CLIENT_PROFILE:
+            return ReferenceDocument(
+                path=Path(f"api://client/{client_id}/profile.md"),
+                content=_format_profile_markdown(),
+                source_type="markdown",
+            )
+        if api_path == API_HOLDINGS:
+            return ReferenceDocument(
+                path=Path(f"api://client/{client_id}/holdings.csv"),
+                content=_format_holdings_csv(),
+                source_type="csv",
+            )
+        if api_path == API_PRODUCT_CATALOG:
+            return ReferenceDocument(
+                path=Path(f"api://client/{client_id}/catalog.json"),
+                content=_format_catalog_json(),
+                source_type="json",
+            )
+        raise ValueError(
+            f"Unknown API path: {api_path!r}. "
+            f"Expected one of: {API_CLIENT_PROFILE}, {API_HOLDINGS}, {API_PRODUCT_CATALOG}."
+        )
+
+    return resolve
 
 
 # ---------------------------------------------------------------------------

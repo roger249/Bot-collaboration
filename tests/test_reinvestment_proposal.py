@@ -16,10 +16,9 @@ from unittest.mock import MagicMock, patch
 
 from src.integrations.reinvestment_proposal import (
     propose_reinvestment,
-    _build_llm_input,
     _build_debug_scores,
-    _summarize_holdings,
 )
+from src.planbot.workflow import build_llm_input, summarize_holdings
 
 
 SAMPLE_CLIENT = {
@@ -74,6 +73,19 @@ SAMPLE_CANDIDATE_PRODUCT = {
 
 class TestReinvestmentProposal(unittest.TestCase):
     """Normal-flow and exception-condition tests for reinvestment proposal."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Force Phase A (local imports) for all tests in this class."""
+        cls._http_cfg_patcher = patch(
+            "src.integrations.reinvestment_proposal._read_http_resolver_config",
+            return_value=None,
+        )
+        cls._http_cfg_patcher.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._http_cfg_patcher.stop()
 
     @patch("src.integrations.reinvestment_proposal.search_by_id")
     @patch("src.integrations.reinvestment_proposal.search_by_product_id")
@@ -352,11 +364,11 @@ class TestReinvestmentProposal(unittest.TestCase):
 
 
 class TestLLMInputBuilder(unittest.TestCase):
-    """Tests for the _build_llm_input helper."""
+    """Tests for the build_llm_input helper."""
 
     def test_build_llm_input_structure(self):
         """llm_input contains all required context blocks."""
-        payload = _build_llm_input(
+        payload = build_llm_input(
             client_profile=SAMPLE_CLIENT,
             source_product=SAMPLE_PRODUCT,
             candidate_products=[SAMPLE_CANDIDATE_PRODUCT],
@@ -372,7 +384,7 @@ class TestLLMInputBuilder(unittest.TestCase):
 
     def test_build_llm_input_optional_market_outlook(self):
         """Market outlook is included when flag is True, omitted when False."""
-        payload_with = _build_llm_input(
+        payload_with = build_llm_input(
             client_profile=SAMPLE_CLIENT,
             source_product=SAMPLE_PRODUCT,
             candidate_products=[],
@@ -380,7 +392,7 @@ class TestLLMInputBuilder(unittest.TestCase):
         )
         self.assertIn("market_outlook", payload_with)
 
-        payload_without = _build_llm_input(
+        payload_without = build_llm_input(
             client_profile=SAMPLE_CLIENT,
             source_product=SAMPLE_PRODUCT,
             candidate_products=[],
@@ -408,15 +420,135 @@ class TestDebugScoresBuilder(unittest.TestCase):
 
 
 class TestHoldingsSummary(unittest.TestCase):
-    """Tests for _summarize_holdings helper."""
+    """Tests for summarize_holdings helper."""
 
     def test_summarize_holdings(self):
         """Holdings are reduced to minimal fields."""
-        summary = _summarize_holdings(SAMPLE_CLIENT["holdings"])
+        summary = summarize_holdings(SAMPLE_CLIENT["holdings"])
         self.assertEqual(len(summary), 1)
         self.assertIn("product_id", summary[0])
         self.assertIn("market_value", summary[0])
         self.assertNotIn("quantity", summary[0])
+
+
+# ---------------------------------------------------------------------------
+# FastAPI integration tests (TestClient, no real server needed)
+# ---------------------------------------------------------------------------
+
+
+class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
+    """Integration tests for FastAPI reinvestment proposal endpoints (AC5, AC17)."""
+
+    @classmethod
+    def setUpClass(cls):
+        from fastapi.testclient import TestClient
+        from src.integrations.server import app
+        cls.client = TestClient(app)
+
+    @patch("src.integrations.server.propose_reinvestment")
+    def test_fastapi_propose_reinvestment_returns_200(self, mock_propose):
+        """POST /api/v1/reinvestment-proposals returns 200 with valid payload (AC5)."""
+        mock_propose.return_value = {
+            "status": "success",
+            "results_by_client": [
+                {
+                    "client_id": "PB-HK-000001-8",
+                    "source_product_id": "ETF-HYG",
+                    "candidate_products": [],
+                    "output_path": "runs/reinvestment_proposal/test.md",
+                }
+            ],
+        }
+
+        response = self.client.post(
+            "/api/v1/reinvestment-proposals",
+            json={
+                "reinvestment_targets": [
+                    {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "success")
+        self.assertEqual(len(data["results_by_client"]), 1)
+        mock_propose.assert_called_once()
+
+    @patch("src.integrations.server.propose_reinvestment")
+    def test_fastapi_propose_reinvestment_passes_all_params(self, mock_propose):
+        """Endpoint forwards all optional parameters to propose_reinvestment."""
+        mock_propose.return_value = {"status": "success", "results_by_client": []}
+
+        self.client.post(
+            "/api/v1/reinvestment-proposals",
+            json={
+                "reinvestment_targets": [
+                    {"client_id": "C1", "source_product_id": "P1"},
+                ],
+                "max_per_product_type": 3,
+                "top_n_per_client": 5,
+                "risk_rating_hard_filter": False,
+                "response_mode": "both",
+                "include_llm_input": True,
+                "include_market_outlook": False,
+                "include_debug_scores": True,
+            },
+        )
+
+        mock_propose.assert_called_once_with(
+            reinvestment_targets=[{"client_id": "C1", "source_product_id": "P1"}],
+            max_per_product_type=3,
+            top_n_per_client=5,
+            risk_rating_hard_filter=False,
+            response_mode="both",
+            include_llm_input=True,
+            include_market_outlook=False,
+            include_debug_scores=True,
+        )
+
+    @patch("src.integrations.server.propose_reinvestment_for_maturing_holdings")
+    def test_fastapi_propose_reinvestment_for_maturing_holdings_returns_200(self, mock_func):
+        """POST .../propose_reinvestment_for_maturing_holdings returns 200 (AC17)."""
+        mock_func.return_value = {"status": "success", "results_by_client": []}
+
+        response = self.client.post(
+            "/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings",
+            json={
+                "product_types": ["bond", "bond_fund"],
+                "within_days": 180,
+                "response_mode": "path",
+                "include_debug_scores": False,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "success")
+        mock_func.assert_called_once()
+
+    @patch("src.integrations.server.propose_reinvestment_for_maturing_holdings")
+    def test_fastapi_maturing_defaults(self, mock_func):
+        """Endpoint uses sensible defaults when optional fields are omitted."""
+        mock_func.return_value = {"status": "success", "results_by_client": []}
+
+        self.client.post(
+            "/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings",
+            json={},
+        )
+
+        mock_func.assert_called_once_with(
+            within_days=365,
+            as_of_date=None,
+            max_clients=5,
+            max_per_product_type=2,
+            top_n_per_client=10,
+            risk_rating_hard_filter=True,
+            response_mode="path",
+            include_llm_input=False,
+            include_market_outlook=True,
+            include_debug_scores=False,
+        )
 
 
 if __name__ == "__main__":
