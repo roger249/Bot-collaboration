@@ -6,6 +6,16 @@ Sprint 1 delivered an end-to-end API-backed reinvestment proposal pipeline.
 Sprint 2 hardens the architecture, improves production readiness, and adds
 missing capabilities that were intentionally deferred.
 
+### Sprint 2 objectives
+
+- **1 — Single routine** to compose reference data whether from files or API. The routine is built generically so other proposal types can adopt it later, but **Sprint 2 exercises it on reinvestment proposal only**. When using files, relevant client/product data is filtered manually by the operator. When using API, the filtering logic must be built in so the proposal receives only the clients and products relevant to it.  *(Covered in: Merge into shared workflow, API resolver sections)*
+
+- **2 — In-memory data**. When retrieving from API, data is composed **in memory** — no temporary files are generated.  *(Covered in: API resolver section)*
+
+- **3 — Maturing-holdings API endpoint**. Add an API endpoint to output reinvestment proposals for clients whose holdings are about to mature and release funding.  *(Covered in: Discovery endpoint section)*
+
+The scope of this spec focus on reinvestment proposal only.  The other proposal including their filters will be postponed to other sprints.
+
 The central architectural change in Sprint 2 is replacing the
 **temp-file round-trip** with an **in-memory API resolver** inside
 `load_references`.  When `get_client_product_from_db: true` is set on a
@@ -28,6 +38,10 @@ common:
   get_client_product_from_db: true   # applies to all proposals
   api_endpoints: http://localhost:8000/api/v1
 
+# When get_client_product_from_db: true, client_profiles and product_catalogs
+# are resolved via api:// patterns (see "API resolver" section below).  The file-based globs below are
+# used only when the flag is false or absent (backward compatibility).
+
 reinvestment_proposal:
   references:
     client_profiles:
@@ -44,9 +58,47 @@ reinvestment_proposal:
         purpose: Full product details including type_specific attributes in JSON format
 ```
 
+## Unified reference-data routine (1)
+
+### Single code path — reinvestment proposal
+
+All proposal types in `config_planbot.yaml` share the same
+`run_crew_planbot` → `load_references` path.  Sprint 2 builds the unified
+file/API routine on this shared path but **exercises it on the reinvestment
+proposal only**.  Other proposal types (`portfolio_review`,
+`client_product_fit_analysis`, `product_investor_matching`,
+`stock_analysis_proposal`) continue to run in file-based mode and must
+pass existing regression tests unchanged.
+
+> **Deferred:** Enabling the API resolver for non-reinvestment proposals
+> and implementing their per-type filters is postponed to future sprints.
+> The infrastructure (`api_resolver` parameter, `load_references` extension,
+> `get_client_product_from_db` toggle) is built generically so adoption is a
+> config change + resolver-factory extension, not a rewrite.
+
+### Filtering logic: files vs. API
+
+A key difference between the two modes is **who filters** the client and
+product lists to only those relevant to the proposal:
+
+| Mode | Filtering responsibility |
+|---|---|
+| **File-based** (`get_client_product_from_db: false`) | The **operator** manually places only the relevant client/product files in the designated directories before running the proposal. |
+| **API-based** (`get_client_product_from_db: true`) | The **code** must filter. The proposal executor passes only the relevant `client_id` (or list of `client_id`s) and any product-type filters to the resolver factory. The resolver factory calls the API with those filters. |
+
+**Filtering contract (Sprint 2 — reinvestment only):**
+
+| Proposal type | Client filter | Product filter |
+|---|---|---|
+| `reinvestment_proposal` | Single `client_id` from maturing-holdings scan | Products aligned to client risk profile + maturity horizon |
+
+**Implementation:** The resolver factory (described in the "API resolver" section below) is built per-proposal with the
+relevant filter parameters.  `load_references` itself is filter-agnostic — it
+only knows `api://` → `api_resolver(api_path)` → `ReferenceDocument`.
+
 ## Sprint 2 scope
 
-### 1. Merge reinvestment_proposal.py logic into CrewAI workflow
+### 1. Merge proposal-specific logic into shared CrewAI workflow (1)
 
 **Current state (Sprint 1):**
 `src/integrations/reinvestment_proposal.py` contains substantial logic that
@@ -58,24 +110,28 @@ duplicates or runs parallel to the CrewAI workflow path:
 - `_process_one_target` — orchestrates fetch → temp files → CrewAI → cleanup
 
 These functions live outside `crew_workflow.py` / `input_loader.py` and are
-not reusable by other proposals (portfolio review, client product fit analysis).
+not reusable by other proposals (portfolio review, client product fit analysis,
+product investor matching).
 
 **Target (Sprint 2):**
-Eliminate temp files and merge the remaining logic into the shared workflow path:
+Eliminate temp files and merge the remaining logic into the shared workflow
+path.  Other proposal types continue to use the file-based path and must
+pass their existing tests unchanged:
 
 | Current location | Merge target |
 |---|---|
-| `_build_client_reference_files` | Removed (replaced by §2 `api_resolver`) |
-| `_build_product_catalog_files` | Removed (replaced by §2 `api_resolver`) |
-| `_build_llm_input` | Move to `src/planbot/workflow.py` as a single shared `_build_llm_input` usable by all proposals (reinvestment, portfolio review, client product fit analysis). Different proposals pass different data blocks but the assembly pattern is the same. |
+| `_build_client_reference_files` | Removed (replaced by the API resolver — see "API resolver" section) |
+| `_build_product_catalog_files` | Removed (replaced by the API resolver — see "API resolver" section) |
+| `_build_llm_input` | Move to `src/planbot/workflow.py` as a single shared `_build_llm_input` usable by all proposals (reinvestment, portfolio review, client product fit analysis, product investor matching). Different proposals pass different data blocks but the assembly pattern is the same. |
 | `_process_one_target` | Simplify to thin caller: fetch data → build resolver → `run_crew_planbot` |
 | `propose_reinvestment` | Keep as public API entry point; delegate internals to shared workflow |
 
 The end state: `reinvestment_proposal.py` is a thin API layer.  All
 reference assembly and CrewAI invocation flows through the shared
-`crew_workflow.py` / `input_loader.py` path.
+`crew_workflow.py` / `input_loader.py` path.  The path is built generically;
+other proposals will adopt it in future sprints.
 
-**Implementation note:** Tasks in this section and §2 that touch
+**Implementation note:** Tasks in this section and in the "API resolver" section that touch
 temp-file logic should be done together in a single pass to avoid an
 intermediate broken state.
 
@@ -87,6 +143,7 @@ intermediate broken state.
 | AC3 | `propose_reinvestment` delegates to shared `run_crew_planbot` path | Integration test |
 | AC4 | Existing regression test passes unchanged | `pytest tests/test_run_client_investment_proposal.py::test_propose_reinvestment_for_maturing_holdings` |
 | AC5 | FastAPI integration: `POST /api/v1/reinvestment-proposals` returns 200 with valid payload (use `TestClient`, not real server) | `pytest tests/test_reinvestment_proposal.py::test_fastapi_propose_reinvestment` |
+| AC5d | Other proposal types (`portfolio_review`, `client_product_fit_analysis`, `product_investor_matching`, `stock_analysis_proposal`) continue to work in file-based mode — all their existing tests still pass after Sprint 2 changes | `pytest tests/` |
 
 ---
 
@@ -202,6 +259,8 @@ runtime_overrides = {
 | AC9 | `get_client_product_from_db: true` causes `api://` patterns to be used | Integration test with real DB |
 | AC10 | `get_client_product_from_db: false` (or absent) uses file globs unchanged | Regression test |
 | AC11 | Client profile and product catalog appear in `loaded_sections` with `source_type="api_json"` | Unit test |
+| AC11a | API resolver returns only the requested `client_id` data for the reinvestment proposal, not all clients | Unit test |
+| AC11b | When API resolver is called with a `client_id` that has no matching data, it raises a clear error; the caller skips that client and continues with the next | Unit test |
 | AC12 | Existing tests pass without modification | `pytest tests/` |
 
 ---
@@ -254,10 +313,11 @@ The endpoint delegates directly to the existing function.  No logic moves.
 | T2 | Extend `load_references` with `api_resolver` parameter | `src/planbot/input_loader.py` |
 | T3 | Add `api_resolver` passthrough in `run_crew_planbot` | `src/planbot/crew_workflow.py` |
 | T4 | Parse `get_client_product_from_db` in `PlanBotConfig` | `src/planbot/config.py` |
-| T5 | Replace `_create_client_reference_files` with in-memory resolver in `ProposalExecutor` | `src/planbot/proposal_executor.py` |
+| T5 | Replace `_create_client_reference_files` with in-memory resolver in `ProposalExecutor` (reinvestment only) | `src/planbot/proposal_executor.py` |
 | T6 | Add `get_client_product_from_db: true` under `common` in config | `config/config_planbot.yaml` |
 | T7 | Add unit tests for `api://` path in `load_references` | `tests/` |
 | T8 | Remove `cleanup_temp_files` and related helpers | `src/planbot/proposal_executor.py` |
+| T8a | Verify all non-reinvestment proposal types still pass their existing tests in file-based mode | `tests/` |
 | T9 | Add FastAPI integration test: `POST /api/v1/reinvestment-proposals` | `tests/test_reinvestment_proposal.py` |
 
 ### Phase B — FastAPI HTTP switch + HTTP endpoints
