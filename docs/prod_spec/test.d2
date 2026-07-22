@@ -1,0 +1,23 @@
+vars: {
+  d2-config: {
+    layout-engine: elk
+  }
+}
+
+direction: right
+
+s1 : {
+    a1 -> a2 
+}
+
+s2 : {
+    b1 -> b2 -> b3
+}
+
+s3 : {
+    direction: down
+    c1 -> c2
+}
+
+s1.a2 -> s3.c1
+s2.b3 -> s3.c1

@@ -5,6 +5,8 @@ common:
 # setting in the proposal section will override the common setting
   crewai_config_folder: config/crewai/planbot
   cleanup_temp_files: false # If true, temporary files generated during processing will be deleted after use.  If false, they will be kept for debugging.
+  api_endpoints: http://localhost:8000/api/v1
+  get_client_product_from_db: true # When true, client_profiles and product_catalogs are fetched via API instead of file globs.
 
 stock_analysis_proposal:
   task: stock_analysis_proposal_task
@@ -30,7 +32,6 @@ reinvestment_proposal:
   references_root: data/planbot/reinvestment_proposal
   output_root: runs/reinvestment_proposal
   output_filename: reinvestment_proposal.md
-  # get_client_product_from_db: true
   references:
     proposal_instructions_and_format:
       - name: proposal_instructions/*.md

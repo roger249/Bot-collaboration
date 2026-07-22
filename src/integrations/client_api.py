@@ -297,12 +297,12 @@ def search_holdings_maturing(
               AND json_extract_string(p.type_specific, '$.maturity') IS NOT NULL
               AND CAST(json_extract_string(p.type_specific, '$.maturity') AS DATE)
                   BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) + ?
-            ORDER BY 4 ASC
+            ORDER BY 4 ASC, h.market_value DESC
         """
         params = [ref] + list(product_types) + [ref, ref, within_days]
         rows = conn.execute(query, params).fetchall()
 
-        result = [{"client_id": r[0], "product_id": r[1], "notional": r[2], "days_to_mature": r[3]} for r in rows]
+        result = [{"client_id": r[0], "product_id": r[1], "market_value": r[2], "days_to_mature": r[3]} for r in rows]
         LOGGER.debug("search_holdings_maturing output: %s", result)
         return result
     finally:

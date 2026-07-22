@@ -59,6 +59,7 @@ product_type:
     - early_withdrawal_allowed # Boolean
     - insured                 # Boolean
     - minimum_deposit
+    - maturity
 
   # === FIXED INCOME ===
   bond:
@@ -101,6 +102,7 @@ product_type:
     - domicile                # Legal incorporation jurisdiction (e.g., Luxembourg, Ireland)
     - rebalancing_frequency   # monthly, quarterly, semi-annual, annual
     - dividend_treatment      # accumulating, distributing
+    - maturity                # For target maturity fund only
     - pricing:                # Corrected nested mapping syntax for parsers
         - ytm                 # Yield to Maturity (decimal)
         - yield_to_worst    
@@ -153,7 +155,7 @@ product_type:
     - coupon_rate             # Stated structural coupon rate
     - participation_rate      # Upside multiplier if applicable
     - payout_structure        # Descriptive text for internal or LLM reference
-    - expiry                  # Contractual duration until maturity
+    - maturity                  # Contractual duration until maturity
 
 
   # Below product type is reserved for the future and no implementation/planning on them for now.
@@ -208,7 +210,7 @@ product_type:
     - type                    # call, put
     - strike_price            # Absolute calculation value
     - moneyness_ratio         # e.g., 0.95 or 1.05 of spot
-    - expiry_date             # Explicit expiration timestamp or calendar date
+    - expiry                  # Explicit expiration timestamp or calendar date
 
   # === CRYPTO ===
   crypto:
@@ -264,6 +266,4 @@ product_type:
     - aum
     - irr                     # Internal Rate of Return performance metric
     - tvpi                    # Total Value to Paid-In capital ratio
-
-
     ```

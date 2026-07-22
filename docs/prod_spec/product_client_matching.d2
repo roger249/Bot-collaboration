@@ -1,28 +1,19 @@
 direction: down
-# grid-rows: 6
-grid-columns: 2
+grid-rows: 5
+grid-columns: 3
+# grid-gap: 80
 
 client_db -> irs -> potential_client
+product_db -> selected_products -> pc_matcher.pfs
+potential_client -> pc_matcher.pfs
 
-product_db -> selected_products: bank, RM, top selling
-
-selected_products -> pfs
-potential_client -> pfs 
-pfs -> matching_scores -> llm
-llm -> proposal
-
-
-selected_products: Selected Products
-
-llm: |md
-    ## AI assisted proposal generation
-    - Refine fitness with the descriptive language in client, product, market outlook, analysis report.
-    - Pick the best product for each client based on the matching scores and the investor readiness scorecard.
-    - Scenario Analysis
+selected_products: |md
+    ## Selected Products
+    - RM select on UI
+    - Bank's promotion
+    - Top selling products
 |
-llm.shape: rectangle
-
-proposal: Proposal
+selected_products.shape: document
 
 client_db: |md
     ## Client Database
@@ -31,25 +22,16 @@ client_db: |md
     - Married
     - Tax Residence
     - Income
-    - Investment goals
+    - Investment goals (TBD)
     - Holdings
 |
+client_db.shape: stored_data
 
 potential_client: |md
     ## Top-n Selected Clients
     - Readiness Score
 |
-
-potential_client.shape: rectangle
-
-matching_scores: |md
-    ## Matching Scores
-    - (client1, product1, score 1)
-    - (client1, product2, score 2)
-    - (client2, product1, score 3)
-|
-
-matching_scores.shape: rectangle
+potential_client.shape: document
 
 product_db: |md
     ## Products Catalog
@@ -61,11 +43,10 @@ product_db: |md
         - Volatility
         - Max drawdown
     - Complexity and other risk metrics
+    - Natural language comment
+    width: 500
 |
-
-client_db.shape: rectangle
-
-product_db.shape: rectangle
+product_db.shape: stored_data
 
 irs: |md
     ## Investor Readiness Scorecard
@@ -77,11 +58,55 @@ irs: |md
 irs.shape: step
 irs.style.fill: linen
 
-pfs: |md
-    ## Product Fitness Scorecard
-    - Concentration Risk
-    - Investment experience
-    - Life stage (Number of potential needs)
-|
-pfs.shape: step
-pfs.style.fill: linen
+pc_matcher: AI-assist product-client matcher {
+    direction: down
+
+    pfs: |md
+        ## Product Fitness Scorecard
+        - Risk Rating
+        - Incremental Concentration Risk
+        - Better Product than Current Holding
+        - Investment experience
+    |
+    pfs.shape: step
+    pfs.style.fill: linen
+
+    matching_scores: |md
+        ## Matching Scores
+        - (client1, product1, score 1)
+        - (client1, product2, score 2)
+        - (client2, product1, score 3)
+    |
+
+    matching_scores.shape: rectangle
+
+    market: |md
+        # Market Outlook
+        - Bank's Research
+        - News and Market Sentiment
+    |
+    market.shape: rectangle
+
+    scenario: |md
+        # Scenario Analysis Engine
+        - Selected historical period
+    |
+    scenario.shape: rectangle
+
+    llm: |md
+        ## AI assisted proposal generation
+        - Pick the best product for each client based on the product/investor fitness score & market outlook.
+        - Compose proposal with natural language
+        - Scenario Analysis
+    |
+    llm.shape: rectangle
+
+    proposal: Proposal
+
+    pfs -> matching_scores
+    market -> llm
+    matching_scores -> llm
+    scenario -> llm
+    llm -> proposal
+}
+

@@ -13,6 +13,7 @@ The goals are:
 2. Preserve the current proposal output structure and quality.
 3. Keep the proposal generator callable as a local Python function while using remote FastAPI calls for client/product retrieval.
 4. Make the API contract stable enough that the same payload can be used by local callers and remote callers.
+5. Accept pre-selected product lists as API input; product selection logic is out of scope for this service.
 
 It does not redesign the proposal text itself, only how the input data are gathered and assembled for the LLM.
 
@@ -22,7 +23,8 @@ It does not redesign the proposal text itself, only how the input data are gathe
 
 - Product-client matching proposal generation for one or more target clients.
 - API-first retrieval for client profile, holdings, and product catalog data.
-- Product search/filter API enhancement for richer screening conditions.
+- Accepting pre-selected product IDs as part of the request payload.
+- Supporting two invocation modes: direct `client_ids` and helper client discovery.
 - Deterministic matching score generation before LLM narrative generation.
 - Local Python entry point and FastAPI endpoint using the same payload schema.
 
@@ -31,37 +33,67 @@ It does not redesign the proposal text itself, only how the input data are gathe
 - Redesign of proposal writing style or output section names.
 - UI development.
 - Rebuilding client or product master-data services.
+- Product discovery or product pre-selection logic.
 - Advanced optimization (parallel fan-out, compact prompt serialization) in this initial phase.
 
 ## Current state and problem
 
 - Current flow relies on static files for client and product context.
-- Product screening criteria are constrained and not uniformly expressed.
+- Product selection logic is currently mixed into proposal generation concerns.
 - The proposal writer and data retrieval concerns are coupled, making migration and testing harder.
 
 ## Target outcomes
 
 1. Proposal generation can be triggered with only API data dependencies.
-2. Product pre-screening supports categorical lists and numeric ranges consistently.
+2. Product list is passed in from upstream selection logic and reused as-is.
 3. Matching scorecards are reproducible and available for debug/trace.
 4. The same business payload can be used for both local and remote invocation.
+5. Callers can choose either explicit client IDs or helper-based client discovery.
 
-# Dataflow
+## API boundary
 
-Please refer to `docs/prod_spec/product_client_matching.d2` for the data flow of this proposal
+Boundary definition for this module:
 
-## Initial design
+- This module accepts only:
+	- selected products (`candidate_product_ids`) from upstream selector logic, and
+	- either explicit `client_ids` or helper discovery criteria.
+- This module owns:
+	- client enrichment retrieval,
+	- PFS/matching score computation,
+	- proposal generation and formatting.
+- This module does not own:
+	- product discovery/selection,
+	- UI-driven shortlist logic,
+	- bank campaign logic for promoted/top-selling product generation.
 
 ### End-to-end flow
 
-1. Receive request containing client targets and product screening constraints.
+Please refer to `docs/prod_spec/product_client_matching.d2` for the data flow of this proposal
+
+The input to this module is a selected list of products, and the client DB.  
+
+Selected product in general are selected by external means from the entire product catalog.  Potential routes are
+
+- Hand picked by teh relationship manager on the UI.
+- Products promoted by the bank.
+- Top selling products in the last month
+
+1. Receive request containing client targets and pre-selected product IDs.
 2. Retrieve client profile and holdings from client API.
-3. Retrieve candidate products from product API via enhanced search contract.
+3. Retrieve product metadata/details for the passed-in product IDs.
 4. Build product fitness scorecard per (client, product) pair.
 5. Select top-N products per client after filtering and ranking.
 6. Build `llm_input` payload with client, scorecards, candidate products, and market context.
 7. Generate final proposal markdown using existing prompt template.
 8. Return output according to response mode (`path`, `markdown`, `both`) with optional debug blocks.
+
+Helper flow (client discovery mode):
+
+1. Receive request containing pre-selected product IDs and client-discovery parameters.
+2. Build IRS/PFS-based client list (top-N or threshold based).
+3. Invoke the same core proposal pipeline as direct mode using discovered `client_ids`.
+
+## Initial design
 
 ### Service boundaries
 
@@ -69,12 +101,13 @@ Please refer to `docs/prod_spec/product_client_matching.d2` for the data flow of
 - Client API owns client profile and holdings retrieval.
 - Product API owns searchable product catalog and product metadata.
 - FastAPI wrapper stays thin and delegates to the local Python builder.
+- Helper endpoint owns only client list discovery orchestration and delegates generation to the same builder.
 
 ### Core modules (logical)
 
 - Request validator
 - Client context retriever
-- Product candidate retriever
+- Product details retriever
 - Matching score engine
 - LLM input builder
 - Proposal renderer
@@ -89,7 +122,7 @@ Suggested signature:
 ```python
 generate_product_client_fit_proposal(
 		client_ids: list[str],
-		product_filters: dict | None = None,
+		candidate_product_ids: list[str],
 		top_n_per_client: int = 10,
 		min_match_score: float | None = None,
 		response_mode: str = "path",  # one of: path, markdown, both
@@ -99,16 +132,39 @@ generate_product_client_fit_proposal(
 ) -> dict
 ```
 
+### `generate_product_client_fit_proposal_by_discovery(...)`
+
+Suggested signature:
+
+```python
+generate_product_client_fit_proposal_by_discovery(
+	candidate_product_ids: list[str],
+	top_n_clients: int = 20,
+	min_readiness_score: float | None = None,
+	top_n_per_client: int = 10,
+	min_match_score: float | None = None,
+	response_mode: str = "path",  # one of: path, markdown, both
+	include_llm_input: bool = False,
+	include_debug_scores: bool = False,
+	include_market_outlook: bool = True,
+) -> dict
+```
+
 ### Input fields
 
 - `client_ids`: one or more client IDs.
-- `product_filters`: search constraints sent to product search API.
+- `candidate_product_ids`: pre-selected product IDs provided by upstream logic.
 - `top_n_per_client`: max shortlisted products per client.
 - `min_match_score`: optional threshold to suppress weak matches.
 - `response_mode`: `path`, `markdown`, or `both`.
 - `include_llm_input`: include assembled LLM context in output when true.
 - `include_debug_scores`: include scorecard breakdown and filtering trace when true.
 - `include_market_outlook`: include market references in context when true.
+
+Helper-mode additional fields:
+
+- `top_n_clients`: max clients selected by helper path.
+- `min_readiness_score`: optional readiness threshold for helper client filtering.
 
 ### Output fields
 
@@ -127,25 +183,15 @@ generate_product_client_fit_proposal(
 
 ### Endpoints
 
-- `POST /api/v1/product-client-fit-proposals`
-- `POST /api/v1/products/search` (enhanced filter contract)
+- `POST /api/v1/product-client-fit-proposals` (direct mode: caller passes `client_ids`)
+- `POST /api/v1/product-client-fit-proposals/discover-clients` (helper mode)
 
 ### Proposal request body (example)
 
 ```json
 {
 	"client_ids": ["PB-HK-000001-8", "PB-HK-000002-6"],
-	"product_filters": {
-		"risk_rating": [2, 3, 4],
-		"expected_return": {"min": 0.03, "max": 0.08},
-		"product_type": ["bond", "etf"],
-		"asset_class": ["fixed_income"],
-		"region": ["APAC", "Global"],
-		"sector": ["Financials", "Utilities"],
-		"time_to_maturity": {"min": "6m", "max": "5y"},
-		"coupon": {"min": 0.02, "max": 0.07},
-		"trade_date": "2026-07-16"
-	},
+	"candidate_product_ids": ["BOND-XYZ", "ETF-ABCD", "MF-789"],
 	"top_n_per_client": 10,
 	"min_match_score": 6.5,
 	"response_mode": "path",
@@ -175,40 +221,78 @@ generate_product_client_fit_proposal(
 }
 ```
 
+### Helper request body (example)
+
+```json
+{
+	"candidate_product_ids": ["BOND-XYZ", "ETF-ABCD", "MF-789"],
+	"top_n_clients": 20,
+	"min_readiness_score": 6.0,
+	"top_n_per_client": 10,
+	"min_match_score": 6.5,
+	"response_mode": "path",
+	"include_llm_input": false,
+	"include_debug_scores": false,
+	"include_market_outlook": true
+}
+```
+
+### Helper response body (example)
+
+```json
+{
+	"status": "success",
+	"discovered_client_ids": ["PB-HK-000001-8", "PB-HK-000002-6"],
+	"results_by_client": [
+		{
+			"client_id": "PB-HK-000001-8",
+			"candidate_products": [
+				{"product_id": "BOND-XYZ", "match_score": 8.2}
+			],
+			"output_path": "runs/client_product_fit_analysis/PB-HK-000001-8.md"
+		}
+	]
+}
+```
+
 ## Tasks
 
-### Product tool enhancement
+### API input enhancement
 
-Add a search API that able to search by below
+Update proposal API request model to require `candidate_product_ids`.
 
-- `risk_rating`
-- `expected_return`
-- `product_type`
-- `asset_class`
-- `region`
-- `sector` (mapped to `sector` in products table)
-- `time_to_maturity` — accepted in d, w, m, y
-- `coupon` — dividend of a MF/ETF, coupon for bond
-- `trade_date` — default to system date if not specified; used to compute `time_to_maturity`
+Rules:
 
-Note below
+- `candidate_product_ids` must be non-empty.
+- Deduplicate IDs while preserving first-seen order.
+- Enforce max list size via config (to cap runtime/token usage).
+- Return validation error when list is empty or exceeds configured max.
 
-- categoric value accepts list.
-- numeric attribute shall accept range
+Direct-mode rules:
 
-### Product search filter semantics
+- `client_ids` must be non-empty.
+- `client_ids` are deduplicated while preserving first-seen order.
 
-- Categorical fields (`risk_rating`, `product_type`, `asset_class`, `region`, `sector`) accept single value or list.
-- Numeric fields (`expected_return`, `coupon`) accept exact or range object (`min`, `max`).
-- `time_to_maturity` accepts exact or range with unit suffix (`d`, `w`, `m`, `y`).
-- `trade_date` defaults to server system date if omitted.
-- Invalid range (`min > max`) must return validation error.
+Helper-mode rules:
 
-### Product search response (minimum)
+- Do not accept `client_ids` in helper endpoint payload.
+- Helper computes `discovered_client_ids` via IRS/PFS criteria and passes them to the same generation builder.
+- If no clients are discovered, return validation/business error with explicit reason.
 
-- `products`: list of matched products with key attributes used for scoring.
-- `applied_filters`: normalized filter object after default handling.
-- `total_count`: count of matched products before shortlist trimming.
+### Product details retrieval
+
+For each passed-in product ID, fetch required product metadata for scoring and proposal generation.
+
+Minimum behavior:
+
+- If a product ID is not found, record per-client/per-product error and continue where possible.
+- If all passed-in products are invalid for a client, return that client result as failed.
+- Do not run product search/discovery logic in this service.
+
+### Deferred / out-of-scope
+
+- Product screening/discovery API design and filter semantics are handled by upstream selector services.
+- This proposal service consumes only `candidate_product_ids` from the caller.
 
 ## LLM input contract
 
@@ -243,28 +327,32 @@ Required blocks:
 |---|---|---|
 | AC1 | Proposal generation runs from a Python function without reading static client/product files | Unit test with file-reader mocks asserting not called |
 | AC2 | Builder retrieves client data through client API contract only | Unit test with mocked client API and call assertions |
-| AC3 | Builder retrieves product data through enhanced product search API contract only | Unit test with mocked product API and call assertions |
-| AC4 | Product search accepts categorical lists and numeric ranges for specified fields | Contract test with valid request examples |
-| AC5 | `time_to_maturity` supports `d`, `w`, `m`, `y` and computes against `trade_date` defaulting to system date | Unit tests for parsing and default-date behavior |
-| AC6 | Invalid filter payloads return explicit validation errors (including invalid ranges) | Negative contract tests |
+| AC3 | Builder retrieves product data only for caller-provided `candidate_product_ids` | Unit test with mocked product API and call assertions |
+| AC4 | Request validation requires non-empty `candidate_product_ids` and enforces configured max list size | Contract tests and negative tests |
+| AC5 | Duplicate product IDs in `candidate_product_ids` are deduplicated while preserving first-seen order | Unit test for normalization behavior |
+| AC6 | Missing/invalid product IDs are handled gracefully with partial-failure reporting | Integration test with mixed valid/invalid products |
 | AC7 | Matching score output contains deterministic per-client, per-product score entries | Snapshot/unit test with fixed fixtures |
-| AC8 | Proposal endpoint supports `path`, `markdown`, and `both` response modes | Endpoint integration tests for each mode |
+| AC8 | Direct-mode endpoint accepts explicit `client_ids` and supports `path`, `markdown`, and `both` response modes | Endpoint integration tests for each mode |
 | AC9 | Optional blocks are controlled by flags (`include_llm_input`, `include_debug_scores`, `include_market_outlook`) | Unit test matrix |
 | AC10 | Required proposal sections are present and non-empty in generated markdown | Content validation test against required headers |
 | AC11 | Batch request supports partial success and returns per-client errors without dropping successful clients | Integration test with mixed valid/invalid clients |
 | AC12 | Logging uses Python logging module and records correlation ID and stage transitions | Unit test with log capture |
+| AC13 | Helper endpoint discovers clients via IRS/PFS rules and then invokes the same core generation path | Integration test with mocked discovery and builder call assertion |
+| AC14 | Helper endpoint returns `discovered_client_ids` and fails explicitly when none are discovered | Negative and positive contract tests |
 
 ## Open decisions
 
 1. Whether minimum score threshold is fixed in config or fully caller-controlled.
 2. Whether market outlook retrieval remains local reference loading or moves to API in this phase.
 3. Whether debug score schema should align exactly with current investor readiness score artifact format.
+4. Whether caller is allowed to pass product metadata directly (bypassing product detail lookup by ID).
+5. Whether helper endpoint should expose full IRS/PFS discovery trace by default or only under debug flag.
 
 ## Recommended initial implementation order
 
 1. Define and validate request/response models.
-2. Implement product search filter normalization and validation.
-3. Implement builder orchestration with mocked API adapters.
-4. Add endpoint wrapper and response-mode handling.
-5. Add tests for AC1 to AC12 before broad rollout.
+2. Implement `candidate_product_ids` validation and normalization.
+3. Implement direct and helper endpoint request validators.
+4. Implement helper client discovery orchestration and delegation to the same builder.
+5. Add endpoint wrappers, response-mode handling, and tests for AC1 to AC14 before broad rollout.
 
