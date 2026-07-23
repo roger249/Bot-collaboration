@@ -8,8 +8,34 @@ instructions: |
 - Any historical reference should have the exact from/to year and duration specified.
 - For each scenario, have a summary table including PnL and projected cashflow for the suggested vs the current portfolio.
 - The PnL shall be break down to the product level.
+- After narrative scenario section, output a machine-readable proposal JSON block for external valuation between markers:
+	- ---** PROPOSAL_JSON **---
+	- ---** END_PROPOSAL_JSON **---
+- The JSON block shall contain assumptions only; do not include portfolio-level computed totals.
+- Use canonical product identifiers from the input data for instrument-level assumptions.
 - Below is a illustration of the scenarios, feel free to use others that making better sense.
 ```
+
+## Structured scenario JSON contract
+
+The scenario JSON block should follow the contract defined in:
+docs/prod_spec/proposal_JSON_output.md
+
+Minimum required fields:
+- schema_version
+- proposal_type
+- client_id
+- catalog_context
+- valuation_context
+- scenario_set.scenarios[] with normal/upside/downside
+- scenario_set.scenarios[].asset_class_returns[] and/or instrument_returns[]
+
+Validation rules:
+- Probability is optional; if any scenario includes it, all three must and sum to 1.0.
+- All return_pct values are percentages, not decimals.
+- Use unique scenario_id values.
+- Include source/source_period where historical references are used.
+- Instrument IDs must match product_id in the same-version catalog.
 
 ## Normal Market Condition
 - Projected global equity returns: 10%.  This was an average return for the last 5 y

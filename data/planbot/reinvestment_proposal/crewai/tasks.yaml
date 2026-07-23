@@ -21,3 +21,9 @@ reinvestment_proposal_task:
     - The instruction and the proposal format is in proposal_instructions/proposal_format.md.  Follow the section requirement and examples in the markdown.
     - Use tables where they provide a clearer and more concise view.
     - Do not include YAML blocks, extra section, or commentary.
+    - After the markdown, append a structured proposal JSON block between markers:
+      - ---** PROPOSAL_JSON **---
+      - ---** END_PROPOSAL_JSON **---
+    - The proposal JSON must follow the schema defined in the scenario analysis instruction (proposal_section_instructions/scenario_analysis_instruction.md, "Structured scenario JSON contract" section).
+    - The proposal JSON should include assumptions and scenario definitions only, not computed portfolio totals.
+    - Output only the LLM-owned fields (executive_summary, recommended_product, pros_and_cons, scenario_set, references_used). Pre-filled fields (schema_version, proposal_type, client_id, catalog_context, valuation_context, source_product_id) are injected separately.
