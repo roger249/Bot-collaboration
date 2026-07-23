@@ -115,7 +115,7 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
     # Extract proposal sections (top-level keys except scoring configs, common, etc.)
     _non_proposal_keys = {
         "common", "llm_models", "run_configurations",
-        "investor_readiness_score", "product_fitness_score",
+        "investor_readiness_score", "product_fitness_score", "server",
     }
     proposals_raw: dict[str, Any] = {
         k: v for k, v in data.items() if k not in _non_proposal_keys

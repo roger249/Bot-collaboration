@@ -5,14 +5,24 @@ common:
 # setting in the proposal section will override the common setting
   crewai_config_folder: config/crewai/planbot
   cleanup_temp_files: false # If true, temporary files generated during processing will be deleted after use.  If false, they will be kept for debugging.
-  api_endpoints: http://localhost:8000/api/v1
-  get_client_product_from_db: true # When true, client_profiles and product_catalogs are fetched via API instead of file globs.
+  data_service_url: http://localhost:8001/api/v1  # URL of the data service (Phase B: HTTP resolver calls this for client/product data)
+  get_client_product_from_db: false # When true, client_profiles and product_catalogs are fetched via API instead of file globs.
   # HTTP resolver settings (Phase B) — used when get_client_product_from_db is true
   # and the resolver makes HTTP calls to the FastAPI server.
   http_resolver:
     timeout_seconds: 30
     max_retries: 3
     retry_backoff_factor: 0.5  # exponential backoff multiplier
+
+# Server bind settings — consumed by data_server and proposal_server __main__ blocks.
+# Not used by the monolithic server.py (kept for backward compatibility).
+server:
+  data:
+    host: "127.0.0.1"
+    port: 8001
+  proposal:
+    host: "127.0.0.1"
+    port: 8000
 
 stock_analysis_proposal:
   task: stock_analysis_proposal_task

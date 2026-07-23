@@ -36,7 +36,7 @@ product investor matching, stock analysis) that share the same
 ```yaml
 common:
   get_client_product_from_db: true   # applies to all proposals
-  api_endpoints: http://localhost:8000/api/v1
+  data_service_url: http://localhost:8000/api/v1
 
 # When get_client_product_from_db: true, client_profiles and product_catalogs
 # are resolved via api:// patterns (see "API resolver" section below).  The file-based globs below are

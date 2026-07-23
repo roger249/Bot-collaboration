@@ -91,6 +91,8 @@ def propose_reinvestment(
 
     results: list[dict] = []
 
+    errors_occurred = False
+
     for target in reinvestment_targets:
         client_id = target.get("client_id")
         source_product_id = target.get("source_product_id")
@@ -100,23 +102,42 @@ def propose_reinvestment(
                 "Skipping target with missing client_id or source_product_id: %s",
                 target,
             )
+            results.append({
+                "client_id": client_id or "<missing>",
+                "source_product_id": source_product_id or "<missing>",
+                "error": "Missing required field 'client_id' or 'source_product_id'.",
+            })
+            errors_occurred = True
             continue
 
-        result = _process_one_target(
-            app_config=app_config,
-            client_id=client_id,
-            source_product_id=source_product_id,
-            max_per_product_type=max_per_product_type,
-            top_n_per_client=top_n_per_client,
-            risk_rating_hard_filter=risk_rating_hard_filter,
-            response_mode=response_mode,
-            include_llm_input=include_llm_input,
-            include_market_outlook=include_market_outlook,
-            include_debug_scores=include_debug_scores,
-        )
+        try:
+            result = _process_one_target(
+                app_config=app_config,
+                client_id=client_id,
+                source_product_id=source_product_id,
+                max_per_product_type=max_per_product_type,
+                top_n_per_client=top_n_per_client,
+                risk_rating_hard_filter=risk_rating_hard_filter,
+                response_mode=response_mode,
+                include_llm_input=include_llm_input,
+                include_market_outlook=include_market_outlook,
+                include_debug_scores=include_debug_scores,
+            )
+        except Exception as exc:
+            LOGGER.error("Error processing %s/%s: %s", client_id, source_product_id, exc)
+            result = {
+                "client_id": client_id,
+                "source_product_id": source_product_id,
+                "error": str(exc),
+            }
+            errors_occurred = True
+
         results.append(result)
 
-    return {"status": "success", "results_by_client": results}
+    return {
+        "status": "partial_error" if errors_occurred else "success",
+        "results_by_client": results,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -128,7 +149,7 @@ def propose_reinvestment_for_maturing_holdings(
     *,
     within_days: int = 365,
     as_of_date: str | None = None,
-    max_clients: int = 5,
+    max_clients: int = 2,
     max_per_product_type: int = 2,
     top_n_per_client: int = 10,
     risk_rating_hard_filter: bool = True,
@@ -150,7 +171,7 @@ def propose_reinvestment_for_maturing_holdings(
     as_of_date : str | None
         Reference date for maturity calculation (default today).
     max_clients : int
-        Safety cap on the number of clients to process (default 5).
+        Safety cap on the number of clients to process (default 2).
     max_per_product_type : int
         Passed to :func:`propose_reinvestment`.
     top_n_per_client : int
@@ -248,9 +269,9 @@ def _process_one_target(
     if http_cfg is not None:
         # ── Phase B: HTTP resolver ──────────────────────────────────
         planbot_config = yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
-        base_url = (planbot_config.get("common") or {}).get("api_endpoints", "http://localhost:8000/api/v1")
+        data_service_url: str = (planbot_config.get("common") or {}).get("data_service_url", "http://localhost:8000/api/v1")
         # Strip /api/v1 if present — HttpApiResolver appends paths.
-        base_url = base_url.replace("/api/v1", "")
+        base_url = data_service_url.replace("/api/v1", "")
 
         resolver = HttpApiResolver(
             client_id=client_id,
@@ -261,18 +282,35 @@ def _process_one_target(
             retry_backoff_factor=http_cfg.get("retry_backoff_factor", 0.5),
         )
 
-        # Early-exit checks (same semantics as Phase A)
-        if resolver.client_profile is None:
-            LOGGER.warning("Client not found via HTTP: %s", client_id)
-            item["candidate_products"] = []
-            item["output_path"] = ""
-            return item
+        # Access resolver properties to trigger HTTP calls.
+        # Wrap in try/except so network errors include the failing URL.
+        try:
+            _client_ok = resolver.client_profile
+            _product_ok = resolver.source_product
+        except Exception as exc:
+            msg = (
+                f"Data service unreachable at {data_service_url}: {exc}. "
+                f"Is the data server running?"
+            )
+            LOGGER.error(msg)
+            raise ConnectionError(msg) from exc
 
-        if resolver.source_product is None:
-            LOGGER.warning("Source product not found via HTTP: %s", source_product_id)
-            item["candidate_products"] = []
-            item["output_path"] = ""
-            return item
+        # Early-exit checks — surface data errors as structured failures
+        if _client_ok is None:
+            msg = (
+                f"Client not found via HTTP: {client_id} "
+                f"(data_service_url={data_service_url})"
+            )
+            LOGGER.warning(msg)
+            raise LookupError(msg)
+
+        if _product_ok is None:
+            msg = (
+                f"Source product not found via HTTP: {source_product_id} "
+                f"(data_service_url={data_service_url})"
+            )
+            LOGGER.warning(msg)
+            raise LookupError(msg)
 
         candidate_products = resolver.candidate_products
         item["candidate_products"] = candidate_products
@@ -286,17 +324,15 @@ def _process_one_target(
         # ── Phase A: local imports (fallback) ──────────────────────
         client_profile = search_by_id(client_id)
         if client_profile is None:
-            LOGGER.warning("Client not found: %s", client_id)
-            item["candidate_products"] = []
-            item["output_path"] = ""
-            return item
+            msg = f"Client not found: {client_id}"
+            LOGGER.warning(msg)
+            raise LookupError(msg)
 
         source_product = search_by_product_id(source_product_id)
         if source_product is None:
-            LOGGER.warning("Source product not found: %s", source_product_id)
-            item["candidate_products"] = []
-            item["output_path"] = ""
-            return item
+            msg = f"Source product not found: {source_product_id}"
+            LOGGER.warning(msg)
+            raise LookupError(msg)
 
         cand_result = search_reinvestment_candidates(
             client_ids=[client_id],

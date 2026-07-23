@@ -1,10 +1,8 @@
 import pytest
+import httpx
 
-from fastapi.testclient import TestClient
 from src import main
 from src.integrations.client_api import search_holdings_maturing
-from src.integrations.reinvestment_proposal import propose_reinvestment
-from src.integrations.server import app
 
 
 def test_run_client_product_fit_analysis_monkeypatched(monkeypatch):
@@ -37,30 +35,31 @@ def test_run_client_product_fit_analysis_monkeypatched(monkeypatch):
 
 
 @pytest.mark.slow
-def test_propose_reinvestment_for_maturing_holdings(monkeypatch):
-    """FastAPI endpoint for maturing holdings generates a reinvestment proposal.
+def test_propose_reinvestment_for_maturing_holdings(monkeypatch, proposal_server):
+    """Real-HTTP inbound: proposal API via httpx → server in thread.
 
-    1. Call ``POST .../propose_reinvestment_for_maturing_holdings`` via
-       TestClient — discovers maturing bonds, caps at 1 client, invokes LLM.
-    2. Verify the output file exists and contains required section headers.
+    1. Call ``POST .../propose_reinvestment_for_maturing_holdings`` over real
+       TCP — discovers maturing bonds, caps at 1 client, invokes LLM.
+    2. Verify the output contains required section headers.
 
-    Uses Phase A (local imports) internally since TestClient runs in-process
-    without a real HTTP server on port 8000.
+    Data lookups use Phase A (local imports) via monkeypatch.
+    To switch to Phase B (real data service), remove the monkeypatch line —
+    the YAML ``data_service_url`` takes over with zero test-code changes.
     """
     monkeypatch.setattr(
         "src.integrations.reinvestment_proposal._read_http_resolver_config",
         lambda: None,
     )
 
-    client = TestClient(app)
-    response = client.post(
-        "/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings",
+    response = httpx.post(
+        f"{proposal_server}/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings",
         json={
             "within_days": 365 * 10,
             "max_clients": 1,
             "response_mode": "both",
             "include_debug_scores": True,
         },
+        timeout=600,
     )
 
     assert response.status_code == 200
@@ -87,13 +86,16 @@ def test_propose_reinvestment_for_maturing_holdings(monkeypatch):
 
 
 @pytest.mark.slow
-def test_multi_client_propose_reinvestment(monkeypatch):
-    """Chain all clients with maturing bonds, up to 5, through the API at once.
+def test_multi_client_propose_reinvestment(monkeypatch, proposal_server):
+    """Real-HTTP inbound: POST /api/v1/reinvestment-proposals with explicit targets.
 
-    1. Discover all maturing bonds/bond funds.
+    1. Discover maturing bonds/bond funds locally.
     2. Deduplicate by client, cap at 5.
-    3. Call ``propose_reinvestment`` with ALL targets.
+    3. Call the proposal server over real TCP with ALL targets.
     4. Verify every client gets a non-empty proposal with required sections.
+
+    Data lookups use Phase A (local imports) via monkeypatch.
+    To switch to Phase B, remove the monkeypatch line.
     """
     monkeypatch.setattr(
         "src.integrations.reinvestment_proposal._read_http_resolver_config",
@@ -102,7 +104,7 @@ def test_multi_client_propose_reinvestment(monkeypatch):
 
     # 1 ─ Discover maturing holdings ──────────────────────────────────
     maturing = search_holdings_maturing(
-        product_types=["bond", "bond_fund"], within_days= 30
+        product_types=["bond", "bond_fund"], within_days=30
     )
 
     seen_clients: set[str] = set()
@@ -127,12 +129,19 @@ def test_multi_client_propose_reinvestment(monkeypatch):
     assert len(targets) >= 1, "Expected at least one reinvestment target"
     print(f"Processing {len(targets)} client(s): {[t['client_id'] for t in targets]}")
 
-    # 2 ─ Call the API with ALL targets ────────────────────────────────
-    result = propose_reinvestment(
-        reinvestment_targets=targets,
-        response_mode="both",
-        include_debug_scores=True,
+    # 2 ─ Call the proposal API over real HTTP ────────────────────────
+    response = httpx.post(
+        f"{proposal_server}/api/v1/reinvestment-proposals",
+        json={
+            "reinvestment_targets": targets,
+            "response_mode": "both",
+            "include_debug_scores": True,
+        },
+        timeout=600,
     )
+
+    assert response.status_code == 200
+    result = response.json()
 
     # 3 ─ Verify every client got a proposal ───────────────────────────
     assert result["status"] == "success"

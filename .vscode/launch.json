@@ -126,6 +126,30 @@
         "--config",
         "config/config_marketdata.yaml"
       ]
+    },
+    {
+      "name": "Proposal API Server",
+      "type": "python",
+      "request": "launch",
+      "module": "src.integrations.proposal_server",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
+    },
+    {
+      "name": "Data API Server",
+      "type": "python",
+      "request": "launch",
+      "module": "src.integrations.data_server",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
     }
   ]
 }
