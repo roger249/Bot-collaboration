@@ -8,4 +8,4 @@ data/planbot/**/*.pdf
 data/planbot/stock_analysis/news_and_data/**/*
 temp/
 data/planbot/shared/client_profile/clients.duckdb
-data/planbot/db/planbot.duckdb
+
