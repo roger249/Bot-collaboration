@@ -20,3 +20,9 @@
 - Validate phase exit criteria before merge (no runtime error, required outputs present, no empty required sections).
 - Keep changes reversible at code level even if rollback is not required.
 - Document new dependencies/runtime prerequisites in requirements and setup notes.
+
+# Fast API
+- The swagger page shall have example request payload and response
+- The request payload shall illustrate how the API being called by using most parameters.  If parameter accepts a range, it should put in a range instead of single value.
+- The example request shall have return of non-empty return
+- Each API shall have unit test built

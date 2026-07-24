@@ -122,7 +122,7 @@ def _compute_derived_fields(conn: duckdb.DuckDBPyConnection) -> dict[str, dict[s
     for cid, c in clients.items():
         pts = pt_map.get(cid, set())
         c["product_types_in_holdings"] = sorted(pts)
-        c["product_types_in_holdings_product_families"] = sorted({get_product_family(p) for p in pts})
+        c["product_families_in_holdings"] = sorted({get_product_family(p) for p in pts})
 
     # cash_pct
     cpr = conn.execute("""
@@ -249,7 +249,7 @@ def search(**criteria: Any) -> list[dict]:
                 if not _match_range(c.get("age"), criteria["age"]):
                     continue
             if "product_types_in_holdings" in criteria and criteria["product_types_in_holdings"] is not None:
-                cats = set(c.get("product_types_in_holdings_product_families", []))
+                cats = set(c.get("product_families_in_holdings", []))
                 req = criteria["product_types_in_holdings"]
                 if isinstance(req, str):
                     req = [req]

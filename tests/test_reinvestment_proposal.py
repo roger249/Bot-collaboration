@@ -124,7 +124,7 @@ class TestReinvestmentProposal(unittest.TestCase):
 
     @patch("src.integrations.reinvestment_proposal.search_by_id")
     def test_missing_client_returns_graceful(self, mock_client):
-        """Missing client returns empty candidate_products and empty output_path."""
+        """Missing client produces partial_error with diagnostic error message."""
         mock_client.return_value = None
 
         result = propose_reinvestment(
@@ -133,15 +133,17 @@ class TestReinvestmentProposal(unittest.TestCase):
             ],
         )
 
+        self.assertEqual(result["status"], "partial_error")
         item = result["results_by_client"][0]
-        self.assertEqual(item["candidate_products"], [])
-        self.assertEqual(item["output_path"], "")
+        self.assertIn("error", item)
+        self.assertIn("NONEXISTENT", item["error"])
+        self.assertEqual(item["client_id"], "NONEXISTENT")
         self.assertEqual(item["source_product_id"], "ETF-HYG")
 
     @patch("src.integrations.reinvestment_proposal.search_by_id")
     @patch("src.integrations.reinvestment_proposal.search_by_product_id")
     def test_missing_source_product_returns_graceful(self, mock_product, mock_client):
-        """Missing source product returns empty candidate_products and empty output_path."""
+        """Missing source product produces partial_error with diagnostic error message."""
         mock_client.return_value = SAMPLE_CLIENT
         mock_product.return_value = None
 
@@ -151,9 +153,11 @@ class TestReinvestmentProposal(unittest.TestCase):
             ],
         )
 
+        self.assertEqual(result["status"], "partial_error")
         item = result["results_by_client"][0]
-        self.assertEqual(item["candidate_products"], [])
-        self.assertEqual(item["output_path"], "")
+        self.assertIn("error", item)
+        self.assertIn("NONEXISTENT", item["error"])
+        self.assertEqual(item["client_id"], "PB-HK-000001-8")
 
     @patch("src.integrations.reinvestment_proposal.search_by_id")
     @patch("src.integrations.reinvestment_proposal.search_by_product_id")
@@ -348,9 +352,14 @@ class TestReinvestmentProposal(unittest.TestCase):
             ],
         )
 
-        # Only the third target is valid
-        self.assertEqual(len(result["results_by_client"]), 1)
-        self.assertEqual(result["results_by_client"][0]["client_id"], "PB-HK-000002-6")
+        # Two targets fail validation, third succeeds — status is partial_error
+        self.assertEqual(result["status"], "partial_error")
+        self.assertEqual(len(result["results_by_client"]), 3)
+        # First two have errors
+        self.assertIn("error", result["results_by_client"][0])
+        self.assertIn("error", result["results_by_client"][1])
+        # Third target succeeds
+        self.assertEqual(result["results_by_client"][2]["client_id"], "PB-HK-000002-6")
 
     def test_invalid_response_mode(self):
         """Invalid response_mode raises ValueError."""
@@ -442,10 +451,10 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         from fastapi.testclient import TestClient
-        from src.integrations.server import app
+        from src.integrations.proposal_server import app
         cls.client = TestClient(app)
 
-    @patch("src.integrations.server.propose_reinvestment")
+    @patch("src.integrations.proposal_server.propose_reinvestment")
     def test_fastapi_propose_reinvestment_returns_200(self, mock_propose):
         """POST /api/v1/reinvestment-proposals returns 200 with valid payload (AC5)."""
         mock_propose.return_value = {
@@ -475,7 +484,7 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
         self.assertEqual(len(data["results_by_client"]), 1)
         mock_propose.assert_called_once()
 
-    @patch("src.integrations.server.propose_reinvestment")
+    @patch("src.integrations.proposal_server.propose_reinvestment")
     def test_fastapi_propose_reinvestment_passes_all_params(self, mock_propose):
         """Endpoint forwards all optional parameters to propose_reinvestment."""
         mock_propose.return_value = {"status": "success", "results_by_client": []}
@@ -507,7 +516,7 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
             include_debug_scores=True,
         )
 
-    @patch("src.integrations.server.propose_reinvestment_for_maturing_holdings")
+    @patch("src.integrations.proposal_server.propose_reinvestment_for_maturing_holdings")
     def test_fastapi_propose_reinvestment_for_maturing_holdings_returns_200(self, mock_func):
         """POST .../propose_reinvestment_for_maturing_holdings returns 200 (AC17)."""
         mock_func.return_value = {"status": "success", "results_by_client": []}
@@ -527,7 +536,7 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
         self.assertEqual(data["status"], "success")
         mock_func.assert_called_once()
 
-    @patch("src.integrations.server.propose_reinvestment_for_maturing_holdings")
+    @patch("src.integrations.proposal_server.propose_reinvestment_for_maturing_holdings")
     def test_fastapi_maturing_defaults(self, mock_func):
         """Endpoint uses sensible defaults when optional fields are omitted."""
         mock_func.return_value = {"status": "success", "results_by_client": []}
@@ -540,7 +549,7 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
         mock_func.assert_called_once_with(
             within_days=365,
             as_of_date=None,
-            max_clients=5,
+            max_clients=2,
             max_per_product_type=2,
             top_n_per_client=10,
             risk_rating_hard_filter=True,

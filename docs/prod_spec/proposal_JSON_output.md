@@ -496,3 +496,84 @@ Some fields are pre-filled by Python before the JSON reaches downstream, reducin
 ## References
 - data/planbot/shared/proposal_section_instructions/scenario_analysis_instruction.md
 - docs/prod_spec/product_catalog/product_catalog.md
+
+## Open Discussion: Downsized JSON-Only Contract
+
+Current v1.0 JSON carries narrative fields (executive summary, rationale, pros/cons, alternatives, risk characteristics) in addition to the computation-required fields (scenario assumptions, funding source, recommended amount). An alternative is to strip the JSON to only what the downstream engine cannot derive:
+
+### Proposed minimal JSON (LLM-owned only)
+
+```json
+{
+  "schema_version": "1.0",
+  "client_id": "PB-HK-000001-8",
+  "catalog_context": {
+    "catalog_version_id": "catalog-2026-07-23-a",
+    "catalog_as_of_date": "2026-07-23"
+  },
+  "valuation_context": {
+    "base_currency": "USD",
+    "horizon_months": 12,
+    "return_convention": "simple_annual",
+    "probability_required": false
+  },
+  "recommended_product": {
+    "product_id": "ETF-BND",
+    "recommended_amount": 500000
+  },
+  "funding_source": [
+    {
+      "instrument_id": "USIG-2026",
+      "action": "redeem",
+      "amount": 500000,
+      "note": "Maturing corporate bond releases principal for reinvestment"
+    }
+  ],
+  "scenario_set": {
+    "scenarios": [
+      {
+        "scenario_id": "normal",
+        "description": "Moderate growth, rates range-bound...",
+        "probability": 0.60,
+        "asset_class_returns": [...],
+        "instrument_returns": [...],
+        "assumption_rationale": [...]
+      }
+    ]
+  }
+}
+```
+
+### What's removed vs. v1.0
+
+| Removed from JSON | Stays in | Rationale |
+|---|---|---|
+| `executive_summary.*` | Markdown only | Narrative; no downstream computation needs it |
+| `recommended_product.product_name`, `rationale`, `fit_score`, `risk_characteristics` | Markdown only | Narrative + catalog-derived |
+| `pros_and_cons.*` | Markdown only | Narrative |
+| `alternative_products.*` | Markdown only | Narrative |
+| `client_needs.*` | Markdown only | Narrative (or removed entirely; reinvestment samples don't have it) |
+| `references_used.*` | Markdown only | Narrative; already in markdown References section |
+
+### What stays in JSON
+
+| Field | Why needed |
+|---|---|
+| `recommended_product.product_id` | Downstream joins with catalog for product details |
+| `recommended_product.recommended_amount` | Downstream computes suggested portfolio allocation |
+| `funding_source[]` | Downstream needs to know what was sold/trimmed to contrast current vs. suggested |
+| `scenario_set.*` | Core LLM output: return assumptions for deterministic valuation |
+
+### Trade-offs
+
+| Factor | Current v1.0 (full JSON) | Proposed (minimal JSON) |
+|---|---|---|
+| LLM output complexity | ~20 fields | ~4 LLM-owned fields |
+| JSON failure surface | High — one malformed narrative field kills all JSON | Low — only scenario + funding data at risk |
+| Downstream value | High — structured narrative available | Same for computation; narrative stays in markdown |
+| MD/JSON drift risk | Narrative duplicated across formats | Narrative lives in one place (markdown) |
+| Rebuild proposal from JSON | Possible | Not possible without markdown |
+
+### Decision deferred
+
+Keep v1.0 as-is for initial implementation. The downsized contract is noted here for re-evaluation after observing JSON extraction reliability and MD/JSON consistency in production.

@@ -11,7 +11,7 @@ Start with:
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from fastapi import FastAPI
 
@@ -50,6 +50,8 @@ class ReinvestmentTarget(BaseModel):
 class ProposeReinvestmentRequest(BaseModel):
     """Generate reinvestment proposals for one or more target pairs."""
 
+    model_config = ConfigDict(extra="allow")  # backward compat with old body: dict
+
     reinvestment_targets: list[ReinvestmentTarget] = Field(
         ..., description="List of (client_id, source_product_id) pairs to process",
         min_length=1,
@@ -79,6 +81,8 @@ class ProposeReinvestmentRequest(BaseModel):
 
 class MaturingHoldingsRequest(BaseModel):
     """Discover clients with maturing bonds and generate proposals."""
+
+    model_config = ConfigDict(extra="allow")  # backward compat with old body: dict
 
     within_days: int = Field(
         365, description="Look ahead this many days for maturing holdings", ge=1,
@@ -115,11 +119,47 @@ class MaturingHoldingsRequest(BaseModel):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# Response models (for OpenAPI documentation only — not validated at runtime)
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class PerClientResult(BaseModel):
+    """Result for a single client→product pair."""
+
+    client_id: str = Field(..., json_schema_extra={"example": "PB-HK-000007-5"})
+    source_product_id: str = Field(..., json_schema_extra={"example": "PROD053"})
+    candidate_products: list[dict] = Field(
+        default_factory=list,
+        json_schema_extra={"example": [{"product_id": "PROD054", "similarity_score": 0.9933}]},
+    )
+    output_path: str | None = Field(
+        None, json_schema_extra={"example": "runs/reinvestment_proposal/reinvestment_proposal_PB-HK-000007-5.md"},
+    )
+    markdown_output: str | None = Field(
+        None, json_schema_extra={"example": "# Reinvestment Proposal\n\n## Executive Summary\n..."},
+    )
+    error: str | None = Field(
+        None, json_schema_extra={"example": "Data service unreachable at http://localhost:8001/api/v1: [Errno 61] Connection refused. Is the data server running?"},
+    )
+
+
+class ProposalResponse(BaseModel):
+    """Top-level response from the reinvestment proposal API."""
+
+    status: str = Field(..., json_schema_extra={"example": "success"})
+    results_by_client: list[PerClientResult] = Field(default_factory=list)
+
+
+class ValidationErrorDetail(BaseModel):
+    detail: str = Field(..., json_schema_extra={"example": "Client not found: PB-HK-999"})
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Reinvestment proposal endpoints
 # ═══════════════════════════════════════════════════════════════════════════
 
 
-@app.post("/api/v1/reinvestment-proposals")
+@app.post("/api/v1/reinvestment-proposals", response_model=ProposalResponse)
 def get_reinvestment_proposals(body: ProposeReinvestmentRequest) -> dict:
     """Generate reinvestment proposals for one or more target pairs."""
     return propose_reinvestment(
@@ -134,7 +174,10 @@ def get_reinvestment_proposals(body: ProposeReinvestmentRequest) -> dict:
     )
 
 
-@app.post("/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings")
+@app.post(
+    "/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings",
+    response_model=ProposalResponse,
+)
 def propose_for_maturing_holdings(body: MaturingHoldingsRequest) -> dict:
     """Discover clients with maturing bond/bond-fund holdings and generate reinvestment proposals."""
     return propose_reinvestment_for_maturing_holdings(

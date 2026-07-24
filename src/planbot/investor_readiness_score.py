@@ -692,6 +692,15 @@ def run_score_card(
 
         mod.CLIENT_DB_PATH = Path(db_path)
 
+    if _db_has_data():
+        # DB already populated — use read-only to avoid lock conflicts
+        conn = duckdb.connect(str(CLIENT_DB_PATH), read_only=True)
+        try:
+            return compute_total_scores(conn, score_config)
+        finally:
+            conn.close()
+
+    # First run or rebuild — needs write access
     conn = get_client_db_conn(read_only=False)
     try:
         init_client_db(conn)
@@ -700,6 +709,19 @@ def run_score_card(
         return scores
     finally:
         conn.close()
+
+
+def _db_has_data() -> bool:
+    """Return True if the DuckDB already has client data loaded."""
+    try:
+        conn = duckdb.connect(str(CLIENT_DB_PATH), read_only=True)
+        try:
+            count = conn.execute("SELECT COUNT(*) FROM clients").fetchone()[0]
+            return count > 0
+        finally:
+            conn.close()
+    except Exception:
+        return False
 
 
 # ---------------------------------------------------------------------------
