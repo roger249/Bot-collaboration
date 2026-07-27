@@ -1,7 +1,19 @@
 To Do
 =====
 
-Below are some Epic to do
+# Below are to do for a POC grade proposal generator
+
+- Product catalog / Client schema
+- Define Product catalog / Client
+- Move proposal generation to a server side API with JSON output
+- Integrate to SmartWealth product/client catalog
+- Refine the proposal algo to include score card mechanism
+- Refine the proposal-client matching UI
+
+# Below are to do for a Smart Alert
+
+
+Below are some Epics to do in the future
 
 # Self update of market outlook and provide description (from suitability standpoint) for products based on news/data
 
@@ -15,8 +27,10 @@ The engine behind is Learn to Rank
 - Linear RankNet to train scorecard?
   - 1000 labeled training data
 
-# Scenario analysis like Historical VaR
+# Efficient frontier?
+
+# Scenario analysis like Historical VaR?
 
 # Add psychology framework to the investment guide
-- May not have sufficient information due to Long questionnaire
+- May not have sufficient information due to long questionnaire that no investor would like to take.
 

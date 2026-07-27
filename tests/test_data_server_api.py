@@ -197,10 +197,10 @@ class TestClientSearch:
 
 
 class TestProductSearch:
-    """POST /api/v1/products/search"""
+    """POST /api/v1/products/search-similar"""
 
     def test_search_returns_results(self):
-        r = client.post("/api/v1/products/search", json={
+        r = client.post("/api/v1/products/search-similar", json={
             "query": {"risk_rating": 1, "expected_return": 3.7, "product_type": "bond"},
             "top_n": 3,
             "exclude_product_ids": ["PROD053"],

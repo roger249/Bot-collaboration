@@ -1,112 +1,139 @@
 direction: down
-grid-rows: 5
-grid-columns: 3
-# grid-gap: 80
 
-client_db -> irs -> potential_client
-product_db -> selected_products -> pc_matcher.pfs
-potential_client -> pc_matcher.pfs
+# ── Left: two rows stacked vertically ────────────────────────────────
+PFS-input: {
+  direction: down
 
-selected_products: |md
-    ## Selected Products
-    - RM select on UI
-    - Bank's promotion
-    - Top selling products
-|
-selected_products.shape: document
+  # Row 1 ──────────────────────────────────────────────────────────────
+  Client-flow: {
+    direction: right
 
-client_db: |md
-    ## Client Database
-    - Age
-    - Gender
-    - Married
-    - Tax Residence
-    - Income
-    - Investment goals (TBD)
-    - Holdings
-|
-client_db.shape: stored_data
+    client_db: |md
+      ## Client Database
+      - Age
+      - Gender
+      - Married
+      - Tax Residence
+      - Income
+      - Investment goals (TBD)
+      - Holdings
+    |
+    client_db.shape: stored_data
 
-potential_client: |md
-    ## Top-n Selected Clients
-    - Readiness Score
-|
-potential_client.shape: document
+    irs: |md
+      ## Investor Readiness Scorecard
+      - % Cash or equivalents
+      - Concentration Risk
+      - Investment experience
+      - Life stage (Number of potential needs)
+    |
+    irs.shape: step
+    irs.style.fill: linen
 
-product_db: |md
-    ## Products Catalog
-    - Asset class
-    - Risk rating
-    - Liquidity
-    - Historical performance
-        - Expected return
-        - Volatility
-        - Max drawdown
-    - Complexity and other risk metrics
-    - Natural language comment
-    width: 500
-|
-product_db.shape: stored_data
+    potential_client: |md
+      ## Top-n Selected Clients
+      - Readiness Score
+    |
+    potential_client.shape: document
 
-irs: |md
-    ## Investor Readiness Scorecard
-    - % Cash or equivalents
-    - Concentration Risk
-    - Investment experience
-    - Life stage (Number of potential needs)
-|
-irs.shape: step
-irs.style.fill: linen
+    client_db -> irs -> potential_client
+  }
 
-pc_matcher: AI-assist product-client matcher {
+  # Row 2 ──────────────────────────────────────────────────────────────
+  Product-flow: {
     direction: down
 
-    pfs: |md
-        ## Product Fitness Scorecard
-        - Risk Rating
-        - Incremental Concentration Risk
-        - Better Product than Current Holding
-        - Investment experience
+    product_db: |md
+      ## Products Catalog
+      - Asset class
+      - Risk rating
+      - Liquidity
+      - Historical performance
+          - Expected return
+          - Volatility
+          - Max drawdown
+      - Complexity and other risk metrics
+      - Natural language comment
     |
-    pfs.shape: step
-    pfs.style.fill: linen
+    product_db.shape: stored_data
 
-    matching_scores: |md
-        ## Matching Scores
-        - (client1, product1, score 1)
-        - (client1, product2, score 2)
-        - (client2, product1, score 3)
+    selected_products: |md
+      ## Selected Products (Manual)
+      - RM select on UI
+      - Bank's promotion
+      - Top selling products
     |
+    selected_products.shape: document
 
-    matching_scores.shape: rectangle
-
-    market: |md
-        # Market Outlook
-        - Bank's Research
-        - News and Market Sentiment
-    |
-    market.shape: rectangle
-
-    scenario: |md
-        # Scenario Analysis Engine
-        - Selected historical period
-    |
-    scenario.shape: rectangle
-
-    llm: |md
-        ## AI assisted proposal generation
-        - Pick the best product for each client based on the product/investor fitness score & market outlook.
-        - Compose proposal with natural language
-        - Scenario Analysis
-    |
-    llm.shape: rectangle
-
-    proposal: Proposal
-
-    pfs -> matching_scores
-    market -> llm
-    matching_scores -> llm
-    scenario -> llm
-    llm -> proposal
+    product_db -> selected_products
+  }
 }
 
+# ── Right: Product-Client Matcher ────────────────────────────────────
+pc_matcher: AI-assist product-client matcher {
+  direction: down
+
+  market: |md
+    # Market Outlook
+    - Bank's research
+    - News and market sentiment
+  |
+  market.shape: document
+
+  # ── Main vertical chain ─────────────────────────────────────────────
+  pfs: |md
+    ## Product Fitness Scorecard
+    - Risk rating
+    - Incremental concentration risk
+    - Better product than current holding
+    - Investment experience
+  |
+  pfs.shape: step
+  pfs.style.fill: linen
+
+  matching_scores: |md
+    ## Matching Scores
+    - (client1, product1, score 1)
+    - (client1, product2, score 2)
+    - (client2, product1, score 3)
+  |
+  matching_scores.shape: document
+
+  llm: |md
+    ## AI Product Investor Matcher
+    Consideration mainly on natural language input
+    - The product/investor fitness score
+    - Market outlook
+    - Client profile
+    - Product catalog
+    - Compose proposal with natural language
+    - Scenario analysis
+  |
+  llm.shape: rectangle
+
+  scenario: |md
+    # Scenario Analysis Engine
+    - Selected historical period
+  |
+  scenario.shape: rectangle
+
+  proposal_writer: |md
+    ## AI Proposal Writer
+    - Executive summary
+    - Suggested product & funding
+    - Rationale of the suggestion
+    - Pros and cons regarding from portfolio perspective
+    - Scenario analysis
+    - Alternative suggestions
+    - Risk disclosure
+  |
+  proposal_writer.shape: rectangle
+
+  pfs -> matching_scores -> llm -> proposal_writer
+  market -> llm
+  scenario -> proposal_writer
+}
+
+# ── Cross-panel connections ─────────────────────────────────────────
+PFS-input.client-flow.potential_client -> pc_matcher.pfs
+PFS-input.product-flow.selected_products -> pc_matcher.pfs

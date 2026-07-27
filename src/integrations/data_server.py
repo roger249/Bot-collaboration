@@ -65,8 +65,22 @@ class ClientSearchRequest(BaseModel):
     )
 
 
-class ProductSearchRequest(BaseModel):
-    """Proximity search returning products ranked by similarity."""
+class SimilarProductSearchRequest(BaseModel):
+    """Proximity search returning products ranked by similarity.
+
+    Each numeric attribute in ``query`` (e.g. ``risk_rating``, ``expected_return``)
+    is compared against every product using a Gaussian kernel:
+
+      similarity = 1.0 − min(|product_value − query_value| ∕ σ,  1.0)
+
+    where σ is the population standard deviation of that attribute across the
+    product catalog.  Categorical attributes (``product_type``, ``asset_class``,
+    ``region``, ``sector``) use exact-match scoring (1.0 match, 0.0 mismatch).
+
+    The final score is a weighted average over all supplied dimensions,
+    renormalised so that omitted dimensions do not penalise the result.
+    Products are returned in descending similarity order.
+    """
 
     query: dict = Field(
         ..., description="Product attributes to match against",
@@ -143,7 +157,7 @@ class ProductResponse(BaseModel):
     product_type: str | None = Field(None, json_schema_extra={"example": "bond"})
 
 
-class SearchSimilarResult(BaseModel):
+class SimilarProductSearchResult(BaseModel):
     results: list[dict] = Field(
         ...,
         json_schema_extra={"example": [
@@ -331,9 +345,14 @@ def get_product(
     return result
 
 
-@app.post("/api/v1/products/search", response_model=SearchSimilarResult)
-def search_products(body: ProductSearchRequest) -> dict:
-    """Proximity search returning products ranked by similarity."""
+@app.post("/api/v1/products/search-similar", response_model=SimilarProductSearchResult)
+def search_similar_products(body: SimilarProductSearchRequest) -> dict:
+    """Proximity search returning products ranked by similarity.
+
+    Products are scored against the supplied ``query`` attributes using a
+    Gaussian proximity kernel for numerics and exact-match for categoricals.
+    See ``SimilarProductSearchRequest`` for the scoring formula.
+    """
     return search_similar(
         query=body.query,
         top_n=body.top_n,

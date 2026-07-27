@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from pathlib import Path
 import re
 
 from src.shared.io_utils import read_text
+
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -92,10 +95,12 @@ def load_references(
 
         if not matched_paths:
             search_folder = _derive_glob_search_folder(root_dir, pattern)
-            raise FileNotFoundError(
-                f"Reference glob '{pattern}' matched no files under root '{root_dir}'. "
-                f"Expected files under '{search_folder}' (exists={search_folder.exists()})."
+            LOGGER.warning(
+                "Reference glob '%s' matched no files under root '%s'. "
+                "Expected files under '%s' (exists=%s). Skipping.",
+                pattern, root_dir, search_folder, search_folder.exists(),
             )
+            continue
 
         paths_set.update(matched_paths)
 

@@ -20,3 +20,12 @@
 - Validate phase exit criteria before merge (no runtime error, required outputs present, no empty required sections).
 - Keep changes reversible at code level even if rollback is not required.
 - Document new dependencies/runtime prerequisites in requirements and setup notes.
+
+# API Contract Sources for Coding
+- OpenAPI source of truth: `docs/prod_spec/tool/openapi.json`
+- Concise endpoint index: `docs/prod_spec/tool/endpoint_index.md`
+- Client API functional notes: `docs/prod_spec/tool/client_tool.md`
+- Product API functional notes: `docs/prod_spec/tool/product_tool.md`
+- Runtime integration implementation: `src/integrations`
+- Scorecard source docs: `docs/prod_spec/score_card/investor_readiness_score.md`, `docs/prod_spec/score_card/product_fitness_score.md`
+- When generating or modifying integration code, follow OpenAPI schema and operation IDs first; treat prose docs as supplementary.
