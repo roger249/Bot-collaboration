@@ -90,7 +90,9 @@ product_investor_matching:
     proposal_instructions_and_format:
       - name: proposal_instructions/*.md
         purpose: Instructions and format for generating the proposal
-      - name: ../shared/proposal_section_instructions/*.md
+      - name: ../shared/proposal_section_instructions/[!s]*.md
+        purpose: Detail instructions for specific sections in the proposal
+      - name: ../shared/proposal_section_instructions/s[!c]*.md
         purpose: Detail instructions for specific sections in the proposal
     guidelines: 
       - name: ../shared/financial_needs/*.md
@@ -359,3 +361,31 @@ run_configurations:
         client_ids: product_investor_matching_filter.output.client_ids
       output:
         by_client_id: map
+
+product_groups:
+  bank_recommended:
+    description: "Bank recommended products"
+    product_ids:
+      - PROD001    # Tech Leaders Equity Fund
+      - PROD003    # US Corporate Bond Fund
+      - PROD007    # Asia Pacific Bond Fund
+      - PROD008    # Multi-Asset Income Fund
+      - PROD013    # Global Dividend Equity Fund
+      - PROD014    # Emerging Markets Fund
+      - PROD016    # Healthcare Innovation Fund
+      - PROD020    # Balanced Growth & Income
+      - ETF-VOO    # Vanguard S&P 500 ETF
+      - ETF-HYG    # iShares High Yield Corp Bond ETF
+  ETF:
+    description: "Exchange Traded Funds"
+    product_ids:
+      - ETF-VOO     # Vanguard S&P 500 ETF
+      - ETF-HYG     # iShares High Yield Corp Bond ETF
+      - ETF-GOVT    # iShares U.S. Treasury Bond ETF
+      - ETF-SPY     # SPDR S&P 500 ETF Trust
+      - ETF-QQQ     # Invesco QQQ Trust (Nasdaq-100)
+      - ETF-IWM     # iShares Russell 2000 ETF
+      - ETF-BND     # Vanguard Total Bond Market ETF
+      - ETF-AGG     # iShares Core US Aggregate Bond ETF
+      - ETF-GLDM    # SPDR Gold MiniShares
+      - ETF-SHYG    # iShares 0-5Y High Yield Corp Bond ETF

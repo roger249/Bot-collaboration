@@ -7,11 +7,17 @@ Start with:
 
 from __future__ import annotations
 
+import json
+import logging
+import logging.config
+import time
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from fastapi import FastAPI, HTTPException, Path, Query
+from fastapi import FastAPI, HTTPException, Path, Query, Request
+from fastapi.responses import Response, StreamingResponse
 
 from src.integrations.client_api import (
     search_by_id,
@@ -25,11 +31,92 @@ from src.integrations.product_tool import (
     search_product_by_fitness_score,
 )
 
+LOGGER = logging.getLogger(__name__)
+
+# ── Wire integration-level logging to file on startup ─────────────────────
+_CWD = Path(__file__).resolve().parents[2]
+_LOGGING_INI = _CWD / "config" / "logging_config.ini"
+_LOG_FILE = _CWD / "log" / "root.log"
+_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+if _LOGGING_INI.exists():
+    logging.config.fileConfig(
+        str(_LOGGING_INI),
+        defaults={
+            "log_level": "DEBUG",
+            "log_file": str(_LOG_FILE),
+            "chat_history_log_file": str(_CWD / "log" / "chat_history.log"),
+            "api_debug_level": "DEBUG",
+        },
+        disable_existing_loggers=False,
+    )
+
 app = FastAPI(
     title="PlanBot Data API",
     description="Client and product APIs for investment proposal generation.",
     version="0.1.0",
 )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Debug-logging middleware — logs request/response payloads at DEBUG level
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.middleware("http")
+async def _log_payloads(request: Request, call_next) -> Response:
+    t0 = time.monotonic()
+
+    # Capture request body (consume + restore)
+    req_body_bytes = await request.body()
+    if request.method in ("POST", "PUT", "PATCH") and req_body_bytes:
+        try:
+            req_payload = json.loads(req_body_bytes)
+            LOGGER.debug("REQ %s %s → %s", request.method, request.url.path,
+                         json.dumps(req_payload, ensure_ascii=False, default=str))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            LOGGER.debug("REQ %s %s → [%d bytes non-JSON body]",
+                         request.method, request.url.path, len(req_body_bytes))
+
+    # Rebuild request so body is available to endpoint handlers
+    async def _receive():
+        return {"type": "http.request", "body": req_body_bytes}
+
+    request._receive = _receive
+
+    response = await call_next(request)
+    elapsed_ms = (time.monotonic() - t0) * 1000
+
+    # Capture response body (only for JSON responses, not streaming/file downloads)
+    if not isinstance(response, StreamingResponse):
+        resp_body = b""
+        async for chunk in response.body_iterator:
+            resp_body += chunk
+
+        try:
+            resp_text = resp_body.decode("utf-8", errors="replace")
+            resp_preview = resp_text[:4096] if len(resp_text) > 4096 else resp_text
+            truncated = "…[truncated]" if len(resp_text) > 4096 else ""
+            LOGGER.debug("RES %s %s → HTTP %d (%d ms) body=%s%s",
+                         request.method, request.url.path,
+                         response.status_code, round(elapsed_ms),
+                         resp_preview, truncated)
+        except Exception:
+            LOGGER.debug("RES %s %s → HTTP %d (%d ms) [%d bytes]",
+                         request.method, request.url.path,
+                         response.status_code, round(elapsed_ms), len(resp_body))
+
+        # Rebuild response with captured body
+        return Response(
+            content=resp_body,
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            media_type=response.media_type,
+        )
+
+    LOGGER.debug("RES %s %s → HTTP %d (%d ms) [streaming]",
+                 request.method, request.url.path,
+                 response.status_code, round(elapsed_ms))
+    return response
 
 
 # ═══════════════════════════════════════════════════════════════════════════

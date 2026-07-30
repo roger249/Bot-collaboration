@@ -5,7 +5,9 @@ Product Investor Matching
 ```yaml
 instructions: |
 Provide a description of what this report is.
-- Tabulate the top 10 suggested clients and the rationale of the suggestion.
+
+- Tabulate the top 10 clients with best buying score, list in the order of descending buying score
+- Show the rationale of the suggestion, 
 - Compare the expected return of the suggested product vs. the original product in the table
 ```
 

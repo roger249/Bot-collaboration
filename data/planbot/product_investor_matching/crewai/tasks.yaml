@@ -6,8 +6,9 @@ product_investor_matching_task:
 
     - Given a list of clients and investable products, generate a product-fit based on each client's financial needs and risk profile.
     - For each client, assign a buying score from 1-5 indicating how likely the client is to buy the recommended investment product.  5 is the most likely to buy, while 1 is the least likely to buy.
+    - **Use the Product Fitness Scores table** at the end of the product catalog section. Prefer products with higher fitness scores for each client. The fitness score is computed from risk-rating match, concentration impact, investment experience, and relative return uplift — treat it as a quantitative starting point for your recommendation, then apply qualitative judgment (client needs, market outlook, RM notes).
+    - Avoid matching product with low Fitness Scores, in particular a concentration score (>9)
     - Only one product recommendation is allowed for each client.
-    - The list is ordered by the shows the top 10 clients with the highest buying score for the recommended product, list in the descending order of the buying score.
     - For any suggested product, please specify the funding source.  
     - Each product shall suggest to no more than 5 clients to ensure the diversification of the recommendation.
     - The risk class or asset class of the suggested product should be similar to the funding source.
@@ -17,8 +18,8 @@ product_investor_matching_task:
     - Uses 5y CAGR to for the future expected return.  For product with much higher 1y, 3y CAGR than 5y CAGR, please provide justification on the sustainability of the return.
     - The reference materials are provided at the end of the user prompt as structured JSON that includes below:
       - proposal_instruction_and_format: Instructions and format for generating the proposal
-      - client_profiles: list of client profile and existing holdings
-      - product_catalogs: investable assets available for recommendation
+      - client_profiles: list of client profile and existing holdings.  Each client profile includes their Investor Readiness Score with component breakdown — use this to prioritize clients most likely to transact.
+      - product_catalogs: investable assets available for recommendation.  Includes per-client Product Fitness Scores tables at the end — use these as quantitative input for product selection.
       - guidelines:  A list of the common needs and market outlook.  
     - Observe the guideline ../shared/common/general_guideline.md
 

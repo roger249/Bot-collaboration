@@ -11,6 +11,8 @@ Start with:
 
 from __future__ import annotations
 
+from enum import Enum
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from fastapi import FastAPI
@@ -19,6 +21,7 @@ from src.integrations.reinvestment_proposal import (
     propose_reinvestment,
     propose_reinvestment_for_maturing_holdings,
 )
+from src.integrations.product_investor_matcher import match_products_to_investors
 
 app = FastAPI(
     title="PlanBot Proposal API",
@@ -152,6 +155,104 @@ class ProposalResponse(BaseModel):
 
 class ValidationErrorDetail(BaseModel):
     detail: str = Field(..., json_schema_extra={"example": "Client not found: PB-HK-999"})
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Product-Investor Matcher models
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class MatcherProposal(BaseModel):
+    """A single matched client→product proposal."""
+
+    client_id: str = Field(..., json_schema_extra={"example": "PB-HK-000001-8"})
+    product_id: str = Field(..., json_schema_extra={"example": "ETF-HYG"})
+    investment_amount: str = Field("", json_schema_extra={"example": "$500,000"})
+    funding_source: str = Field("", json_schema_extra={"example": "Cash reserves"})
+    buying_score: float = Field(0, json_schema_extra={"example": 4.5})
+    rationale: str = Field("", json_schema_extra={"example": "Strong fit due to income objective"})
+    proposal_markdown: str = Field("", json_schema_extra={"example": "# Client Product Fit Analysis\n..."})
+    error: str | None = Field(None)
+
+
+class MatcherSummary(BaseModel):
+    status: str = Field("success", json_schema_extra={"example": "success"})
+    total_clients_retrieved: int = Field(0)
+    clients_after_readiness: int = Field(0)
+    top_n_returned: int = Field(0)
+
+
+class MatcherErrorDetail(BaseModel):
+    code: str = Field("", json_schema_extra={"example": "NO_ELIGIBLE_CLIENTS"})
+    message: str = Field("")
+
+
+class ProductSource(str, Enum):
+    """Where the product universe is defined."""
+
+    DEFAULT_YAML = "default_yaml"
+    REQUEST_PAYLOAD = "request_payload"
+
+
+class ProductInvestorMatcherRequest(BaseModel):
+    """Request payload for the product-investor matcher.
+
+    When *product_source* is ``default_yaml``, *product_ids* may contain
+    group names defined in ``config_planbot.yaml`` under ``product_groups``
+    (expanded to their member product IDs).  When *product_source* is
+    ``request_payload``, *product_ids* are always literal product IDs.
+    """
+
+    product_source: ProductSource = Field(
+        ProductSource.DEFAULT_YAML,
+        json_schema_extra={"example": "default_yaml"},
+    )
+    product_ids: list[str] | None = Field(
+        None, json_schema_extra={"example": ["bank_recommended"]},
+    )
+    client_selection: dict | None = Field(
+        None, json_schema_extra={"example": {"risk_rating": [3, 5]}},
+    )
+    top_n: int = Field(3, ge=1, le=20, json_schema_extra={"example": 3})
+    market_outlook: str | None = Field(
+        None, json_schema_extra={"example": "Current market outlook text..."},
+    )
+
+
+class ProductInvestorMatcherResponse(BaseModel):
+    run_id: str = Field(..., json_schema_extra={"example": "run-20260730-120000"})
+    summary: MatcherSummary = Field(default_factory=MatcherSummary)
+    product_investor_matching_markdown: str = Field("")
+    final_proposals: list[MatcherProposal] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    errors: list[MatcherErrorDetail] = Field(default_factory=list)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Product-Investor Matcher endpoint
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+@app.post(
+    "/api/v1/product-investor-matcher",
+    response_model=ProductInvestorMatcherResponse,
+)
+def match_products_to_investors_endpoint(
+    body: ProductInvestorMatcherRequest,
+) -> dict:
+    """Run the full product-investor matcher pipeline.
+
+    Accepts product IDs and client selection criteria, returns ranked
+    client×product proposals with buying scores, investment rationale,
+    and final proposal markdown.
+    """
+    return match_products_to_investors(
+        product_ids=body.product_ids,
+        product_source=body.product_source.value,
+        client_selection=body.client_selection,
+        top_n=body.top_n,
+        market_outlook=body.market_outlook,
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════

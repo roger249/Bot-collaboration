@@ -10,6 +10,9 @@ To Do
 - Refine the proposal algo to include score card mechanism
 - Refine the proposal-client matching UI
 
+- Further divide risk rating to compare drawdown, vol during crisis period instead of general comparison
+- For the expected return, shall average the last five years to avoid any peak in 3y period?
+
 # Below are to do for a Smart Alert
 
 
