@@ -126,6 +126,7 @@ All field names use **snake_case** in the API.  The DuckDB schema mirrors this n
 | `net_worth` | enriched data (planned) | `float` | Total net worth excluding primary residence |
 | `aum` | `client_list.csv` → `client/aum` | `float` | Total portfolio value |
 | `region` | `client_list.csv` → `client/region` | `string` | Primary geographic region |
+| `qualitative_profile` | enriched test data | `string` | Free-text RM notes on client preferences, behavioural traits, and product suitability cues (LLM/RM context) |
 
 ### Fields to deprecate
 

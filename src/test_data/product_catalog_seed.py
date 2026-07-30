@@ -1,6 +1,6 @@
 """
 One-shot seeder:  reads selected_etf.csv + Yahoo Finance + otc_products.md
-and populates data/planbot/db/planbot.duckdb (products table; coexists with clients/holdings/profiles).
+and populates data/planbot/db/planbot.duckdb (products table; coexists with clients and holdings).
 
 Usage:
     python -m src.test_data.product_catalog_seed
@@ -582,13 +582,227 @@ def _synth_otc_equity_fund(otc: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Main seeder
+# Investment note generation (based on current market outlook, July 2026)
 # ---------------------------------------------------------------------------
+
+def _generate_investment_note(
+    name: str,
+    product_type: str,
+    sector: str | None,
+    expected_return: float | None,
+    risk_rating: int,
+    region: str | None,
+) -> str:
+    """Generate a realistic investment note grounded in current market outlook.
+
+    July 2026 assumptions:
+    - Global rates remain elevated after the hiking cycle; central banks in
+      wait-and-see mode with cuts expected 2027.
+    - US/APAC equities: AI/tech-driven rally extends but valuations are
+      stretched; rotation into value and small-caps gaining traction.
+    - Fixed income: attractive entry point for duration as terminal rate
+      pricing stabilises; credit spreads tight but carry is favourable.
+    - Gold and commodities: supported by geopolitical uncertainty and
+      de-dollarisation flows.
+    - China/HK: policy easing supports selective exposure but structural
+      headwinds persist in real estate.
+    - Money market: yields remain competitive for short-dated liquidity
+      management while awaiting clearer rate-cut signals.
+
+    Returns a concise 1‒3 sentence note suitable for RM and LLM consumption.
+    """
+    sector_lower = (sector or "").lower()
+    name_lower = name.lower()
+
+    # --- Money Market Funds ---
+    if product_type == "money_market_fund":
+        return (
+            "Yields on short-dated government and prime instruments remain "
+            "attractive (4.0‒5.0% range) as the Fed holds rates steady. "
+            "Suitable for capital preservation and liquidity parking until the "
+            "rate-cutting cycle becomes clearer. Monitor for reinvestment risk "
+            "if cuts materialise."
+        )
+
+    # --- Bond Funds ---
+    if product_type == "bond_fund":
+        if "treasury" in name_lower or "government" in name_lower:
+            return (
+                "Duration-risk positioning looks increasingly attractive as "
+                "terminal-rate expectations stabilise. Government bonds offer a "
+                "flight-to-quality hedge against equity drawdowns. Reinvestment "
+                "yields remain elevated compared to 2024 levels."
+            )
+        if "high yield" in name_lower or "high-yield" in name_lower:
+            return (
+                "Credit spreads are tight by historical standards but carry "
+                "remains positive. Suitable for income-oriented investors "
+                "willing to accept moderate credit risk. Monitor for widening "
+                "if recession fears re-emerge."
+            )
+        if "corporate" in name_lower or "investment grade" in name_lower:
+            return (
+                "Investment-grade corporate bonds offer a favourable risk/reward "
+                "balance in the current environment. Spreads are near cycle "
+                "tights, but absolute yields are compelling for buy-and-hold "
+                "investors seeking income with moderate volatility."
+            )
+        if "floating" in name_lower or "ultrashort" in name_lower or "short" in name_lower:
+            return (
+                "Floating-rate and ultra-short bond funds benefit from elevated "
+                "front-end rates with minimal duration exposure. Useful as a "
+                "cash-plus allocation while the rate outlook remains uncertain."
+            )
+        if "convertible" in name_lower:
+            return (
+                "Convertible bonds offer asymmetric upside participation in "
+                "equity markets with bond-floor downside protection. Well-suited "
+                "for investors with a constructive equity view who seek some "
+                "capital preservation."
+            )
+        if "emerging" in name_lower:
+            return (
+                "EM debt offers attractive nominal yields but elevated currency "
+                "and political risk. Select exposure to commodity exporters and "
+                "reform-oriented countries is warranted. Active management "
+                "recommended given dispersion across issuers."
+            )
+        if "municipal" in name_lower:
+            return (
+                "Tax-exempt municipal bonds provide attractive after-tax yields "
+                "for high-bracket investors. Credit quality is generally strong, "
+                "though unfunded pension liabilities warrant monitoring at the "
+                "state level."
+            )
+        return (
+            "Bond yields are at multi-decade highs, offering a rare opportunity "
+            "to lock in attractive income. Active duration management can add "
+            "value as the rate cycle evolves. Suitable for investors seeking "
+            "income diversification alongside equity exposure."
+        )
+
+    # --- Equity Funds ---
+    if product_type in ("equity_fund", "stock"):
+        note_parts: list[str] = []
+        if region and region.upper() == "US":
+            note_parts.append(
+                "US equities are supported by resilient earnings and AI-driven "
+                "productivity gains, but valuations are above long-term averages. "
+            )
+            if sector_lower in ("technology",):
+                note_parts.append(
+                    "Technology sector benefits from secular AI adoption trends "
+                    "but is sensitive to rate expectations and concentration risk "
+                    "in mega-caps. Consider pairing with value-oriented positions."
+                )
+            elif sector_lower in ("financial",):
+                note_parts.append(
+                    "Financial sector benefits from elevated net interest margins "
+                    "in a high-rate environment. Regulatory headwinds are easing. "
+                    "Capital return through buybacks and dividends supports total "
+                    "return."
+                )
+            elif sector_lower in ("healthcare",):
+                note_parts.append(
+                    "Healthcare offers defensive growth characteristics and "
+                    "innovation tailwinds from biotech and GLP-1 therapies. "
+                    "Policy risk around drug pricing is a key monitor."
+                )
+            else:
+                note_parts.append(
+                    "Broad-based US exposure provides growth exposure. Sector "
+                    "rotation risk is elevated — active management or factor "
+                    "tilts may add value in this environment."
+                )
+        elif region and region.upper() == "APAC":
+            if "china" in name_lower or "hang seng" in name_lower or "hsi" in name_lower:
+                note_parts.append(
+                    "HK/China equities trade at discounted valuations relative to "
+                    "developed markets. Policy support (fiscal and monetary) is "
+                    "increasing, but structural headwinds in real estate and "
+                    "geopolitical tensions warrant position sizing discipline."
+                )
+            elif "india" in name_lower:
+                note_parts.append(
+                    "India equities benefit from strong domestic growth, favourable "
+                    "demographics, and supply-chain diversification away from China. "
+                    "Valuations are elevated — consider scaling in on dips."
+                )
+            elif "japan" in name_lower:
+                note_parts.append(
+                    "Japan equities are supported by corporate governance reforms, "
+                    "shareholder returns, and a weak yen boosting exporter earnings. "
+                    "BOJ policy normalisation is a key risk to monitor."
+                )
+            else:
+                note_parts.append(
+                    "Asia-Pacific ex-Japan offers diversified growth exposure "
+                    "across developed and emerging markets. Currency risk is a "
+                    "consideration for USD-based investors."
+                )
+        elif region and region.upper() == "EM":
+            note_parts.append(
+                "Emerging market equities offer attractive valuations and "
+                "structural growth stories. Currency and political risks require "
+                "active overlay. Commodity-linked markets benefit from elevated "
+                "resource prices."
+            )
+        else:
+            note_parts.append(
+                "Equity exposure suits investors with a medium-to-long-term "
+                "horizon. Diversify across regions and factors to manage "
+                "concentration risk in an uncertain macro environment."
+            )
+
+        ret_str = f" Expected return ~{expected_return}%." if expected_return else ""
+        return "".join(note_parts) + ret_str
+
+    # --- Individual Bonds ---
+    if product_type == "bond":
+        return (
+            "Individual bonds allow precise maturity-matching for liability-driven "
+            "investing. Hold-to-maturity strategies eliminate mark-to-market "
+            "volatility. Current yields are attractive for income-focused "
+            "portfolios. Credit quality and call features should be reviewed."
+        )
+
+    # --- Balanced Funds ---
+    if product_type == "balanced_fund":
+        if "conservative" in name_lower or "income" in name_lower:
+            return (
+                "Conservative multi-asset allocation emphasises income generation "
+                "and capital preservation. In the current elevated-rate environment, "
+                "the fixed-income sleeve provides attractive carry while equity "
+                "exposure captures modest upside. Suitable for risk-averse investors "
+                "seeking inflation-protected returns."
+            )
+        if "growth" in name_lower:
+            return (
+                "Growth-oriented balanced fund with higher equity allocation "
+                "seeking long-term capital appreciation. Current equity valuations "
+                "warrant a disciplined rebalancing approach. The fixed-income "
+                "component provides ballast and income during drawdowns."
+            )
+        return (
+            "Diversified multi-asset portfolio balancing growth and income. "
+            "The elevated rate environment favours the fixed-income sleeve for "
+            "carry, while equity exposure captures structural growth themes. "
+            "Active asset-allocation decisions can add value in this late-cycle "
+            "macro backdrop."
+        )
+
+    # --- Fallback ---
+    return (
+        f"Suitable for investors seeking {product_type.replace('_', ' ')} exposure "
+        f"within a diversified portfolio. Risk rating {risk_rating}/5. "
+        "Review against client suitability and portfolio concentration limits."
+    )
 
 DDL_COLUMNS = [
     "product_id", "isin", "name", "ticker", "trading_currency",
     "risk_rating", "expected_return", "region", "country", "sector",
     "remarks", "product_type", "vehicle", "type_specific", "performance_history",
+    "investment_note",
 ]
 
 
@@ -643,6 +857,14 @@ def seed(use_yahoo: bool = True) -> None:
                 "region": _infer_region(ticker, asset_class),
                 "country": yahoo.get("country"),
                 "sector": asset_class,
+                "investment_note": _generate_investment_note(
+                    name=row.get("name", ""),
+                    product_type=pt,
+                    sector=asset_class,
+                    expected_return=float(row["expected_return"]) if row.get("expected_return") else None,
+                    risk_rating=int(row.get("risk_rating", "3")),
+                    region=_infer_region(ticker, asset_class),
+                ),
                 "remarks": yahoo.get("longBusinessSummary"),
                 "product_type": pt,
                 "vehicle": _infer_vehicle(pt),
@@ -650,7 +872,7 @@ def seed(use_yahoo: bool = True) -> None:
                 "performance_history": json.dumps(perf, ensure_ascii=False),
             }
             conn.execute(
-                "INSERT OR REPLACE INTO products VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT OR REPLACE INTO products VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 [row_data[k] for k in DDL_COLUMNS],
             )
             counts[pt] = counts.get(pt, 0) + 1
@@ -669,8 +891,16 @@ def seed(use_yahoo: bool = True) -> None:
         else:
             g["type_specific"] = json.dumps(_synth_otc_equity_fund(otc), ensure_ascii=False)
         g["performance_history"] = json.dumps({})
+        g["investment_note"] = _generate_investment_note(
+            name=g.get("name", ""),
+            product_type=pt,
+            sector=g.get("sector"),
+            expected_return=g.get("expected_return"),
+            risk_rating=g.get("risk_rating", 3),
+            region=g.get("region"),
+        )
         conn.execute(
-            "INSERT OR REPLACE INTO products VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT OR REPLACE INTO products VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             [g[k] for k in DDL_COLUMNS],
         )
         counts[pt] = counts.get(pt, 0) + 1
@@ -682,8 +912,16 @@ def seed(use_yahoo: bool = True) -> None:
         g = _otc_to_general(otc, "bond", "Direct")
         g["type_specific"] = json.dumps(_synthesize_bond(otc), ensure_ascii=False)
         g["performance_history"] = json.dumps({})
+        g["investment_note"] = _generate_investment_note(
+            name=g.get("name", ""),
+            product_type="bond",
+            sector=g.get("sector"),
+            expected_return=g.get("expected_return"),
+            risk_rating=g.get("risk_rating", 3),
+            region=g.get("region"),
+        )
         conn.execute(
-            "INSERT OR REPLACE INTO products VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT OR REPLACE INTO products VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             [g[k] for k in DDL_COLUMNS],
         )
         counts["bond"] = counts.get("bond", 0) + 1

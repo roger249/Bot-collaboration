@@ -84,6 +84,8 @@ product_investor_matching:
   references_root: data/planbot/product_investor_matching
   output_root: runs/product_investor_matching
   output_filename: product_investor_matching.md
+  matcher:
+    default_number_of_candidates_from_investor_readiness: 20  # Pool size of top readiness clients to pass into fitness scoring
   references:
     proposal_instructions_and_format:
       - name: proposal_instructions/*.md
@@ -100,6 +102,9 @@ product_investor_matching:
     client_profiles:
       - name: ../shared/client_profile/*.csv
         purpose: Client profiles and suggested product for each client in csv format
+    market_outlook:
+      - name: ../shared/market_outlook/*.md
+        purpose: Market outlook and sentiment analysis for the recommendation
     product_catalogs: 
       - name: ../shared/product_catalog/*.md
         purpose: Selected products to consider for reinvestment recommendation in markdown format
@@ -130,6 +135,7 @@ client_product_fit_analysis:
         purpose: Client profiles and suggested product for each client in markdown format
       - name: clients/*.csv
         purpose: Client profiles and suggested product for each client in csv format
+    market_outlook:
       - name: ../shared/market_outlook/*.md
         purpose: Market outlook and sentiment analysis for the recommendation
     product_catalogs: 

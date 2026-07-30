@@ -189,7 +189,7 @@ def _linear_interpolate(x: float, pivot: dict[float, float]) -> float:
 COLUMNS = [
     "product_id", "name", "ticker", "risk_rating", "expected_return",
     "product_type", "vehicle", "trading_currency", "region", "sector",
-    "type_specific", "performance_history",
+    "investment_note", "type_specific", "performance_history",
 ]
 
 
@@ -419,6 +419,7 @@ def search_similar(
                 "product_type": p["product_type"],
                 "risk_rating": p["risk_rating"],
                 "expected_return": p["expected_return"],
+                "investment_note": p.get("investment_note"),
                 "similarity_score": p["similarity_score"],
             }
             for p in result
@@ -502,7 +503,9 @@ def search_reinvestment_candidates(
         results[cid] = [
             {
                 "product_id": r["product_id"],
-                "product_type": r["product_type"],
+                "name": r.get("name"),
+                "product_type": r.get("product_type"),
+                "investment_note": r.get("investment_note"),
                 "similarity_score": r["similarity_score"],
             }
             for r in client_results
@@ -735,6 +738,8 @@ def search_product_by_fitness_score(
             results.append({
                 "client_id": cid,
                 "product_id": pid,
+                "product_name": products_map.get(pid, {}).get("name"),
+                "investment_note": products_map.get(pid, {}).get("investment_note"),
                 "fitness_score": round(fitness, 4),
                 "component_scores": comp_scores,
             })

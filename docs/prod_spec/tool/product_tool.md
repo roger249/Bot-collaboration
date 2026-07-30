@@ -22,6 +22,8 @@ All score (constant) used in the computation shall be defined in yaml and not ha
 
 Below are the API exposed to search the product catalog, it returns a list of the products in JSON format
 
+All product responses include the `investment_note` field — a narrative house-view commentary for RM/LLM consumption during investment proposals (see [product catalog schema](docs/prod_spec/product_catalog/product_catalog_schema.md)).
+
 ### search_by_product_id
 
 Look up a single product by its `product_id`.
@@ -262,6 +264,7 @@ Request:
       "product_type": "bond_fund",
       "risk_rating": 3,
       "expected_return": 6.2,
+      "investment_note": "Credit spreads are tight by historical standards but carry remains positive. Suitable for income-oriented investors willing to accept moderate credit risk.",
       "similarity_score": 0.92
     },
     {
@@ -270,6 +273,7 @@ Request:
       "product_type": "bond_fund",
       "risk_rating": 2,
       "expected_return": 4.8,
+      "investment_note": "Bond yields are at multi-decade highs, offering a rare opportunity to lock in attractive income.",
       "similarity_score": 0.84
     }
   ]
@@ -351,12 +355,16 @@ Response:
     "PB-HK-000001-8": [
       {
         "product_id": "ETF-BND",
+        "name": "Vanguard Total Bond Market ETF",
         "product_type": "bond_fund",
+        "investment_note": "Bond yields are at multi-decade highs, offering a rare opportunity to lock in attractive income.",
         "similarity_score": 0.84
       },
       {
         "product_id": "ETF-VOO",
+        "name": "Vanguard S&P 500 ETF",
         "product_type": "equity_fund",
+        "investment_note": "US equities are supported by resilient earnings and AI-driven productivity gains.",
         "similarity_score": 0.63
       }
     ]
@@ -364,7 +372,7 @@ Response:
 }
 ```
 
-Consumers needing full product details should call `search_by_product_id` with the returned `product_id` values.
+Context fields (`name`, `product_type`, `investment_note`) are included inline in each candidate entry — no separate product lookup is needed.
 
 ### search_product_by_fitness_score
 
@@ -391,6 +399,8 @@ Response:
     {
       "client_id": "PB-HK-000001-8",
       "product_id": "ETF-BND",
+      "product_name": "Vanguard Total Bond Market ETF",
+      "investment_note": "Bond yields are at multi-decade highs, offering a rare opportunity to lock in attractive income.",
       "fitness_score": 8.35,
       "component_scores": {
         "risk_rating_match_score": 9.0,
@@ -402,6 +412,8 @@ Response:
   ]
 }
 ```
+
+`product_name` and `investment_note` are included inline — no separate product lookup is needed to build LLM input context.
 
 ## YAML configuration
 

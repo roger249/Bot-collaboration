@@ -33,8 +33,13 @@ CREATE TABLE IF NOT EXISTS products (
     product_type        TEXT NOT NULL,
     vehicle             TEXT,
     type_specific       TEXT,
-    performance_history TEXT
+    performance_history TEXT,
+    investment_note     TEXT
 );
+"""
+
+DDL_ADD_INVESTMENT_NOTE = """
+ALTER TABLE products ADD COLUMN IF NOT EXISTS investment_note TEXT;
 """
 
 
@@ -49,6 +54,8 @@ def get_conn(read_only: bool = False) -> duckdb.DuckDBPyConnection:
 def init_db(conn: duckdb.DuckDBPyConnection) -> None:
     """Create the products table if it does not already exist."""
     conn.execute(DDL_PRODUCTS)
+    # Migration: add investment_note column to pre-existing tables
+    conn.execute(DDL_ADD_INVESTMENT_NOTE)
 
 
 # ---------------------------------------------------------------------------
@@ -82,7 +89,7 @@ def search_aligned_products(
     query = f"""
         SELECT product_id, name, ticker, risk_rating, expected_return,
                product_type, vehicle, trading_currency, region, sector,
-               type_specific, performance_history
+               investment_note, type_specific, performance_history
         FROM products WHERE {where}
         ORDER BY risk_rating, expected_return DESC
     """

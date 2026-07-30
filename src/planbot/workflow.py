@@ -185,5 +185,61 @@ def summarize_holdings(holdings: list[dict]) -> list[dict]:
         }
         for h in holdings
     ]
-    return f"{output_filename}-{model_token}"
+
+
+# ---------------------------------------------------------------------------
+# Matcher LLM input builder — in-memory, no temp files
+# ---------------------------------------------------------------------------
+
+
+def build_matcher_llm_payload(
+    client_profile: dict,
+    product: dict,
+    readiness_score: dict | None = None,
+    fitness_score: dict | None = None,
+    market_outlook: str | None = None,
+) -> dict:
+    """Assemble the LLM input package for a single client×product pair.
+
+    Follows the same in-memory pattern as ``build_llm_input`` used by the
+    reinvestment proposal flow.  No temp files — all data comes from API
+    responses or scorecard outputs.
+
+    Args:
+        client_profile: Full client profile dict from client API.
+        product: Product detail dict from product API.
+        readiness_score: Readiness score dict (client_id, total_score, components).
+        fitness_score: Fitness score dict (client_id, product_id, fitness_score, component_scores).
+        market_outlook: Optional market narrative from request payload.
+
+    Returns:
+        A dict ready to be serialised as JSON and passed to the LLM prompt
+        via the ``{references}`` template variable.
+    """
+    payload: dict[str, Any] = {
+        "client": {
+            "client_id": client_profile.get("client_id"),
+            "name": client_profile.get("name"),
+            "risk_rating": client_profile.get("risk_rating"),
+            "aum": client_profile.get("aum"),
+            "qualitative_profile": client_profile.get("qualitative_profile", ""),
+        },
+        "product": {
+            "product_id": product.get("product_id"),
+            "name": product.get("name"),
+            "product_type": product.get("product_type"),
+            "risk_rating": product.get("risk_rating"),
+            "expected_return": product.get("expected_return"),
+            "investment_note": product.get("investment_note", ""),
+        },
+        "scorecard": {
+            "investor_readiness": readiness_score,
+            "product_fitness": fitness_score,
+        },
+    }
+
+    if market_outlook:
+        payload["market_outlook"] = market_outlook
+
+    return payload
 

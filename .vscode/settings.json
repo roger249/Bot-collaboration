@@ -21,7 +21,7 @@
             "type": "file",
             "path": "/Users/roger/Documents/GitHub/Bot collaboration/data/planbot/db/planbot.duckdb",
             "readOnly": true,
-            "attached": true
+            "attached": false
         }
     ],
     "duckdb.defaultDatabase": "planbot",

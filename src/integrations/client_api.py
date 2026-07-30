@@ -71,14 +71,14 @@ def _compute_derived_fields(conn: duckdb.DuckDBPyConnection) -> dict[str, dict[s
         SELECT client_id, name, aum, cash_pct, region,
                birthdate, occupation, risk_rating, marital_status,
                children_info, liquidity_need, income_stability,
-               investment_objective
+               investment_objective, qualitative_profile
         FROM clients
     """).fetchall()
 
     cols = ["client_id", "name", "aum", "cash_pct", "region",
             "birthdate", "occupation", "risk_rating", "marital_status",
             "children_info", "liquidity_need", "income_stability",
-            "investment_objective"]
+            "investment_objective", "qualitative_profile"]
     clients: dict[str, dict] = {row[0]: dict(zip(cols, row)) for row in rows}
 
     today = date.today()
@@ -191,7 +191,7 @@ def search_by_id(client_id: str) -> dict | None:
             SELECT client_id, name, aum, cash_pct, region,
                    birthdate, occupation, risk_rating, marital_status,
                    children_info, liquidity_need, income_stability,
-                   investment_objective
+                   investment_objective, qualitative_profile
             FROM clients
             WHERE client_id = ?
         """, [client_id]).fetchone()
@@ -201,7 +201,7 @@ def search_by_id(client_id: str) -> dict | None:
         cols = ["client_id", "name", "aum", "cash_pct", "region",
                 "birthdate", "occupation", "risk_rating", "marital_status",
                 "children_info", "liquidity_need", "income_stability",
-                "investment_objective"]
+                "investment_objective", "qualitative_profile"]
         client = dict(zip(cols, row))
 
         # Normalize risk_rating to int

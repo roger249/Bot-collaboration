@@ -28,7 +28,8 @@ general:
   - region                    # Macro geographic exposure (e.g., APAC, EMEA, Global)
   - country                   # Specific primary risk country code
   - sector                    # Top-level industry category (e.g., Technology, Financials)
-  - remarks                   # Free text or links to supporting documentation
+  - investment_note           # Narrative mainly target to RM/LLM to consider in investment proposal.  This may contains house view of this product in near future and target client
+  - remarks                   # Key product behavior
   - product_type              # Links directly to CATEGORY 2 keys
   - vehicle                   # Wrapper tag (e.g., Direct, ETF, Mutual Fund, Structure)
 
