@@ -96,7 +96,8 @@ def match_products_to_investors(
     # ── 1. Load matcher config ──────────────────────────────────────────
     planbot_config = _load_planbot_config()
     matcher_cfg = planbot_config.get("product_investor_matching", {}).get("matcher", {})
-    readiness_pool_size = matcher_cfg.get("default_number_of_candidates_from_investor_readiness", 15)
+    readiness_pool_size = matcher_cfg.get("readiness_pool_size", 15)
+    llm_client_pool_size = matcher_cfg.get("llm_client_pool_size", 5)
     app_config = load_config(str(_ROOT_DIR / "config" / "config.yaml"))
 
     # ── 2. Fetch clients ────────────────────────────────────────────────
@@ -220,9 +221,10 @@ def match_products_to_investors(
         LOGGER.info("Using full product universe: %d products", len(product_universe))
 
     # ── 5. Product fitness score per client ─────────────────────────────
+    fitness_top_n = max(3, len(fitness_product_ids) // 2) or 1
     LOGGER.info(
         "Scorecard request: search_product_by_fitness_score(%d clients × %d products, top_n=%d)",
-        len(eligible_client_ids), len(fitness_product_ids), top_n * 3,
+        len(eligible_client_ids), len(fitness_product_ids), fitness_top_n,
     )
     fitness_results: dict[str, list[dict]] = {}
     try:
@@ -230,7 +232,7 @@ def match_products_to_investors(
             fit = search_product_by_fitness_score(
                 client_ids=[cid],
                 product_ids=fitness_product_ids,
-                top_n=top_n * 3,  # wider pool for LLM to rank
+                top_n=fitness_top_n,
                 risk_rating_hard_filter=False,  # PFS already handles risk gate
             )
             fitness_results[cid] = fit.get("results", [])
@@ -257,14 +259,14 @@ def match_products_to_investors(
         ),
     )
 
-    # ── 5b. Trim LLM input to top_n clients only ──────────────────────
+    # ── 5b. Trim LLM input to llm_client_pool_size clients ──────────
     # The fitness scorecard runs on the full readiness pool, but the LLM
-    # only sees the top_n clients.  This keeps the LLM call fast and
-    # focused — no truncation, no wasted tokens on discarded clients.
-    llm_client_ids = eligible_client_ids[:top_n]
+    # only sees the llm_client_pool_size clients.  This keeps the LLM call
+    # fast and focused — no truncation, no wasted tokens on discarded clients.
+    llm_client_ids = eligible_client_ids[:llm_client_pool_size]
     LOGGER.info(
-        "LLM input: %d clients trimmed from readiness pool of %d (top_n=%d)",
-        len(llm_client_ids), len(eligible_client_ids), top_n,
+        "LLM input: %d clients trimmed from readiness pool of %d (llm_client_pool_size=%d)",
+        len(llm_client_ids), len(eligible_client_ids), llm_client_pool_size,
     )
 
     # ── 6. Build in-memory API resolver ─────────────────────────────────

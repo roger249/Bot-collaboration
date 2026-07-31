@@ -85,12 +85,13 @@ product_investor_matching:
   output_root: runs/product_investor_matching
   output_filename: product_investor_matching.md
   matcher:
-    default_number_of_candidates_from_investor_readiness: 15  # Pool size of top readiness clients to pass into fitness scoring
+    readiness_pool_size: 15  # Pool size of top readiness clients to pass into fitness scoring
+    llm_client_pool_size: 5  # Number of clients to pass into the LLM for final recommendation generation
   references:
     proposal_instructions_and_format:
       - name: proposal_instructions/*.md
         purpose: Instructions and format for generating the proposal
-      - name: ../shared/proposal_section_instructions/[!s]*.md
+      - name: ../shared/proposal_section_instructions/[ref]*.md
         purpose: Detail instructions for specific sections in the proposal
       - name: ../shared/proposal_section_instructions/s[!c]*.md
         purpose: Detail instructions for specific sections in the proposal

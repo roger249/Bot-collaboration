@@ -77,7 +77,7 @@ def proposal_server():
     """
     from src.integrations.proposal_server import app
 
-    config = uvicorn.Config(app, host="127.0.0.1", port=0, log_level="warning")
+    config = uvicorn.Config(app, host="127.0.0.1", port=0, log_level="warning", log_config=None)
     server = uvicorn.Server(config)
     thread = threading.Thread(target=server.run, daemon=False)
     thread.start()

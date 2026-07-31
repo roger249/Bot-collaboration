@@ -17,6 +17,7 @@ All to-do below are too initial.  Need more investigation to confirm they are wo
 - Organized way to repopulate into DuckDB?
 - For the expected return, shall average the last five years to avoid any peak in 3y period?
 - Invoking PFS with multiple client.  Pagination for every 30?
+- search_by_investor_readiness_score to accept client filtering criteria
 
 # Below are to do for a Smart Alert
 

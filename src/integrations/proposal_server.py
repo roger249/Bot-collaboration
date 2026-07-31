@@ -215,9 +215,6 @@ class ProductInvestorMatcherRequest(BaseModel):
         None, json_schema_extra={"example": {"risk_rating": [3, 5]}},
     )
     top_n: int = Field(3, ge=1, le=20, json_schema_extra={"example": 3})
-    market_outlook: str | None = Field(
-        None, json_schema_extra={"example": "Current market outlook text..."},
-    )
 
 
 class ProductInvestorMatcherResponse(BaseModel):
@@ -252,7 +249,6 @@ def match_products_to_investors_endpoint(
         product_source=body.product_source.value,
         client_selection=body.client_selection,
         top_n=body.top_n,
-        market_outlook=body.market_outlook,
     )
 
 
@@ -320,4 +316,5 @@ if __name__ == "__main__":
         "src.integrations.proposal_server:app",
         host=server_cfg.get("host", "127.0.0.1"),
         port=server_cfg.get("port", 8000),
+        log_config=None,  # prevent uvicorn from closing our file handler
     )

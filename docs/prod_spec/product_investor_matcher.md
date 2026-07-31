@@ -44,7 +44,7 @@ Today, matching and investment recommendation quality depends heavily on LLM jud
 1. API receives request containing product universe (or product IDs), client selection criteria, and execution options.
 2. API retrieves/normalizes client and product data through the tool contracts in `docs/prod_spec/tool` (clients are not passed in request payload).
 3. API computes investor readiness score for each client using the existing scorecard implementation documented in `docs/prod_spec/score_card/investor_readiness_score.md` (not delegated to LLM).
-4. API filters clients to top-K by investor readiness score (descending), where `K` is a standalone config value `default_number_of_candidates_from_investor_readiness` defined in `config/config_planbot.yaml` under `product_investor_matching.matcher`. Default: `K = 20` (or all clients if fewer exist).
+4. API filters clients to top-K by investor readiness score (descending), where `K` is the config value `readiness_pool_size` defined in `config/config_planbot.yaml` under `product_investor_matching.matcher`. Default: `K = 15` (or all clients if fewer exist).
 5. For each remaining client, API computes product fitness score against all eligible products using the existing implementation documented in `docs/prod_spec/score_card/product_fitness_score.md`.
 6. Build an LLM input package for each candidate pair using the in-memory payload builder ``build_matcher_llm_payload()`` in ``src/planbot/workflow.py`` (same pattern as the reinvestment proposal's ``build_llm_input`` — no temp files). The payload includes:
    - market outlook (from request `market_outlook`)

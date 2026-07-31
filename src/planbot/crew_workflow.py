@@ -251,17 +251,17 @@ _CREWAI_TRACE_LOGGER = logging.getLogger("crewai_trace")
 
 @contextlib.contextmanager
 def _tee_stdout_to_crewai_trace():
-    """Tee sys.stdout to the crewai_trace logger (ANSI codes stripped).
+    """Capture sys.stdout into the crewai_trace logger (ANSI codes stripped).
 
     The crewai_trace logger is defined in logging_config.ini with its own
     file handler (log/crewai_trace.log) and propagate=0, so trace never
-    appears in planbot.log.
+    appears in planbot.log or on console.
     """
     original_stdout = sys.stdout
 
     class _TeeStream:
         def write(self, text: str) -> int:
-            original_stdout.write(text)
+            # Send to crewai_trace logger (file only) — not to stdout.
             clean = _ANSI_ESCAPE.sub("", text)
             if clean:
                 for line in clean.splitlines():
@@ -271,18 +271,18 @@ def _tee_stdout_to_crewai_trace():
             return len(text)
 
         def flush(self) -> None:
-            original_stdout.flush()
+            pass
 
         def isatty(self) -> bool:
             return False
 
         @property
         def encoding(self) -> str:
-            return getattr(original_stdout, "encoding", "utf-8")
+            return "utf-8"
 
         @property
         def errors(self) -> str | None:
-            return getattr(original_stdout, "errors", None)
+            return None
 
     sys.stdout = _TeeStream()  # type: ignore[assignment]
     try:
