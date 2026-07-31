@@ -10,7 +10,9 @@ To Do
 - Refine the proposal algo to include score card mechanism
 - Refine the proposal-client matching UI
 
-## Minor one
+## Minor improvement
+
+All to-do below are too initial.  Need more investigation to confirm they are worth to do.
 - Further divide risk rating to compare drawdown, vol during crisis period instead of general comparison
 - Organized way to repopulate into DuckDB?
 - For the expected return, shall average the last five years to avoid any peak in 3y period?
