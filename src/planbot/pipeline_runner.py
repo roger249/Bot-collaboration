@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, ValidationError
 from src.planbot.orchestrator import PipelineOrchestrator
 from src.planbot.proposal_executor import ProposalExecutor
 from src.shared.config_loader import AppConfig
-from src.shared.logging_utils import configure_logging
+from src.shared.logging_utils import init_logging
 
 LOGGER = logging.getLogger(__name__)
 
@@ -113,19 +113,8 @@ class PipelineRunner:
         """
         orchestrator = PipelineOrchestrator(self.root_dir, self.config_path, app_config=self.app_config)
 
-        # Configure a pipeline-scoped log file so early filter failures are persisted.
-        pipeline_logs_dir = self.root_dir / "runs" / "pipelines" / pipeline_name / orchestrator.run_id / "logs"
-        pipeline_logs_dir.mkdir(parents=True, exist_ok=True)
-        configure_logging(
-            self.app_config.logging_level,
-            pipeline_logs_dir / "pipeline.log",
-            pipeline_logs_dir / "chat_history.log",
-            self.app_config.logging_config_file,
-            chat_history_enabled=self.app_config.logging_chat_history_enabled,
-            chat_history_max_bytes=self.app_config.logging_chat_history_max_bytes,
-            chat_history_backup_count=self.app_config.logging_chat_history_backup_count,
-            api_debug_level=self.app_config.logging_api_debug_level,
-        )
+        # Use the session-wide logger (writes to log/planbot.log).
+        init_logging()
 
         raw_config = orchestrator.load_config()
         parsed_config = self._parse_run_config(raw_config)

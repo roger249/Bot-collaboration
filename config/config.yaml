@@ -2,7 +2,6 @@
 
 logging:
   level: INFO
-  api_debug_level: DEBUG
   config_file: config/logging_config.ini
   chat_history_enabled: true
   chat_history_max_bytes: 5000000

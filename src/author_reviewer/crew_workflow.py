@@ -27,7 +27,7 @@ from src.author_reviewer.workflow import (
 )
 from src.shared.config_loader import AppConfig, BotConfig
 from src.shared.llm_client import LLMRequest, PromptTimeoutError, _resolve_api_key, build_client
-from src.shared.logging_utils import configure_logging
+from src.shared.logging_utils import init_logging
 
 
 LOGGER = logging.getLogger(__name__)
@@ -157,16 +157,7 @@ def run_crew_workflow(app_config: AppConfig) -> WorkflowResult:
     )
     log_path = run_paths.logs_dir / "workflow.log"
     chat_history_log_path = run_paths.logs_dir / "chat_history.log"
-    configure_logging(
-        app_config.logging_level,
-        log_path,
-        chat_history_log_path,
-        app_config.logging_config_file,
-        chat_history_enabled=app_config.logging_chat_history_enabled,
-        chat_history_max_bytes=app_config.logging_chat_history_max_bytes,
-        chat_history_backup_count=app_config.logging_chat_history_backup_count,
-        api_debug_level=app_config.logging_api_debug_level,
-    )
+    init_logging()
 
     current_spec_name = app_config.workflow.spec_file.name
     current_spec_text = read_text(app_config.workflow.spec_file)

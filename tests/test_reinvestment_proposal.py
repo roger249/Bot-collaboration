@@ -14,6 +14,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from src.integrations.reinvestment_proposal import (
     propose_reinvestment,
     _build_debug_scores,
@@ -71,6 +73,7 @@ SAMPLE_CANDIDATE_PRODUCT = {
 }
 
 
+@pytest.mark.slow
 class TestReinvestmentProposal(unittest.TestCase):
     """Normal-flow and exception-condition tests for reinvestment proposal."""
 

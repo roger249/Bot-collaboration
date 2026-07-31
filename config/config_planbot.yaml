@@ -85,7 +85,7 @@ product_investor_matching:
   output_root: runs/product_investor_matching
   output_filename: product_investor_matching.md
   matcher:
-    default_number_of_candidates_from_investor_readiness: 20  # Pool size of top readiness clients to pass into fitness scoring
+    default_number_of_candidates_from_investor_readiness: 15  # Pool size of top readiness clients to pass into fitness scoring
   references:
     proposal_instructions_and_format:
       - name: proposal_instructions/*.md

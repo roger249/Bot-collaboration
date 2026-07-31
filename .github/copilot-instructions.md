@@ -1,3 +1,6 @@
+# General
+- Don't start any implementation until user asked to start.
+
 # Standard
 - Parameters (output filename, ai provider, prompts) shall be externalized to a yaml configuration
 

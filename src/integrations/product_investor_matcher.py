@@ -88,10 +88,15 @@ def match_products_to_investors(
     warnings: list[str] = []
     errors: list[dict] = []
 
+    LOGGER.info(
+        "=== Matcher request %s: product_ids=%s source=%s top_n=%d ===",
+        run_id, product_ids, product_source, top_n,
+    )
+
     # ── 1. Load matcher config ──────────────────────────────────────────
     planbot_config = _load_planbot_config()
     matcher_cfg = planbot_config.get("product_investor_matching", {}).get("matcher", {})
-    readiness_pool_size = matcher_cfg.get("readiness_pool_size", 20)
+    readiness_pool_size = matcher_cfg.get("default_number_of_candidates_from_investor_readiness", 15)
     app_config = load_config(str(_ROOT_DIR / "config" / "config.yaml"))
 
     # ── 2. Fetch clients ────────────────────────────────────────────────
@@ -121,9 +126,11 @@ def match_products_to_investors(
 
     LOGGER.info("Retrieved %d clients after client_selection filter", len(all_clients))
 
+    LOGGER.info("Scorecard request: search_by_investor_readiness_score(top_n=%d)", readiness_pool_size)
+
     # ── 3. Investor readiness → top-K ───────────────────────────────────
     try:
-        readiness_scores = search_by_investor_readiness_score()
+        readiness_scores = search_by_investor_readiness_score(top_n=readiness_pool_size)
     except Exception as exc:
         LOGGER.error("Investor readiness score failed: %s", exc)
         return {
@@ -144,7 +151,15 @@ def match_products_to_investors(
         for r in readiness_scores
         if r["client_id"] in search_client_ids
     ]
-    eligible_client_ids = eligible_client_ids[:readiness_pool_size]
+
+    LOGGER.info(
+        "Readiness scorecard: %d clients scored, %d eligible (top-%d)",
+        len(readiness_scores), len(eligible_client_ids), readiness_pool_size,
+    )
+    LOGGER.debug(
+        "Readiness scorecard API response (first 5):\n%s",
+        json.dumps(readiness_scores[:5], indent=2, default=str),
+    )
 
     if not eligible_client_ids:
         return {
@@ -168,6 +183,24 @@ def match_products_to_investors(
             product_universe = list(dict.fromkeys(product_ids))  # dedup, order preserved
         else:
             product_universe = _resolve_product_ids(product_ids, planbot_config)
+
+        # Fitness scoring only runs on the requested products, not on
+        # existing holdings.  Snapshot before enrichment.
+        fitness_product_ids = list(product_universe)
+
+        # Enrich with products the eligible clients already hold so the
+        # LLM sees existing holdings in the product catalog for comparison.
+        n_before = len(product_universe)
+        holdings_pids = _get_holdings_product_ids(eligible_client_ids)
+        existing = set(product_universe)
+        for pid in holdings_pids:
+            if pid not in existing:
+                existing.add(pid)
+                product_universe.append(pid)
+        LOGGER.info(
+            "Product universe: %d from request + %d from holdings = %d total",
+            n_before, len(product_universe) - n_before, len(product_universe),
+        )
     else:
         # Default: use all products from the catalog
         from src.test_data.product_catalog import get_conn as _pcat_conn
@@ -183,15 +216,20 @@ def match_products_to_investors(
         except Exception as exc:
             LOGGER.warning("Cannot load product catalog from DB: %s", exc)
             product_universe = []
+        fitness_product_ids = list(product_universe)  # full catalog = all scorable
         LOGGER.info("Using full product universe: %d products", len(product_universe))
 
     # ── 5. Product fitness score per client ─────────────────────────────
+    LOGGER.info(
+        "Scorecard request: search_product_by_fitness_score(%d clients × %d products, top_n=%d)",
+        len(eligible_client_ids), len(fitness_product_ids), top_n * 3,
+    )
     fitness_results: dict[str, list[dict]] = {}
     try:
         for cid in eligible_client_ids:
             fit = search_product_by_fitness_score(
                 client_ids=[cid],
-                product_ids=product_universe,
+                product_ids=fitness_product_ids,
                 top_n=top_n * 3,  # wider pool for LLM to rank
                 risk_rating_hard_filter=False,  # PFS already handles risk gate
             )
@@ -208,13 +246,30 @@ def match_products_to_investors(
         }
 
     LOGGER.info(
-        "Fitness scoring complete for %d clients",
-        len(fitness_results),
+        "Fitness scorecard: %d clients scored against %d products",
+        len(fitness_results), len(fitness_product_ids),
+    )
+    LOGGER.debug(
+        "Fitness scorecard API response (first 3 clients, top 3 each):\n%s",
+        json.dumps(
+            {k: v[:3] for k, v in list(fitness_results.items())[:3]},
+            indent=2, default=str,
+        ),
+    )
+
+    # ── 5b. Trim LLM input to top_n clients only ──────────────────────
+    # The fitness scorecard runs on the full readiness pool, but the LLM
+    # only sees the top_n clients.  This keeps the LLM call fast and
+    # focused — no truncation, no wasted tokens on discarded clients.
+    llm_client_ids = eligible_client_ids[:top_n]
+    LOGGER.info(
+        "LLM input: %d clients trimmed from readiness pool of %d (top_n=%d)",
+        len(llm_client_ids), len(eligible_client_ids), top_n,
     )
 
     # ── 6. Build in-memory API resolver ─────────────────────────────────
     api_resolver = _build_matcher_api_resolver(
-        eligible_client_ids=eligible_client_ids,
+        eligible_client_ids=llm_client_ids,
         product_universe=product_universe,
         readiness_map=readiness_map,
         fitness_results=fitness_results,
@@ -337,6 +392,27 @@ def match_products_to_investors(
 def _generate_run_id() -> str:
     from datetime import datetime, timezone
     return datetime.now(timezone.utc).strftime("run-%Y%m%d-%H%M%S")
+
+
+def _get_holdings_product_ids(client_ids: list[str]) -> list[str]:
+    """Return distinct product_ids from *client_ids* holdings that exist
+    in the products table — so the LLM sees what clients already own."""
+    if not client_ids:
+        return []
+    from src.test_data.product_catalog import get_conn as _pcat_conn
+    conn = _pcat_conn(read_only=True)
+    try:
+        placeholders = ",".join("?" for _ in client_ids)
+        rows = conn.execute(
+            f"SELECT DISTINCT h.product_id "
+            f"FROM holdings h "
+            f"INNER JOIN products p ON h.product_id = p.product_id "
+            f"WHERE h.client_id IN ({placeholders})",
+            client_ids,
+        ).fetchall()
+        return [r[0] for r in rows]
+    finally:
+        conn.close()
 
 
 def _load_planbot_config() -> dict:

@@ -731,7 +731,8 @@ def _db_has_data() -> bool:
 if __name__ == "__main__":
     import sys
 
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    from src.shared.logging_utils import init_logging
+    init_logging()
 
     config_arg = sys.argv[1] if len(sys.argv) > 1 else "config/config_planbot.yaml"
     results = run_score_card(config_arg)

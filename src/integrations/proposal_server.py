@@ -12,6 +12,7 @@ Start with:
 from __future__ import annotations
 
 from enum import Enum
+from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -300,11 +301,18 @@ def propose_for_maturing_holdings(body: MaturingHoldingsRequest) -> dict:
 # ═══════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
+    import logging
     import uvicorn
     from pathlib import Path
     import yaml
 
-    config_path = Path(__file__).resolve().parents[2] / "config" / "config_planbot.yaml"
+    # ── One-time logging init from config/logging_config.ini ───────────
+    from src.shared.logging_utils import init_logging
+    init_logging()
+    logging.getLogger(__name__).info("Server starting — logging configured from config/logging_config.ini")
+
+    _ROOT = Path(__file__).resolve().parents[2]
+    config_path = _ROOT / "config" / "config_planbot.yaml"
     cfg = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
     server_cfg = (cfg.get("server") or {}).get("proposal", {})
 

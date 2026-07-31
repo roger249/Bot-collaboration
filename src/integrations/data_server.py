@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 import logging
-import logging.config
 import time
 from pathlib import Path
 from typing import Any
@@ -31,25 +30,12 @@ from src.integrations.product_tool import (
     search_product_by_fitness_score,
 )
 
+from src.shared.logging_utils import init_logging
+
 LOGGER = logging.getLogger(__name__)
 
 # ── Wire integration-level logging to file on startup ─────────────────────
-_CWD = Path(__file__).resolve().parents[2]
-_LOGGING_INI = _CWD / "config" / "logging_config.ini"
-_LOG_FILE = _CWD / "log" / "root.log"
-_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
-
-if _LOGGING_INI.exists():
-    logging.config.fileConfig(
-        str(_LOGGING_INI),
-        defaults={
-            "log_level": "DEBUG",
-            "log_file": str(_LOG_FILE),
-            "chat_history_log_file": str(_CWD / "log" / "chat_history.log"),
-            "api_debug_level": "DEBUG",
-        },
-        disable_existing_loggers=False,
-    )
+init_logging()
 
 app = FastAPI(
     title="PlanBot Data API",

@@ -325,6 +325,7 @@ def search_by_investor_readiness_score(top_n: int | None = None) -> list[dict]:
         }
         for i, s in enumerate(scores, 1)
     ]
+    LOGGER.info("IRS: %d clients scored (top_n=%s)", len(result), top_n)
     LOGGER.debug("search_by_investor_readiness_score output: %s", result)
     return result
 

@@ -2,117 +2,51 @@ from __future__ import annotations
 
 import logging
 import logging.config
-from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
+_INITIALIZED: bool = False
 
-_LAST_LOG_FILE: Path | None = None
-_LAST_CHAT_HISTORY_LOG_FILE: Path | None = None
+_LOGGER = logging.getLogger(__name__)
 
 
-def _configure_chat_history_logger(
-    chat_history_log_file: Path,
-    enabled: bool,
-    max_bytes: int,
-    backup_count: int,
-) -> None:
-    logger = logging.getLogger("chat_history")
+def init_logging(ini_path: str | Path = "config/logging_config.ini") -> None:
+    """Initialise logging from ``config/logging_config.ini``.
 
-    for handler in list(logger.handlers):
-        logger.removeHandler(handler)
-        handler.close()
+    - Creates the ``log/`` directory if it does not exist.
+    - Idempotent: calling a second time is a no-op (handlers are not
+      double-registered).
+    - The ini must be self-contained — literal level values, no
+      ``%(…)s`` placeholders.
 
-    if not enabled:
-        logger.disabled = True
-        logger.propagate = False
+    This is the *only* function in the codebase that calls
+    ``logging.config.fileConfig``, ``logging.basicConfig``, or
+    ``logging.FileHandler``.
+    """
+    global _INITIALIZED
+    if _INITIALIZED and logging.getLogger().handlers:
         return
 
-    logger.disabled = False
-    logger.setLevel(logging.DEBUG)
-    logger.propagate = False
+    ini = Path(ini_path)
+    if not ini.is_absolute():
+        # Resolve relative to project root (two dirs up from src/shared/).
+        root = Path(__file__).resolve().parents[2]
+        ini = root / ini
 
-    handler = RotatingFileHandler(
-        chat_history_log_file,
-        maxBytes=max(0, max_bytes),
-        backupCount=max(0, backup_count),
-        encoding="utf-8",
-    )
-    handler.setLevel(logging.DEBUG)
-    handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s %(levelname)s %(name)s %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
+    if not ini.exists():
+        _LOGGER.warning(
+            "Logging config not found at %s — using basicConfig fallback", ini,
         )
-    )
-    logger.addHandler(handler)
-
-
-def configure_logging(
-    level: str,
-    log_file: Path,
-    chat_history_log_file: Path,
-    config_file: Path | None = None,
-    chat_history_enabled: bool = True,
-    chat_history_max_bytes: int = 5_000_000,
-    chat_history_backup_count: int = 5,
-    api_debug_level: str = "INFO",
-) -> None:
-    global _LAST_LOG_FILE, _LAST_CHAT_HISTORY_LOG_FILE
-
-    log_file.parent.mkdir(parents=True, exist_ok=True)
-    chat_history_log_file.parent.mkdir(parents=True, exist_ok=True)
-
-    resolved_log_file = log_file.resolve()
-    resolved_chat_history_file = chat_history_log_file.resolve()
-
-    # Reuse existing logger setup when targets are unchanged.
-    if (
-        _LAST_LOG_FILE == resolved_log_file
-        and _LAST_CHAT_HISTORY_LOG_FILE == resolved_chat_history_file
-        and logging.getLogger().handlers
-    ):
-        _configure_chat_history_logger(
-            chat_history_log_file,
-            enabled=chat_history_enabled,
-            max_bytes=chat_history_max_bytes,
-            backup_count=chat_history_backup_count,
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s %(levelname)s %(name)s %(message)s",
         )
+        _INITIALIZED = True
         return
 
-    if config_file is not None and config_file.exists():
-        logging.config.fileConfig(
-            config_file,
-            defaults={
-                "log_level": level.upper(),
-                "log_file": str(log_file),
-                "chat_history_log_file": str(chat_history_log_file),
-                "api_debug_level": api_debug_level.upper(),
-            },
-            disable_existing_loggers=False,
-        )
-        _configure_chat_history_logger(
-            chat_history_log_file,
-            enabled=chat_history_enabled,
-            max_bytes=chat_history_max_bytes,
-            backup_count=chat_history_backup_count,
-        )
-        _LAST_LOG_FILE = resolved_log_file
-        _LAST_CHAT_HISTORY_LOG_FILE = resolved_chat_history_file
-        return
+    # Ensure log/ directory exists (ini paths are relative to project root).
+    log_dir = ini.parent.parent / "log"
+    log_dir.mkdir(parents=True, exist_ok=True)
 
-    logging.basicConfig(
-        level=getattr(logging, level.upper(), logging.INFO),
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
-        handlers=[
-            logging.FileHandler(log_file, encoding="utf-8"),
-            logging.StreamHandler(),
-        ],
-    )
-    _configure_chat_history_logger(
-        chat_history_log_file,
-        enabled=chat_history_enabled,
-        max_bytes=chat_history_max_bytes,
-        backup_count=chat_history_backup_count,
-    )
-    _LAST_LOG_FILE = resolved_log_file
-    _LAST_CHAT_HISTORY_LOG_FILE = resolved_chat_history_file
+    logging.config.fileConfig(str(ini), disable_existing_loggers=False)
+    _INITIALIZED = True
+    _LOGGER.info("Logging initialized from %s", ini)

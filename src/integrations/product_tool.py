@@ -545,6 +545,12 @@ def search_product_by_fitness_score(
 
     exclude = set(exclude_dimensions or [])
 
+    LOGGER.info(
+        "PFS request: %d clients × %d products, top_n=%d, hard_filter=%s, exclude=%s",
+        len(client_ids), len(product_ids), top_n, risk_rating_hard_filter,
+        sorted(exclude) if exclude else "none",
+    )
+
     # --- Load clients, holdings, products ---
     conn = _get_conn(read_only=True)
     try:
@@ -750,6 +756,25 @@ def search_product_by_fitness_score(
         -(products_map.get(x["product_id"], {}).get("expected_return") or 0),
         x["product_id"],
     ))
+
+    # Log per-client fitness score summary
+    total_scored = len(results)
+    clients_scored = len({r["client_id"] for r in results})
+    LOGGER.info(
+        "PFS: %d pairs scored across %d clients, top_n=%d returned",
+        total_scored, clients_scored, min(top_n, total_scored),
+    )
+    for cid in client_ids:
+        client_results = [r for r in results if r["client_id"] == cid]
+        if client_results:
+            top3 = client_results[:3]
+            lines = [
+                f"  {r['product_id']:12s} → fitness={r['fitness_score']:.2f}  "
+                f"components={json.dumps(r['component_scores'])}"
+                for r in top3
+            ]
+            LOGGER.debug("PFS client %s (top %d of %d):\n%s",
+                         cid, len(top3), len(client_results), "\n".join(lines))
 
     results = results[:top_n]
 

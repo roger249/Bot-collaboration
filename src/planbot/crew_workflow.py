@@ -38,7 +38,6 @@ from src.shared.llm_client import (
     build_client,
     configure_transport_logging,
 )
-from src.shared.logging_utils import configure_logging
 from src.shared.run_utils import create_run_root
 
 LOGGER = logging.getLogger(__name__)
@@ -247,49 +246,49 @@ def _instrument_tool(tool: Any, configured_name: str) -> Any:
 
 
 _ANSI_ESCAPE = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])", re.ASCII)
+_CREWAI_TRACE_LOGGER = logging.getLogger("crewai_trace")
 
 
 @contextlib.contextmanager
-def _tee_stdout_to_log(log_path: Path):
-    """Tee sys.stdout to log_path (ANSI codes stripped) while keeping live console output."""
+def _tee_stdout_to_crewai_trace():
+    """Tee sys.stdout to the crewai_trace logger (ANSI codes stripped).
+
+    The crewai_trace logger is defined in logging_config.ini with its own
+    file handler (log/crewai_trace.log) and propagate=0, so trace never
+    appears in planbot.log.
+    """
     original_stdout = sys.stdout
-    with log_path.open("a", encoding="utf-8") as _log_file:
 
-        class _TeeStream:
-            def write(self, text: str) -> int:
-                original_stdout.write(text)
-                clean = _ANSI_ESCAPE.sub("", text)
-                if clean and not _log_file.closed:
-                    try:
-                        _log_file.write(clean)
-                    except ValueError:
-                        pass  # file closed by context manager before deferred event fired
-                return len(text)
+    class _TeeStream:
+        def write(self, text: str) -> int:
+            original_stdout.write(text)
+            clean = _ANSI_ESCAPE.sub("", text)
+            if clean:
+                for line in clean.splitlines():
+                    stripped = line.strip()
+                    if stripped:
+                        _CREWAI_TRACE_LOGGER.debug("%s", stripped)
+            return len(text)
 
-            def flush(self) -> None:
-                original_stdout.flush()
-                if not _log_file.closed:
-                    try:
-                        _log_file.flush()
-                    except ValueError:
-                        pass
+        def flush(self) -> None:
+            original_stdout.flush()
 
-            def isatty(self) -> bool:
-                return False
+        def isatty(self) -> bool:
+            return False
 
-            @property
-            def encoding(self) -> str:
-                return getattr(original_stdout, "encoding", "utf-8")
+        @property
+        def encoding(self) -> str:
+            return getattr(original_stdout, "encoding", "utf-8")
 
-            @property
-            def errors(self) -> str | None:
-                return getattr(original_stdout, "errors", None)
+        @property
+        def errors(self) -> str | None:
+            return getattr(original_stdout, "errors", None)
 
-        sys.stdout = _TeeStream()  # type: ignore[assignment]
-        try:
-            yield
-        finally:
-            sys.stdout = original_stdout
+    sys.stdout = _TeeStream()  # type: ignore[assignment]
+    try:
+        yield
+    finally:
+        sys.stdout = original_stdout
 
 
 def _resolve_agent_tools(agent_def: dict[str, Any]) -> list[Any]:
@@ -311,7 +310,6 @@ def _generate_with_crew(
     cfg,
     user_prompt: str,
     crewai_verbose: bool = False,
-    log_path: Path | None = None,
 ) -> str:
     agents_cfg = _load_yaml(cfg.crewai_config_folder / "agents.yaml")
     tasks_cfg = _load_yaml(cfg.crewai_config_folder / "tasks.yaml")
@@ -382,8 +380,8 @@ def _generate_with_crew(
 
     LOGGER.info("Sending request via CrewAI (model=%s, provider=%s)", cfg.model, cfg.provider)
     try:
-        if crewai_verbose and log_path is not None:
-            with _tee_stdout_to_log(log_path):
+        if crewai_verbose:
+            with _tee_stdout_to_crewai_trace():
                 result = crew.kickoff()
         else:
             result = crew.kickoff()
@@ -431,21 +429,7 @@ def run_crew_planbot(
         cfg.overwrite_output_folder,
         preserve_existing=preserve_existing_run_root,
     )
-    logs_dir = run_root / "logs"
-    logs_dir.mkdir(parents=True, exist_ok=True)
-
-    log_path = logs_dir / "planbot.log"
-    chat_history_log_path = logs_dir / "chat_history.log"
-    configure_logging(
-        app_config.logging_level,
-        log_path,
-        chat_history_log_path,
-        app_config.logging_config_file,
-        chat_history_enabled=app_config.logging_chat_history_enabled,
-        chat_history_max_bytes=app_config.logging_chat_history_max_bytes,
-        chat_history_backup_count=app_config.logging_chat_history_backup_count,
-        api_debug_level=app_config.logging_api_debug_level,
-    )
+    log_path = app_config.root_dir / "log" / "planbot.log"
     configure_transport_logging(
         body_max_chars=app_config.logging_chat_history_body_max_chars,
         redact_fields=app_config.logging_chat_history_redact_fields,
@@ -524,7 +508,11 @@ def run_crew_planbot(
         )
         output = build_client(app_config, "planbot", bot_config).generate(request)
     else:
-        output = _generate_with_crew(app_config, cfg, user_prompt, crewai_verbose=app_config.logging_crewai_verbose, log_path=log_path)
+        output = _generate_with_crew(app_config, cfg, user_prompt, crewai_verbose=app_config.logging_crewai_verbose)
+
+    output_chars, output_bytes = _payload_sizes(output)
+    LOGGER.info("LLM response: %s chars, %s bytes", output_chars, output_bytes)
+    LOGGER.debug("LLM response (full)\n=== response ===\n%s", output)
 
     output = _normalize_planbot_output(output)
 

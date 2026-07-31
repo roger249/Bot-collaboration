@@ -353,7 +353,7 @@ def get_market_data(
             sgov_one_year_return=sgov_one_year_return,
             is_etf=_is_etf(info),
         )
-        expected_return = _estimate_expected_return(period_results.get("3y"))
+        expected_return = _estimate_expected_return(period_results.get("5y"))
 
         row["risk_rating"] = risk_rating
         row["expected_return"] = _round_or_blank(expected_return)

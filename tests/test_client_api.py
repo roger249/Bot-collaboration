@@ -86,18 +86,19 @@ def _seed_minimal_db(db_path: Path) -> None:
             children_info      TEXT,
             liquidity_need     TEXT,
             income_stability   TEXT,
-            investment_objective TEXT
+            investment_objective TEXT,
+            qualitative_profile TEXT
         )
     """)
     conn.executemany(
-        "INSERT OR REPLACE INTO clients VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "INSERT OR REPLACE INTO clients VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         [
             ("PB-TEST-001", "Alice Alpha", 1_000_000.0, 5.0, "North America",
-             "1980-06-15", "Engineer", 4, "Married", "2 children", "Low", "High", "Growth"),
+             "1980-06-15", "Engineer", 4, "Married", "2 children", "Low", "High", "Growth", ""),
             ("PB-TEST-002", "Bob Beta", 500_000.0, 20.0, "Europe",
-             "1955-03-20", "Retired", 2, "Married", "0 children", "Medium", "Low", "Income"),
+             "1955-03-20", "Retired", 2, "Married", "0 children", "Medium", "Low", "Income", ""),
             ("PB-TEST-003", "Carol Gamma", 2_000_000.0, 1.0, "Asia",
-             "1990-11-01", "Entrepreneur", 5, "Single", "0 children", "High", "Variable", "Aggressive Growth"),
+             "1990-11-01", "Entrepreneur", 5, "Single", "0 children", "High", "Variable", "Aggressive Growth", ""),
         ],
     )
 

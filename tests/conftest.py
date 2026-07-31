@@ -20,6 +20,54 @@ import pytest
 import uvicorn
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--run-slow", action="store_true", default=False,
+        help="run slow tests (real LLM/CrewAI invocations)",
+    )
+
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "slow: mark test as slow")
+
+
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("--run-slow"):
+        return
+    skip_slow = pytest.mark.skip(reason="need --run-slow option to run")
+    for item in items:
+        if "slow" in item.keywords:
+            item.add_marker(skip_slow)
+
+
+# ── pytest marker registration ────────────────────────────────────────────
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--run-slow",
+        action="store_true",
+        default=False,
+        help="Run tests marked as slow (LLM-invoking tests)",
+    )
+
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "slow: mark test as slow (LLM-invoking, >20s)")
+
+
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("--run-slow"):
+        return
+    skip_slow = pytest.mark.skip(reason="slow test — use --run-slow to execute")
+    for item in items:
+        if item.get_closest_marker("slow"):
+            item.add_marker(skip_slow)
+
+
+# ── Fixtures ──────────────────────────────────────────────────────────────
+
+
 @pytest.fixture(scope="function")
 def proposal_server():
     """Start the proposal server in a background thread on port 0 (OS-assigned).
