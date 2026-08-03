@@ -59,6 +59,10 @@ ticker_groups:
     - JPST
     - ICSH
     - BIL
+    - XHLF
+    - XTRE
+    - XFIV
+    - XSVN
     - SHV
     - VMRXX
     - FZDXX
@@ -190,3 +194,78 @@ liquidity_rating:
   annuity: 3
   realestate: 2
   privateequity: 1
+# ---------------------------------------------------------------------------
+# duckdb_ticker_groups — Holdings products that need bridge rows in the
+# products table.  The seeder creates STOCK-{ticker} / ETF-{ticker} rows,
+# but client holdings may use different product_id values (e.g. "1810-hk"
+# vs "STOCK-1810.HK").  Each entry here creates a second products row with
+# the holdings-compatible product_id.
+#
+# Fields:
+#   product_id (required)  — exact product_id used in the holdings table
+#   ticker     (required)  — Yahoo Finance symbol for market data lookup
+#   name, sector (optional) — fallback when Yahoo returns no metadata
+# ---------------------------------------------------------------------------
+duckdb_ticker_groups:
+
+  holdings_stocks:
+    description: "Stocks in client holdings that need product_id bridge rows"
+    product_type: "stock"
+    entries:
+      - product_id: "1810-hk"
+        ticker: "1810.HK"
+        # Below are optional, and act as fallback if yahoo not available.
+        # name: "Xiaomi Corporation"
+        # sector: "Technology"
+      - product_id: "brka"
+        ticker: "BRK-A"
+      - product_id: "2018-hk"
+        ticker: "2018.HK"
+
+  holdings_treasury_yields:
+    description: "Treasury yield instruments held by clients — proxied via BondBloxx target-duration ETFs"
+    product_type: "bond"
+    entries:
+      - product_id: "us3yt-rr"
+        ticker: "XTRE"
+        name: "US 3-Year Treasury Yield"
+        sector: "Government"
+      - product_id: "us5yt-rr"
+        ticker: "XFIV"
+        name: "US 5-Year Treasury Yield"
+        sector: "Government"
+      - product_id: "us7yt-rr"
+        ticker: "XSVN"
+        name: "US 7-Year Treasury Yield"
+        sector: "Government"
+
+  holdings_treasury_bills:
+    description: "Treasury bill instruments held by clients — proxied via BondBloxx 6-Month ETF"
+    product_type: "money_market_fund"
+    entries:
+      - product_id: "PROD053"
+        ticker: "XHLF"
+        name: "US 1-Month Treasury Bill Rate"
+        sector: "Government"
+      - product_id: "us2mt-x"
+        ticker: "XHLF"
+        name: "US 2-Month Treasury Bill"
+        sector: "Government"
+      - product_id: "us3mt-rr"
+        ticker: "XHLF"
+        name: "US 3-Month Treasury Bill Rate"
+        sector: "Government"
+      - product_id: "PROD054"
+        ticker: "XHLF"
+        name: "US 4-Month Treasury Bill"
+        sector: "Government"
+
+  holdings_fx:
+    description: "FX instruments held by clients"
+    product_type: "currency"
+    entries:
+      - product_id: "eur-usd"
+        ticker: "EURUSD=X"
+        name: "Euro / US Dollar"
+        sector: "FX"
+

@@ -93,8 +93,6 @@ product_investor_matching:
         purpose: Instructions and format for generating the proposal
       - name: ../shared/proposal_section_instructions/[ref]*.md
         purpose: Detail instructions for specific sections in the proposal
-      - name: ../shared/proposal_section_instructions/s[!c]*.md
-        purpose: Detail instructions for specific sections in the proposal
     guidelines: 
       - name: ../shared/financial_needs/*.md
         purpose: Guidelines on financial needs analysis and common financial needs
@@ -115,13 +113,13 @@ product_investor_matching:
         purpose: Details of the investable assets available for recommendation in csv format
   llm_model: deepseek_tool
 
-client_product_fit_analysis:
-  task: client_product_fit_analysis_task
-  output_root: runs/client_product_fit_analysis
-  output_filename: client_product_fit_analysis.md
+product_opportunity_proposal:
+  task: product_opportunity_proposal_task
+  output_root: runs/product_opportunity_proposal
+  output_filename: product_opportunity_proposal.md
   overwrite_output_folder: true
-  crewai_config_folder: data/planbot/client_product_fit/crewai
-  references_root: data/planbot/client_product_fit
+  crewai_config_folder: data/planbot/product_opportunity_proposal/crewai
+  references_root: data/planbot/product_opportunity_proposal
   references:
     proposal_instructions_and_format:
       - name: proposal_instructions/*.md
@@ -304,10 +302,10 @@ run_configurations:
     max_parallel_clients: 1
     keep_generated_client_inputs: true
 
-  client_product_fit_analysis_proposals:
-    # Generate one client_product_fit_analysis per selected client
+  product_opportunity_proposals:
+    # Generate one product_opportunity_proposal per selected client
     # Contract: 'from' defines iteration count and order; alias values must resolve one value per iteration; every placeholder token used downstream must be defined in alias.
-    generated_inputs_root: runs/client_product_fit_analysis/generated_inputs
+    generated_inputs_root: runs/product_opportunity_proposal/generated_inputs
     fan_out:
       from: product_investor_matching_filter.output.client_profiles
       alias: 
@@ -317,9 +315,9 @@ run_configurations:
         - product_investor_matching_filter.output.client_profiles.{client_id}.md
         - client_holdings_filter.output.by_client_id.{client_id}.md
       execute:
-        - proposal: client_product_fit_analysis
+        - proposal: product_opportunity_proposal
           enabled: true
-          output_file: runs/sample_outputs/client_product_fit_analysis_{client_id}.md
+          output_file: runs/sample_outputs/product_opportunity_proposal_{client_id}.md
         # Keep this as optional while validating first integrated flow.
         - proposal: portfolio_review
           enabled: true

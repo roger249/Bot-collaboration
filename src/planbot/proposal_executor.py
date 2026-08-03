@@ -23,7 +23,7 @@ class ProposalExecutor:
         config_path: str | Path,
         run_id: str,
         keep_generated_client_inputs: bool = True,
-        generated_inputs_root: str | Path = "runs/client_product_fit_analysis/generated_inputs",
+        generated_inputs_root: str | Path = "runs/product_opportunity_proposal/generated_inputs",
     ):
         self.app_config = app_config
         self.config_path = Path(config_path)
@@ -46,7 +46,7 @@ class ProposalExecutor:
         Injects client profile and holdings into the proposal execution.
         
         Args:
-            proposal_name: Name of proposal to run (e.g., 'client_product_fit_analysis')
+            proposal_name: Name of proposal to run (e.g., 'product_opportunity_proposal')
             context: ExecutionContext with client data
             output_file_template: Output filename template (already resolved with placeholders)
             

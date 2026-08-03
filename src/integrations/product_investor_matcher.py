@@ -4,7 +4,7 @@ Product-Investor Matcher — Full pipeline from client/product data to ranked pr
 Implements the end-to-end flow defined in:
     docs/prod_spec/product_investor_matcher.md
 
-Sprint 1: Scorecards → LLM ranking → client_product_fit_analysis.
+Sprint 1: Scorecards → LLM ranking → product_opportunity_proposal.
 All data flows in-memory — no temp files.
 """
 
@@ -309,7 +309,7 @@ def match_products_to_investors(
     # ── 8. Extract top-N pairs from matching output ─────────────────────
     top_pairs = _extract_top_pairs(matching_markdown, top_n)
 
-    # ── 9. Run client_product_fit_analysis per pair ─────────────────────
+    # ── 9. Run product_opportunity_proposal per pair ─────────────────────
     final_proposals: list[dict] = []
     for pair in top_pairs:
         cid = pair["client_id"]
@@ -331,13 +331,13 @@ def match_products_to_investors(
             )
 
             fit_output_path = (
-                f"runs/client_product_fit_analysis/"
-                f"client_product_fit_analysis_{cid}_{pid}_{run_id}.md"
+                f"runs/product_opportunity_proposal/"
+                f"product_opportunity_proposal_{cid}_{pid}_{run_id}.md"
             )
             fit_result = run_crew_planbot(
                 app_config=app_config,
                 config_path=str(_CONFIG_PATH),
-                proposal_name="client_product_fit_analysis",
+                proposal_name="product_opportunity_proposal",
                 runtime_reference_overrides={
                     "client_profiles": [API_CLIENT_PROFILE, API_HOLDINGS],
                     "product_catalogs": [API_PRODUCT_CATALOG],
@@ -711,7 +711,7 @@ def _build_matcher_api_resolver(
 
 
 # ---------------------------------------------------------------------------
-# In-memory API resolver for client_product_fit_analysis (per-pair)
+# In-memory API resolver for product_opportunity_proposal (per-pair)
 # ---------------------------------------------------------------------------
 
 

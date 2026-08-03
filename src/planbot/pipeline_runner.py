@@ -14,14 +14,14 @@ from src.shared.logging_utils import init_logging
 LOGGER = logging.getLogger(__name__)
 
 
-class ClientProductFitPipelineConfig(BaseModel):
-    generated_inputs_root: str = "runs/client_product_fit_analysis/generated_inputs"
+class ProductOpportunityPipelineConfig(BaseModel):
+    generated_inputs_root: str = "runs/product_opportunity_proposal/generated_inputs"
     fan_out: dict[str, Any] = Field(default_factory=dict)
 
 
 class RunConfigurationsModel(BaseModel):
     defaults: dict[str, Any] = Field(default_factory=dict)
-    client_product_fit_analysis_proposals: ClientProductFitPipelineConfig = ClientProductFitPipelineConfig()
+    product_opportunity_proposals: ProductOpportunityPipelineConfig = ProductOpportunityPipelineConfig()
     filters: dict[str, Any]
 
 
@@ -46,8 +46,8 @@ class PipelineRunner:
             return False
 
         # Check for required sections
-        if "client_product_fit_analysis_proposals" not in config:
-            LOGGER.warning("No client_product_fit_analysis_proposals found in run_configurations")
+        if "product_opportunity_proposals" not in config:
+            LOGGER.warning("No product_opportunity_proposals found in run_configurations")
 
         if "filters" not in config:
             LOGGER.error("run_configurations missing 'filters' section")
@@ -66,7 +66,7 @@ class PipelineRunner:
             LOGGER.info("client_profile_filter not configured; client demographics will be omitted")
 
         # Validate fan_out contract
-        proposals_cfg = config.get("client_product_fit_analysis_proposals", {})
+        proposals_cfg = config.get("product_opportunity_proposals", {})
         fan_out_cfg = proposals_cfg.get("fan_out", {})
         alias_cfg = fan_out_cfg.get("alias", {})
 
@@ -101,7 +101,7 @@ class PipelineRunner:
         LOGGER.info("Pipeline configuration validation passed")
         return True
 
-    def run_pipeline(self, pipeline_name: str = "client_product_fit_analysis_proposals") -> dict[str, Any]:
+    def run_pipeline(self, pipeline_name: str = "product_opportunity_proposals") -> dict[str, Any]:
         """
         Run an orchestrated proposal pipeline.
         

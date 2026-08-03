@@ -480,7 +480,7 @@ class PipelineOrchestrator:
         Execute fan-out orchestration: iterate clients and run proposals.
         
         Args:
-            config: run_configurations['client_product_fit_analysis_proposals']
+            config: run_configurations['product_opportunity_proposals']
             filter_output: Combined filter output with profiles and holdings
             execute_proposal_fn: Callable(proposal_name, context) -> str (output path)
         """

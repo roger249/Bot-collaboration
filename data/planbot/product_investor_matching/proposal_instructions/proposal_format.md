@@ -9,6 +9,7 @@ Provide a description of what this report is.
 - Tabulate no more than 10 clients with best buying score, list in the order of descending buying score
 - Suggested product & position
 - Funding for the product 
+- Avoid large expected return difference (> 5%) between the suggested and switch-out.
 - Compare the expected return of the suggested product vs. the original product in the table
 ```
 
@@ -30,7 +31,23 @@ Show in the point form the followings
 - No more than 4 clients shall be suggested for structure products.  
 - Expected return is from 5y CAGR from the product catalog.  For product with much higher 1y, 3y CAGR than 5y CAGR, please provide justification on the sustainability of the return on recommendation and show in the expected return column.
 - Provide justification for any increasing in concentration risk
-- Alternative suggested products
+
+## Portfolio
+```yaml
+instructions: |
+- Show the % holding of each product before/after
+```
+
+| Asset                        | Current Market Value | Suggested Market Value | Current % | Suggested % | Change | Remark                                                     |
+| ---------------------------- | -------------------: | ---------------------: | --------: | ----------: | -----: | ---------------------------------------------------------- |
+| Tracker Fund of HK (2800.HK) |                   30 |                     20 |       30% |         20% |   -10% | Reduce HK concentration; maintain local dividend exposure. |
+| MS US Advantage Fund (N06)   |                   20 |                      0 |       20% |          0% |   -20% | Eliminate overlap; consolidate into broader index (SPY).   |
+
+## Alternative suggestion
+```yaml
+instructions: |
+- Alternative suggested products with their rationale
+```
 
 # References
 ```yaml

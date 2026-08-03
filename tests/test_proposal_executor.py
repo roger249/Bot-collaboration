@@ -22,8 +22,8 @@ def test_execute_with_context_writes_generated_inputs_and_overrides(monkeypatch,
     config_path = tmp_path / "config_planbot.yaml"
     config_path.write_text(
         """
-client_product_fit_analysis:
-  references_root: data/planbot/client_product_fit
+product_opportunity_proposal:
+  references_root: data/planbot/product_opportunity_proposal
 """.strip()
         + "\n",
         encoding="utf-8",
@@ -35,7 +35,7 @@ client_product_fit_analysis:
         config_path,
         run_id="20260514-101010",
         keep_generated_client_inputs=True,
-        generated_inputs_root="runs/client_product_fit_analysis/generated_inputs",
+        generated_inputs_root="runs/product_opportunity_proposal/generated_inputs",
     )
 
     captured: dict = {}
@@ -52,14 +52,14 @@ client_product_fit_analysis:
     )
 
     output_path = executor.execute_with_context(
-        proposal_name="client_product_fit_analysis",
+        proposal_name="product_opportunity_proposal",
         context=_make_context("C0001"),
-        output_file_template="runs/sample_outputs/client_product_fit_analysis_C0001.md",
+        output_file_template="runs/sample_outputs/product_opportunity_proposal_C0001.md",
     )
 
     generated_dir = (
         tmp_path
-        / "runs/client_product_fit_analysis/generated_inputs/20260514-101010/C0001"
+        / "runs/product_opportunity_proposal/generated_inputs/20260514-101010/C0001"
     )
     profile_file = generated_dir / "C0001_profile.md"
     holdings_file = generated_dir / "C0001_holdings.csv"
@@ -72,11 +72,11 @@ client_product_fit_analysis:
     overrides = captured["runtime_reference_overrides"]
     assert "client_profiles" in overrides
     assert overrides["client_profiles"] == [
-        "runs/client_product_fit_analysis/generated_inputs/20260514-101010/C0001/C0001_profile.md",
-        "runs/client_product_fit_analysis/generated_inputs/20260514-101010/C0001/C0001_holdings.csv",
+        "runs/product_opportunity_proposal/generated_inputs/20260514-101010/C0001/C0001_profile.md",
+        "runs/product_opportunity_proposal/generated_inputs/20260514-101010/C0001/C0001_holdings.csv",
     ]
 
-    expected_output = tmp_path / "runs/sample_outputs/client_product_fit_analysis_C0001.md"
+    expected_output = tmp_path / "runs/sample_outputs/product_opportunity_proposal_C0001.md"
     assert Path(output_path) == expected_output
     assert captured["output_file_override"] == expected_output
 
@@ -90,8 +90,8 @@ def test_cleanup_temp_files_removes_generated_inputs_when_disabled(monkeypatch, 
     config_path = tmp_path / "config_planbot.yaml"
     config_path.write_text(
         """
-client_product_fit_analysis:
-  references_root: data/planbot/client_product_fit
+product_opportunity_proposal:
+  references_root: data/planbot/product_opportunity_proposal
 """.strip()
         + "\n",
         encoding="utf-8",
@@ -103,7 +103,7 @@ client_product_fit_analysis:
         config_path,
         run_id="20260514-202020",
         keep_generated_client_inputs=False,
-        generated_inputs_root="runs/client_product_fit_analysis/generated_inputs",
+        generated_inputs_root="runs/product_opportunity_proposal/generated_inputs",
     )
 
     def fake_run_crew_planbot(app_cfg, cfg_path, proposal_name, runtime_reference_overrides=None, output_file_override=None):
@@ -115,14 +115,14 @@ client_product_fit_analysis:
     )
 
     executor.execute_with_context(
-        proposal_name="client_product_fit_analysis",
+        proposal_name="product_opportunity_proposal",
         context=_make_context("C0002"),
-        output_file_template="runs/sample_outputs/client_product_fit_analysis_C0002.md",
+        output_file_template="runs/sample_outputs/product_opportunity_proposal_C0002.md",
     )
 
     generated_dir = (
         tmp_path
-        / "runs/client_product_fit_analysis/generated_inputs/20260514-202020/C0002"
+        / "runs/product_opportunity_proposal/generated_inputs/20260514-202020/C0002"
     )
     profile_file = generated_dir / "C0002_profile.md"
     holdings_file = generated_dir / "C0002_holdings.csv"
@@ -140,8 +140,8 @@ def test_execute_with_context_uses_generated_inputs_root_override(monkeypatch, t
     config_path = tmp_path / "config_planbot.yaml"
     config_path.write_text(
         """
-client_product_fit_analysis:
-  references_root: data/planbot/client_product_fit
+product_opportunity_proposal:
+  references_root: data/planbot/product_opportunity_proposal
 """.strip()
         + "\n",
         encoding="utf-8",
@@ -153,7 +153,7 @@ client_product_fit_analysis:
         config_path,
         run_id="20260514-303030",
         keep_generated_client_inputs=True,
-        generated_inputs_root="runs/client_product_fit_analysis/generated_inputs",
+        generated_inputs_root="runs/product_opportunity_proposal/generated_inputs",
     )
 
     captured: dict = {}
@@ -168,14 +168,14 @@ client_product_fit_analysis:
     )
 
     executor.execute_with_context(
-        proposal_name="client_product_fit_analysis",
+        proposal_name="product_opportunity_proposal",
         context=_make_context("C0003"),
-        output_file_template="runs/sample_outputs/client_product_fit_analysis_C0003.md",
+        output_file_template="runs/sample_outputs/product_opportunity_proposal_C0003.md",
     )
 
     generated_dir = (
         tmp_path
-        / "runs/client_product_fit_analysis/generated_inputs/20260514-303030/C0003"
+        / "runs/product_opportunity_proposal/generated_inputs/20260514-303030/C0003"
     )
     profile_file = generated_dir / "C0003_profile.md"
     holdings_file = generated_dir / "C0003_holdings.csv"
@@ -185,6 +185,6 @@ client_product_fit_analysis:
 
     overrides = captured["runtime_reference_overrides"]
     assert overrides["client_profiles"] == [
-        "runs/client_product_fit_analysis/generated_inputs/20260514-303030/C0003/C0003_profile.md",
-        "runs/client_product_fit_analysis/generated_inputs/20260514-303030/C0003/C0003_holdings.csv",
+        "runs/product_opportunity_proposal/generated_inputs/20260514-303030/C0003/C0003_profile.md",
+        "runs/product_opportunity_proposal/generated_inputs/20260514-303030/C0003/C0003_holdings.csv",
     ]

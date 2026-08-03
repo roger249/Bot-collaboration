@@ -5,7 +5,7 @@ from src import main
 from src.integrations.client_api import search_holdings_maturing
 
 
-def test_run_client_product_fit_analysis_monkeypatched(monkeypatch):
+def test_run_product_opportunity_proposal_monkeypatched(monkeypatch):
     called = {}
 
     def fake_run(app_config, cfg_path, proposal):
@@ -20,12 +20,12 @@ def test_run_client_product_fit_analysis_monkeypatched(monkeypatch):
     result = main.run_planbot_programmatically(
         config_path='config/config.yaml',
         planbot_config='config/config_planbot.yaml',
-        proposal='client_product_fit_analysis',
+        proposal='product_opportunity_proposal',
     )
 
     assert 'args' in called
     assert called['args'][1] == 'config/config_planbot.yaml'
-    assert called['args'][2] == 'client_product_fit_analysis'
+    assert called['args'][2] == 'product_opportunity_proposal'
     assert result is not None
 
 

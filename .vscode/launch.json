@@ -50,7 +50,7 @@
       ]
     },
     {
-      "name": "Client Product-Fit Analysis",
+      "name": "Product Opportunity Proposal",
       "type": "python",
       "request": "launch",
       "module": "src.main",
@@ -62,11 +62,11 @@
         "--config",
         "config/config.yaml",
         "--proposal",
-        "client_product_fit_analysis"
+        "product_opportunity_proposal"
       ]
     },
     {
-      "name": "Run Pipeline (Client Product Fit)",
+      "name": "Run Pipeline (Product Opportunity Proposal)",
       "type": "python",
       "request": "launch",
       "module": "src.main",
@@ -80,7 +80,7 @@
         "--planbot-config",
         "config/config_planbot.yaml",
         "--pipeline",
-        "client_product_fit_analysis_proposals"
+        "product_opportunity_proposals"
       ]
     },
     {

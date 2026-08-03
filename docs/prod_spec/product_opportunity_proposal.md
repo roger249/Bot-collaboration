@@ -1,7 +1,21 @@
-Product Investor Matching Proposal API Refactor
-===============================================
+Product Opportunity Proposal API
+================================
 
 ## Overview
+
+Data flow of to generate the Product Opportunity Proposal as follows.
+
+- Generate the product_client_matching proposal (docs/prod_spec/product_investor_matcher.md)
+- Parse the output of he proposal to extract client and other information
+- The parser 
+- Invoke the Product Opportunity Proposal with the output from product_client_matching to generate the Product Opportunity Proposal
+
+## Note
+
+- The parsing of product_client_matching to invocation of the product opportunity proposal could refer to the data flow of client_product_fit_analysis_proposals in config/config_planbot.yaml
+- The current client_product_fit_analysis_proposals will not be used anymore so this will use as base to modify to the new 
+- No concurrency consideration is required for this sprint
+
 
 The current product investor matching proposal is generated from static files only. Please refer to `config/config_planbot.yaml` for the current execution. The spec is to refactor the proposal generation flow so that all client, holding, and product data are retrieved through remote FastAPI endpoints.
 

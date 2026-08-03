@@ -66,7 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     pipeline_parser.add_argument(
         "--pipeline",
-        default="client_product_fit_analysis_proposals",
+        default="product_opportunity_proposals",
         help="Name of the pipeline to run",
     )
 
