@@ -143,6 +143,11 @@ product_opportunity_proposal:
         purpose: Client profiles and suggested product for each client in markdown format
       - name: clients/*.csv
         purpose: Client profiles and suggested product for each client in csv format
+    suggested_products_and_rationale:
+      # Matcher per-client analysis markdown — resolved from product_investor_matcher
+      # output at runtime, but may also be supplied as a file glob by the RM.
+      - name: suggested_products/*.md
+        purpose: Suggested products, fitness scores, funding sources, client needs analysis, and rationale for the recommended product
     market_outlook:
       - name: ../shared/market_outlook/*.md
         purpose: Market outlook and sentiment analysis for the recommendation

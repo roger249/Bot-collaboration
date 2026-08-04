@@ -324,6 +324,11 @@ class OpportunityProposalRequest(BaseModel):
     client_id: str = Field(..., description="Client identifier")
     product_id: str = Field(..., description="Primary suggested product ID")
     rationale: str = Field("", description="Freeform markdown rationale")
+    suggested_products_and_rationale: str = Field(
+        "",
+        description="Matcher per-client analysis in markdown (product recommendations, fitness scores, funding sources, client needs). Populated from product_investor_matcher output.",
+        json_schema_extra={"default": ""},
+    )
     run_matcher: bool = Field(False, description="Run matcher to obtain rationale")
     market_outlook: str | None = Field(
         default=None, json_schema_extra={"default": None},
@@ -375,7 +380,7 @@ class AutomatchRequest(BaseModel):
     )
     run_matcher: bool = Field(False, json_schema_extra={"example": True})
     max_proposals: int = Field(
-        3, json_schema_extra={"example": 3},
+        10, json_schema_extra={"example": 3},
     )
 
 
@@ -405,6 +410,7 @@ def generate_opportunity_proposal(body: OpportunityProposalRequest) -> dict:
         client_id=body.client_id,
         product_id=body.product_id,
         rationale=body.rationale,
+        suggested_products_and_rationale=body.suggested_products_and_rationale,
         run_matcher=body.run_matcher,
         market_outlook=body.market_outlook,
         alternative_count=body.alternative_count,

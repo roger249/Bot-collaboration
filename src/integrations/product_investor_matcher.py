@@ -365,8 +365,8 @@ def product_investor_matcher(
 
 
 def _generate_run_id() -> str:
-    from datetime import datetime, timezone
-    return datetime.now(timezone.utc).strftime("run-%Y%m%d-%H%M%S")
+    from datetime import datetime
+    return datetime.now().strftime("run-%Y%m%d-%H%M%S")
 
 
 def _get_holdings_product_ids(client_ids: list[str]) -> list[str]:

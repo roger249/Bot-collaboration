@@ -1,5 +1,5 @@
 # General
-- Don't start any implementation until user asked to start.
+- Don't start any new implementation until a spec is finalized and have authorization from user.
 
 # Standard
 - Parameters (output filename, ai provider, prompts) shall be externalized to a yaml configuration

@@ -25,6 +25,7 @@ _API_SCHEME = "api://"
 API_CLIENT_PROFILE = f"{_API_SCHEME}client_profile"
 API_HOLDINGS = f"{_API_SCHEME}holdings"
 API_PRODUCT_CATALOG = f"{_API_SCHEME}product_catalog"
+API_SUGGESTED_PRODUCTS_AND_RATIONALE = f"{_API_SCHEME}suggested_products_and_rationale"
 
 
 def _convert_pdf_to_text(path: Path) -> str:

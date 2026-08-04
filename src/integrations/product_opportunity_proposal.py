@@ -31,6 +31,7 @@ from src.planbot.input_loader import (
     API_CLIENT_PROFILE,
     API_HOLDINGS,
     API_PRODUCT_CATALOG,
+    API_SUGGESTED_PRODUCTS_AND_RATIONALE,
     ReferenceDocument,
 )
 from src.shared.config_loader import load_config
@@ -62,6 +63,7 @@ def propose_product_opportunity(
     product_id: str,
     *,
     rationale: str = "",
+    suggested_products_and_rationale: str = "",
     run_matcher: bool = False,
     market_outlook: str | None = None,
     alternative_count: int = 3,
@@ -77,6 +79,10 @@ def propose_product_opportunity(
     rationale : str
         Freeform markdown describing why this product fits the client.
         Supplied by the RM or passed through from product_investor_matcher.
+    suggested_products_and_rationale : str
+        Raw markdown from the matcher's per-client detail section (fitness scores,
+        funding source, client needs analysis, concentration impact, alternatives).
+        Passed to the LLM via the ``api://suggested_products_and_rationale`` path.
     run_matcher : bool
         If True, run product_investor_matcher first to obtain rationale
         and fitness scores.  Default False.
@@ -90,23 +96,33 @@ def propose_product_opportunity(
     dict
         Response with client_id, product_id, output_filename, proposal_markdown, metadata.
     """
-    # ── Optionally run matcher to get rationale ──────────────────────
+    # ── Optionally run matcher to get rationale + alternatives ──────
+    matcher_alternatives: list[str] | None = None
     if run_matcher:
         from src.integrations.product_investor_matcher import product_investor_matcher
 
         matcher_result = product_investor_matcher(
             product_ids=[product_id],
             product_source="request_payload",
-            top_n=1,
+            top_n=10,  # more pairs for better chance of matching this client
             market_outlook=market_outlook,
         )
+        # Find the pair for this specific client
         proposals = matcher_result.get("final_proposals", [])
-        if proposals:
-            matched = proposals[0]
+        matched = next(
+            (p for p in proposals
+             if p.get("client_id") == client_id and p.get("product_id") == product_id),
+            None,
+        )
+        if matched:
             rationale = matched.get("rationale", rationale)
+            matcher_alternatives = matched.get("alternative_product_ids", [])
+            # If caller didn't supply suggested_products_and_rationale, use the matcher's per-client block
+            if not suggested_products_and_rationale:
+                suggested_products_and_rationale = matched.get("matching_context", "")
         else:
             LOGGER.warning(
-                "run_matcher=true but matcher returned no pairs for client=%s product=%s",
+                "run_matcher=true but matcher returned no pair for client=%s product=%s",
                 client_id, product_id,
             )
 
@@ -114,8 +130,10 @@ def propose_product_opportunity(
         client_id=client_id,
         product_id=product_id,
         rationale=rationale,
+        suggested_products_and_rationale=suggested_products_and_rationale,
         market_outlook=market_outlook,
         alternative_count=alternative_count,
+        matcher_alternatives=matcher_alternatives,
     )
 
 
@@ -127,7 +145,7 @@ def propose_product_opportunity_automatch(
     market_outlook: str | None = None,
     readiness_pool_size: int | None = None,
     run_matcher: bool = False,
-    max_proposals: int = 3,
+    max_proposals: int = 10,
 ) -> dict:
     """Batch endpoint — runs matching, then generates one proposal per pair.
 
@@ -206,6 +224,7 @@ def propose_product_opportunity_automatch(
                 client_id=cid,
                 product_id=pid,
                 rationale=pair.get("rationale", ""),
+                suggested_products_and_rationale=pair.get("matching_context", ""),
                 market_outlook=market_outlook,
                 alternative_count=0,  # use matcher alternatives
                 matcher_alternatives=pair.get("alternative_product_ids", []),
@@ -238,6 +257,7 @@ def _process_one_pair(
     product_id: str,
     *,
     rationale: str = "",
+    suggested_products_and_rationale: str = "",
     market_outlook: str | None = None,
     alternative_count: int = 3,
     matcher_alternatives: list[str] | None = None,
@@ -296,6 +316,7 @@ def _process_one_pair(
             client_data=client_profile,
             product_data=source_product,
             rationale=rationale,
+            suggested_products_and_rationale=suggested_products_and_rationale,
             market_outlook=market_outlook,
             alternative_count=alternative_count,
             matcher_alternatives=matcher_alternatives,
@@ -326,9 +347,10 @@ def _process_one_pair(
         config_path=str(_CONFIG_PATH),
         proposal_name="product_opportunity_proposal",
         runtime_reference_overrides={
-            "client_profiles": [API_CLIENT_PROFILE, API_HOLDINGS],
-            "product_catalogs": [API_PRODUCT_CATALOG],
-            "market_outlook": [API_MARKET_OUTLOOK],
+            "client_profiles":                  [API_CLIENT_PROFILE, API_HOLDINGS],
+            "product_catalogs":                 [API_PRODUCT_CATALOG],
+            "market_outlook":                   [API_MARKET_OUTLOOK],
+            "suggested_products_and_rationale": [API_SUGGESTED_PRODUCTS_AND_RATIONALE],
         },
         output_file_override=output_path,
         api_resolver=api_resolver,
@@ -358,6 +380,7 @@ def _build_proposal_resolver(
     product_data: dict,
     *,
     rationale: str = "",
+    suggested_products_and_rationale: str = "",
     market_outlook: str | None = None,
     alternative_count: int = 3,
     matcher_alternatives: list[str] | None = None,
@@ -387,10 +410,18 @@ def _build_proposal_resolver(
     holdings = client_data.get("holdings", [])
     if holdings:
         client_content += "\n\n" + format_holdings_bullets(holdings)
-    if rationale:
-        client_content += f"\n\n# Rationale\n\n{rationale}"
+    # rationale is NO LONGER appended to client_content — it goes to
+    # API_SUGGESTED_PRODUCTS_AND_RATIONALE alongside matching_context.
 
-    return build_api_resolver({
+    rationale_content = ""
+    if suggested_products_and_rationale:
+        rationale_content += suggested_products_and_rationale
+    if rationale:
+        if rationale_content:
+            rationale_content += "\n\n"
+        rationale_content += f"## Rationale\n\n{rationale}\n"
+
+    docs: dict[str, ReferenceDocument] = {
         API_CLIENT_PROFILE: ReferenceDocument(
             path=Path("api://client_profile"),
             content=client_content,
@@ -406,7 +437,15 @@ def _build_proposal_resolver(
             content=format_market_outlook_section(market_outlook),
             source_type="markdown",
         ),
-    })
+    }
+    if rationale_content:
+        docs[API_SUGGESTED_PRODUCTS_AND_RATIONALE] = ReferenceDocument(
+            path=Path(API_SUGGESTED_PRODUCTS_AND_RATIONALE),
+            content=rationale_content,
+            source_type="markdown",
+        )
+
+    return build_api_resolver(docs)
 
 
 # ---------------------------------------------------------------------------

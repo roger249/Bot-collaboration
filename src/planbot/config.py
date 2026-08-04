@@ -161,6 +161,10 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
 
     reference_sections: dict[str, ReferenceSectionConfig] = {}
     for section_name, entries in raw_proposal.references.items():
+        if entries is None:
+            # Skip sections with a null/None value — they are placeholder
+            # slots to be resolved at runtime (e.g. suggested_products_and_rationale).
+            continue
         if not isinstance(entries, list):
             raise ValueError(
                 f"Section '{section_name}' under references in '{proposal_name}' must be a list of {{name, purpose}} entries."

@@ -82,23 +82,29 @@ internally by the automatch endpoint.
 
 ### Internal Processing
 
-1. **Data Retrieval** — All data fetched via FastAPI:
-   - Client profile: `GET /client/search_by_id/{client_id}`
+1. **Data Retrieval** — Phase A (direct calls) or Phase B (HTTP resolver).
+   - Client profile + holdings: `GET /client/search_by_id/{client_id}`
    - Product profile: `GET /product/search_by_product_id/{product_id}`
-   - Alternative products: extracted from the LLM matcher output
-     (per-client ``Alternative suggestion`` bullets).
-     Format: `- PRODUCT_ID Name (fitness X.XX) …`.
-     Parse via regex `-\s+([A-Za-z]+[-.]?[\w.-]+)\s`.
-     **Fallback:** if no alternatives are found, use
-     `search_similar_to_product(primary_product, …)`.
+
+2. **Matcher handoff (when `run_matcher=true`)** — Invoke
+   `product_investor_matcher`.  Search `final_proposals` for the matching
+   `(client_id, product_id)` pair and extract:
+   - **`rationale`** — why the matcher recommends this product (from the
+     summary table `Key Rationale` column)
+   - **`alternative_product_ids`** — other products considered (extracted
+     from per-client ``#### Alternative suggestion`` bullets)
+   - **Fitness scores** — reused from the matcher rather than recomputed
+
+   When `run_matcher=false` (default), the caller supplies `rationale`
+   directly and alternatives are fetched via `search_similar_to_product`.
+
+3. **`alternative_product_ids` resolution** — If the matcher supplied
+   alternatives, those IDs are looked up via `search_by_product_id`.
+   **Fallback:** if no matcher alternatives are available (or
+   `run_matcher=false`), use `search_similar_to_product(primary_product,
+   top_n=alternative_count, diversification=true)`.
 
      > `search_similar_to_product` is a shared utility in `src/integrations/product_tool.py`.  It composes `_build_similarity_query_from_product` with `search_similar` and auto-excludes the anchor.  Also used by `search_reinvestment_candidates` and the reinvestment proposal flow.
-   - Product fitness scores and rationale (when `run_matcher=true`):
-     obtained from `product_investor_matcher`.  Scores are
-     **reused** rather than recomputed.
-   - When `run_matcher=false` (default), caller supplies rationale;
-     fitness scores are computed inline using the
-     existing scorer (`docs/prod_spec/score_card/product_fitness_score.md`).
 
 2. **Payload Construction** — Build an `api_resolver` callable following the
    same pattern as `_build_fit_analysis_resolver()` in the matcher.
