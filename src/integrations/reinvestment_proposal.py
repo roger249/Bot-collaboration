@@ -21,7 +21,7 @@ import yaml
 from src.integrations.client_api import search_by_id, search_holdings_maturing
 from src.integrations.product_tool import (
     search_by_product_id,
-    search_reinvestment_candidates,
+    search_similar_to_product,
 )
 from src.planbot.crew_workflow import run_crew_planbot
 from src.planbot.http_resolver import HttpApiResolver
@@ -33,6 +33,10 @@ from src.planbot.input_loader import (
 )
 from src.planbot.workflow import build_llm_input
 from src.shared.config_loader import load_config
+from src.shared.resolver_formatters import (
+    build_api_resolver,
+    format_holdings_csv,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -334,14 +338,13 @@ def _process_one_target(
             LOGGER.warning(msg)
             raise LookupError(msg)
 
-        cand_result = search_reinvestment_candidates(
-            client_ids=[client_id],
-            source_product_id=source_product_id,
+        cand_result = search_similar_to_product(
+            source_product,
+            top_n=top_n_per_client,
             max_per_product_type=max_per_product_type,
-            top_n_per_client=top_n_per_client,
             risk_rating_hard_filter=risk_rating_hard_filter,
         )
-        candidates_raw = cand_result.get("results_by_client", {}).get(client_id, [])
+        candidates_raw = cand_result.get("results", [])
 
         candidate_products = []
         for c in candidates_raw:
@@ -471,20 +474,6 @@ def _build_api_resolver(
         ]
         return "\n".join(lines) + "\n"
 
-    def _format_holdings_csv() -> str:
-        holdings = client_profile.get("holdings", [])
-        fieldnames = [
-            "client_id", "holding_id", "product_id", "instrument_name",
-            "symbol", "asset_class", "region", "currency", "quantity",
-            "book_cost", "market_value", "unrealized_pl", "unrealized_pl_pct",
-            "yield_pct", "risk_bucket", "esg_score", "liquidity",
-        ]
-        lines: list[str] = [",".join(fieldnames)]
-        for h in holdings:
-            row = ",".join(str(h.get(f, "")) for f in fieldnames)
-            lines.append(row)
-        return "\n".join(lines) + "\n"
-
     def _format_catalog_json() -> str:
         def _serialize_json_fields(d: dict) -> dict:
             out = dict(d)
@@ -512,31 +501,23 @@ def _build_api_resolver(
         }
         return json.dumps(payload, ensure_ascii=False, indent=2, default=str) + "\n"
 
-    def resolve(api_path: str) -> ReferenceDocument:
-        if api_path == API_CLIENT_PROFILE:
-            return ReferenceDocument(
-                path=Path(f"api://client/{client_id}/profile.md"),
-                content=_format_profile_markdown(),
-                source_type="markdown",
-            )
-        if api_path == API_HOLDINGS:
-            return ReferenceDocument(
-                path=Path(f"api://client/{client_id}/holdings.csv"),
-                content=_format_holdings_csv(),
-                source_type="csv",
-            )
-        if api_path == API_PRODUCT_CATALOG:
-            return ReferenceDocument(
-                path=Path(f"api://client/{client_id}/catalog.json"),
-                content=_format_catalog_json(),
-                source_type="json",
-            )
-        raise ValueError(
-            f"Unknown API path: {api_path!r}. "
-            f"Expected one of: {API_CLIENT_PROFILE}, {API_HOLDINGS}, {API_PRODUCT_CATALOG}."
-        )
-
-    return resolve
+    return build_api_resolver({
+        API_CLIENT_PROFILE: ReferenceDocument(
+            path=Path(f"api://client/{client_id}/profile.md"),
+            content=_format_profile_markdown(),
+            source_type="markdown",
+        ),
+        API_HOLDINGS: ReferenceDocument(
+            path=Path(f"api://client/{client_id}/holdings.csv"),
+            content=format_holdings_csv(client_profile.get("holdings", [])),
+            source_type="csv",
+        ),
+        API_PRODUCT_CATALOG: ReferenceDocument(
+            path=Path(f"api://client/{client_id}/catalog.json"),
+            content=_format_catalog_json(),
+            source_type="json",
+        ),
+    })
 
 
 # ---------------------------------------------------------------------------

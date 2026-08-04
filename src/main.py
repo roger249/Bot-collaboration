@@ -13,6 +13,7 @@ if __package__ is None or __package__ == "":
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.shared.config_loader import load_config
+from src.shared.logging_utils import init_logging
 from src.author_reviewer.crew_workflow import run_crew_workflow
 from src.planbot.crew_workflow import run_crew_planbot
 from src.planbot.market_data_module import get_market_data_from_config
@@ -92,6 +93,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     _load_local_dotenv()
+    init_logging()
     parser = build_parser()
     argv = sys.argv[1:]
     if not argv:
@@ -144,6 +146,10 @@ def main() -> None:
             LOGGER.error("PlanBot failed: %s", exc)
             raise SystemExit(1) from exc
     elif args.command == "run-pipeline":
+        LOGGER.warning(
+            "run-pipeline is DEPRECATED and will be removed in a future release. "
+            "Use the /api/v1/product-opportunity-proposal-automatch endpoint instead.",
+        )
         config = load_config(args.config)
         try:
             runner = PipelineRunner(config, args.planbot_config)

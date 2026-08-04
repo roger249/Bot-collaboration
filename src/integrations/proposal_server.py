@@ -11,6 +11,7 @@ Start with:
 
 from __future__ import annotations
 
+import logging
 from enum import Enum
 from pathlib import Path
 
@@ -22,13 +23,28 @@ from src.integrations.reinvestment_proposal import (
     propose_reinvestment,
     propose_reinvestment_for_maturing_holdings,
 )
-from src.integrations.product_investor_matcher import match_products_to_investors
+from src.integrations.product_investor_matcher import product_investor_matcher
+from src.integrations.product_opportunity_proposal import (
+    propose_product_opportunity,
+    propose_product_opportunity_automatch,
+)
+
+from src.shared.logging_utils import init_logging
+
+LOGGER = logging.getLogger(__name__)
+
 
 app = FastAPI(
     title="PlanBot Proposal API",
     description="Reinvestment proposal generation API.",
     version="0.1.0",
 )
+
+
+@app.on_event("startup")
+async def _on_startup() -> None:
+    init_logging()
+    LOGGER.info("Proposal Server startup complete.")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -215,6 +231,9 @@ class ProductInvestorMatcherRequest(BaseModel):
         None, json_schema_extra={"example": {"risk_rating": [3, 5]}},
     )
     top_n: int = Field(3, ge=1, le=20, json_schema_extra={"example": 3})
+    market_outlook: str | None = Field(
+        default=None, json_schema_extra={"default": None},
+    )
 
 
 class ProductInvestorMatcherResponse(BaseModel):
@@ -244,11 +263,12 @@ def match_products_to_investors_endpoint(
     client×product proposals with buying scores, investment rationale,
     and final proposal markdown.
     """
-    return match_products_to_investors(
+    return product_investor_matcher(
         product_ids=body.product_ids,
         product_source=body.product_source.value,
         client_selection=body.client_selection,
         top_n=body.top_n,
+        market_outlook=body.market_outlook,
     )
 
 
@@ -293,19 +313,128 @@ def propose_for_maturing_holdings(body: MaturingHoldingsRequest) -> dict:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# Product Opportunity Proposal endpoints
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class OpportunityProposalRequest(BaseModel):
+    """Single-shot product opportunity proposal."""
+    model_config = ConfigDict(extra="allow")
+
+    client_id: str = Field(..., description="Client identifier")
+    product_id: str = Field(..., description="Primary suggested product ID")
+    rationale: str = Field("", description="Freeform markdown rationale")
+    run_matcher: bool = Field(False, description="Run matcher to obtain rationale")
+    market_outlook: str | None = Field(
+        default=None, json_schema_extra={"default": None},
+    )
+    alternative_count: int = Field(3, description="Number of alternative products", ge=0)
+
+
+class OpportunityProposalResponse(BaseModel):
+    client_id: str
+    product_id: str
+    output_filename: str
+    proposal_markdown: str
+    metadata: dict = Field(default_factory=dict)
+
+
+class AutomatchRequest(BaseModel):
+    """Batch product opportunity proposal via product-investor matching.
+
+    Example payload::
+
+        {
+          "product_source": "default_yaml",
+          "product_ids": ["bank_recommended"],
+          "client_selection": {"risk_rating": [1, 5]},
+          "run_matcher": true,
+          "max_proposals": 3
+        }
+
+    When *product_source* is ``default_yaml``, *product_ids* may contain
+    group names defined in ``config_planbot.yaml`` under ``product_groups``
+    (expanded to their member product IDs).  When *product_source* is
+    ``request_payload``, *product_ids* are always literal product IDs.
+    """
+    model_config = ConfigDict(extra="allow")
+
+    product_source: ProductSource = Field(
+        ProductSource.DEFAULT_YAML,
+        json_schema_extra={"example": "default_yaml"},
+    )
+    product_ids: list[str] = Field(
+        default=["bank_recommended"],
+        json_schema_extra={"example": ["bank_recommended"]},
+    )
+    client_selection: dict | None = Field(
+        None, json_schema_extra={"example": {"risk_rating": [1, 5]}},
+    )
+    market_outlook: str | None = Field(
+        default=None, json_schema_extra={"default": None},
+    )
+    run_matcher: bool = Field(False, json_schema_extra={"example": True})
+    max_proposals: int = Field(
+        3, json_schema_extra={"example": 3},
+    )
+
+
+class AutomatchProposalItem(BaseModel):
+    client_id: str
+    product_id: str
+    output_filename: str | None = None
+    proposal_markdown: str
+    metadata: dict = Field(default_factory=dict)
+
+
+class AutomatchResponse(BaseModel):
+    matcher_run_id: str
+    total_clients_matched: int
+    total_proposals_generated: int
+    proposals: list[AutomatchProposalItem] = Field(default_factory=list)
+    errors: list[dict] = Field(default_factory=list)
+
+
+@app.post(
+    "/api/v1/product-opportunity-proposal",
+    response_model=OpportunityProposalResponse,
+)
+def generate_opportunity_proposal(body: OpportunityProposalRequest) -> dict:
+    """Generate a single product opportunity proposal for one client–product pair."""
+    return propose_product_opportunity(
+        client_id=body.client_id,
+        product_id=body.product_id,
+        rationale=body.rationale,
+        run_matcher=body.run_matcher,
+        market_outlook=body.market_outlook,
+        alternative_count=body.alternative_count,
+    )
+
+
+@app.post(
+    "/api/v1/product-opportunity-proposal-automatch",
+    response_model=AutomatchResponse,
+)
+def generate_opportunity_proposal_automatch(body: AutomatchRequest) -> dict:
+    """Run product-investor matching, then generate one proposal per pair."""
+    return propose_product_opportunity_automatch(
+        product_ids=body.product_ids,
+        product_source=body.product_source,
+        client_selection=body.client_selection,
+        market_outlook=body.market_outlook,
+        run_matcher=body.run_matcher,
+        max_proposals=body.max_proposals,
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Startup (production)
 # ═══════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    import logging
     import uvicorn
     from pathlib import Path
     import yaml
-
-    # ── One-time logging init from config/logging_config.ini ───────────
-    from src.shared.logging_utils import init_logging
-    init_logging()
-    logging.getLogger(__name__).info("Server starting — logging configured from config/logging_config.ini")
 
     _ROOT = Path(__file__).resolve().parents[2]
     config_path = _ROOT / "config" / "config_planbot.yaml"
@@ -316,5 +445,5 @@ if __name__ == "__main__":
         "src.integrations.proposal_server:app",
         host=server_cfg.get("host", "127.0.0.1"),
         port=server_cfg.get("port", 8000),
-        log_config=None,  # prevent uvicorn from closing our file handler
+        log_config=None,
     )

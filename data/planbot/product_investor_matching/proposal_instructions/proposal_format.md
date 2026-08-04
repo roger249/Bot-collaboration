@@ -1,7 +1,7 @@
 Product Investor Matching
 =========================
 
-# Executive Summary
+## Executive Summary
 ```yaml
 instructions: |
 Provide a description of what this report is.
@@ -19,11 +19,15 @@ Provide a description of what this report is.
 | PB-HK-000002-6 (Sarah Chen) | 4 | ETF-VOO Vanguard S&P 500 ETF – USD 250,000 (7.8%) | Sell STOCK-AMZN Amazon.com Inc. – USD 250,000 | 4.20 | 20.55% | 23.88% | Reduce AMZN single-stock concentration while retaining broad US equity upside; high fitness and high liquidity. |
 
 
-# Top clients with detail analysis
+## Top clients with detail analysis
 ```yaml
 instructions: |
 Show in the point form the followings
+```
 
+### PB-HK-000001-8 (David Kim)**
+```yaml
+instructions: |
 - Provide details of the suggestion per each client as the sections below. 
 - Elaborate the reasons to justify the financial needs of the client.
 - Provide the key factors that influenced your recommendation, such as the client's financial goals, risk tolerance, market outlook.
@@ -31,25 +35,15 @@ Show in the point form the followings
 - No more than 4 clients shall be suggested for structure products.  
 - Expected return is from 5y CAGR from the product catalog.  For product with much higher 1y, 3y CAGR than 5y CAGR, please provide justification on the sustainability of the return on recommendation and show in the expected return column.
 - Provide justification for any increasing in concentration risk
-
-## Portfolio
-```yaml
-instructions: |
-- Show the % holding of each product before/after
 ```
 
-| Asset                        | Current Market Value | Suggested Market Value | Current % | Suggested % | Change | Remark                                                     |
-| ---------------------------- | -------------------: | ---------------------: | --------: | ----------: | -----: | ---------------------------------------------------------- |
-| Tracker Fund of HK (2800.HK) |                   30 |                     20 |       30% |         20% |   -10% | Reduce HK concentration; maintain local dividend exposure. |
-| MS US Advantage Fund (N06)   |                   20 |                      0 |       20% |          0% |   -20% | Eliminate overlap; consolidate into broader index (SPY).   |
-
-## Alternative suggestion
+#### Alternative suggestion
 ```yaml
 instructions: |
 - Alternative suggested products with their rationale
 ```
 
-# References
+## References
 ```yaml
 instructions: |
 Please refer to the proposal_section_instructions/reference_instruction to come up this section

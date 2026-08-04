@@ -17,26 +17,45 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from src.integrations.product_investor_matcher import (
-    match_products_to_investors,
+    product_investor_matcher,
     _extract_top_pairs,
     _resolve_product_ids,
 )
 
-SAMPLE_MATCHING_MARKDOWN = """# Product-Investor Matching Report
+SAMPLE_MATCHING_MARKDOWN = """# Product Investor Matching
 
-## Rank 1 – Client PB-HK-000001-8 — Buying Score: 4.5
+## Executive Summary
 
-- **Product ID:** ETF-HYG
-- **Investment Amount:** $500,000
-- **Funding Source:** Cash reserves
-- **Rationale:** Strong alignment with income objective and risk profile.
+Summary text.
 
-## Rank 2 – Client PB-HK-000002-6 — Buying Score: 3.8
+| Client ID (Name) | Buying Score | Suggested Product & Position | Funding Source | Fitness Score | Expected Return – Suggested | Expected Return – Source | Key Rationale |
+|---:|---:|---|---:|---:|---:|---|--|
+| PB-HK-000001-8 (David Kim) | 5 | ETF-HYG iShares High Yield Corp Bond ETF – USD 500,000 (10.0%) | Sell Cash – USD 500,000 | 4.20 | 5.5% | 0.0% | Strong alignment with income objective and risk profile. |
+| PB-HK-000002-6 (Sarah Chen) | 4 | ETF-HYG iShares High Yield Corp Bond ETF – USD 300,000 (6.0%) | Sell STOCK-AMZN – USD 300,000 | 4.20 | 5.5% | 15.0% | Suitable replacement for existing position. |
 
-- **Product ID:** ETF-HYG
-- **Investment Amount:** $300,000
-- **Funding Source:** Maturing bond proceeds
-- **Rationale:** Suitable replacement for maturing fixed-income position.
+## Top clients with detail analysis
+
+### PB-HK-000001-8 (David Kim)
+
+- **Buying Score:** 5
+- **Recommendation:** Buy ETF-HYG via selling Cash.
+
+#### Alternative suggestion
+
+- PROD003 US Corporate Bond Fund (fitness 4.20) lower-risk alternative.
+- PROD016 Healthcare Innovation Fund (fitness 3.45) growth alternative.
+
+---
+
+### PB-HK-000002-6 (Sarah Chen)
+
+- **Buying Score:** 4
+- **Recommendation:** Buy ETF-HYG via selling STOCK-AMZN.
+
+#### Alternative suggestion
+
+- PROD014 Emerging Markets Fund (fitness 4.20) APAC exposure alternative.
+- PROD001 Tech Leaders Equity Fund (fitness 4.20) technology alternative.
 """
 
 FIT_ANALYSIS_MARKDOWN = "# Fit Analysis\n\nTest proposal from real DB"
@@ -114,16 +133,28 @@ class TestExtractTopPairs(unittest.TestCase):
         pairs = _extract_top_pairs(SAMPLE_MATCHING_MARKDOWN, top_n=5)
         self.assertEqual(len(pairs), 2)
         self.assertEqual(pairs[0]["client_id"], "PB-HK-000001-8")
-        self.assertEqual(pairs[0]["buying_score"], 4.5)
+        self.assertEqual(pairs[0]["buying_score"], 5.0)
         self.assertEqual(pairs[0]["product_id"], "ETF-HYG")
-        self.assertEqual(pairs[0]["funding_source"], "Cash reserves")
+        self.assertIn("Sell Cash", pairs[0]["funding_source"])
         self.assertEqual(pairs[1]["client_id"], "PB-HK-000002-6")
-        self.assertEqual(pairs[1]["buying_score"], 3.8)
+        self.assertEqual(pairs[1]["buying_score"], 4.0)
 
     def test_extract_pairs_top_n_limit(self):
         pairs = _extract_top_pairs(SAMPLE_MATCHING_MARKDOWN, top_n=1)
         self.assertEqual(len(pairs), 1)
         self.assertEqual(pairs[0]["client_id"], "PB-HK-000001-8")
+
+    def test_extract_alternatives(self):
+        """Alternative product IDs are extracted from per-client sections."""
+        pairs = _extract_top_pairs(SAMPLE_MATCHING_MARKDOWN, top_n=5)
+        self.assertEqual(
+            pairs[0]["alternative_product_ids"],
+            ["PROD003", "PROD016"],
+        )
+        self.assertEqual(
+            pairs[1]["alternative_product_ids"],
+            ["PROD014", "PROD001"],
+        )
 
     def test_extract_pairs_empty(self):
         pairs = _extract_top_pairs("No client data here.", top_n=5)
@@ -157,12 +188,10 @@ class TestProductInvestorMatcher(unittest.TestCase):
     def test_normal_flow(self):
         """Normal flow: real DB → real search/IRS/PFS → mock LLM → success."""
         self.mock_run_crew.side_effect = [
-            self._matching_result,   # product_investor_matching
-            self._fit_result,        # fit analysis pair 1
-            self._fit_result,        # fit analysis pair 2
+            self._matching_result,   # product_investor_matching only
         ]
 
-        result = match_products_to_investors(
+        result = product_investor_matcher(
             product_ids=["bank_recommended"],
             product_source="default_yaml",
             top_n=2,
@@ -173,6 +202,9 @@ class TestProductInvestorMatcher(unittest.TestCase):
         self.assertGreaterEqual(result["summary"]["clients_after_readiness"], 1)
         self.assertGreater(len(result["product_investor_matching_markdown"]), 0)
         self.assertGreater(len(result["final_proposals"]), 0)
+        # final_proposals now carry ranking data (no proposal_markdown)
+        self.assertIn("buying_score", result["final_proposals"][0])
+        self.assertIn("rationale", result["final_proposals"][0])
         self.assertEqual(len(result["errors"]), 0)
 
     # ── empty-result paths ──────────────────────────────────────────
@@ -183,7 +215,7 @@ class TestProductInvestorMatcher(unittest.TestCase):
             "src.integrations.product_investor_matcher.search",
             return_value=[],
         ):
-            result = match_products_to_investors(
+            result = product_investor_matcher(
                 product_ids=["ETF-HYG"], top_n=5,
             )
 
@@ -204,7 +236,7 @@ class TestProductInvestorMatcher(unittest.TestCase):
                 {"rank": 1, "client_id": "PB-HK-000088-8", "name": "Other", "total_score": 20.0},
             ],
         ):
-            result = match_products_to_investors(
+            result = product_investor_matcher(
                 product_ids=["ETF-HYG"], top_n=5,
             )
 
@@ -219,7 +251,7 @@ class TestProductInvestorMatcher(unittest.TestCase):
             "src.integrations.product_investor_matcher.search",
             side_effect=RuntimeError("Connection refused"),
         ):
-            result = match_products_to_investors(
+            result = product_investor_matcher(
                 product_ids=["ETF-HYG"], top_n=5,
             )
 
@@ -232,7 +264,7 @@ class TestProductInvestorMatcher(unittest.TestCase):
             "src.integrations.product_investor_matcher.search_by_investor_readiness_score",
             side_effect=RuntimeError("Scorecard crash"),
         ):
-            result = match_products_to_investors(
+            result = product_investor_matcher(
                 product_ids=["ETF-HYG"], top_n=5,
             )
 
@@ -245,7 +277,7 @@ class TestProductInvestorMatcher(unittest.TestCase):
             "src.integrations.product_investor_matcher.search_product_by_fitness_score",
             side_effect=RuntimeError("Fitness scoring crash"),
         ):
-            result = match_products_to_investors(
+            result = product_investor_matcher(
                 product_ids=["ETF-HYG"], top_n=5,
             )
 
@@ -256,7 +288,7 @@ class TestProductInvestorMatcher(unittest.TestCase):
         """Exception: CrewAI/LLM call fails."""
         self.mock_run_crew.side_effect = RuntimeError("LLM timeout")
 
-        result = match_products_to_investors(
+        result = product_investor_matcher(
             product_ids=["ETF-HYG"], top_n=2,
         )
 
@@ -273,12 +305,10 @@ class TestProductInvestorMatcher(unittest.TestCase):
         ):
             self.mock_run_crew.side_effect = [
                 _make_crew_result(SAMPLE_MATCHING_MARKDOWN),
-                _make_crew_result(FIT_ANALYSIS_MARKDOWN),
-                _make_crew_result(FIT_ANALYSIS_MARKDOWN),
             ]
 
             # "ETF" could be a group name — in request_payload mode it is NOT expanded
-            result = match_products_to_investors(
+            result = product_investor_matcher(
                 product_ids=["ETF"],
                 product_source="request_payload",
                 top_n=2,
@@ -304,7 +334,7 @@ class TestProductInvestorMatcher(unittest.TestCase):
                     _make_crew_result(FIT_ANALYSIS_MARKDOWN),
                 ]
 
-                match_products_to_investors(
+                product_investor_matcher(
                     product_ids=["bank_recommended"],
                     product_source="default_yaml",
                     top_n=2,

@@ -3,370 +3,324 @@ Product Opportunity Proposal API
 
 ## Overview
 
-Data flow of to generate the Product Opportunity Proposal as follows.
+The Product Opportunity Proposal generates a full investment recommendation
+proposal (markdown) for a specific client–product pair.  It is the final stage
+of the proposal pipeline after the Product-Investor Matcher has identified
+which clients are ready and which products are suitable.
 
-- Generate the product_client_matching proposal (docs/prod_spec/product_investor_matcher.md)
-- Parse the output of he proposal to extract client and other information
-- The parser 
-- Invoke the Product Opportunity Proposal with the output from product_client_matching to generate the Product Opportunity Proposal
+This Proposal will also be invoked from the UI with a manually selected client, product and rationale judged by a investment advise
 
-## Note
+### End-to-End Data Flow
 
-- The parsing of product_client_matching to invocation of the product opportunity proposal could refer to the data flow of client_product_fit_analysis_proposals in config/config_planbot.yaml
-- The current client_product_fit_analysis_proposals will not be used anymore so this will use as base to modify to the new 
-- No concurrency consideration is required for this sprint
-
-
-The current product investor matching proposal is generated from static files only. Please refer to `config/config_planbot.yaml` for the current execution. The spec is to refactor the proposal generation flow so that all client, holding, and product data are retrieved through remote FastAPI endpoints.
-
-A similar implementation has been done for the reinvestment proposal.  Please refer to `docs/prod_spec/reinvestment_proposal_api.md` for more information.
-
-The goals are:
-
-1. Replace file-based client and product inputs with API-backed retrieval.
-2. Preserve the current proposal output structure and quality.
-3. Keep the proposal generator callable as a local Python function while using remote FastAPI calls for client/product retrieval.
-4. Make the API contract stable enough that the same payload can be used by local callers and remote callers.
-5. Accept pre-selected product lists as API input; product selection logic is out of scope for this service.
-
-It does not redesign the proposal text itself, only how the input data are gathered and assembled for the LLM.
-
-## Scope
-
-### In scope
-
-- Product-client matching proposal generation for one or more target clients.
-- API-first retrieval for client profile, holdings, and product catalog data.
-- Accepting pre-selected product IDs as part of the request payload.
-- Supporting two invocation modes: direct `client_ids` and helper client discovery.
-- Deterministic matching score generation before LLM narrative generation.
-- Local Python entry point and FastAPI endpoint using the same payload schema.
-
-### Out of scope
-
-- Redesign of proposal writing style or output section names.
-- UI development.
-- Rebuilding client or product master-data services.
-- Product discovery or product pre-selection logic.
-- Advanced optimization (parallel fan-out, compact prompt serialization) in this initial phase.
-
-## Current state and problem
-
-- Current flow relies on static files for client and product context.
-- Product selection logic is currently mixed into proposal generation concerns.
-- The proposal writer and data retrieval concerns are coupled, making migration and testing harder.
-
-## Target outcomes
-
-1. Proposal generation can be triggered with only API data dependencies.
-2. Product list is passed in from upstream selection logic and reused as-is.
-3. Matching scorecards are reproducible and available for debug/trace.
-4. The same business payload can be used for both local and remote invocation.
-5. Callers can choose either explicit client IDs or helper-based client discovery.
-
-## API boundary
-
-Boundary definition for this module:
-
-- This module accepts only:
-	- selected products (`candidate_product_ids`) from upstream selector logic, and
-	- either explicit `client_ids` or helper discovery criteria.
-- This module owns:
-	- client enrichment retrieval,
-	- PFS/matching score computation,
-	- proposal generation and formatting.
-- This module does not own:
-	- product discovery/selection,
-	- UI-driven shortlist logic,
-	- bank campaign logic for promoted/top-selling product generation.
-
-### End-to-end flow
-
-Please refer to `docs/prod_spec/product_client_matching.d2` for the data flow of this proposal
-
-The input to this module is a selected list of products, and the client DB.  
-
-Selected product in general are selected by external means from the entire product catalog.  Potential routes are
-
-- Hand picked by teh relationship manager on the UI.
-- Products promoted by the bank.
-- Top selling products in the last month
-
-1. Receive request containing client targets and pre-selected product IDs.
-2. Retrieve client profile and holdings from client API.
-3. Retrieve product metadata/details for the passed-in product IDs.
-4. Build product fitness scorecard per (client, product) pair.
-5. Select top-N products per client after filtering and ranking.
-6. Build `llm_input` payload with client, scorecards, candidate products, and market context.
-7. Generate final proposal markdown using existing prompt template.
-8. Return output according to response mode (`path`, `markdown`, `both`) with optional debug blocks.
-
-Helper flow (client discovery mode):
-
-1. Receive request containing pre-selected product IDs and client-discovery parameters.
-2. Build IRS/PFS-based client list (top-N or threshold based).
-3. Invoke the same core proposal pipeline as direct mode using discovered `client_ids`.
-
-## Initial design
-
-### Service boundaries
-
-- Matching proposal service owns orchestration, scorecard assembly, and LLM input construction.
-- Client API owns client profile and holdings retrieval.
-- Product API owns searchable product catalog and product metadata.
-- FastAPI wrapper stays thin and delegates to the local Python builder.
-- Helper endpoint owns only client list discovery orchestration and delegates generation to the same builder.
-
-### Core modules (logical)
-
-- Request validator
-- Client context retriever
-- Product details retriever
-- Matching score engine
-- LLM input builder
-- Proposal renderer
-- Response formatter
-
-## Python API design
-
-### `generate_product_client_fit_proposal(...)`
-
-Suggested signature:
-
-```python
-generate_product_client_fit_proposal(
-		client_ids: list[str],
-		candidate_product_ids: list[str],
-		top_n_per_client: int = 10,
-		min_match_score: float | None = None,
-		response_mode: str = "path",  # one of: path, markdown, both
-		include_llm_input: bool = False,
-		include_debug_scores: bool = False,
-		include_market_outlook: bool = True,
-) -> dict
+```
+Request (client_id, product_id, rationale, options)
+       │
+       ▼
+┌──────────────────────────────┐
+│ 1. Resolve Input Data        │
+│    - Client profile via API  │  ← `GET /client/search_by_id`
+│    - Client holdings via API │  ← (included in ClientProfile)
+│    - Product profile via API │  ← `GET /product/search_by_product_id`
+│    - Alternative products    │  ← `GET /product/search_similar`
+│    - Product fitness scores  │  ← computed or optionally cached
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ 2. Build API Resolver        │
+│    - In-memory construction  │  ← same pattern as reinvestment proposal
+│    - api_resolver() callable  │     (Phase A: direct DB calls;
+│      serves client, holdings, │      Phase B: HttpApiResolver)
+│      product, alternatives,   │
+│      rationale to CrewAI      │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ 3. LLM Proposal Generation   │
+│    - CrewAI agent/task       │  ← configured in config_planbot.yaml
+│    - Produces full markdown  │     under `product_opportunity_proposal`
+│      proposal per the TOC    │
+└──────────────┬───────────────┘
+               │
+               ▼
+       Proposal Markdown
+       (Investment Recommendation + Supporting Analysis)
 ```
 
-### `generate_product_client_fit_proposal_by_discovery(...)`
+The proposal follows the structure defined in
+`docs/prod_spec/proposal_sections.md`, covering:
 
-Suggested signature:
+- **Investment Recommendation** — suggested product & position, funding
+  source, expected return/risk profile change, pros & cons, alternatives.
+- **Supporting Analysis** — executive summary, product specification, asset
+  allocation pie chart, portfolio constituents table, scenario analysis,
+  risk disclaimer.
 
-```python
-generate_product_client_fit_proposal_by_discovery(
-	candidate_product_ids: list[str],
-	top_n_clients: int = 20,
-	min_readiness_score: float | None = None,
-	top_n_per_client: int = 10,
-	min_match_score: float | None = None,
-	response_mode: str = "path",  # one of: path, markdown, both
-	include_llm_input: bool = False,
-	include_debug_scores: bool = False,
-	include_market_outlook: bool = True,
-) -> dict
-```
+### APIs Exposed
 
-### Input fields
+This sprint exposes **two** FastAPI endpoints.
 
-- `client_ids`: one or more client IDs.
-- `candidate_product_ids`: pre-selected product IDs provided by upstream logic.
-- `top_n_per_client`: max shortlisted products per client.
-- `min_match_score`: optional threshold to suppress weak matches.
-- `response_mode`: `path`, `markdown`, or `both`.
-- `include_llm_input`: include assembled LLM context in output when true.
-- `include_debug_scores`: include scorecard breakdown and filtering trace when true.
-- `include_market_outlook`: include market references in context when true.
+---
 
-Helper-mode additional fields:
+## API 1: `product_opportunity_proposal`
 
-- `top_n_clients`: max clients selected by helper path.
-- `min_readiness_score`: optional readiness threshold for helper client filtering.
+**Purpose:** Generate a single proposal for one client–product pair.  This is
+the "manual" / single-shot endpoint, usable directly by an RM or called
+internally by the automatch endpoint.
 
-### Output fields
+### Request
 
-- `status`
-- `results_by_client`: list of per-client results with:
-	- `client_id`
-	- `candidate_products`
-	- `matching_scores`
-	- `output_path` when response mode includes `path`
-	- `markdown_output` when response mode includes `markdown`
-	- `llm_input` when `include_llm_input = true`
-	- `debug_scores` when `include_debug_scores = true`
-- `errors`: optional list for partial failures
+| Parameter     | Type    | Required | Description |
+|---------------|---------|----------|-------------|
+| `client_id`   | string  | Yes      | Client identifier. |
+| `product_id`  | string  | Yes      | Primary suggested product. |
+| `rationale`   | string  | No       | Freeform markdown describing why this product fits the client. Supplied by the RM (manual entry) or passed through from `product_investor_matcher` output. |
+| `run_matcher` | boolean | No       | If `true`, run `product_investor_matching` and use its output as rationale/fitness scores. If `false` (default), the caller must supply `rationale` directly. Default: `false`. |
+| `market_outlook` | string | No    | Market narrative to include in LLM context. If omitted, uses a default or empty outlook. |
+| `alternative_count` | int | No   | Number of alternative products to include. Default: 3. |
 
-## FastAPI contract
+### Internal Processing
 
-### Endpoints
+1. **Data Retrieval** — All data fetched via FastAPI:
+   - Client profile: `GET /client/search_by_id/{client_id}`
+   - Product profile: `GET /product/search_by_product_id/{product_id}`
+   - Alternative products: extracted from the LLM matcher output
+     (per-client ``Alternative suggestion`` bullets).
+     Format: `- PRODUCT_ID Name (fitness X.XX) …`.
+     Parse via regex `-\s+([A-Za-z]+[-.]?[\w.-]+)\s`.
+     **Fallback:** if no alternatives are found, use
+     `search_similar_to_product(primary_product, …)`.
 
-- `POST /api/v1/product-client-fit-proposals` (direct mode: caller passes `client_ids`)
-- `POST /api/v1/product-client-fit-proposals/discover-clients` (helper mode)
+     > `search_similar_to_product` is a shared utility in `src/integrations/product_tool.py`.  It composes `_build_similarity_query_from_product` with `search_similar` and auto-excludes the anchor.  Also used by `search_reinvestment_candidates` and the reinvestment proposal flow.
+   - Product fitness scores and rationale (when `run_matcher=true`):
+     obtained from `product_investor_matcher`.  Scores are
+     **reused** rather than recomputed.
+   - When `run_matcher=false` (default), caller supplies rationale;
+     fitness scores are computed inline using the
+     existing scorer (`docs/prod_spec/score_card/product_fitness_score.md`).
 
-### Proposal request body (example)
+2. **Payload Construction** — Build an `api_resolver` callable following the
+   same pattern as `_build_fit_analysis_resolver()` in the matcher.
+   The resolver serves `API_CLIENT_PROFILE`, `API_HOLDINGS`,
+   and `API_PRODUCT_CATALOG` paths to CrewAI's `run_crew_planbot`.
+   No temp files.  The resolver includes:
+   - Client profile + holdings
+   - Primary product specification
+   - Alternative products with fitness scores
+   - Rationale (from matcher or RM)
+   - Market outlook
+   - Proposal instructions + section guidelines (from `config_planbot.yaml`
+     references, resolved via `runtime_reference_overrides`)
+
+3. **LLM Invocation** — CrewAI agent/task configured under
+   `product_opportunity_proposal` in `config_planbot.yaml`.
+
+### Response
 
 ```json
 {
-	"client_ids": ["PB-HK-000001-8", "PB-HK-000002-6"],
-	"candidate_product_ids": ["BOND-XYZ", "ETF-ABCD", "MF-789"],
-	"top_n_per_client": 10,
-	"min_match_score": 6.5,
-	"response_mode": "path",
-	"include_llm_input": false,
-	"include_debug_scores": false,
-	"include_market_outlook": true
+  "client_id": "C001",
+  "product_id": "P042",
+  "output_filename": "runs/product_opportunity_proposal/product_opportunity_proposal_C001.md",
+  "proposal_markdown": "<full markdown proposal>",
+  "metadata": {
+    "model": "deepseek_tool",
+    "tokens_used": 12345,
+    "alternative_products": ["P017", "P088", "P103"],
+    "product_fitness_scores": {
+      "P042": 8.2,
+      "P017": 7.1,
+      "P088": 6.5,
+      "P103": 5.9
+    }
+  }
 }
 ```
 
-### Proposal response body (example)
+### Error Scenarios
+
+| Condition | HTTP Status | Detail |
+|-----------|-------------|--------|
+| Client not found | 404 | `CLIENT_NOT_FOUND` |
+| Product not found | 404 | `PRODUCT_NOT_FOUND` |
+| LLM invocation failure | 502 | `LLM_ERROR` with retry flag |
+| Risk rating hard-gate blocks product | 200 | Proposal with `status: "blocked"` and reason |
+
+---
+
+## API 2: `product_opportunity_proposal_automatch`
+
+**Purpose:** Batch endpoint — runs product-investor matching, then generates
+one proposal per eligible client–product pair.  This is the "lights-out"
+automated workflow.
+
+### Request
+
+| Parameter              | Type    | Required | Description |
+|------------------------|---------|----------|-------------|
+| `product_ids`          | list[str] | Yes   | Product universe to consider. |
+| `client_selection`     | object  | No       | Client filter criteria (region, risk_rating range, etc.). If omitted, all clients are considered. |
+| `market_outlook`       | string  | No       | Market narrative for LLM context. |
+| `readiness_pool_size`  | int     | No       | Top-K clients by investor readiness score. Only used when `run_matcher=true`. Default: 15 (from config). |
+| `run_matcher`          | boolean | No       | If `true`, execute `product_investor_matching` inline. If `false` (default), read the latest matching output from `runs/product_investor_matching/`. Default: `false`. |
+| `max_proposals`        | int     | No       | Cap on total proposals generated. Default: 10. Set 0 or -1 for unlimited. |
+
+### Internal Processing
+
+1. **Product-Investor Matching** — If `run_matcher=true`, invoke the
+   `product_investor_matcher` endpoint inline (in-memory handoff, no file
+   I/O).  If `false`, load the latest matching run from
+   `runs/product_investor_matching/` by filename sort.
+
+2. **Fan-Out** — For each (client, product) pair in the matching output,
+   call the same internal logic as `product_opportunity_proposal`.
+   Fitness scores from the matcher are reused (not recomputed).
+   Sequential iteration (concurrency deferred to Sprint 2).
+
+3. **Result Assembly** — Collect all proposal responses into a batch result.
+
+> **Note on CrewAI config:** The `product_opportunity_proposal` section in
+> `config_planbot.yaml` references file globs for `client_profiles`,
+> `product_catalogs`, and `market_outlook`.  At runtime, these are
+> resolved in-memory via `HttpApiResolver` + `runtime_reference_overrides`
+> — no YAML changes required.  Same pattern as the reinvestment proposal.
+
+### Response
 
 ```json
 {
-	"status": "success",
-	"results_by_client": [
-		{
-			"client_id": "PB-HK-000001-8",
-			"candidate_products": [
-				{"product_id": "BOND-XYZ", "match_score": 8.2}
-			],
-			"matching_scores": [
-				{"product_id": "BOND-XYZ", "fit": 8.2, "readiness": 7.8}
-			],
-			"output_path": "runs/client_product_fit_analysis/PB-HK-000001-8.md"
-		}
-	]
+  "matcher_run_id": "2026-08-03T14-22-00",
+  "total_clients_matched": 8,
+  "total_proposals_generated": 8,
+  "proposals": [
+    {
+      "client_id": "C001",
+      "product_id": "P042",
+      "output_filename": "runs/product_opportunity_proposal/product_opportunity_proposal_C001_P042.md",
+      "proposal_markdown": "<markdown>",
+      "metadata": { ... }
+    }
+  ],
+  "errors": []
 }
 ```
 
-### Helper request body (example)
+Partial failure: If one client's proposal generation fails, it is recorded
+in `errors[]` and processing continues for remaining clients.  The HTTP
+response is 200 as long as at least one proposal succeeded.
 
-```json
-{
-	"candidate_product_ids": ["BOND-XYZ", "ETF-ABCD", "MF-789"],
-	"top_n_clients": 20,
-	"min_readiness_score": 6.0,
-	"top_n_per_client": 10,
-	"min_match_score": 6.5,
-	"response_mode": "path",
-	"include_llm_input": false,
-	"include_debug_scores": false,
-	"include_market_outlook": true
-}
-```
+### Error Scenarios
 
-### Helper response body (example)
+| Condition | HTTP Status | Detail |
+|-----------|-------------|--------|
+| No eligible clients after readiness filter | 200 | `NO_ELIGIBLE_CLIENTS` warning, empty proposals |
+| Matcher output file not found (run_matcher=false) | 400 | `MATCHER_OUTPUT_MISSING` |
+| All proposals failed | 200 | Empty proposals, errors[] populated |
+| Product universe empty | 400 | `EMPTY_PRODUCT_UNIVERSE` |
 
-```json
-{
-	"status": "success",
-	"discovered_client_ids": ["PB-HK-000001-8", "PB-HK-000002-6"],
-	"results_by_client": [
-		{
-			"client_id": "PB-HK-000001-8",
-			"candidate_products": [
-				{"product_id": "BOND-XYZ", "match_score": 8.2}
-			],
-			"output_path": "runs/client_product_fit_analysis/PB-HK-000001-8.md"
-		}
-	]
-}
-```
+---
 
-## Tasks
+## Migration from Legacy Pipeline
 
-### API input enhancement
+The current `client_product_fit_analysis_proposals` pipeline in
+`config/config_planbot.yaml` will be **deprecated** and replaced by this
+API-driven flow.  Key changes:
 
-Update proposal API request model to require `candidate_product_ids`.
+| Aspect | Legacy | New (This Sprint) |
+|--------|--------|--------------------|
+| Data source | Static files (CSV, MD) | FastAPI endpoints |
+| Handoff | Temp files on disk | In-memory (same as reinvestment) |
+| Configuration | `config_planbot.yaml` pipeline section | API parameters + config for LLM references only |
+| Concurrency | N/A | Sequential (deferred) |
 
-Rules:
+The CrewAI agent/task configuration (`product_opportunity_proposal` section in
+`config_planbot.yaml`) and reference files (proposal instructions, section
+guidelines, financial needs docs) remain **unchanged** — only the data
+retrieval and orchestration layer is refactored.
 
-- `candidate_product_ids` must be non-empty.
-- Deduplicate IDs while preserving first-seen order.
-- Enforce max list size via config (to cap runtime/token usage).
-- Return validation error when list is empty or exceeds configured max.
+**Reference implementation:** `docs/prod_spec/reinvestment_proposal_s3.md`
+and `src/integrations/reinvestment_proposal.py`.  The same pattern
+(in-memory resolver → payload builder → LLM invocation → response assembly)
+applies.
 
-Direct-mode rules:
+> **Phase A / Phase B:** Follows the same dual-mode pattern as the
+> reinvestment proposal.
+> - **Phase A** (default, `get_client_product_from_db: false`): Direct
+>   calls to `search_by_id`, `search_by_product_id`,
+>   `search_similar_to_product`, `search_product_by_fitness_score`.
+> - **Phase B** (`get_client_product_from_db: true`): All client and
+>   product data fetched via `HttpApiResolver` against the data service.
+>   Controlled by `config_planbot.yaml` → `common.get_client_product_from_db`.
 
-- `client_ids` must be non-empty.
-- `client_ids` are deduplicated while preserving first-seen order.
+---
 
-Helper-mode rules:
+### Implementation Tasks
 
-- Do not accept `client_ids` in helper endpoint payload.
-- Helper computes `discovered_client_ids` via IRS/PFS criteria and passes them to the same generation builder.
-- If no clients are discovered, return validation/business error with explicit reason.
+1. **Fix `_extract_top_pairs` regex & add alternative extraction.**  The LLM output structure (confirmed 2026-08-04 from `product_investor_matching_run-20260803-155239.md`):
 
-### Product details retrieval
+   **Summary table** (8 columns):
+   `| Client ID (Name) | Buying Score | Suggested Product & Position | Funding Source | Fitness Score | ER Suggested | ER Source | Key Rationale |`
 
-For each passed-in product ID, fetch required product metadata for scoring and proposal generation.
+   Parse per row:
+   | Field | Source col | Regex |
+   |-------|-----------|-------|
+   | `client_id` | 1 | `[A-Z]{2}-[A-Z]{2}-\d{6,7}-\d` |
+   | `buying_score` | 2 | `\d+` |
+   | `product_id` | 3 | `[A-Za-z]+[-.]?[\w.-]+` (first token) |
+   | `investment_amount` | 3 | `\$([\d,]+)` or `([\d,]+)` before `%` |
+   | `funding_source` | 4 | entire cell |
+   | `rationale` | 8 | entire cell |
 
-Minimum behavior:
+   **Per-client alternatives** (under `#### Alternative suggestion`):
+   Each line: `- PRODUCT_ID Name (fitness X.XX) …rest…`
+   Extract `product_id` via `-\s+([A-Za-z]+[-.]?[\w.-]+)\s`.
 
-- If a product ID is not found, record per-client/per-product error and continue where possible.
-- If all passed-in products are invalid for a client, return that client result as failed.
-- Do not run product search/discovery logic in this service.
+   All patterns externalized to `config_planbot.yaml` under
+   `product_investor_matching.matcher.extract_patterns`.
+2. **Extract step 9 into new API.**  Move the per-pair `run_crew_planbot(proposal_name="product_opportunity_proposal")` logic from `product_investor_matcher()` step 9 into `src/integrations/product_opportunity_proposal.py`.  Enrich the resolver (holdings, alternatives, fitness scores, rationale).  Expose two FastAPI endpoints in `proposal_server.py`.
+3. **Remove step 9 from matcher.**  Delete the entire `for pair in top_pairs:` loop (lines 313–373) from `product_investor_matcher()`.  The matcher stops at ranking and returns `final_proposals` as an empty list.
+4. **Rename matcher function.**  Rename `match_products_to_investors` → `product_investor_matcher` in `src/integrations/product_investor_matcher.py` and `proposal_server.py` to align with the OpenAPI endpoint path `/api/v1/product-investor-matcher`.
+5. **Add JSON sidecar to matcher output.**  After `_extract_top_pairs()` produces `list[dict]`, serialize to a `_pairs.json` sidecar alongside the `.md` file.  Implement `_load_latest_matcher_output()` — find the latest `_pairs.json` in `runs/product_investor_matching/`, load structured pairs with `client_id`, `product_id`, `rationale`, `buying_score`.  No markdown parsing at read time.
+6. **Create test file.**  Create `tests/test_product_opportunity_proposal.py` with minimum two tests: normal flow + exception condition.
+7. **Exclude primary product from alternatives.**  `search_similar_to_product()` automatically excludes the anchor product.  Callers no longer need to pass `exclude_product_ids` manually.
 
-### Deferred / out-of-scope
 
-- Product screening/discovery API design and filter semantics are handled by upstream selector services.
-- This proposal service consumes only `candidate_product_ids` from the caller.
-
-## LLM input contract
-
-`llm_input` should be deterministic JSON in this initial phase.
-
-Required blocks:
-
-1. Client profile summary.
-2. Holdings summary and concentration indicators.
-3. Candidate product summaries.
-4. Matching scorecard results and rationale.
-5. Market outlook snippets (optional by flag).
-6. Proposal output instruction block.
-
-## Error handling and observability
-
-- Per-client failure should not fail the whole batch unless no client succeeds.
-- Return partial success with `errors` entries containing `client_id`, `code`, and `message`.
-- Log request correlation ID and per-client processing stage.
-- No `print` statements; use module-level Python logging.
-
-## Test strategy
-
-- Unit tests (mock APIs) for normal and exception flows.
-- Contract tests for request validation and response shape.
-- Integration test for endpoint -> builder path with representative payload.
-- Snapshot test for `llm_input` required blocks and non-empty required proposal sections.
-
-## Acceptance criteria
+## Acceptance Criteria
 
 | # | Criterion | Verification |
-|---|---|---|
-| AC1 | Proposal generation runs from a Python function without reading static client/product files | Unit test with file-reader mocks asserting not called |
-| AC2 | Builder retrieves client data through client API contract only | Unit test with mocked client API and call assertions |
-| AC3 | Builder retrieves product data only for caller-provided `candidate_product_ids` | Unit test with mocked product API and call assertions |
-| AC4 | Request validation requires non-empty `candidate_product_ids` and enforces configured max list size | Contract tests and negative tests |
-| AC5 | Duplicate product IDs in `candidate_product_ids` are deduplicated while preserving first-seen order | Unit test for normalization behavior |
-| AC6 | Missing/invalid product IDs are handled gracefully with partial-failure reporting | Integration test with mixed valid/invalid products |
-| AC7 | Matching score output contains deterministic per-client, per-product score entries | Snapshot/unit test with fixed fixtures |
-| AC8 | Direct-mode endpoint accepts explicit `client_ids` and supports `path`, `markdown`, and `both` response modes | Endpoint integration tests for each mode |
-| AC9 | Optional blocks are controlled by flags (`include_llm_input`, `include_debug_scores`, `include_market_outlook`) | Unit test matrix |
-| AC10 | Required proposal sections are present and non-empty in generated markdown | Content validation test against required headers |
-| AC11 | Batch request supports partial success and returns per-client errors without dropping successful clients | Integration test with mixed valid/invalid clients |
-| AC12 | Logging uses Python logging module and records correlation ID and stage transitions | Unit test with log capture |
-| AC13 | Helper endpoint discovers clients via IRS/PFS rules and then invokes the same core generation path | Integration test with mocked discovery and builder call assertion |
-| AC14 | Helper endpoint returns `discovered_client_ids` and fails explicitly when none are discovered | Negative and positive contract tests |
+|---|-----------|-------------|
+| AC1 | `product_opportunity_proposal` generates a valid proposal given `client_id` + `product_id` with empty rationale | Integration test: call endpoint, assert markdown contains all required TOC sections |
+| AC2 | `product_opportunity_proposal_automatch` completes end-to-end via Swagger UI | Manual Swagger test with ≥2 clients |
+| AC3 | Proposal output structure matches `docs/prod_spec/proposal_sections.md` (Investment Recommendation + Supporting Analysis sections present, non-empty) | Golden-file diff against legacy pipeline output |
+| AC4 | All client, holdings, and product data retrieved via FastAPI — no static file reads | Code review: zero `open()` calls for data files in proposal path |
+| AC5 | Product fitness scores are included in proposal metadata | Assert `metadata.product_fitness_scores` is populated and non-empty |
+| AC6 | Empty rationale still produces a coherent proposal | Spot-check proposal quality with rationale="" |
+| AC7 | `run_matcher=false` correctly loads latest matching run from disk | Integration test: pre-seed a matching output, verify it's picked up |
+| AC8 | Partial failure in automatch does not abort remaining clients | Failure injection: make one client fail, assert others succeed |
 
-## Open decisions
+---
 
-1. Whether minimum score threshold is fixed in config or fully caller-controlled.
-2. Whether market outlook retrieval remains local reference loading or moves to API in this phase.
-3. Whether debug score schema should align exactly with current investor readiness score artifact format.
-4. Whether caller is allowed to pass product metadata directly (bypassing product detail lookup by ID).
-5. Whether helper endpoint should expose full IRS/PFS discovery trace by default or only under debug flag.
+## Sprint 2
 
-## Recommended initial implementation order
+| # | Item | Notes |
+|---|------|-------|
+| S1 | LLM prompt revision | Revise the CrewAI agent/task prompts to align with the proposal structure defined in `docs/prod_spec/proposal_sections.md`. The current prompts were written for an earlier proposal format; Sprint 2 will audit and update all prompt templates (proposal instructions, section guidelines) to ensure the LLM produces each required section (Investment Recommendation → Supporting Analysis) consistently. |
+| S2 | Concurrency | Add bounded parallelism with configurable `max_concurrency` (default 1). Structure Sprint 1 fan-out so replacing with `asyncio.gather`/`ThreadPoolExecutor` is a one-line change. Accept `max_concurrency` param as no-op in Sprint 1 for forward-compatibility. |
+| S3 | Response size & streaming | Add `response_mode: "inline" \| "file"` parameter. Default `"inline"` for backward compatibility. `"file"` persists proposals to disk and returns file paths instead of inline markdown. Needed if proposals grow with embedded charts (base64). |
+| S4 | Refine JSON sidecar format | The `_pairs.json` sidecar (Sprint 1) captures the output of `_extract_top_pairs()`. In Sprint 2, consider having the LLM output structured JSON directly, eliminating the regex extraction step entirely. This requires prompt changes aligned with S1.
 
-1. Define and validate request/response models.
-2. Implement `candidate_product_ids` validation and normalization.
-3. Implement direct and helper endpoint request validators.
-4. Implement helper client discovery orchestration and delegation to the same builder.
-5. Add endpoint wrappers, response-mode handling, and tests for AC1 to AC14 before broad rollout.
+---
+
+## Outstanding Issues (Pre-Implementation Review)
+
+### ✅ Ready
+
+- Matcher handles scorecards/filtering/ranking — ready for extraction
+- `_build_similarity_query_from_product` helper ready for alternatives
+- `product_tool.py` tests pass (21/21)
+- CrewAI configs exist; proposal instructions exist
+- `proposal_server.py` endpoint registration pattern is clear
+- Reference implementation: `src/integrations/reinvestment_proposal.py`
+- Output path uses legacy YAML root: `runs/product_opportunity_proposal/product_opportunity_proposal_{client_id}.md`
 

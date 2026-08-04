@@ -432,6 +432,57 @@ def search_similar(
 # ── 3. search_reinvestment_candidates ─────────────────────────────────────
 
 
+def _build_similarity_query_from_product(product: dict) -> dict:
+    """Build a search_similar query dict from a product's attributes."""
+    query: dict[str, Any] = {
+        "risk_rating": product["risk_rating"],
+        "expected_return": product["expected_return"],
+        "product_type": product["product_type"],
+        "region": product["region"],
+        "sector": product["sector"],
+    }
+    query["asset_class"] = _derive_asset_class(product["product_type"])
+
+    # For bonds/bond_funds, include maturity and coupon
+    pt = product.get("product_type", "")
+    if pt in ("bond", "bond_fund"):
+        ts = product.get("type_specific") or {}
+        if pt == "bond":
+            query["time_to_maturity"] = "2y"
+        else:
+            dur = ts.get("effective_duration")
+            if dur:
+                query["time_to_maturity"] = f"{float(dur)}y"
+
+    return query
+
+
+def search_similar_to_product(
+    product: dict,
+    *,
+    top_n: int = 3,
+    diversification: bool = True,
+    max_per_product_type: int = 2,
+    risk_rating_hard_filter: bool = True,
+    exclude_product_ids: list[str] | None = None,
+) -> dict:
+    """Find products similar to *product*, automatically excluding the anchor.
+
+    Composes :func:`_build_similarity_query_from_product` with
+    :func:`search_similar`, auto-excluding the anchor product ID.
+    """
+    exclude = list(exclude_product_ids or [])
+    exclude.append(product["product_id"])
+    return search_similar(
+        query=_build_similarity_query_from_product(product),
+        top_n=top_n,
+        diversification=diversification,
+        max_per_product_type=max_per_product_type,
+        risk_rating_hard_filter=risk_rating_hard_filter,
+        exclude_product_ids=exclude,
+    )
+
+
 def search_reinvestment_candidates(
     client_ids: list[str],
     source_product_id: str,
@@ -464,33 +515,10 @@ def search_reinvestment_candidates(
     if source is None:
         raise ValueError(f"Source product not found: {source_product_id}")
 
-    # Build query from source product attributes
-    query = {
-        "risk_rating": source["risk_rating"],
-        "expected_return": source["expected_return"],
-        "product_type": source["product_type"],
-        "region": source["region"],
-        "sector": source["sector"],
-    }
-    # derive asset_class
-    query["asset_class"] = _derive_asset_class(source["product_type"])
-
-    # For bonds/bond_funds, include maturity and coupon
-    pt = source.get("product_type", "")
-    if pt in ("bond", "bond_fund"):
-        ts = source.get("type_specific") or {}
-        if pt == "bond":
-            query["time_to_maturity"] = "2y"  # default; actual from client context
-        else:
-            dur = ts.get("effective_duration")
-            if dur:
-                query["time_to_maturity"] = f"{float(dur)}y"
-
     results: dict[str, list] = {}
     for cid in client_ids:
-        # search_similar for this client with diversification already built in
-        sim_result = search_similar(
-            query=query,
+        sim_result = search_similar_to_product(
+            source,
             top_n=top_n_per_client or 9999,  # large, diversification + limit after
             risk_rating_hard_filter=risk_rating_hard_filter,
             diversification=True,

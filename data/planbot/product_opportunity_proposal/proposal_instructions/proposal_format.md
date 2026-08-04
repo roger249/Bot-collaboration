@@ -44,3 +44,8 @@ Please refer to the proposal_section_instructions/scenario_analysis_instruction 
 instructions: |
 Please refer to the proposal_section_instructions/reference_instruction to come up this section
 ```
+
+- After all above section, output a machine-readable proposal JSON block for external valuation between markers:
+	- ---** PROPOSAL_JSON **---
+	- ---** END_PROPOSAL_JSON **---
+- The JSON block shall contain assumptions only; do not include portfolio-level computed totals.

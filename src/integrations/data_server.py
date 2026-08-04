@@ -34,14 +34,18 @@ from src.shared.logging_utils import init_logging
 
 LOGGER = logging.getLogger(__name__)
 
-# ── Wire integration-level logging to file on startup ─────────────────────
-init_logging()
 
 app = FastAPI(
     title="PlanBot Data API",
     description="Client and product APIs for investment proposal generation.",
     version="0.1.0",
 )
+
+
+@app.on_event("startup")
+async def _on_startup() -> None:
+    init_logging()
+    LOGGER.info("Data Server startup complete.")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -479,4 +483,5 @@ if __name__ == "__main__":
         host=server_cfg.get("host", "127.0.0.1"),
         port=server_cfg.get("port", 8001),
         reload=True,
+        log_config=None,
     )

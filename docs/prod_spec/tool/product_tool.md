@@ -62,11 +62,16 @@ search_similar filtering rules:
 - Final score is used as relative ranking only (not an absolute score threshold)
 
 
+### search_similar_to_product
+
+Convenience wrapper: given a product dict (from `search_by_product_id`), builds the similarity query from its attributes and delegates to `search_similar`.  The anchor product is **automatically excluded** from results.
+
+Accepts the same keyword arguments as `search_similar` (`top_n`, `diversification`, `max_per_product_type`, `risk_rating_hard_filter`, `exclude_product_ids`).
+
+
 ### search_reinvestment_candidates
 
-Leverages `search_similar` but the input is a `product_id` whose attributes are used as the similarity query.
-
-Diversification rule also applies.
+Leverages `search_similar_to_product` per client.  The input is a `product_id` whose attributes are used as the similarity query.  Diversification rule also applies.
 
 ### search_product_by_fitness_score
 

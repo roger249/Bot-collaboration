@@ -87,6 +87,13 @@ product_investor_matching:
   matcher:
     readiness_pool_size: 15  # Pool size of top readiness clients to pass into fitness scoring
     llm_client_pool_size: 5  # Number of clients to pass into the LLM for final recommendation generation
+    extract_patterns:
+      # Regex patterns for _extract_top_pairs() markdown parsing.
+      # Externalized so prompt format changes don't require code edits.
+      client_id_re: "[A-Z]{2}-[A-Z]{2}-\\d{6,7}-\\d"
+      product_id_re: "[A-Za-z]+[-.]?[\\w.-]+"
+      amount_re: "USD\\s+\\$?([\\d,]+(?:\\.\\d+)?)"
+      alternative_product_re: "-\\s+([A-Za-z]+[-.]?[\\w.-]+)\\s"
   references:
     proposal_instructions_and_format:
       - name: proposal_instructions/*.md
@@ -291,6 +298,10 @@ product_fitness_score:
     experience_score_same_family: 6.0           # medium: same product_family held
     experience_score_none: 0.0                  # low: no match
 
+# DEPRECATED — run_configurations is only used by the CLI `run-pipeline` command.
+# The API entry points (proposal_server.py) bypass this entirely.
+# All pipeline features are now available via /api/v1/product-opportunity-proposal-automatch.
+# This section will be removed in a future release.
 run_configurations:
   schema_version: 1
   # Pydantic model is built with the following defaults.

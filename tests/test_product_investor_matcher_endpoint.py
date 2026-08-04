@@ -23,21 +23,38 @@ _LOG_PATH = _ROOT / "log" / "planbot.log"
 _INI_PATH = _ROOT / "config" / "logging_config.ini"
 
 FIT_MARKDOWN = "# Fit Analysis\n\nTest proposal from real DB."
-MATCHING_MARKDOWN = """# Product-Investor Matching Report
+MATCHING_MARKDOWN = """# Product Investor Matching
 
-## Rank 1 – Client PB-HK-000001-8 — Buying Score: 4.5
+## Executive Summary
 
-- **Product ID:** ETF-HYG
-- **Investment Amount:** $500,000
-- **Funding Source:** Cash reserves
-- **Rationale:** Strong alignment with income objective and risk profile.
+Summary text.
 
-## Rank 2 – Client PB-HK-000002-6 — Buying Score: 3.8
+| Client ID (Name) | Buying Score | Suggested Product & Position | Funding Source | Fitness Score | Expected Return – Suggested | Expected Return – Source | Key Rationale |
+|---:|---:|---|---:|---:|---:|---|--|
+| PB-HK-000001-8 (David Kim) | 5 | ETF-HYG iShares High Yield Corp Bond ETF – USD 500,000 (10.0%) | Sell Cash – USD 500,000 | 4.20 | 5.5% | 0.0% | Strong alignment with income objective and risk profile. |
+| PB-HK-000002-6 (Sarah Chen) | 4 | ETF-HYG iShares High Yield Corp Bond ETF – USD 300,000 (6.0%) | Sell STOCK-AMZN – USD 300,000 | 4.20 | 5.5% | 15.0% | Suitable replacement for existing position. |
 
-- **Product ID:** ETF-HYG
-- **Investment Amount:** $300,000
-- **Funding Source:** Maturing bond proceeds
-- **Rationale:** Suitable replacement for maturing fixed-income position.
+## Top clients with detail analysis
+
+### PB-HK-000001-8 (David Kim)
+
+- **Buying Score:** 5
+
+#### Alternative suggestion
+
+- PROD003 US Corporate Bond Fund (fitness 4.20) alternative.
+- PROD016 Healthcare Innovation Fund (fitness 3.45) alternative.
+
+---
+
+### PB-HK-000002-6 (Sarah Chen)
+
+- **Buying Score:** 4
+
+#### Alternative suggestion
+
+- PROD014 Emerging Markets Fund (fitness 4.20) alternative.
+- PROD001 Tech Leaders Equity Fund (fitness 4.20) alternative.
 """
 
 
@@ -103,13 +120,11 @@ class TestMatcherFast(unittest.TestCase):
         """bank_recommended product group (10 products): real search/IRS/PFS → mock LLM → success."""
         self.mock_run_crew.side_effect = [
             _make_crew_result(MATCHING_MARKDOWN),
-            _make_crew_result(FIT_MARKDOWN),
-            _make_crew_result(FIT_MARKDOWN),
         ]
 
-        from src.integrations.product_investor_matcher import match_products_to_investors
+        from src.integrations.product_investor_matcher import product_investor_matcher
 
-        result = match_products_to_investors(
+        result = product_investor_matcher(
             product_ids=["bank_recommended"],
             product_source="default_yaml",
             top_n=2,
@@ -121,6 +136,9 @@ class TestMatcherFast(unittest.TestCase):
         self.assertGreaterEqual(result["summary"]["clients_after_readiness"], 1)
         self.assertGreater(len(result["product_investor_matching_markdown"]), 0)
         self.assertGreater(len(result["final_proposals"]), 0)
+        # final_proposals now carry ranking data (no proposal_markdown)
+        self.assertIn("buying_score", result["final_proposals"][0])
+        self.assertIn("rationale", result["final_proposals"][0])
         self.assertEqual(len(result["errors"]), 0)
 
         # ── Disk log assertions ─────────────────────────────────────
