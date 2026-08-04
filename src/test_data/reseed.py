@@ -187,27 +187,36 @@ def _insert_bridge_rows(
             sector = entry.get("sector") or csv_asset_class or ""
             region = csv_region
 
+            # risk_rating / expected_return: config overrides take priority over CSV
             risk_rating_str = csv_row.get("risk_rating", "")
-            expected_return_str = csv_row.get("expected_return", "")
-
             risk_rating: int
-            try:
-                risk_rating = int(risk_rating_str)
-            except (ValueError, TypeError):
-                risk_rating = 3  # default
+            if "risk_rating" in entry:
+                risk_rating = int(entry["risk_rating"])
+            else:
+                try:
+                    risk_rating = int(risk_rating_str)
+                except (ValueError, TypeError):
+                    risk_rating = 3  # default
 
             expected_return: float | None = None
-            try:
-                expected_return = float(expected_return_str)
-            except (ValueError, TypeError):
-                pass
+            if "expected_return" in entry:
+                expected_return = float(entry["expected_return"])
+            else:
+                try:
+                    expected_return = float(csv_row.get("expected_return", ""))
+                except (ValueError, TypeError):
+                    pass
 
             perf = extract_performance_history(csv_row)
 
-            # Type-specific synthesis
-            if product_type == "stock":
+            # Type-specific synthesis (entry can supply an override map)
+            ts_override = entry.get("type_specific")
+            if product_type == "stock" and not ts_override:
                 vehicle = "Direct"
                 ts = _synthesize_stock(csv_row, {})
+            elif ts_override:
+                vehicle = _infer_vehicle(product_type)
+                ts = dict(ts_override)  # shallow copy to avoid mutating config
             else:
                 vehicle = _infer_vehicle(product_type)
                 ts = {}

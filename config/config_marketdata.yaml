@@ -243,10 +243,6 @@ duckdb_ticker_groups:
     description: "Treasury bill instruments held by clients — proxied via BondBloxx 6-Month ETF"
     product_type: "money_market_fund"
     entries:
-      - product_id: "PROD053"
-        ticker: "XHLF"
-        name: "US 1-Month Treasury Bill Rate"
-        sector: "Government"
       - product_id: "us2mt-x"
         ticker: "XHLF"
         name: "US 2-Month Treasury Bill"
@@ -255,10 +251,53 @@ duckdb_ticker_groups:
         ticker: "XHLF"
         name: "US 3-Month Treasury Bill Rate"
         sector: "Government"
+
+  holdings_treasury_bonds:
+    description: "Individual US Treasury bonds held by clients — proxied via BondBloxx 6-Month ETF"
+    product_type: "bond"
+    entries:
+      - product_id: "PROD053"
+        ticker: "XHLF"
+        name: "US Treasury 4.375% 31Aug26"
+        sector: "Government"
+        risk_rating: 1
+        expected_return: 3.7
+        type_specific:
+          issuer_name: "U.S. Treasury"
+          issuer_sector: "government"
+          coupon_type: "fixed"
+          coupon_rate: 0.04375
+          coupon_frequency: "semi-annual"
+          day_count_convention: "thirty_360"
+          credit_rating: "AA+"
+          maturity: "2026-08-31"
+          seniority: "senior"
+          callable: false
+          puttable: false
+          convertible: false
+          green_bond: false
+          sukuk: false
       - product_id: "PROD054"
         ticker: "XHLF"
-        name: "US 4-Month Treasury Bill"
+        name: "US Treasury 3.75% 30Jun27"
         sector: "Government"
+        risk_rating: 1
+        expected_return: 3.8
+        type_specific:
+          issuer_name: "U.S. Treasury"
+          issuer_sector: "government"
+          coupon_type: "fixed"
+          coupon_rate: 0.0375
+          coupon_frequency: "semi-annual"
+          day_count_convention: "thirty_360"
+          credit_rating: "AA+"
+          maturity: "2027-06-30"
+          seniority: "senior"
+          callable: false
+          puttable: false
+          convertible: false
+          green_bond: false
+          sukuk: false
 
   holdings_fx:
     description: "FX instruments held by clients"
