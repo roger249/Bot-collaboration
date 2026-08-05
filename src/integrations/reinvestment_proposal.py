@@ -10,7 +10,6 @@ The endpoint composes reference files, invokes CrewAI, and returns output paths.
 
 from __future__ import annotations
 
-import json
 import logging
 from collections.abc import Callable
 from pathlib import Path
@@ -27,15 +26,17 @@ from src.planbot.crew_workflow import run_crew_planbot
 from src.planbot.http_resolver import HttpApiResolver
 from src.planbot.input_loader import (
     API_CLIENT_PROFILE,
-    API_HOLDINGS,
     API_PRODUCT_CATALOG,
     ReferenceDocument,
 )
 from src.planbot.workflow import build_llm_input
 from src.shared.config_loader import load_config
 from src.shared.resolver_formatters import (
-    build_api_resolver,
-    format_holdings_csv,
+    build_proposal_resolver,
+    compute_pfs_for_products,
+    format_client_and_holdings,
+    format_product_catalog,
+    read_http_resolver_config,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -237,18 +238,6 @@ def propose_reinvestment_for_maturing_holdings(
 # ---------------------------------------------------------------------------
 
 
-def _read_http_resolver_config() -> dict | None:
-    """Read HTTP resolver settings from config_planbot.yaml common section.
-
-    Returns None if the section is absent (Phase A / local-import fallback).
-    """
-    planbot_config = yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
-    common = planbot_config.get("common") or {}
-    if not common.get("get_client_product_from_db"):
-        return None
-    return common.get("http_resolver")  # None if not configured → Phase A
-
-
 def _process_one_target(
     app_config: Any,
     client_id: str,
@@ -268,7 +257,7 @@ def _process_one_target(
         "source_product_id": source_product_id,
     }
 
-    http_cfg = _read_http_resolver_config()
+    http_cfg = read_http_resolver_config(_CONFIG_PATH)
 
     if http_cfg is not None:
         # ── Phase B: HTTP resolver ──────────────────────────────────
@@ -356,9 +345,16 @@ def _process_one_target(
 
         item["candidate_products"] = candidate_products
 
+        # ── Compute PFS for suggested + alternatives ──────────────
+        pfs_scores = compute_pfs_for_products(
+            client_id=client_id,
+            suggested_product_id=source_product_id,
+            alternative_products=candidate_products,
+        )
+
         api_resolver = _build_api_resolver(
             client_id, client_profile, source_product, source_product_id,
-            candidate_products,
+            candidate_products, pfs_scores=pfs_scores,
         )
 
     # 5 ─ Build client-scoped output filename ────────────────────────────
@@ -370,7 +366,7 @@ def _process_one_target(
         config_path=str(_CONFIG_PATH),
         proposal_name="reinvestment_proposal",
         runtime_reference_overrides={
-            "client_profiles": [API_CLIENT_PROFILE, API_HOLDINGS],
+            "client_profiles": [API_CLIENT_PROFILE],
             "product_catalogs": [API_PRODUCT_CATALOG],
         },
         output_file_override=output_override,
@@ -415,109 +411,43 @@ def _build_api_resolver(
     source_product: dict,
     source_product_id: str,
     candidate_products: list[dict],
+    pfs_scores: dict[str, dict] | None = None,
 ) -> Callable[[str], ReferenceDocument]:
-    """Build a resolver closure that returns ReferenceDocuments from pre-fetched data.
+    """Build a resolver closure for reinvestment proposals.
 
-    The returned callable conforms to the ``api_resolver`` contract expected
-    by ``load_references``: ``(api_path: str) -> ReferenceDocument``.
-
-    Phase A (Sprint 2): data is pre-fetched and formatted in-memory.
-    Phase B (future): resolver switches to FastAPI HTTP calls without
-    changing the contract or any code in ``load_references`` / ``crew_workflow``.
+    Uses the shared ``build_proposal_resolver`` — only the client-content
+    extra sections and product catalog differ per proposal.
     """
 
-    def _format_profile_markdown() -> str:
-        cp = client_profile
-        lines = [
-            "# Client Profile",
-            "",
-            f"- Client ID: {cp.get('client_id', client_id)}",
-            f"- Name: {cp.get('name', 'N/A')}",
-            f"- Age: {cp.get('age', 'N/A')}",
-            f"- Birthdate: {cp.get('birthdate', 'N/A')}",
-            f"- Occupation: {cp.get('occupation', 'N/A')}",
-            f"- Marital Status: {cp.get('marital_status', 'N/A')}",
-            f"- Children Info: {cp.get('children_info', 'N/A')}",
-        ]
-        aum = cp.get('aum')
-        lines.append(f"- AUM: ${aum:,.0f}" if aum else "- AUM: N/A")
-        lines += [
-            f"- Risk Tolerance (1-5): {cp.get('risk_rating', 'N/A')}",
-            f"- Region: {cp.get('region', 'N/A')}",
-            f"- Cash %: {cp.get('cash_pct', 'N/A')}",
-            f"- Liquidity Need: {cp.get('liquidity_need', 'N/A')}",
-            f"- Income Stability: {cp.get('income_stability', 'N/A')}",
-            f"- Investment Objective: {cp.get('investment_objective', 'N/A')}",
-        ]
-        irs = cp.get('investor_readiness_score')
-        if irs is not None:
-            lines.append(f"- Investor Readiness Score: {irs}")
-        lines += [
-            f"- Cash Score: {cp.get('cash_score', 'N/A')}",
-            f"- Concentration Score: {cp.get('concentration_score', 'N/A')}",
-            f"- Active Score: {cp.get('active_score', 'N/A')}",
-            f"- Life Stage Score: {cp.get('life_stage_score', 'N/A')}",
-        ]
-        pt_holdings = cp.get('product_types_in_holdings', [])
-        if pt_holdings:
-            lines.append(f"- Product Types Held: {', '.join(pt_holdings)}")
-        has_fund = cp.get('has_fund')
-        if has_fund is not None:
-            lines.append(f"- Has Fund Holdings: {'Yes' if has_fund else 'No'}")
-        lines += [
-            "",
-            "# Wallet inflow Event",
-            "",
-            "The following product is maturing:",
-            f"- Product ID: {source_product_id}",
-            f"- Product Name: {source_product.get('name', source_product_id)}",
-        ]
-        return "\n".join(lines) + "\n"
+    cp = client_profile
+    extra: list[str] = []
+    irs = cp.get("investor_readiness_score")
+    readiness_lines = []
+    if irs is not None:
+        readiness_lines.append(f"{irs}")
+    for key in ("cash_score", "concentration_score", "active_score", "life_stage_score"):
+        val = cp.get(key)
+        if val is not None:
+            readiness_lines.append(f"  - {key.replace('_score','').title()}: {val}")
+    if readiness_lines:
+        extra.append("## Investor Readiness Score\n" + "\n".join(readiness_lines))
 
-    def _format_catalog_json() -> str:
-        def _serialize_json_fields(d: dict) -> dict:
-            out = dict(d)
-            for field in ("type_specific", "performance_history"):
-                val = out.get(field)
-                if isinstance(val, str):
-                    try:
-                        out[field] = json.loads(val)
-                    except (json.JSONDecodeError, TypeError):
-                        pass
-            return out
+    extra.append(
+        "# Wallet Inflow Event\n\n"
+        "The following product is maturing:\n"
+        f"- Product ID: {source_product_id}\n"
+        f"- Product Name: {source_product.get('name', source_product_id)}"
+    )
 
-        payload = {
-            "catalog_version": "1.0",
-            "generated_for": client_id,
-            "instruction": (
-                "The following products are the only investable candidates "
-                "for this reinvestment proposal. Do not recommend any product "
-                "not listed below."
-            ),
-            "source_product": _serialize_json_fields(source_product),
-            "candidate_products": [
-                _serialize_json_fields(cp) for cp in candidate_products
-            ],
-        }
-        return json.dumps(payload, ensure_ascii=False, indent=2, default=str) + "\n"
-
-    return build_api_resolver({
-        API_CLIENT_PROFILE: ReferenceDocument(
-            path=Path(f"api://client/{client_id}/profile.md"),
-            content=_format_profile_markdown(),
-            source_type="markdown",
+    return build_proposal_resolver(
+        client_content=format_client_and_holdings(cp, extra_sections=extra),
+        product_content=format_product_catalog(
+            suggested=source_product,
+            holdings=cp.get("holdings", []),
+            alternatives=candidate_products or None,
+            pfs_scores=pfs_scores or None,
         ),
-        API_HOLDINGS: ReferenceDocument(
-            path=Path(f"api://client/{client_id}/holdings.csv"),
-            content=format_holdings_csv(client_profile.get("holdings", [])),
-            source_type="csv",
-        ),
-        API_PRODUCT_CATALOG: ReferenceDocument(
-            path=Path(f"api://client/{client_id}/catalog.json"),
-            content=_format_catalog_json(),
-            source_type="json",
-        ),
-    })
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -550,3 +480,13 @@ def _build_debug_scores(
             for c in candidate_products
         ],
     }
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# End of module
+# ═══════════════════════════════════════════════════════════════════════════

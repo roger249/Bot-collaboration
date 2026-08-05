@@ -81,7 +81,7 @@ class TestReinvestmentProposal(unittest.TestCase):
     def setUpClass(cls):
         """Force Phase A (local imports) for all tests in this class."""
         cls._http_cfg_patcher = patch(
-            "src.integrations.reinvestment_proposal._read_http_resolver_config",
+            "src.integrations.reinvestment_proposal.read_http_resolver_config",
             return_value=None,
         )
         cls._http_cfg_patcher.start()

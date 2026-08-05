@@ -47,6 +47,18 @@ def init_logging(ini_path: str | Path = "config/logging_config.ini") -> None:
     log_dir = ini.parent.parent / "log"
     log_dir.mkdir(parents=True, exist_ok=True)
 
-    logging.config.fileConfig(str(ini), disable_existing_loggers=False)
+    try:
+        logging.config.fileConfig(str(ini), disable_existing_loggers=False)
+    except Exception:
+        # Surface a clear diagnostic message, then re-raise so
+        # the crash isn't silently swallowed.
+        _LOGGER.error(
+            "Failed to load logging config from %s — check that all formatter"
+            " and handler references in the [keys] sections match their"
+            " corresponding section names.",
+            ini, exc_info=True,
+        )
+        raise
+
     _INITIALIZED = True
     _LOGGER.info("Logging initialized from %s", ini)

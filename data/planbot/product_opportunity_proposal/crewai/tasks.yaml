@@ -4,18 +4,22 @@ product_opportunity_proposal_task:
 
   description: |
 
-    - Given a client profile and one suggested product, generate an client product-fit analysis for the client that includes a product-fit score and justification for the recommendation.
+    - Given a client profile and one suggested product, generate a client product-fit analysis that includes a product-fit score and justification for the recommendation.
     - Do not increase holding for any product other than the suggested product.
+    - The YAML blocks under each heading in the reference materials are INSTRUCTIONS to you.  The markdown text outside YAML blocks is EXAMPLE OUTPUT showing the expected format.  Follow the instructions, not the example values.
     - The reference materials are provided at the end of the user prompt as structured JSON:
-      - proposal_instruction_and_format: Instructions and format for generating the proposal
-      - client_profiles: list of client profile and existing holdings
-      - product_catalogs: investable assets available for recommendation
-      - guidelines:  A list of the common needs.  Feel free to put up potential needs not in the list.
+      - proposal_instructions_and_format: Instructions and format for generating the proposal
+      - client_profiles: Client profile and existing holdings
+      - suggested_products_and_rationale: Matcher analysis with fitness scores, funding source, client needs, and rationale for the recommended product
+      - product_catalogs: Investable assets available for recommendation (primary + alternative products)
+      - guidelines: Common financial needs and general guidelines.  You may surface additional needs not in the list.
     - Observe the guideline ../shared/common/general_guideline.md
+    - Output sections MUST follow the exact heading hierarchy defined in proposal_instructions/proposal_format.md: H1 title, H2 major sections, H3 sub-sections.
   
   expected_output: |
 
     A client product-fit analysis in markdown format that:
-    - The instruction and the sections in the proposal is in proposal_instructions/proposal_format.md
-    - Use tables where they provide a clearer and more concise view.
-    - Do not include YAML blocks, extra section, or commentary.
+    - Follows the section structure and heading hierarchy in proposal_instructions/proposal_format.md.
+    - Uses tables where they provide a clearer and more concise view.
+    - Does NOT include raw YAML instruction blocks in the output — those are for your guidance only.
+    - Does NOT include extra sections, commentary, or placeholder text.

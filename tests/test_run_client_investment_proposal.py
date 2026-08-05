@@ -47,7 +47,7 @@ def test_propose_reinvestment_for_maturing_holdings(monkeypatch, proposal_server
     the YAML ``data_service_url`` takes over with zero test-code changes.
     """
     monkeypatch.setattr(
-        "src.integrations.reinvestment_proposal._read_http_resolver_config",
+        "src.integrations.reinvestment_proposal.read_http_resolver_config",
         lambda: None,
     )
 
@@ -98,7 +98,7 @@ def test_multi_client_propose_reinvestment(monkeypatch, proposal_server):
     To switch to Phase B, remove the monkeypatch line.
     """
     monkeypatch.setattr(
-        "src.integrations.reinvestment_proposal._read_http_resolver_config",
+        "src.integrations.reinvestment_proposal.read_http_resolver_config",
         lambda: None,
     )
 

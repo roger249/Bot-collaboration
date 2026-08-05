@@ -251,17 +251,20 @@ _CREWAI_TRACE_LOGGER = logging.getLogger("crewai_trace")
 
 @contextlib.contextmanager
 def _tee_stdout_to_crewai_trace():
-    """Capture sys.stdout into the crewai_trace logger (ANSI codes stripped).
+    """Capture sys.stdout and sys.stderr into the crewai_trace logger.
+
+    CrewAI verbose output goes through Rich Console, which defaults to
+    stderr.  Both streams are intercepted so nothing leaks to the terminal.
 
     The crewai_trace logger is defined in logging_config.ini with its own
     file handler (log/crewai_trace.log) and propagate=0, so trace never
     appears in planbot.log or on console.
     """
     original_stdout = sys.stdout
+    original_stderr = sys.stderr
 
     class _TeeStream:
         def write(self, text: str) -> int:
-            # Send to crewai_trace logger (file only) — not to stdout.
             clean = _ANSI_ESCAPE.sub("", text)
             if clean:
                 for line in clean.splitlines():
@@ -285,10 +288,12 @@ def _tee_stdout_to_crewai_trace():
             return None
 
     sys.stdout = _TeeStream()  # type: ignore[assignment]
+    sys.stderr = _TeeStream()  # type: ignore[assignment]
     try:
         yield
     finally:
         sys.stdout = original_stdout
+        sys.stderr = original_stderr
 
 
 def _resolve_agent_tools(agent_def: dict[str, Any]) -> list[Any]:

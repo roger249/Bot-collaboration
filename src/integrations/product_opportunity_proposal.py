@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import Callable
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +30,6 @@ from src.planbot.crew_workflow import run_crew_planbot
 from src.planbot.http_resolver import HttpApiResolver
 from src.planbot.input_loader import (
     API_CLIENT_PROFILE,
-    API_HOLDINGS,
     API_PRODUCT_CATALOG,
     API_SUGGESTED_PRODUCTS_AND_RATIONALE,
     ReferenceDocument,
@@ -37,13 +37,13 @@ from src.planbot.input_loader import (
 from src.shared.config_loader import load_config
 from src.shared.market_outlook_utils import (
     API_MARKET_OUTLOOK,
-    format_market_outlook_section,
 )
 from src.shared.resolver_formatters import (
-    build_api_resolver,
-    format_client_profile_markdown,
-    format_holdings_bullets,
-    format_product_single,
+    build_proposal_resolver,
+    compute_pfs_for_products,
+    format_client_and_holdings,
+    format_product_catalog,
+    read_http_resolver_config,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -268,7 +268,7 @@ def _process_one_pair(
         "product_id": product_id,
     }
 
-    http_cfg = _read_http_resolver_config()
+    http_cfg = read_http_resolver_config(_CONFIG_PATH)
 
     if http_cfg is not None:
         # ── Phase B: HTTP resolver ──────────────────────────────────
@@ -339,19 +339,27 @@ def _process_one_pair(
     app_config = load_config(str(_ROOT_DIR / "config" / "config.yaml"))
     output_path = (
         f"runs/product_opportunity_proposal/"
-        f"product_opportunity_proposal_{client_id}_{product_id}.md"
+        f"product_opportunity_{datetime.now().strftime('%H%M%S')}_{client_id}.md"
     )
+
+    overrides: dict[str, list[str]] = {
+        "client_profiles":  [API_CLIENT_PROFILE],
+        "product_catalogs": [API_PRODUCT_CATALOG],
+    }
+    # Only override market_outlook when explicitly provided; otherwise
+    # load from config_planbot.yaml file glob (../shared/market_outlook/*.md)
+    if market_outlook is not None:
+        overrides["market_outlook"] = [API_MARKET_OUTLOOK]
+    # Only override suggested_products_and_rationale when content is present;
+    # otherwise fall through to YAML file glob.
+    if suggested_products_and_rationale:
+        overrides["suggested_products_and_rationale"] = [API_SUGGESTED_PRODUCTS_AND_RATIONALE]
 
     fit_result = run_crew_planbot(
         app_config=app_config,
         config_path=str(_CONFIG_PATH),
         proposal_name="product_opportunity_proposal",
-        runtime_reference_overrides={
-            "client_profiles":                  [API_CLIENT_PROFILE, API_HOLDINGS],
-            "product_catalogs":                 [API_PRODUCT_CATALOG],
-            "market_outlook":                   [API_MARKET_OUTLOOK],
-            "suggested_products_and_rationale": [API_SUGGESTED_PRODUCTS_AND_RATIONALE],
-        },
+        runtime_reference_overrides=overrides,
         output_file_override=output_path,
         api_resolver=api_resolver,
     )
@@ -405,14 +413,22 @@ def _build_proposal_resolver(
             if alt:
                 alt_products.append(alt)
 
-    # ── Build documents ──────────────────────────────────────────
-    client_content = format_client_profile_markdown(client_data)
+    # Resolve holdings to full product dicts for the catalog
     holdings = client_data.get("holdings", [])
-    if holdings:
-        client_content += "\n\n" + format_holdings_bullets(holdings)
-    # rationale is NO LONGER appended to client_content — it goes to
-    # API_SUGGESTED_PRODUCTS_AND_RATIONALE alongside matching_context.
+    holdings_products: list[dict] = []
+    for h in holdings:
+        hp = search_by_product_id(h.get("product_id", ""))
+        if hp:
+            holdings_products.append(hp)
 
+    # ── Compute PFS (suggested + alternatives) for the LLM prompt ──
+    pfs_scores = compute_pfs_for_products(
+        client_id=str(client_data.get("client_id", "")),
+        suggested_product_id=str(product_data.get("product_id", "")),
+        alternative_products=alt_products,
+    )
+
+    # ── Build rationale/context document ─────────────────────────
     rationale_content = ""
     if suggested_products_and_rationale:
         rationale_content += suggested_products_and_rationale
@@ -421,45 +437,30 @@ def _build_proposal_resolver(
             rationale_content += "\n\n"
         rationale_content += f"## Rationale\n\n{rationale}\n"
 
-    docs: dict[str, ReferenceDocument] = {
-        API_CLIENT_PROFILE: ReferenceDocument(
-            path=Path("api://client_profile"),
-            content=client_content,
-            source_type="markdown",
-        ),
-        API_PRODUCT_CATALOG: ReferenceDocument(
-            path=Path("api://product_catalog"),
-            content=format_product_single(product_data, alternatives=alt_products or None),
-            source_type="markdown",
-        ),
-        API_MARKET_OUTLOOK: ReferenceDocument(
-            path=Path(API_MARKET_OUTLOOK),
-            content=format_market_outlook_section(market_outlook),
-            source_type="markdown",
-        ),
-    }
+    extra_docs: dict[str, ReferenceDocument] = {}
     if rationale_content:
-        docs[API_SUGGESTED_PRODUCTS_AND_RATIONALE] = ReferenceDocument(
+        extra_docs[API_SUGGESTED_PRODUCTS_AND_RATIONALE] = ReferenceDocument(
             path=Path(API_SUGGESTED_PRODUCTS_AND_RATIONALE),
             content=rationale_content,
             source_type="markdown",
         )
 
-    return build_api_resolver(docs)
+    return build_proposal_resolver(
+        client_content=format_client_and_holdings(client_data),
+        product_content=format_product_catalog(
+            suggested=product_data,
+            holdings=holdings_products or None,
+            alternatives=alt_products or None,
+            pfs_scores=pfs_scores or None,
+        ),
+        market_outlook=market_outlook,
+        extra_docs=extra_docs or None,
+    )
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-
-def _read_http_resolver_config() -> dict | None:
-    """Read HTTP resolver settings from config_planbot.yaml."""
-    planbot_config = yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
-    common = planbot_config.get("common") or {}
-    if not common.get("get_client_product_from_db"):
-        return None
-    return common.get("http_resolver")
 
 
 def _load_latest_matcher_output() -> tuple[str, list[dict]]:

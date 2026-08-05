@@ -35,7 +35,6 @@ from src.planbot.input_loader import (
     API_PRODUCT_CATALOG,
     ReferenceDocument,
 )
-from src.planbot.workflow import build_matcher_llm_payload
 from src.shared.config_loader import load_config
 from src.shared.market_outlook_utils import (
     API_MARKET_OUTLOOK,
@@ -646,32 +645,6 @@ def _build_matcher_api_resolver(
     return build_api_resolver(docs)
 
 
-# ---------------------------------------------------------------------------
-# In-memory API resolver for product_opportunity_proposal (per-pair)
-# ---------------------------------------------------------------------------
-
-
-def _build_fit_analysis_resolver(
-    client_data: dict,
-    product_data: dict,
-    matching_markdown: str,
-    market_outlook: str | None,
-) -> Callable[[str], ReferenceDocument]:
-    """Build a resolver for a single client×product pair."""
-    return build_api_resolver({
-        API_CLIENT_PROFILE: ReferenceDocument(
-            path=Path("api://client_profile"),
-            content=format_client_profile_markdown(client_data),
-            source_type="markdown",
-        ),
-        API_PRODUCT_CATALOG: ReferenceDocument(
-            path=Path("api://product_catalog"),
-            content=format_product_single_recommended(product_data),
-            source_type="markdown",
-        ),
-        API_MARKET_OUTLOOK: ReferenceDocument(
-            path=Path(API_MARKET_OUTLOOK),
-            content=format_market_outlook_section(market_outlook),
-            source_type="markdown",
-        ),
-    })
+# ═══════════════════════════════════════════════════════════════════════════
+# End of resolver helpers
+# ═══════════════════════════════════════════════════════════════════════════
