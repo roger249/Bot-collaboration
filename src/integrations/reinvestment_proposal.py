@@ -35,6 +35,7 @@ from src.shared.resolver_formatters import (
     build_proposal_resolver,
     compute_pfs_for_products,
     format_client_and_holdings,
+    format_irs_section,
     format_product_catalog,
     read_http_resolver_config,
 )
@@ -421,16 +422,15 @@ def _build_api_resolver(
 
     cp = client_profile
     extra: list[str] = []
-    irs = cp.get("investor_readiness_score")
-    readiness_lines = []
-    if irs is not None:
-        readiness_lines.append(f"{irs}")
-    for key in ("cash_score", "concentration_score", "active_score", "life_stage_score"):
-        val = cp.get(key)
-        if val is not None:
-            readiness_lines.append(f"  - {key.replace('_score','').title()}: {val}")
-    if readiness_lines:
-        extra.append("## Investor Readiness Score\n" + "\n".join(readiness_lines))
+    irs_text = format_irs_section(
+        total=cp.get("investor_readiness_score"),
+        cash_drag=cp.get("cash_score"),
+        concentration=cp.get("concentration_score"),
+        active_management=cp.get("active_score"),
+        life_stage=cp.get("life_stage_score"),
+    )
+    if irs_text:
+        extra.append(irs_text)
 
     extra.append(
         "# Wallet Inflow Event\n\n"

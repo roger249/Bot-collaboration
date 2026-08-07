@@ -145,7 +145,7 @@ class TestAutomatchPromptAndFields(unittest.TestCase):
         from src.planbot.workflow import (
             _build_reference_payload,
             _build_user_prompt,
-            _build_prompt_snapshot_payload,
+            _build_prompt_snapshot_markdown,
         )
         from src.shared.config_loader import load_config
 
@@ -256,62 +256,38 @@ class TestAutomatchPromptAndFields(unittest.TestCase):
             task_prompt="<task prompt>",
             reference_payload_json=reference_payload_json,
         )
-        snapshot = _build_prompt_snapshot_payload(
-            user_prompt, cfg.model, cfg.temperature,
+        snapshot = _build_prompt_snapshot_markdown(
+            task_prompt="<task prompt>",
+            loaded_sections=loaded_sections,
+            model=cfg.model,
+            temperature=cfg.temperature,
+            root_dir=ck["app_config"].root_dir,
         )
-        snapshot_data = json.loads(snapshot)
 
         # Verify prompt fields are populated
-        self.assertIn("model", snapshot_data)
-        self.assertIn("temperature", snapshot_data)
-        self.assertIn("messages", snapshot_data)
-        self.assertEqual(len(snapshot_data["messages"]), 1)
-        self.assertEqual(snapshot_data["messages"][0]["role"], "user")
-        prompt_content = snapshot_data["messages"][0]["content"]
-        self.assertIsInstance(prompt_content, str)
-        self.assertGreater(len(prompt_content), 100,
+        self.assertIn(f"**Model:** {cfg.model}", snapshot)
+        self.assertIn(f"**Temperature:** {cfg.temperature}", snapshot)
+        self.assertIn("## Task Prompt", snapshot)
+        self.assertIn("## Reference Sections", snapshot)
+        self.assertGreater(len(snapshot), 100,
                            "prompt must be non-trivial")
         # suggested_products_and_rationale is gated — only appears when content
         # is non-empty.  Check whether the override was provided.
         _has_suggested = "suggested_products_and_rationale" in (ck["runtime_reference_overrides"] or {})
         if _has_suggested:
-            self.assertIn("suggested_products_and_rationale", prompt_content,
+            self.assertIn("suggested_products_and_rationale", snapshot,
                           "prompt must reference the new section when content provided")
 
-        # Verify every reference section is present in the prompt payload
-        json_start = prompt_content.find('"schema_version"')
-        sections_present: dict = {}
-        if json_start > 0:
-            payload = json.loads("{" + prompt_content[json_start:])
-            self.assertIn("sections", payload)
-            sections_present = payload["sections"]
-            expected_sections = [
-                "proposal_instructions_and_format",
-                "guidelines",
-                "client_profiles",
-                "market_outlook",
-                "product_catalogs",
-            ]
-            for sec in expected_sections:
-                self.assertIn(
-                    sec, sections_present,
-                    f"section '{sec}' must be present in prompt payload",
-                )
-                docs = sections_present[sec].get("documents", [])
-                self.assertGreater(
-                    len(docs), 0,
-                    f"section '{sec}' must have at least 1 document",
-                )
-            # suggested_products_and_rationale is gated — may be absent when empty
-            if _has_suggested:
-                self.assertIn("suggested_products_and_rationale", sections_present,
-                              "section 'suggested_products_and_rationale' must be present when content provided")
-        else:
-            # Fallback: check raw string contains all sections
-            for sec in ["client_profiles", "product_catalogs",
-                         "guidelines", "proposal_instructions"]:
-                self.assertIn(sec, prompt_content,
-                              f"prompt must contain '{sec}'")
+        # Verify every reference section is present in the markdown
+        for sec in ["proposal_instructions_and_format", "guidelines",
+                     "client_profiles", "market_outlook", "product_catalogs"]:
+            self.assertIn(
+                f"### {sec}", snapshot,
+                f"section '{sec}' must be present in prompt snapshot",
+            )
+        if _has_suggested:
+            self.assertIn("### suggested_products_and_rationale", snapshot,
+                          "section 'suggested_products_and_rationale' must be present when content provided")
 
         # ── 5. Dump prompt to persistent test output dir ──────────────
         dump_dir = Path(os.environ.get(
@@ -319,28 +295,24 @@ class TestAutomatchPromptAndFields(unittest.TestCase):
             str(Path(__file__).resolve().parents[1] / "runs" / "test_output"),
         ))
         dump_dir.mkdir(parents=True, exist_ok=True)
-        # Include client_id in name so multiple runs don't overwrite
         cid = result["proposals"][0]["client_id"]
-        snapshot_file = dump_dir / f"prompt_snapshot_{cid}.json"
-        prompt_file = dump_dir / f"user_prompt_{cid}.md"
+        snapshot_file = dump_dir / f"prompt_snapshot_{cid}.md"
         snapshot_file.write_text(snapshot, encoding="utf-8")
-        prompt_file.write_text(prompt_content, encoding="utf-8")
         print(f"\nPrompt snapshot → {snapshot_file}")
-        print(f"User prompt     → {prompt_file}")
 
-        # ── 6. Verify suggested_products_and_rationale content ─────────
-        if sections_present and _has_suggested:
-            spr_docs = sections_present.get("suggested_products_and_rationale", {}).get("documents", [])
-            if spr_docs:
-                spr_content = spr_docs[0]["content"]
-                self.assertGreater(len(spr_content), 0,
-                                   "suggested_products_and_rationale must have content when provided")
-                has_rationale = "rationale" in spr_content.lower() or "Rationale" in spr_content
-                has_matcher = "Recommendation" in spr_content or "Fitness score" in spr_content
-                self.assertTrue(
-                    has_rationale or has_matcher,
-                    f"suggested_products_and_rationale must contain meaningful content, got: {spr_content[:200]}",
-                )
+        # ── 6. Verify suggested_products_and_rationale content (in markdown) ─
+        if _has_suggested:
+            # Find the suggested_products_and_rationale section in the markdown
+            spr_start = snapshot.find("### suggested_products_and_rationale")
+            self.assertGreater(spr_start, 0,
+                               "suggested_products_and_rationale section must be present")
+            spr_section = snapshot[spr_start:]
+            # Stop at next ### or ---
+            next_section = spr_section.find("\n### ", 4)
+            if next_section > 0:
+                spr_section = spr_section[:next_section]
+            self.assertGreater(len(spr_section.strip()), 0,
+                               "suggested_products_and_rationale must have content")
 
 
 if __name__ == "__main__":

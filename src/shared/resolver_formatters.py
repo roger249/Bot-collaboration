@@ -382,20 +382,10 @@ def format_product_catalog(
 
     # ── 4. Product Fitness Scores (suggested + alternatives only) ──
     if pfs_scores:
-        lines += ["", "## Product Fitness Scores", ""]
-        lines.append(
-            "| # | Product ID | Fitness Score | Risk Match | Concentration | Experience | Better Product |"
-        )
-        lines.append("|---|---|---|---|---|---|---|")
-        for i, (pid, comp) in enumerate(pfs_scores.items(), 1):
-            lines.append(
-                f"| {i} | {pid} | "
-                f"{comp.get('fitness_score', ''):.2f} | "
-                f"{comp.get('risk_rating_match_score', ''):.1f} | "
-                f"{comp.get('concentration_score', ''):.1f} | "
-                f"{comp.get('has_similar_investment_experience_score', ''):.1f} | "
-                f"{comp.get('better_product_score', ''):.1f} |"
-            )
+        lines.append("")
+        lines.append("## Product Fitness Scores")
+        lines.append("")
+        lines += format_pfs_table(pfs_scores)
 
     return "\n".join(lines)
 
@@ -451,6 +441,75 @@ def format_product_multi(products: list[dict]) -> str:
             lines.append(f"- Investment Note: {note}")
         lines.append("")
     return "\n".join(lines)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Shared IRS section — used by all proposals
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def format_irs_section(*, total=None, rank=None, cash_drag=None, concentration=None, active_management=None, life_stage=None):
+    """Render IRS section. All fields optional — omitted when None. Returns "" when all None."""
+    lines = ["## Investor Readiness Score", ""]
+    if rank is not None: lines.append(f"Rank: {rank}")
+    if total is not None: lines.append(f"Total Score: {total}")
+    for label, val in [("Cash Drag", cash_drag), ("Concentration", concentration), ("Active Management", active_management), ("Life Stage", life_stage)]:
+        if val is not None: lines.append(f"  - {label}: {val}")
+    return "\n".join(lines) if len(lines) > 2 else ""
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Shared PFS table rendering — used by all proposals
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def format_pfs_table(
+    pfs_scores: dict[str, dict],
+    *,
+    include_name: bool = False,
+) -> list[str]:
+    """Render a PFS component-score table from a product_id → scores dict.
+
+    Parameters
+    ----------
+    pfs_scores : dict[str, dict]
+        Mapping of product_id → component_scores dict.  May be a single
+        client's suggested+alternatives (reinvestment, product-opp) or
+        all products in the universe (matcher).
+    include_name : bool
+        If True, adds a ``Name`` column after Product ID (used by matcher
+        which doesn't hardcode product names in the catalog listing).
+
+    Returns
+    -------
+    list[str]
+        Markdown lines — the table header, separator, and one row per
+        product.  Does NOT include the section heading (caller adds it).
+    """
+    if not pfs_scores:
+        return []
+
+    if include_name:
+        header = "| # | Product ID | Name | Fitness Score | Risk Match | Concentration | Experience | Better Product |"
+        sep   = "|---|---|---|---|---|---|---|---|"
+    else:
+        header = "| # | Product ID | Fitness Score | Risk Match | Concentration | Experience | Better Product |"
+        sep   = "|---|---|---|---|---|---|---|"
+
+    lines = [header, sep]
+    for i, (pid, comp) in enumerate(pfs_scores.items(), 1):
+        row = f"| {i} | {pid} |"
+        if include_name:
+            row += f" {comp.get('product_name', '')[:40]} |"
+        row += (
+            f" {comp.get('fitness_score', ''):.2f} |"
+            f" {comp.get('risk_rating_match_score', ''):.1f} |"
+            f" {comp.get('concentration_score', ''):.1f} |"
+            f" {comp.get('has_similar_investment_experience_score', ''):.1f} |"
+            f" {comp.get('better_product_score', ''):.1f} |"
+        )
+        lines.append(row)
+    return lines
 
 
 # ═══════════════════════════════════════════════════════════════════════════

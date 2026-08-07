@@ -31,10 +31,15 @@ Below are some Epics to do in the future
 # Efficient integration to product/client
 
 # Move Scorecard to self-learning
-The engine behind is Learn to Rank
+- Two-Tower Deep Learning
+  - Encode client profile and product in latent embedding
+  - Training the model to cluster them together to predict client-product match
 
-- Linear RankNet to train scorecard?
-  - 1000 labeled training data
+- The engine behind is Learn to Rank 
+  - Linear RankNet to train scorecard?
+    - 1000 labeled training data
+
+
 
 # Efficient frontier?
 

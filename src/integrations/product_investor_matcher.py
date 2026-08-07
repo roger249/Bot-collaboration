@@ -31,21 +31,19 @@ from src.integrations.product_tool import (
 from src.planbot.crew_workflow import run_crew_planbot
 from src.planbot.input_loader import (
     API_CLIENT_PROFILE,
-    API_HOLDINGS,
     API_PRODUCT_CATALOG,
     ReferenceDocument,
 )
 from src.shared.config_loader import load_config
 from src.shared.market_outlook_utils import (
     API_MARKET_OUTLOOK,
-    format_market_outlook_section,
 )
 from src.shared.resolver_formatters import (
-    build_api_resolver,
-    format_client_profile_markdown,
-    format_holdings_table,
+    build_proposal_resolver,
+    format_client_and_holdings,
+    format_irs_section,
+    format_pfs_table,
     format_product_multi,
-    format_product_single_recommended,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -292,7 +290,7 @@ def product_investor_matcher(
     try:
         matching_output_path = f"runs/product_investor_matching/product_investor_matching_{run_id}.md"
         reference_overrides: dict[str, list[str]] = {
-            "client_profiles": [API_CLIENT_PROFILE, API_HOLDINGS],
+            "client_profiles": [API_CLIENT_PROFILE],
             "product_catalogs": [API_PRODUCT_CATALOG],
         }
         if market_outlook is not None:
@@ -567,25 +565,21 @@ def _build_matcher_api_resolver(
     def _format_client_profile(cid: str) -> str:
         cp = clients_data.get(cid, {})
         readiness = readiness_map.get(cid, {})
-        base = format_client_profile_markdown(cp)
-        extra = [
-            "",
-            f"- Cash %: {cp.get('cash_pct', 'N/A')}",
-            "",
-            "## Investor Readiness Score",
-            f"Rank: {eligible_client_ids.index(cid) + 1 if cid in eligible_client_ids else 'N/A'}/{len(eligible_client_ids)}",
-            f"Total Score: {readiness.get('total_score', 'N/A')}",
-            f"  - Cash Drag: {readiness.get('s_cash', 'N/A')}",
-            f"  - Concentration: {readiness.get('s_concentration', 'N/A')}",
-            f"  - Active Management: {readiness.get('s_active', 'N/A')}",
-            f"  - Life Stage: {readiness.get('s_lifestage', 'N/A')}",
-        ]
-        return base + "\n".join(extra)
+        rank_str = f"{eligible_client_ids.index(cid) + 1}/{len(eligible_client_ids)}" if cid in eligible_client_ids else None
+        irs_text = format_irs_section(
+            total=readiness.get("total_score"),
+            rank=rank_str,
+            cash_drag=readiness.get("s_cash"),
+            concentration=readiness.get("s_concentration"),
+            active_management=readiness.get("s_active"),
+            life_stage=readiness.get("s_lifestage"),
+        )
+        return format_client_and_holdings(cp, extra_sections=[irs_text] if irs_text else [])
 
     def _format_product_catalog() -> str:
         products = [products_data[pid] for pid in product_universe if pid in products_data]
         content = format_product_multi(products)
-        # Append fitness score summary per client
+        # Append fitness score summary per client (uses shared format_pfs_table)
         lines = [content, "", "## Product Fitness Scores (per client)", ""]
         for cid in eligible_client_ids:
             fit = fitness_results.get(cid, [])
@@ -594,55 +588,27 @@ def _build_matcher_api_resolver(
             cp = clients_data.get(cid, {})
             lines.append(f"### {cid} — {cp.get('name', 'N/A')} (RR={cp.get('risk_rating', 'N/A')})")
             lines.append("")
-            lines.append("| Rank | Product ID | Name | Fitness Score | Risk Match | Concentration | Experience | Better Product |")
-            lines.append("|---|---|---|---|---|---|---|---|")
-            for i, f_item in enumerate(fit[:10], 1):
-                comp = f_item.get("component_scores", {})
-                p_name = f_item.get("product_name", "")
-                lines.append(
-                    f"| {i} | {f_item.get('product_id', '')} | {p_name[:40]} | "
-                    f"{f_item.get('fitness_score', ''):.2f} | "
-                    f"{comp.get('risk_rating_match_score', ''):.1f} | "
-                    f"{comp.get('concentration_score', ''):.1f} | "
-                    f"{comp.get('has_similar_investment_experience_score', ''):.1f} | "
-                    f"{comp.get('better_product_score', ''):.1f} |"
-                )
+            # Build pfs_scores dict for this client
+            pfs_for_client: dict[str, dict] = {}
+            for f_item in fit[:10]:
+                pid = f_item.get("product_id", "")
+                comp = dict(f_item.get("component_scores", {}))
+                comp["fitness_score"] = f_item.get("fitness_score", 0)
+                comp["product_name"] = f_item.get("product_name", "")
+                pfs_for_client[pid] = comp
+            lines += format_pfs_table(pfs_for_client, include_name=True)
             lines.append("")
         return "\n".join(lines)
 
     client_profile_content = "\n\n---\n\n".join(
         _format_client_profile(cid) for cid in eligible_client_ids
     )
-    holdings_content = "\n\n---\n\n".join(
-        format_holdings_table(clients_data.get(cid, {}).get("holdings", []))
-        for cid in eligible_client_ids
+
+    return build_proposal_resolver(
+        client_content=client_profile_content,
+        product_content=_format_product_catalog(),
+        market_outlook=market_outlook,
     )
-
-    docs = {
-        API_CLIENT_PROFILE: ReferenceDocument(
-            path=Path("api://client_profile"),
-            content=client_profile_content,
-            source_type="markdown",
-        ),
-        API_HOLDINGS: ReferenceDocument(
-            path=Path("api://holdings"),
-            content=holdings_content,
-            source_type="markdown",
-        ),
-        API_PRODUCT_CATALOG: ReferenceDocument(
-            path=Path("api://product_catalog"),
-            content=_format_product_catalog(),
-            source_type="markdown",
-        ),
-    }
-    if market_outlook is not None:
-        docs[API_MARKET_OUTLOOK] = ReferenceDocument(
-            path=Path(API_MARKET_OUTLOOK),
-            content=format_market_outlook_section(market_outlook),
-            source_type="markdown",
-        )
-
-    return build_api_resolver(docs)
 
 
 # ═══════════════════════════════════════════════════════════════════════════

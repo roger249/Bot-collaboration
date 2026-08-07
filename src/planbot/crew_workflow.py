@@ -23,7 +23,7 @@ from src.planbot.input_loader import (
 )
 from src.planbot.workflow import (
     PlanBotResult,
-    _build_prompt_snapshot_payload,
+    _build_prompt_snapshot_markdown,
     _build_reference_payload,
     _build_user_prompt,
     _normalize_planbot_output,
@@ -537,7 +537,13 @@ def run_crew_planbot(
     prompt_snapshot = run_root / "prompt_snapshot.md"
     write_text(
         prompt_snapshot,
-        _build_prompt_snapshot_payload(user_prompt, cfg.model, cfg.temperature),
+        _build_prompt_snapshot_markdown(
+            task_prompt=task_prompt,
+            loaded_sections=loaded_sections,
+            model=cfg.model,
+            temperature=cfg.temperature,
+            root_dir=app_config.root_dir,
+        ),
     )
 
     LOGGER.info(

@@ -85,15 +85,72 @@ def _normalize_planbot_output(output: str) -> str:
     return output
 
 
-def _build_prompt_snapshot_payload(user_prompt: str, model: str, temperature: float) -> str:
-    payload = {
-        "model": model,
-        "temperature": temperature,
-        "messages": [
-            {"role": "user", "content": user_prompt},
-        ],
-    }
-    return json.dumps(payload, indent=2, ensure_ascii=False)
+def _build_prompt_snapshot_markdown(
+    task_prompt: str,
+    loaded_sections: dict[str, tuple[str, list[ReferenceDocument]]],
+    model: str,
+    temperature: float,
+    root_dir: Path,
+) -> str:
+    """Build a human-readable Markdown snapshot of the full prompt payload.
+
+    Renders the task prompt and every reference section with actual
+    document content — no JSON escapes, real newlines throughout.
+    Designed to open directly in any Markdown viewer for inspection.
+    """
+    lines: list[str] = []
+
+    # ── Header ─────────────────────────────────────────────────────
+    lines.append("# Prompt Snapshot")
+    lines.append("")
+    lines.append(f"**Model:** {model}")
+    lines.append(f"**Temperature:** {temperature}")
+    lines.append("")
+
+    # ── Task Prompt ────────────────────────────────────────────────
+    lines.append("---")
+    lines.append("")
+    lines.append("## Task Prompt")
+    lines.append("")
+    for line in task_prompt.strip().splitlines():
+        lines.append(f"> {line}" if line.strip() else ">")
+    lines.append("")
+
+    # ── Reference Sections ─────────────────────────────────────────
+    lines.append("---")
+    lines.append("")
+    lines.append("## Reference Sections")
+    lines.append("")
+
+    for section_name, (purpose, docs) in loaded_sections.items():
+        # Section header
+        lines.append(f"### {section_name}")
+        if purpose:
+            lines.append(f"*{purpose}*")
+        lines.append("")
+
+        if not docs:
+            lines.append("*(no documents)*")
+            lines.append("")
+            continue
+
+        for doc in docs:
+            doc_path = (
+                str(doc.path.relative_to(root_dir)).replace("\\", "/")
+                if doc.path.is_relative_to(root_dir)
+                else str(doc.path)
+            )
+            lines.append(f"#### {doc.path.name}")
+            lines.append(f"- **Source:** `{doc_path}`")
+            lines.append(f"- **Type:** {doc.source_type}")
+            lines.append(f"- **Size:** {len(doc.content):,} chars")
+            lines.append("")
+            lines.append(doc.content.strip())
+            lines.append("")
+            lines.append("---")
+            lines.append("")
+
+    return "\n".join(lines)
 
 
 def _sanitize_for_filename(value: str) -> str:
