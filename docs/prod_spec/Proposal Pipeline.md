@@ -7,9 +7,9 @@ Status: Draft concept for discussion
 
 ## 1. Purpose
 
-Define a proposal pipeline concept that modernizes proposal generation while staying aligned with current PlanBot behavior.
+Define a proposal pipeline architecture that modernizes proposal generation while preserving current PlanBot behavior.
 
-This draft is intentionally implementation-light. It focuses on architecture, contracts, boundaries, and operating principles.
+This draft is intentionally architecture-first and implementation-oriented. It focuses on the contract between YAML configuration, shared runtime resolution, and proposal output generation.
 
 ---
 
@@ -22,6 +22,52 @@ The proposal pipeline should:
 3. Support both runtime API data and file-glob references with predictable fallback.
 4. Treat prior-step outputs as optional or required through explicit policy.
 5. Produce similar proposal output quality with a simpler, intuitive configuration model.
+
+### 2.1 Design principles
+
+The pipeline should be fully configuration-driven so adding or changing a proposal does not require new Python branching logic. In practice, this means:
+
+1. Proposal-specific prompt sections are declared in YAML and treated as the source of truth for behavior.
+2. Shared Python code provides slot resolvers, formatters, and execution orchestration only.
+3. Optional sections that depend on previous function calls use explicit policy such as `skip`, `fallback_to_static`, or `error`.
+4. A new proposal type is primarily a configuration change plus content assets rather than a new orchestration branch.
+
+### 2.2 Current proposal data input landscape
+
+The current implementation already converges through a common execution path. The remaining differences are primarily in per-proposal resolver wrappers that hardcode what to include and when.
+
+#### Runtime resolver paths
+
+| `api://` path | Reinvestment | Product Opp. | Matcher |
+|---|---|---|---|
+| `client_profile` | ✅ `format_client_and_holdings(cp, extra=…)` | ✅ `format_client_and_holdings(cp)` | ✅ `format_client_and_holdings(cp, extra=…)` |
+| `product_catalog` | ✅ `format_product_catalog(suggested, holdings, alts, pfs)` | ✅ same | ❌ `format_product_multi()` |
+| `suggested_products_and_rationale` | — | ✅ gated via extra docs | — |
+| `market_outlook` | — (YAML glob) | ✅ when provided | ✅ when provided |
+
+#### What the LLM currently receives
+
+| Section | Reinvestment | Product Opp. | Matcher | Shared function? |
+|---|---|---|---|---|
+| Task prompt | ✅ | ✅ | ✅ | ✅ `tasks.yaml` |
+| Proposal instructions | ✅ | ✅ | ✅ | ✅ `load_references` |
+| Guidelines | ✅ | ✅ | ✅ | ✅ `load_references` |
+| Client profile (composite: includes holdings) | ✅ | ✅ | ✅ | ✅ `format_client_and_holdings` |
+| Investor Readiness Score | ✅ | ❌ | ✅ | ✅ `format_irs_section` |
+| Wallet Inflow Event | ✅ | ❌ | ❌ | ❌ wrapper-only |
+| Product catalog (composite: suggested + holdings + alts) | ✅ | ✅ | ❌ multi | ✅ `format_product_catalog` |
+| Multi-product listing | ❌ | ❌ | ✅ | ❌ `format_product_multi` |
+| Product Fitness Scores | ✅ | ✅ | ✅ | ✅ `format_pfs_table` |
+| Suggested products and rationale | ❌ | ✅ gated | ❌ | ❌ wrapper-only |
+| Market outlook | ✅ YAML glob | ✅ API or YAML glob | ✅ API or YAML glob | ✅ `load_references` |
+
+### 2.3 Current gaps to address
+
+1. Matcher still uses a different product-catalog structure from the other proposals.
+2. Product opportunity currently has no IRS section by default.
+3. Proposal differences still live in Python wrapper logic rather than in a shared declarative contract.
+4. Per-target and per-pair processing still carries duplicated control flow.
+5. The formatting layer should converge on a small set of shared `format_*` helpers per logical data type, such as client profile, wallet inflow event, holdings table, product catalog, and PFS sections, so proposal-specific rendering is driven by data shape rather than bespoke wrapper logic.
 
 ---
 
@@ -106,7 +152,7 @@ Builds prompt payload by reading configured inputs in order:
 Each input applies policy for missing data:
 
 1. `skip`
-2. `fallback_to_glob`
+2. `fallback_to_static`
 3. `error`
 
 ### 5.4 Stage D: Reference resolution
@@ -146,7 +192,7 @@ The pipeline should move to one simple proposal configuration model with these t
 ### 6.1 Conceptual schema (simplified)
 
 ```yaml
-schema_version: 2
+schema_version: 1
 proposal:
    id: <proposal_id>
    name: <display_name>
@@ -169,15 +215,20 @@ input_policy:
 prompt_packaging:
    decision_context_order: [ ... ]
    references_order: [ ... ]
-   llm_payload: { ... }
+   llm_payload:
+      task_prompt_from: <input_id>   # input whose resolved content becomes the task prompt
+      include_references: true
 
 quality_gates: { ... }
+```
+
+When `task_prompt_from` references an input with a file glob, multiple matched files are sorted alphabetically and concatenated with a double newline separator — the same behavior as `load_references` in the current implementation.
 ```
 
 ### 6.2 Sample YAML: Reinvestment Proposal
 
 ```yaml
-schema_version: 2
+schema_version: 1
 proposal:
    id: reinvestment
    name: Reinvestment Proposal
@@ -203,70 +254,57 @@ execution:
 
 inputs:
    - id: proposal_instructions
-      source: static_glob
+      source: file
       paths:
          - data/planbot/reinvestment_proposal/proposal_instructions/*.md
       prompt_section: references
       required: true
 
    - id: section_guides
-      source: static_glob
+      source: file
       paths:
          - data/planbot/shared/proposal_section_instructions/*.md
       prompt_section: references
       required: true
 
    - id: general_guidelines
-      source: static_glob
+      source: file
       paths:
          - data/planbot/shared/common/general_guideline.md
       prompt_section: references
       required: true
 
    - id: financial_needs_guidelines
-      source: static_glob
+      source: file
       paths:
          - data/planbot/shared/financial_needs/*.md
       prompt_section: references
       required: true
 
    - id: client_profile
-      source: dynamic_by_api
+      source: api
       prompt_section: decision_context
       required: true
+      # composite: always includes holdings table
 
    - id: investor_readiness_score
-      source: dynamic_by_api
+      source: api
       prompt_section: decision_context
       required: false
 
    - id: wallet_inflow_event
-      source: dynamic_by_api
+      source: api
       prompt_section: decision_context
       required: true
 
-   - id: holdings_table
-      source: dynamic_by_api
+   - id: product_catalog
+      source: api
       prompt_section: decision_context
       required: true
-
-   - id: suggested_product
-      source: dynamic_by_api
-      prompt_section: decision_context
-      required: true
-
-   - id: holdings_in_catalog
-      source: dynamic_by_api
-      prompt_section: decision_context
-      required: true
-
-   - id: alternative_products
-      source: dynamic_by_api
-      prompt_section: decision_context
-      required: false
+      # composite: always includes suggested product + holdings in catalog + alternatives
 
    - id: product_fitness_scores
-      source: dynamic_by_api
+      source: api
       prompt_section: decision_context
       required: false
 
@@ -284,7 +322,6 @@ input_policy:
    per_input:
       investor_readiness_score: skip
       market_outlook: fallback_to_static
-      alternative_products: skip
       product_fitness_scores: skip
 
 prompt_packaging:
@@ -292,10 +329,7 @@ prompt_packaging:
       - client_profile
       - investor_readiness_score
       - wallet_inflow_event
-      - holdings_table
-      - suggested_product
-      - holdings_in_catalog
-      - alternative_products
+      - product_catalog
       - product_fitness_scores
       - market_outlook
    references_order:
@@ -311,9 +345,8 @@ quality_gates:
    required_sections:
       - client_profile
       - wallet_inflow_event
-      - holdings_table
-      - suggested_product
-   fail_on_empty_required_section: true
+      - product_catalog
+   fail_on_missing_required_input: true
 ```
 
 ### 6.3 Why this model is intuitive
@@ -323,13 +356,13 @@ quality_gates:
 3. `prompt_section` makes packaging intent explicit (`decision_context` vs `references`).
 4. `id` is the stable semantic key and implicit API plus formatter selector in shared code.
 5. Missing-data behavior is visible per input, not hidden in code.
-6. New proposal onboarding is mostly editing one YAML file.
+6. `client_profile` and `product_catalog` are composite IDs — each backed by a single shared formatter that returns multiple logical sub-parts in one call. The pipeline does not need separate IDs for holdings, suggested product, holdings-in-catalog, or alternatives.
 
 ### 6.4 Fixed runtime source and enrichment (Sprint 1)
 
 For Sprint 1, runtime data retrieval and enrichment should be fixed in shared code, not configured per proposal.
 
-1. Input rows with `source: dynamic_by_api` are resolved by a centralized resolver layer.
+1. Input rows with `source: api` are resolved by a centralized resolver layer.
 2. Proposal YAML should not carry provider/method boilerplate when there is only one supported source path.
 3. Re-externalize source/enrichment only when genuine multi-source variation is needed.
 
@@ -347,14 +380,14 @@ For Sprint 1, API selection and formatter selection are both driven by `id`.
 
 To keep production YAML concise, the pipeline should support default field values when keys are omitted.
 
-`input_defaults` should be defined once at schema or repository scope and shared across proposals unless a future need for proposal-local override appears.
+`input_defaults` lives in `config/config_planbot.yaml` as a top-level `input_defaults` block, shared by all proposals. At load time, the pipeline reads the defaults, then overlays the proposal-specific YAML on top.
 
 Suggested default values:
 
 1. `prompt_section: references`
 2. `required: false`
-3. `source: static_glob` when `paths` is present
-4. `source: dynamic_by_api` when the `id` is a known runtime-resolved input
+3. `source: file` when `paths` is present
+4. `source: api` when the `id` is a known runtime-resolved input
 5. `source: runtime_or_static` when `source_priority` is present
 6. `input_policy.missing_data.default: skip`
 
@@ -368,7 +401,7 @@ Recommended precedence order:
 Compact YAML pattern:
 
 ```yaml
-schema_version: 2
+schema_version: 1
 
 input_defaults:
    global:
@@ -376,28 +409,21 @@ input_defaults:
       required: false
    by_id:
       client_profile:
-         source: dynamic_by_api
+         source: api
          prompt_section: decision_context
+         # composite: always includes holdings
       investor_readiness_score:
-         source: dynamic_by_api
+         source: api
          prompt_section: decision_context
       wallet_inflow_event:
-         source: dynamic_by_api
+         source: api
          prompt_section: decision_context
-      holdings_table:
-         source: dynamic_by_api
+      product_catalog:
+         source: api
          prompt_section: decision_context
-      suggested_product:
-         source: dynamic_by_api
-         prompt_section: decision_context
-      holdings_in_catalog:
-         source: dynamic_by_api
-         prompt_section: decision_context
-      alternative_products:
-         source: dynamic_by_api
-         prompt_section: decision_context
+         # composite: always includes suggested + holdings in catalog + alternatives
       product_fitness_scores:
-         source: dynamic_by_api
+         source: api
          prompt_section: decision_context
       market_outlook:
          source: runtime_or_static
@@ -407,7 +433,7 @@ input_policy:
       default: skip
    per_input:
       client_profile: error
-      suggested_product: error
+      product_catalog: error
 
 inputs:
    - id: proposal_instructions
@@ -430,7 +456,7 @@ This keeps configuration intuitive while avoiding repetitive fields on most inpu
 The following example intentionally omits keys when defaults already provide the desired behavior.
 
 ```yaml
-schema_version: 2
+schema_version: 1
 
 # shared defaults, defined once for all proposal configurations
 input_defaults:
@@ -438,13 +464,10 @@ input_defaults:
       prompt_section: references
       required: false
    by_id:
-      client_profile: { source: dynamic_by_api, prompt_section: decision_context }
-      investor_readiness_score: { source: dynamic_by_api, prompt_section: decision_context }
-      holdings_table: { source: dynamic_by_api, prompt_section: decision_context }
-      suggested_product: { source: dynamic_by_api, prompt_section: decision_context }
-      holdings_in_catalog: { source: dynamic_by_api, prompt_section: decision_context }
-      alternative_products: { source: dynamic_by_api, prompt_section: decision_context }
-      product_fitness_scores: { source: dynamic_by_api, prompt_section: decision_context }
+      client_profile: { source: api, prompt_section: decision_context, note: "composite: includes holdings" }
+      investor_readiness_score: { source: api, prompt_section: decision_context }
+      product_catalog: { source: api, prompt_section: decision_context, note: "composite: includes suggested + holdings + alternatives" }
+      product_fitness_scores: { source: api, prompt_section: decision_context }
       suggested_products_and_rationale: { source: runtime_or_static, prompt_section: references }
       market_outlook: { source: runtime_or_static, prompt_section: references }
 
@@ -472,7 +495,7 @@ input_policy:
       default: skip
    per_input:
       client_profile: error
-      suggested_product: error
+      product_catalog: error
       suggested_products_and_rationale: fallback_to_static
       market_outlook: fallback_to_static
 
@@ -502,15 +525,8 @@ inputs:
 
    - id: investor_readiness_score
 
-   - id: holdings_table
+   - id: product_catalog
       required: true
-
-   - id: suggested_product
-      required: true
-
-   - id: holdings_in_catalog
-
-   - id: alternative_products
 
    - id: product_fitness_scores
 
@@ -528,10 +544,7 @@ prompt_packaging:
    decision_context_order:
       - client_profile
       - investor_readiness_score
-      - holdings_table
-      - suggested_product
-      - holdings_in_catalog
-      - alternative_products
+      - product_catalog
       - product_fitness_scores
    references_order:
       - proposal_instructions
@@ -547,18 +560,33 @@ prompt_packaging:
 quality_gates:
    required_sections:
       - client_profile
-      - holdings_table
-      - suggested_product
-   fail_on_empty_required_section: true
+      - product_catalog
+   fail_on_missing_required_input: true
 ```
 
 Notes on omitted keys:
 
-1. Most runtime business inputs omit `source` because `input_defaults.by_id` already maps them to `dynamic_by_api`.
+1. Most runtime business inputs omit `source` because `input_defaults.by_id` already maps them to `api`.
 2. Decision-critical inputs omit `prompt_section` because `input_defaults.by_id` already maps them to `decision_context`.
 3. Optional inputs omit `required` because the global default is `false`.
 4. `suggested_products_and_rationale` and `market_outlook` only specify `source_priority` because their `source` and `prompt_section` are already defaulted.
-5. The example assumes `input_defaults` is shared globally and not repeated per proposal in real authoring.
+5. `client_profile` and `product_catalog` are composite IDs — each is backed by a single API call that returns multiple logical sub-parts.
+
+### 6.6 Quality gate semantics
+
+Quality gates validate the **assembled prompt content**, not the LLM output. The check runs at the end of Stage D (Reference resolution), before LLM generation: if a required input resolved successfully and is present in the compiled prompt, the gate passes. Post-hoc checking of LLM output belongs in a separate validation layer and is not part of this pipeline.
+
+The key `fail_on_empty_required_section` is renamed to `fail_on_missing_required_input` to avoid ambiguity about what is being validated.
+
+### 6.7 `source_priority` and `missing_data` interaction
+
+When an input has `source: runtime_or_static`, it carries a `source_priority` chain. The same input can also have an entry in `input_policy.missing_data.per_input`. The evaluation order is:
+
+1. Walk the `source_priority` chain top to bottom.
+2. If a source resolves, stop and use it — `missing_data` policy does not fire.
+3. If the entire chain is exhausted without resolution, consult `input_policy.missing_data.per_input[id]` (falling back to `.default`) and apply `skip`, `fallback_to_static`, or `error` per that policy.
+
+`source_priority` defines *what to try*; `missing_data` defines *what to do when everything fails*.
 
 ---
 
@@ -569,7 +597,7 @@ Some proposal sections come from previous function calls and may be absent for c
 The concept resolves this with input-policy behavior, not proposal-specific branching:
 
 1. If upstream section exists, inject via runtime doc override.
-2. If upstream section is missing and input policy is `fallback_to_glob`, use configured file glob.
+2. If upstream section is missing and input policy is `fallback_to_static`, use configured file glob.
 3. If upstream section is missing and policy is `skip`, omit section.
 4. If upstream section is missing and policy is `error`, fail deterministically.
 
@@ -601,12 +629,16 @@ Expected assembly pattern:
 
 ### 8.3 Product investor matching
 
+The matcher is structurally different from single-client proposals: it pre-fetches all eligible clients, runs PFS as a client × product matrix, and builds a closure-based resolver that returns multi-client content from a single `api://client_profile` call. Multi-client iteration is owned by the resolver implementation, not by YAML configuration.
+
 Expected assembly pattern:
 
-1. multi-client profile blocks
-2. readiness framing
-3. product universe view with PFS per client
+1. multi-client profile blocks (all clients concatenated by the resolver)
+2. readiness framing per client
+3. product universe view with PFS per client (appended by the resolver)
 4. market outlook (runtime or static)
+
+`request_contract` for the matcher accepts `client_selection` criteria rather than a single `client_id`.
 
 ---
 
@@ -636,7 +668,11 @@ The proposal pipeline returns:
 
 1. Every input resolution is logged as `resolved`, `skipped`, `fallback`, or `error`.
 2. Runtime override decisions are logged explicitly.
-3. Failures use stable machine-readable error codes.
+3. Failures use stable machine-readable error codes:
+   - `REQUIRED_INPUT_MISSING` — a `required: true` input failed resolution.
+   - `RUNTIME_DOC_REQUIRED_MISSING` — an upstream doc with `if_missing: error` was absent.
+   - `QUALITY_GATE_FAILED` — a required input was missing at the quality gate check.
+   - `RESOLUTION_FALLBACK_EXHAUSTED` — a `source_priority` chain ran dry with policy `error`.
 4. Non-critical missing context should fail-soft only when policy permits.
 
 ---
@@ -671,18 +707,67 @@ Those should be defined in a separate implementation plan after concept approval
 
 The concept is successful when:
 
-1. Proposal behavior differences are primarily YAML-declared inputs and policies.
+1. Proposal behavior differences are strictly YAML-declared inputs and policies.
 2. Prior-function-derived sections no longer require hardcoded per-proposal branching.
 3. Runtime and static references coexist under explicit policies.
 4. New proposal onboarding requires configuration and content authoring, not custom orchestration logic.
 
+### 13.1 Acceptance criteria — proposal generation tests
+
+The following tests serve as the minimal regression gate for the pipeline refactor. Each proposal type has one normal-flow and one exception-flow test, matching the project convention of two tests per component.
+
+**AC-13-01 Reinvestment proposal (normal flow)**
+- Given a valid `client_id` and `source_product_id` with all required runtime inputs resolvable
+- When the reinvestment proposal pipeline runs
+- Then the run completes with `status: success`
+- And the output markdown contains `client_profile`, `wallet_inflow_event`, and `product_catalog` sections
+- And no error codes are present in diagnostics
+
+**AC-13-02 Reinvestment proposal (exception flow)**
+- Given a `client_id` that does not exist or a `source_product_id` with no matching product
+- When the reinvestment proposal pipeline runs
+- Then the run fails with `REQUIRED_INPUT_MISSING` or produces `status: partial_error` with diagnostics identifying the missing input
+
+**AC-13-03 Product opportunity proposal (normal flow)**
+- Given a valid `client_id` and `product_id` with all required runtime inputs resolvable
+- When the product opportunity pipeline runs
+- Then the run completes with `status: success`
+- And the output markdown contains `client_profile` and `product_catalog` sections
+
+**AC-13-04 Product opportunity proposal (exception flow)**
+- Given a `suggested_products_and_rationale` is missing and input policy is `fallback_to_static`
+- When the product opportunity pipeline runs
+- Then the run completes successfully using the static fallback glob
+- And logs record the resolution outcome as `fallback` for that input
+
+**AC-13-05 Product investor matcher (normal flow)**
+- Given valid `product_ids` and `client_selection` criteria returning at least one eligible client
+- When the matcher pipeline runs
+- Then the run completes with `status: success`
+- And the output markdown contains multi-client profile blocks and per-client PFS tables
+
+**AC-13-06 Product investor matcher (exception flow)**
+- Given `client_selection` criteria that return zero eligible clients
+- When the matcher pipeline runs
+- Then the run completes with `status: warning` and `NO_ELIGIBLE_CLIENTS` in warnings
+
 ---
 
-## 14. Cross-Reference
+## 14. Resolved design choices captured in this spec
 
-This concept is aligned with:
+The following architectural choices are now explicitly embodied in this specification and do not require further debate before implementation:
 
-1. `config/config_planbot.yaml` as current operational source of proposal metadata.
-2. `docs/prompts/planbot_refactor.md` as input-driven prompt assembly direction.
+1. Resolution behavior is determined by the input definition and the input-policy model in Section 7. Each input declares its `source`, and the engine applies the configured fallback behavior when a runtime payload is absent.
+2. Proposal behavior is driven by YAML configuration. Proposal-specific differences are expressed through input selection, policies, packaging order, and quality gates rather than custom Python branching.
+3. Shared runtime logic owns retrieval and formatting. Proposal YAML selects which inputs matter, while shared resolvers and `format_*` helpers handle the common rendering path for logical data types.
+4. The matcher is treated as a first-class proposal variant within the same schema model, with differences expressed by configuration rather than hardcoded wrapper behavior.
+5. The implementation path should preserve current output shape while introducing a cleaner configuration contract and a clear migration boundary for legacy wrapper logic.
 
-These two documents remain the source anchors for subsequent implementation planning.
+## 15. Open issues for discussion before implementation
+
+*All issues resolved. Section retained for future items.*
+
+
+## 16. Cross-Reference
+
+This concept is aligned with the operational proposal metadata in `config/config_planbot.yaml` and uses YAML as the primary contract for proposal behavior. The document is intended to stand on its own as the canonical design reference for the pipeline model and should remain the basis for subsequent implementation planning.
