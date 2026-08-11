@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  api:
+    image: ghcr.io/yourusername/my-openapi-app:latest # or 'build: .' if building on target
+    container_name: openapi_service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    volumes:
+      # Format: /host/path:/container/path
+      - /var/log/my-openapi-app:/app/logs

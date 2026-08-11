@@ -1,0 +1,15 @@
+.venv
+__pycache__
+*.pyc
+.gitignore
+.vscode
+.env
+.pytest_cache/
+.DS_Store
+.venv/
+temp/
+log/
+runs/
+data/planbot/**/*.pdf
+data/planbot/stock_analysis/news_and_data/**/*
+docs/

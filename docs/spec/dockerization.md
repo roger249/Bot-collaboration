@@ -180,15 +180,42 @@ docker compose up -d
 
 ```
 
----
 
-## 7. Serving Behind Reverse Proxy (Nginx / Traefik)
+# About log file, and run folder output
 
-When serving OpenAPI endpoints publicly, host the container behind a TLS-terminating reverse proxy (like Nginx, Caddy, or Traefik).
+You map a specific directory on your Linux host (e.g., `/var/log/my-openapi-app`) directly to the log directory inside your Docker container (e.g., `/app/logs`).
 
-If using FastAPI/Uvicorn behind a proxy, update your startup command in the Dockerfile to recognize `X-Forwarded-For` and `X-Forwarded-Proto` headers so OpenAPI documentation URLs render correctly over HTTPS:
+### 1. Update your Application / Logging Config
 
-```dockerfile
-CMD ["fastapi", "run", "app/main.py", "--port", "8000", "--proxy-headers"]
+Ensure your Python application writes its log files to a dedicated directory inside the container, such as `/app/logs/app.log`.
+
+### 2. Configure `docker-compose.yml`
+
+Add a `volumes` entry mapping the host directory to the container directory:
+
+```yaml
+version: '3.8'
+
+services:
+  api:
+    image: ghcr.io/yourusername/my-openapi-app:latest
+    container_name: openapi_service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Format: /host/path:/container/path
+      - /var/log/my-openapi-app:/app/logs
+    environment:
+      - LOG_FILE_PATH=/app/logs/app.log
 
 ```
+
+> **Permission Note:** Because your Dockerfile runs as a non-root user (`appuser`), make sure the host folder exists and is writable by that user/UID on the target Linux host:
+> ```bash
+> sudo mkdir -p /var/log/my-openapi-app
+> sudo chown -R 1000:1000 /var/log/my-openapi-app  # Adjust UID to match container appuser
+> 
+> ```
+> 
+> 

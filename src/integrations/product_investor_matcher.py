@@ -293,7 +293,7 @@ def product_investor_matcher(
 
         # ── Resolve pipeline inputs and merge into api_resolver ────────
         pipeline_engine = PipelineEngine(
-            app_config, config_path=_CONFIG_PATH, proposal_id="reinvestment"
+            app_config, config_path=_CONFIG_PATH, proposal_id="product_investor_matching"
         )
         prep = pipeline_engine.prepare(
             client_selection=client_selection,
@@ -375,6 +375,7 @@ def product_investor_matcher(
             "buying_score": p.get("buying_score", 0),
             "rationale": p.get("rationale", ""),
             "alternative_product_ids": p.get("alternative_product_ids", []),
+            "matching_context": p.get("matching_context", ""),
         }
         for p in top_pairs
     ]
@@ -476,20 +477,90 @@ def _extract_top_pairs(markdown: str, top_n: int) -> list[dict]:
         cfg.get("alternative_product_re", r"-\s+([A-Za-z]+[-.]?[\w.-]+)\s"),
     )
 
-    # ── 1. Parse the 8-column summary table ────────────────────────────
+    pairs = _extract_top_pairs_from_summary_table(
+        markdown=markdown,
+        client_id_re=client_id_re,
+        product_id_re=product_id_re,
+        amount_re=amount_re,
+    )
+    if not pairs:
+        pairs = _extract_top_pairs_from_narrative_sections(
+            markdown=markdown,
+            client_id_re=client_id_re,
+            product_id_re=product_id_re,
+            amount_re=amount_re,
+            alt_product_re=alt_product_re,
+        )
+
+    if not pairs:
+        LOGGER.warning("_extract_top_pairs: no table rows parsed from markdown")
+        return []
+
+    # ── 2. Extract alternatives from per-client sections ────────────────
+    # Split on ##/### headers; only process sections starting with a client ID
+    client_sections = re.split(r"\n(?=#{2,3}\s)", markdown)
+    context_score_by_client: dict[str, int] = {}
+    for section in client_sections:
+        cid_match = client_id_re.search(section)
+        if not cid_match:
+            continue
+        section_cid = cid_match.group(0)
+
+        # Find the pair for this section
+        pair = next((p for p in pairs if p["client_id"] == section_cid), None)
+        if not pair:
+            continue
+
+        section_text = _normalize_matching_context_markers(section.strip())
+        section_score = _score_matching_context_section(section_text)
+        current_score = context_score_by_client.get(section_cid, -1)
+        if section_score >= current_score:
+            pair["matching_context"] = section_text
+            context_score_by_client[section_cid] = section_score
+
+        # Find #### Alternative suggestion block — stop at next ##/### header or end
+        alt_block_match = re.search(
+            r"####\s+Alternative\s+suggestion\s*\n(.*?)(?=\n(?:#{2,3})\s|\Z)",
+            section, re.DOTALL | re.IGNORECASE,
+        )
+        alt_ids: list[str] = []
+        if alt_block_match:
+            alt_ids = alt_product_re.findall(alt_block_match.group(1))
+        else:
+            inline_alt_match = re.search(
+                r"-\s+\*\*Alternative\s+suggestion:\*\*\s*(.*?)(?=\n-\s+\*\*|\Z)",
+                section,
+                re.DOTALL | re.IGNORECASE,
+            )
+            if inline_alt_match:
+                alt_ids = alt_product_re.findall(inline_alt_match.group(1))
+
+        if not alt_ids:
+            continue
+
+        pair["alternative_product_ids"] = list(dict.fromkeys(alt_ids))  # dedupe, preserve order
+
+    pairs.sort(key=lambda x: x.get("buying_score", 0), reverse=True)
+    return pairs[:top_n]
+
+
+def _extract_top_pairs_from_summary_table(
+    *,
+    markdown: str,
+    client_id_re: re.Pattern[str],
+    product_id_re: re.Pattern[str],
+    amount_re: re.Pattern[str],
+) -> list[dict]:
     pairs: list[dict] = []
     in_table = False
 
     for line in markdown.split("\n"):
         stripped = line.strip()
-        # Detect table start: 8-column header
         if "| Client ID" in stripped and "| Buying Score" in stripped:
             in_table = True
             continue
-        # Skip separator row
         if in_table and re.match(r"^\|[-:\s|]+\|$", stripped):
             continue
-        # End of table
         if in_table and not stripped.startswith("|"):
             in_table = False
             continue
@@ -509,11 +580,9 @@ def _extract_top_pairs(markdown: str, top_n: int) -> list[dict]:
             except (ValueError, TypeError):
                 buying_score = 0.0
 
-            # Extract product_id from col 3 (first token)
             pid_match = product_id_re.search(cells[2])
             product_id = pid_match.group(0) if pid_match else ""
 
-            # Extract investment amount from col 3
             amt_match = amount_re.search(cells[2])
             investment_amount = amt_match.group(1) if amt_match else ""
 
@@ -528,39 +597,148 @@ def _extract_top_pairs(markdown: str, top_n: int) -> list[dict]:
                 "investment_amount": investment_amount,
                 "funding_source": funding_source,
                 "alternative_product_ids": [],
+                "matching_context": "",
             })
 
-    if not pairs:
-        LOGGER.warning("_extract_top_pairs: no table rows parsed from markdown")
-        return []
+    return pairs
 
-    # ── 2. Extract alternatives from per-client sections ────────────────
-    # Split on ##/### headers; only process sections starting with a client ID
-    client_sections = re.split(r"\n(?=#{2,3}\s)", markdown)
-    for section in client_sections:
+
+def _extract_top_pairs_from_narrative_sections(
+    *,
+    markdown: str,
+    client_id_re: re.Pattern[str],
+    product_id_re: re.Pattern[str],
+    amount_re: re.Pattern[str],
+    alt_product_re: re.Pattern[str],
+) -> list[dict]:
+    pairs: list[dict] = []
+    section_pattern = re.compile(
+        r"(?ms)^(?:###\s+Client ID:|#\s+Reinvestment Analysis:\s+Client ID:).*?(?=^(?:###\s+Client ID:|#\s+Reinvestment Analysis:\s+Client ID:)|\Z)",
+    )
+
+    for match in section_pattern.finditer(markdown):
+        section = match.group(0)
+
         cid_match = client_id_re.search(section)
         if not cid_match:
             continue
-        section_cid = cid_match.group(0)
+        client_id = cid_match.group(0)
 
-        # Find the pair for this section
-        pair = next((p for p in pairs if p["client_id"] == section_cid), None)
-        if not pair:
-            continue
-
-        # Find #### Alternative suggestion block — stop at next ##/### header or end
-        alt_block_match = re.search(
-            r"####\s+Alternative\s+suggestion\s*\n(.*?)(?=\n(?:#{2,3})\s|\Z)",
-            section, re.DOTALL | re.IGNORECASE,
+        product_match = re.search(
+            r"Recommended Product:\s*([A-Za-z0-9._-]+)",
+            section,
+            re.IGNORECASE,
         )
-        if not alt_block_match:
-            continue
+        if not product_match:
+            product_match = product_id_re.search(section)
+        product_id = product_match.group(1) if product_match and product_match.groups() else (product_match.group(0) if product_match else "")
 
-        alt_ids = alt_product_re.findall(alt_block_match.group(1))
-        pair["alternative_product_ids"] = list(dict.fromkeys(alt_ids))  # dedupe, preserve order
+        buying_score = 0.0
+        score_match = re.search(r"\|\s*Buying Score\s*\|\s*([0-9]+(?:\.[0-9]+)?)(?:/5)?\s*\|", section, re.IGNORECASE)
+        if not score_match:
+            score_match = re.search(r"Buying Score[:\s]*([0-9]+(?:\.[0-9]+)?)(?:/5)?", section, re.IGNORECASE)
+        if score_match:
+            try:
+                buying_score = float(score_match.group(1))
+            except (ValueError, TypeError):
+                buying_score = 0.0
 
-    pairs.sort(key=lambda x: x.get("buying_score", 0), reverse=True)
-    return pairs[:top_n]
+        amount_match = amount_re.search(section)
+        investment_amount = amount_match.group(1) if amount_match else ""
+
+        funding_match = re.search(
+            r"Funding Source\s*\|\s*(.*?)\s*\|",
+            section,
+            re.IGNORECASE | re.DOTALL,
+        )
+        funding_source = funding_match.group(1).strip() if funding_match else ""
+
+        rationale_match = re.search(
+            r"\*\*Detailed justification:\*\*\s*(.*?)(?=\n###\s|\n---\s|\Z)",
+            section,
+            re.IGNORECASE | re.DOTALL,
+        )
+        if not rationale_match:
+            rationale_match = re.search(
+                r"\*\*Detailed justification\*\*\s*(.*?)(?=\n###\s|\n---\s|\Z)",
+                section,
+                re.IGNORECASE | re.DOTALL,
+            )
+        rationale = rationale_match.group(1).strip() if rationale_match else section.strip()
+
+        alt_block_match = re.search(
+            r"####\s+(?:Alternative\s+Products?\s+to\s+Consider|Alternative\s+suggestion)\s*\n(.*?)(?=\n(?:#{2,3})\s|\Z)",
+            section,
+            re.DOTALL | re.IGNORECASE,
+        )
+        alt_ids: list[str] = []
+        if alt_block_match:
+            alt_ids = alt_product_re.findall(alt_block_match.group(1))
+
+        pairs.append({
+            "client_id": client_id,
+            "product_id": product_id,
+            "buying_score": buying_score,
+            "rationale": rationale,
+            "investment_amount": investment_amount,
+            "funding_source": funding_source,
+            "alternative_product_ids": list(dict.fromkeys(alt_ids)),
+            "matching_context": section.strip(),
+        })
+
+    return pairs
+
+
+def _score_matching_context_section(section: str) -> int:
+    """Return a heuristic score for selecting the best per-client context block.
+
+    Detailed analysis sections include recommendation bullets such as
+    ``Suggestion``, ``Financial-need fit``, and ``Key factors`` and should win
+    over summary-table or alternatives-only sections.
+    """
+    lowered = section.lower()
+    score = 0
+
+    # Prefer explicit per-client markdown blocks over generic summary chunks.
+    if section.startswith("### "):
+        score += 2
+
+    for marker in (
+        "**suggestion:**",
+        "**financial-need fit:**",
+        "**key factors:**",
+        "**return comparison:**",
+        "**concentration impact:**",
+    ):
+        if marker in lowered:
+            score += 2
+
+    # Penalize alternatives-only client sections that appear later in reports.
+    if "alternative products to consider" in lowered and "**suggestion:**" not in lowered:
+        score -= 2
+
+    return score
+
+
+def _normalize_matching_context_markers(section: str) -> str:
+    """Normalize common LLM label variants to stable matcher-context headings.
+
+    The proposal pipeline expects consistent marker names for prompt assembly
+    and regression checks. Different LLM runs may emit semantically equivalent
+    headings (e.g. Recommendation, Financial need, Why this fits). This helper
+    rewrites those variants to canonical labels.
+    """
+    normalized = section
+
+    replacements: list[tuple[str, str]] = [
+        (r"\*\*Recommendation:\*\*", "**Suggestion:**"),
+        (r"\*\*Financial needs?:\*\*", "**Financial-need fit:**"),
+        (r"\*\*Why this fits:\*\*", "**Financial-need fit:**"),
+    ]
+    for pattern, replacement in replacements:
+        normalized = re.sub(pattern, replacement, normalized, flags=re.IGNORECASE)
+
+    return normalized
 
 
 def _load_matcher_extract_config() -> dict[str, str]:

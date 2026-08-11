@@ -373,6 +373,7 @@ def _process_one_pair(
                 suggested=product_data,
                 holdings=holdings_products or None,
                 alternatives=alt_products or None,
+                include_alternatives_section=(alternative_count > 0) or bool(matcher_alternatives),
                 pfs_scores=pfs_scores or None,
             ),
             market_outlook=market_outlook,

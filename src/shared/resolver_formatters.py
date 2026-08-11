@@ -384,6 +384,7 @@ def format_product_catalog(
     suggested: dict | None = None,
     holdings: list[dict] | None = None,
     alternatives: list[dict] | None = None,
+    include_alternatives_section: bool = True,
     pfs_scores: dict[str, dict] | None = None,
 ) -> str:
     """Unified product catalog for ALL proposal types.
@@ -402,6 +403,10 @@ def format_product_catalog(
         Client's existing holdings, resolved to full product dicts.
     alternatives : list[dict] | None
         Alternative products, resolved to full product dicts.
+    include_alternatives_section : bool
+        When False, suppress the entire ``## Alternative Products`` section.
+        Use this when alternatives are intentionally disabled (for example,
+        ``alternative_count=0``) to avoid implying missing data.
     pfs_scores : dict[str, dict] | None
         Product Fitness Scores for suggested + alternatives only
         (holdings are NOT scored).  Maps product_id → component_scores dict
@@ -438,17 +443,18 @@ def format_product_catalog(
         lines += ["", "## Client Holdings", "", "*(no holdings data)*"]
 
     # ── 3. Alternative Products ────────────────────────────────────
-    if alternatives:
-        lines += ["", "## Alternative Products", ""]
-        for i, alt in enumerate(alternatives, 1):
-            lines += [
-                f"### {i}. {alt.get('product_id', 'N/A')} — {alt.get('name', 'N/A')}",
-                "",
-            ]
-            lines += _product_full_details(alt)
-            lines.append("")
-    else:
-        lines += ["", "## Alternative Products", "", "*(none)*"]
+    if include_alternatives_section:
+        if alternatives:
+            lines += ["", "## Alternative Products", ""]
+            for i, alt in enumerate(alternatives, 1):
+                lines += [
+                    f"### {i}. {alt.get('product_id', 'N/A')} — {alt.get('name', 'N/A')}",
+                    "",
+                ]
+                lines += _product_full_details(alt)
+                lines.append("")
+        else:
+            lines += ["", "## Alternative Products", "", "*(none)*"]
 
     # ── 4. Product Fitness Scores (suggested + alternatives only) ──
     if pfs_scores:

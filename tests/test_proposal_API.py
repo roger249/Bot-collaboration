@@ -2,11 +2,10 @@ import pytest
 import httpx
 import time
 from pathlib import Path
+from types import SimpleNamespace
 
 from src.integrations.client_api import search_holdings_maturing
-
-
-pytestmark = pytest.mark.slow
+from src.planbot.input_loader import API_SUGGESTED_PRODUCTS_AND_RATIONALE
 
 
 _ROOT = Path(__file__).resolve().parents[1]
@@ -28,6 +27,7 @@ def _read_latest_prompt_snapshot(run_folder: str, started_at: float) -> str:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.slow
 def test_reinvestment_proposals_propose_reinvestment_for_maturing_holdings(proposal_server):
     """Real-HTTP inbound: proposal API via httpx → server in thread.
 
@@ -158,6 +158,7 @@ def test_multi_client_reinvestment(proposal_server, fake_llm):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.slow
 def test_product_opportunity_proposal(proposal_server):
     """HTTP regression: POST /api/v1/product-opportunity-proposal builds the prompt and returns 200."""
     started_at = time.time()
@@ -187,6 +188,7 @@ def test_product_opportunity_proposal(proposal_server):
     assert "PROD016" in prompt_snapshot
 
 
+@pytest.mark.slow
 def test_product_opportunity_proposal_automatch(proposal_server):
     """HTTP regression: POST /api/v1/product-opportunity-proposal-automatch builds matcher and proposal prompts."""
     started_at = time.time()
@@ -217,3 +219,86 @@ def test_product_opportunity_proposal_automatch(proposal_server):
     assert "### product_catalogs" in matcher_prompt
     assert "PB-HK-000001-8" in proposal_prompt
     assert "PROD016" in proposal_prompt
+
+
+def test_product_opportunity_proposal_automatch_prompt_handoff_mocked(
+    proposal_server,
+    monkeypatch,
+    tmp_path,
+):
+    """Fast regression: verify matcher note flows into the proposal prompt path without the real LLM.
+
+    This keeps prompt-data validation lightweight while still exercising the
+    endpoint wiring, matcher handoff, and proposal resolver assembly.
+    """
+    matcher_context = """### PB-HK-000005-9 (Emma Thompson)
+
+- **Suggestion:** Buy PROD003 US Corporate Bond Fund – USD 173,260 (5.6% of portfolio); funded by selling us5yt-rr US 5-Year Treasury Yield – USD 173,260.
+- **Financial need:** Emma is a risk-averse retiree focused on capital preservation and a 12-month liquidity buffer.
+- **Key factors:** Her risk rating of 1 is matched by the low-risk fixed-income profile of PROD003.
+- **Return comparison:** The recommended product's expected return is 5.2% versus 3.02% for the existing us5yt-rr Treasury position.
+- **Concentration impact:** The trade reduces single-maturity duration concentration while the 32% cash buffer remains unchanged.
+"""
+
+    fake_matcher_result = {
+        "run_id": "run-mocked",
+        "summary": {"status": "success"},
+        "final_proposals": [
+            {
+                "client_id": "PB-HK-000005-9",
+                "product_id": "PROD003",
+                "investment_amount": "173,260",
+                "funding_source": "us5yt-rr",
+                "buying_score": 4.0,
+                "rationale": "Reduce cash drag and add investment-grade income without equity risk.",
+                "alternative_product_ids": ["PROD007", "PROD020"],
+                "matching_context": matcher_context,
+            }
+        ],
+        "warnings": [],
+        "errors": [],
+    }
+
+    monkeypatch.setattr(
+        "src.integrations.product_investor_matcher.product_investor_matcher",
+        lambda **kwargs: fake_matcher_result,
+    )
+
+    captured: dict = {}
+
+    def fake_run_crew_planbot(**kwargs):
+        captured["runtime_reference_overrides"] = kwargs.get("runtime_reference_overrides")
+        api_resolver = kwargs["api_resolver"]
+        captured["suggested_doc"] = api_resolver(API_SUGGESTED_PRODUCTS_AND_RATIONALE).content
+        output_path = tmp_path / "proposal.md"
+        output_path.write_text("# mock proposal\n", encoding="utf-8")
+        return SimpleNamespace(output_path=output_path)
+
+    monkeypatch.setattr(
+        "src.integrations.product_opportunity_proposal.run_crew_planbot",
+        fake_run_crew_planbot,
+    )
+
+    response = httpx.post(
+        f"{proposal_server}/api/v1/product-opportunity-proposal-automatch",
+        json={
+            "product_source": "default_yaml",
+            "product_ids": ["bank_recommended"],
+            "client_selection": {"risk_rating": [1, 5]},
+            "market_outlook": "string",
+            "run_matcher": True,
+            "max_proposals": 1,
+        },
+        timeout=60,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total_proposals_generated"] == 1
+    assert body["proposals"][0]["client_id"] == "PB-HK-000005-9"
+    assert body["proposals"][0]["product_id"] == "PROD003"
+    assert "suggested_products_and_rationale" in captured["runtime_reference_overrides"]
+    assert "Emma Thompson" in captured["suggested_doc"]
+    assert "PROD003" in captured["suggested_doc"]
+    assert "**Suggestion:** Buy PROD003 US Corporate Bond Fund" in captured["suggested_doc"]
+    assert "**Financial need:** Emma is a risk-averse retiree" in captured["suggested_doc"]

@@ -160,18 +160,14 @@ class TestExtractTopPairs(unittest.TestCase):
         pairs = _extract_top_pairs("No client data here.", top_n=5)
         self.assertEqual(len(pairs), 0)
 
-    @unittest.expectedFailure
     def test_extract_pairs_real_llm_shape_without_summary_table(self):
         """Regression guard for refactor drift in matcher markdown shape.
 
         The current parser requires a strict 8-column summary table beginning
         with ``| Client ID (Name) | Buying Score | ...``. Real LLM output seen
         in slow E2E runs may instead emit per-client sections only (for example
-        ``# Reinvestment Analysis: Client ID: ...``) and omit that summary
-        table entirely. In that shape, extraction currently returns zero pairs.
-
-        This test is marked expected-failure to document the gap until parser
-        fallback logic is implemented.
+        ``### Client ID: ...``) and omit that summary table entirely. The
+        fallback parser should still extract client/product pairs from that shape.
         """
         real_llm_shape = """# Reinvestment Analysis: Client ID: PB-HK-000005-9 (Emma Thompson)
 
@@ -192,7 +188,72 @@ Rationale text.
 """
 
         pairs = _extract_top_pairs(real_llm_shape, top_n=5)
-        self.assertGreater(len(pairs), 0)
+        self.assertEqual(len(pairs), 1)
+        self.assertEqual(pairs[0]["client_id"], "PB-HK-000005-9")
+        self.assertEqual(pairs[0]["product_id"], "PROD003")
+
+    def test_extract_matching_context_prefers_detail_over_alternatives_section(self):
+        """Keep the detailed client block when later client headers exist.
+
+        Some LLM reports repeat the same client in later sections like
+        "Alternative Products to Consider" using a "### Client: ..." header.
+        The extractor should preserve the richer detail-analysis block.
+        """
+        markdown = """## Executive Summary
+
+| Client ID (Name) | Buying Score | Suggested Product & Position | Funding Source | Fitness Score | Expected Return – Suggested | Expected Return – Source | Key Rationale |
+|---:|---:|---|---:|---:|---:|---|--|
+| PB-HK-000005-9 (Emma Thompson) | 4 | PROD003 US Corporate Bond Fund – USD 300,000 (9.7%) | Sell ETF-SPAXX – USD 300,000 | 6.25 | 5.2% | 4.68% | Deploy idle cash into high-quality bonds. |
+
+## Top Clients with Detail Analysis
+
+### PB-HK-000005-9 (Emma Thompson)
+
+- **Suggestion:** Buy PROD003 US Corporate Bond Fund – USD 300,000 (9.7% of portfolio); fund by selling ETF-SPAXX Fidelity Government Cash Reserves – USD 300,000.
+- **Financial-need fit:** Emma is risk-averse and seeks stable income.
+- **Key factors:** Risk rating is 1 and product fitness is 6.25.
+- **Return comparison:** PROD003 expected return is 5.2% vs. SPAXX at 4.68%.
+- **Concentration impact:** No concentration is added.
+- **Alternative suggestion:** PROD007 Asia Pacific Bond Fund (fitness 6.25) as a diversification option.
+
+## Alternative Products to Consider
+
+### Client: PB-HK-000005-9 (Emma Thompson)
+
+- **PROD007 Asia Pacific Bond Fund:** Alternative text only.
+- **PROD020 Balanced Growth & Income:** Alternative text only.
+"""
+
+        pairs = _extract_top_pairs(markdown, top_n=5)
+        self.assertEqual(len(pairs), 1)
+        self.assertEqual(pairs[0]["client_id"], "PB-HK-000005-9")
+        self.assertIn("**Suggestion:** Buy PROD003", pairs[0]["matching_context"])
+        self.assertIn("**Financial-need fit:**", pairs[0]["matching_context"])
+        self.assertNotIn("### Client: PB-HK-000005-9", pairs[0]["matching_context"])
+
+    def test_extract_matching_context_normalizes_heading_variants(self):
+        """Normalize common LLM label variants to canonical matcher headings."""
+        markdown = """## Executive Summary
+
+| Client ID (Name) | Buying Score | Suggested Product & Position | Funding Source | Fitness Score | Expected Return – Suggested | Expected Return – Source | Key Rationale |
+|---:|---:|---|---:|---:|---:|---|--|
+| PB-HK-000005-9 (Emma Thompson) | 5 | PROD003 US Corporate Bond Fund – USD 173,260 (5.6%) | Sell us5yt-rr US 5-Year Treasury Yield – USD 173,260 | 6.25 | 5.2% | 3.02% | Upgrade low-yielding treasury into diversified IG corporate bonds. |
+
+## Top Clients with Detail Analysis
+
+### PB-HK-000005-9 (Emma Thompson)
+
+- **Recommendation:** Buy PROD003 US Corporate Bond Fund – USD 173,260; funded by selling us5yt-rr US 5-Year Treasury Yield – USD 173,260.
+- **Financial need:** Emma is a risk-averse retiree focused on capital preservation and liquidity.
+- **Why this fits:** Product fitness is 6.25 and risk profile is aligned.
+"""
+
+        pairs = _extract_top_pairs(markdown, top_n=5)
+        self.assertEqual(len(pairs), 1)
+        ctx = pairs[0]["matching_context"]
+        self.assertIn("**Suggestion:**", ctx)
+        self.assertIn("**Financial-need fit:**", ctx)
+        self.assertNotIn("**Recommendation:**", ctx)
 
 
 # ── Pipeline tests (real DB, mock LLM only) ─────────────────────────────

@@ -67,6 +67,27 @@ class TestFormatProductCatalog(unittest.TestCase):
         self.assertIn("*(none)*", output)
         self.assertNotIn("| Period | Return % | CAGR % | Max Drawdown % | Volatility % |", output)
 
+    def test_suppresses_alternative_section_when_disabled(self):
+        suggested = {
+            "product_id": "PROD003",
+            "name": "US Corporate Bond Fund",
+            "product_type": "bond",
+            "risk_rating": 2,
+            "expected_return": 5.2,
+            "type_specific": {},
+            "performance_history": {},
+        }
+
+        output = format_product_catalog(
+            suggested=suggested,
+            holdings=None,
+            alternatives=None,
+            include_alternatives_section=False,
+        )
+
+        self.assertNotIn("## Alternative Products", output)
+        self.assertNotIn("*(none)*", output)
+
 
 if __name__ == "__main__":
     unittest.main()
