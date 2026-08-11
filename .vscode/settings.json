@@ -5,6 +5,8 @@
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
+    "python.terminal.useEnvFile": true,
+    "python.envFile": "${workspaceFolder}/.env",
     "python.analysis.extraPaths": [
         "${workspaceFolder}"
     ],

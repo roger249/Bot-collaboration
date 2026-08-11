@@ -1,44 +1,37 @@
-# ==========================================
-# Stage 1: Build virtual environment
-# ==========================================
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
-ENV UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy
-
-WORKDIR /app
-
-# 1. Install dependencies first (leveraging Docker layer caching)
-COPY pyproject.toml uv.lock ./
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-install-project --no-dev
-
-# 2. Copy source code and build project
-COPY . .
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
-
-# ==========================================
-# Stage 2: Minimal Secure Runtime
-# ==========================================
-FROM python:3.12-slim-bookworm AS runner
-
-# Create a non-root user for security best practices
-RUN addgroup --system appgroup && adduser --system --group appuser
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_LINK_MODE=copy \
+    PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH=/app
 
 WORKDIR /app
 
-# Copy virtualenv and app code from builder
-COPY --from=builder /app/.venv /app/.venv
-COPY --from=builder /app/app /app/app
+# Install OS packages needed by runtime libs and health check.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set PATH so python/uvicorn runs directly from virtual environment
-ENV PATH="/app/.venv/bin:$PATH" \
-    PYTHONUNBUFFERED=1
+# Install Python dependencies first for better Docker layer caching.
+COPY pyproject.toml uv.lock /app/
+RUN uv sync --frozen --no-dev --no-install-project
 
-USER appuser
+# Copy application code and runtime assets.
+COPY src /app/src
+COPY config /app/config-default
+COPY data /app/data-default
+
+# Container startup helper to materialize default+override config/data.
+COPY docker/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Create writable output folders used by the proposal pipeline.
+RUN mkdir -p /app/log /app/runs /app/temp /app/config /app/data /app/config-override /app/data-override
 
 EXPOSE 8000
 
-# Exec form CMD for graceful SIGTERM/SIGINT shutdown handling
-CMD ["fastapi", "run", "app/main.py", "--port", "8000"]
+# Run Proposal Server directly with container-friendly bind address.
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["uvicorn", "src.integrations.proposal_server:app", "--host", "0.0.0.0", "--port", "8000", "--log-config", "config/logging_config.ini"]

@@ -1,0 +1,23 @@
+[project]
+name = "planbot-proposal-server"
+version = "0.1.0"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "crawl4ai==0.8.6",
+    "crewai==1.14.4",
+    "crewai-tools==1.14.4",
+    "duckdb==1.5.4",
+    "fastapi==0.139.0",
+    "httpx==0.28.1",
+    "loguru==0.7.3",
+    "markitdown==0.1.5",
+    "playwright==1.59.0",
+    "pydantic==2.11.10",
+    "python-dotenv==1.2.2",
+    "pyyaml==6.0.3",
+    "uvicorn==0.46.0",
+    "yfinance==1.3.0",
+]
+
+[tool.uv]
+environments = ["sys_platform == 'linux'"]

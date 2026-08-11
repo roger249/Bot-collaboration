@@ -1,22 +1,23 @@
-version: '3.8'
-
 services:
-  api:
-    image: ghcr.io/yourusername/my-openapi-app:latest # or 'build: .' if building on target
-    container_name: openapi_service
+  proposal-server:
+    image: ${IMAGE_REPO:-ghcr.io/<org-or-user>/planbot-proposal-server}:${IMAGE_TAG:-latest}
+    container_name: planbot_proposal_server
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
-      - ENVIRONMENT=production
-      - LOG_LEVEL=info
+      # Required by deepseek/poe providers configured in config/config.yaml.
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
       interval: 30s
       timeout: 5s
-      retries: 3
-      start_period: 10s
-
+      retries: 5
+      start_period: 20s
     volumes:
-      # Format: /host/path:/container/path
-      - /var/log/my-openapi-app:/app/logs
+      # Persist logs and generated proposal artifacts.
+      - ./log:/app/log
+      - ./runs:/app/runs
+      # Optional overrides; leave empty to use defaults baked in image.
+      - ./config-override:/app/config-override:ro
+      - ./data-override:/app/data-override:ro
