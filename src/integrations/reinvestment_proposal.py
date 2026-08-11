@@ -29,6 +29,7 @@ from src.planbot.input_loader import (
     API_PRODUCT_CATALOG,
     ReferenceDocument,
 )
+from src.planbot.pipeline_engine import PipelineEngine
 from src.planbot.workflow import build_llm_input
 from src.shared.config_loader import load_config
 from src.shared.resolver_formatters import (
@@ -353,23 +354,93 @@ def _process_one_target(
             alternative_products=candidate_products,
         )
 
-        api_resolver = _build_api_resolver(
-            client_id, client_profile, source_product, source_product_id,
-            candidate_products, pfs_scores=pfs_scores,
+        # ── Build api_resolver with IRS + wallet inflow extras ──────
+        cp = client_profile
+        extra: list[str] = []
+        irs_text = format_irs_section(
+            total=cp.get("investor_readiness_score"),
+            cash_drag=cp.get("cash_score"),
+            concentration=cp.get("concentration_score"),
+            active_management=cp.get("active_score"),
+            life_stage=cp.get("life_stage_score"),
+        )
+        if irs_text:
+            extra.append(irs_text)
+        extra.append(
+            "# Wallet Inflow Event\n\n"
+            "The following product is maturing:\n"
+            f"- Product ID: {source_product_id}\n"
+            f"- Product Name: {source_product.get('name', source_product_id)}"
+        )
+        api_resolver = build_proposal_resolver(
+            client_content=format_client_and_holdings(cp, extra_sections=extra),
+            product_content=format_product_catalog(
+                suggested=source_product,
+                holdings=cp.get("holdings", []),
+                alternatives=candidate_products or None,
+                pfs_scores=pfs_scores or None,
+            ),
         )
 
-    # 5 ─ Build client-scoped output filename ────────────────────────────
+    # ── Pipeline resolve: merge pre-resolved file content into api_resolver ──
+    pipeline_engine = PipelineEngine(
+        app_config, config_path=_CONFIG_PATH, proposal_id="reinvestment"
+    )
+    prep = pipeline_engine.prepare(
+        client_id=client_id,
+        source_product_id=source_product_id,
+    )
+
+    # Merge pre-resolved file docs into the api_resolver
+    if prep.file_reference_docs:
+        _original = api_resolver
+        _doc_map = {str(d.path): d for d in prep.file_reference_docs}
+
+        def _merged_resolver(path: str) -> ReferenceDocument:
+            _normalized = path.replace("//", "/")
+            if _normalized in _doc_map:
+                return _doc_map[_normalized]
+            return _original(path)
+
+        api_resolver = _merged_resolver
+
+    # Build runtime_reference_overrides: map pipeline inputs → legacy sections.
+    # For reinvestment, the legacy sections are:
+    #   proposal_instructions_and_format, guidelines, client_profiles, product_catalogs
+    _section_map: dict[str, list[str]] = {
+        "proposal_instructions_and_format": [],
+        "guidelines": [],
+        "client_profiles": [],
+        "product_catalogs": [],
+    }
+    for inp in pipeline_engine.inputs:
+        pid = inp.id
+        if pid in ("proposal_instructions", "section_guides"):
+            _section_map["proposal_instructions_and_format"].append(f"api://resolved/{pid}")
+        elif pid in ("general_guidelines", "financial_needs_guidelines", "market_outlook"):
+            _section_map["guidelines"].append(f"api://resolved/{pid}")
+        elif pid == "client_profile":
+            _section_map["client_profiles"].append(API_CLIENT_PROFILE)
+        elif pid == "product_catalog":
+            _section_map["product_catalogs"].append(API_PRODUCT_CATALOG)
+
+    runtime_overrides = {k: v for k, v in _section_map.items() if v}
+    LOGGER.info(
+        "Pipeline resolved: %d pre-resolved files, %d API inputs. "
+        "Runtime override sections: %s",
+        len(prep.file_reference_docs), len(prep.api_input_ids),
+            list(runtime_overrides.keys()),
+        )
+
+    # ── Build client-scoped output filename ────────────────────────────
     output_override = f"runs/reinvestment_proposal/reinvestment_proposal_{client_id}.md"
 
-    # 6 ─ Invoke CrewAI with api:// patterns (no temp files on disk) ─────
+    # ── Invoke CrewAI with api:// patterns (no temp files on disk) ─────
     crew_result = run_crew_planbot(
         app_config=app_config,
         config_path=str(_CONFIG_PATH),
         proposal_name="reinvestment_proposal",
-        runtime_reference_overrides={
-            "client_profiles": [API_CLIENT_PROFILE],
-            "product_catalogs": [API_PRODUCT_CATALOG],
-        },
+        runtime_reference_overrides=runtime_overrides,
         output_file_override=output_override,
         api_resolver=api_resolver,
     )
@@ -399,55 +470,6 @@ def _process_one_target(
         )
 
     return item
-
-
-# ---------------------------------------------------------------------------
-# In-memory API resolver (replaces temp-file approach)
-# ---------------------------------------------------------------------------
-
-
-def _build_api_resolver(
-    client_id: str,
-    client_profile: dict,
-    source_product: dict,
-    source_product_id: str,
-    candidate_products: list[dict],
-    pfs_scores: dict[str, dict] | None = None,
-) -> Callable[[str], ReferenceDocument]:
-    """Build a resolver closure for reinvestment proposals.
-
-    Uses the shared ``build_proposal_resolver`` — only the client-content
-    extra sections and product catalog differ per proposal.
-    """
-
-    cp = client_profile
-    extra: list[str] = []
-    irs_text = format_irs_section(
-        total=cp.get("investor_readiness_score"),
-        cash_drag=cp.get("cash_score"),
-        concentration=cp.get("concentration_score"),
-        active_management=cp.get("active_score"),
-        life_stage=cp.get("life_stage_score"),
-    )
-    if irs_text:
-        extra.append(irs_text)
-
-    extra.append(
-        "# Wallet Inflow Event\n\n"
-        "The following product is maturing:\n"
-        f"- Product ID: {source_product_id}\n"
-        f"- Product Name: {source_product.get('name', source_product_id)}"
-    )
-
-    return build_proposal_resolver(
-        client_content=format_client_and_holdings(cp, extra_sections=extra),
-        product_content=format_product_catalog(
-            suggested=source_product,
-            holdings=cp.get("holdings", []),
-            alternatives=candidate_products or None,
-            pfs_scores=pfs_scores or None,
-        ),
-    )
 
 
 # ---------------------------------------------------------------------------

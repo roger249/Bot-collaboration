@@ -22,8 +22,8 @@ This spec covers the reinvestment proposal only. It does not redesign the propos
 | `POST /api/v1/reinvestment-proposals` endpoint | ✅ | `src/integrations/server.py` |
 | API-backed client/product catalog overrides for CrewAI | ✅ | generated under `runs/reinvestment_proposal/_generated/` |
 | Unit tests (mocked) | ✅ 17 tests | `tests/test_reinvestment_proposal.py` |
-| Integration test (single-client, real LLM) | ✅ | `tests/test_run_client_investment_proposal.py` |
-| Integration test (multi-client, up to 5, real LLM) | ✅ | `tests/test_run_client_investment_proposal.py` |
+| Integration test (single-client, real LLM) | ✅ | `tests/test_proposal_API.py` |
+| Integration test (multi-client, up to 5, real LLM) | ✅ | `tests/test_proposal_API.py` |
 | FastAPI HTTP switch for data retrieval | 🔜 Sprint 2 | `docs/prod_spec/reinvestment_proposal_sprint2.md` |
 
 **Implementation note (v1):** Data retrieval currently uses direct Python imports (`src.integrations.client_api`, `src.integrations.product_tool`). Switching to FastAPI HTTP calls is deferred to Sprint 2. The API contract and response shapes are identical regardless of transport.

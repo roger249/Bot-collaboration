@@ -145,6 +145,8 @@ def extract_urls_from_references(
     target_name = url_reference_filename.lower() if url_reference_filename else None
 
     for ref in references:
+        if ref is None:
+            continue
         if target_name is not None and ref.path.name.lower() != target_name:
             continue
         for match in url_pattern.findall(ref.content):

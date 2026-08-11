@@ -47,7 +47,9 @@ def _build_reference_payload(
     Args:
         loaded_sections: Mapping of section_name -> (purpose, documents).
     """
-    def _doc_entry(index: int, doc: ReferenceDocument) -> dict:
+    def _doc_entry(index: int, doc: ReferenceDocument | None) -> dict:
+        if doc is None:
+            return {"index": index, "name": "(none)", "path": "", "source_type": "unknown", "title": "", "content": ""}
         return {
             "index": index,
             "name": doc.path.name,
@@ -135,6 +137,17 @@ def _build_prompt_snapshot_markdown(
             continue
 
         for doc in docs:
+            if doc is None:
+                lines.append("#### (missing document)")
+                lines.append("- **Source:** `(missing)`")
+                lines.append("- **Type:** unknown")
+                lines.append("- **Size:** 0 chars")
+                lines.append("")
+                lines.append("*(no content)*")
+                lines.append("")
+                lines.append("---")
+                lines.append("")
+                continue
             doc_path = (
                 str(doc.path.relative_to(root_dir)).replace("\\", "/")
                 if doc.path.is_relative_to(root_dir)

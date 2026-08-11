@@ -34,6 +34,7 @@ from src.planbot.input_loader import (
     API_SUGGESTED_PRODUCTS_AND_RATIONALE,
     ReferenceDocument,
 )
+from src.planbot.pipeline_engine import PipelineEngine
 from src.shared.config_loader import load_config
 from src.shared.market_outlook_utils import (
     API_MARKET_OUTLOOK,
@@ -312,14 +313,70 @@ def _process_one_pair(
         if source_product is None:
             raise LookupError(f"Product not found: {product_id}")
 
-        api_resolver = _build_proposal_resolver(
-            client_data=client_profile,
-            product_data=source_product,
-            rationale=rationale,
-            suggested_products_and_rationale=suggested_products_and_rationale,
+        # ── Build api_resolver inline ───────────────────────────
+        client_data = client_profile
+        product_data = source_product
+
+        # Resolve alternatives
+        alt_products: list[dict] = []
+        if matcher_alternatives:
+            for alt_id in matcher_alternatives:
+                alt = search_by_product_id(alt_id)
+                if alt:
+                    alt_products.append(alt)
+        else:
+            sim_result = search_similar_to_product(
+                product_data,
+                top_n=alternative_count,
+                diversification=True,
+            )
+            for r in sim_result.get("results", []):
+                alt = search_by_product_id(r["product_id"])
+                if alt:
+                    alt_products.append(alt)
+
+        # Resolve holdings to full product dicts for the catalog
+        holdings = client_data.get("holdings", [])
+        holdings_products: list[dict] = []
+        for h in holdings:
+            hp = search_by_product_id(h.get("product_id", ""))
+            if hp:
+                holdings_products.append(hp)
+
+        # Compute PFS (suggested + alternatives) for the LLM prompt
+        pfs_scores = compute_pfs_for_products(
+            client_id=str(client_data.get("client_id", "")),
+            suggested_product_id=str(product_data.get("product_id", "")),
+            alternative_products=alt_products,
+        )
+
+        # Build rationale/context document
+        rationale_content = ""
+        if suggested_products_and_rationale:
+            rationale_content += suggested_products_and_rationale
+        if rationale:
+            if rationale_content:
+                rationale_content += "\n\n"
+            rationale_content += f"## Rationale\n\n{rationale}\n"
+
+        extra_docs: dict[str, ReferenceDocument] = {}
+        if rationale_content:
+            extra_docs[API_SUGGESTED_PRODUCTS_AND_RATIONALE] = ReferenceDocument(
+                path=Path(API_SUGGESTED_PRODUCTS_AND_RATIONALE),
+                content=rationale_content,
+                source_type="markdown",
+            )
+
+        api_resolver = build_proposal_resolver(
+            client_content=format_client_and_holdings(client_data),
+            product_content=format_product_catalog(
+                suggested=product_data,
+                holdings=holdings_products or None,
+                alternatives=alt_products or None,
+                pfs_scores=pfs_scores or None,
+            ),
             market_outlook=market_outlook,
-            alternative_count=alternative_count,
-            matcher_alternatives=matcher_alternatives,
+            extra_docs=extra_docs or None,
         )
 
     # ── Compute fitness scores (when not from matcher) ──────────────
@@ -342,18 +399,63 @@ def _process_one_pair(
         f"product_opportunity_{datetime.now().strftime('%H%M%S')}_{client_id}.md"
     )
 
-    overrides: dict[str, list[str]] = {
-        "client_profiles":  [API_CLIENT_PROFILE],
-        "product_catalogs": [API_PRODUCT_CATALOG],
-    }
-    # Only override market_outlook when explicitly provided; otherwise
-    # load from config_planbot.yaml file glob (../shared/market_outlook/*.md)
-    if market_outlook is not None:
-        overrides["market_outlook"] = [API_MARKET_OUTLOOK]
-    # Only override suggested_products_and_rationale when content is present;
-    # otherwise fall through to YAML file glob.
-    if suggested_products_and_rationale:
-        overrides["suggested_products_and_rationale"] = [API_SUGGESTED_PRODUCTS_AND_RATIONALE]
+    # ── Resolve pipeline inputs and merge into api_resolver ───────────
+    pipeline_engine = PipelineEngine(
+        app_config, config_path=_CONFIG_PATH, proposal_id="product_opportunity"
+    )
+    prep = pipeline_engine.prepare(
+        client_id=client_id,
+        product_id=product_id,
+        market_outlook_text=market_outlook,
+        suggested_products_and_rationale=suggested_products_and_rationale,
+    )
+
+    # Merge pre-resolved file docs into api_resolver
+    if prep.file_reference_docs:
+        _original_po = api_resolver
+        _doc_map_po = {str(d.path): d for d in prep.file_reference_docs}
+
+        def _merged_resolver_po(path: str) -> ReferenceDocument:
+            _n = path.replace("//", "/")
+            if _n in _doc_map_po:
+                return _doc_map_po[_n]
+            return _original_po(path)
+
+        api_resolver = _merged_resolver_po
+
+    # Build runtime overrides: map pipeline inputs → legacy sections
+        _section_map_po: dict[str, list[str]] = {
+            "proposal_instructions_and_format": [],
+            "guidelines": [],
+            "client_profiles": [],
+            "product_catalogs": [],
+            "market_outlook": [],
+            "suggested_products_and_rationale": [],
+        }
+        for inp in pipeline_engine.inputs:
+            pid = inp.id
+            if pid in ("proposal_instructions", "section_guides"):
+                _section_map_po["proposal_instructions_and_format"].append(f"api://resolved/{pid}")
+            elif pid in ("general_guidelines", "financial_needs_guidelines"):
+                _section_map_po["guidelines"].append(f"api://resolved/{pid}")
+            elif pid == "market_outlook":
+                if prep.resolved_inputs.get("market_outlook"):
+                    _section_map_po["market_outlook"].append(f"api://resolved/{pid}")
+            elif pid == "suggested_products_and_rationale":
+                if prep.resolved_inputs.get("suggested_products_and_rationale"):
+                    _section_map_po["suggested_products_and_rationale"].append(f"api://resolved/{pid}")
+            elif pid == "client_profile":
+                _section_map_po["client_profiles"].append(API_CLIENT_PROFILE)
+            elif pid == "product_catalog":
+                _section_map_po["product_catalogs"].append(API_PRODUCT_CATALOG)
+
+        overrides = {k: v for k, v in _section_map_po.items() if v}
+        LOGGER.info(
+            "Pipeline resolved: %d pre-resolved files, %d API inputs. "
+            "Runtime override sections: %s",
+            len(prep.file_reference_docs), len(prep.api_input_ids),
+            list(overrides.keys()),
+        )
 
     fit_result = run_crew_planbot(
         app_config=app_config,
@@ -381,81 +483,6 @@ def _process_one_pair(
 # ---------------------------------------------------------------------------
 # API resolver builder
 # ---------------------------------------------------------------------------
-
-
-def _build_proposal_resolver(
-    client_data: dict,
-    product_data: dict,
-    *,
-    rationale: str = "",
-    suggested_products_and_rationale: str = "",
-    market_outlook: str | None = None,
-    alternative_count: int = 3,
-    matcher_alternatives: list[str] | None = None,
-) -> Callable[[str], ReferenceDocument]:
-    """Build a resolver for a single client×product pair."""
-
-    # Resolve alternatives
-    alt_products: list[dict] = []
-    if matcher_alternatives:
-        for alt_id in matcher_alternatives:
-            alt = search_by_product_id(alt_id)
-            if alt:
-                alt_products.append(alt)
-    else:
-        sim_result = search_similar_to_product(
-            product_data,
-            top_n=alternative_count,
-            diversification=True,
-        )
-        for r in sim_result.get("results", []):
-            alt = search_by_product_id(r["product_id"])
-            if alt:
-                alt_products.append(alt)
-
-    # Resolve holdings to full product dicts for the catalog
-    holdings = client_data.get("holdings", [])
-    holdings_products: list[dict] = []
-    for h in holdings:
-        hp = search_by_product_id(h.get("product_id", ""))
-        if hp:
-            holdings_products.append(hp)
-
-    # ── Compute PFS (suggested + alternatives) for the LLM prompt ──
-    pfs_scores = compute_pfs_for_products(
-        client_id=str(client_data.get("client_id", "")),
-        suggested_product_id=str(product_data.get("product_id", "")),
-        alternative_products=alt_products,
-    )
-
-    # ── Build rationale/context document ─────────────────────────
-    rationale_content = ""
-    if suggested_products_and_rationale:
-        rationale_content += suggested_products_and_rationale
-    if rationale:
-        if rationale_content:
-            rationale_content += "\n\n"
-        rationale_content += f"## Rationale\n\n{rationale}\n"
-
-    extra_docs: dict[str, ReferenceDocument] = {}
-    if rationale_content:
-        extra_docs[API_SUGGESTED_PRODUCTS_AND_RATIONALE] = ReferenceDocument(
-            path=Path(API_SUGGESTED_PRODUCTS_AND_RATIONALE),
-            content=rationale_content,
-            source_type="markdown",
-        )
-
-    return build_proposal_resolver(
-        client_content=format_client_and_holdings(client_data),
-        product_content=format_product_catalog(
-            suggested=product_data,
-            holdings=holdings_products or None,
-            alternatives=alt_products or None,
-            pfs_scores=pfs_scores or None,
-        ),
-        market_outlook=market_outlook,
-        extra_docs=extra_docs or None,
-    )
 
 
 # ---------------------------------------------------------------------------

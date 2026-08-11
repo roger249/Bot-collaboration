@@ -141,7 +141,7 @@ intermediate broken state.
 | AC1 | `reinvestment_proposal.py` no longer creates temp files | Unit test + code review |
 | AC2 | `_build_llm_input` logic moves to `src/planbot/workflow.py` as a single shared function for all proposals | Code review |
 | AC3 | `propose_reinvestment` delegates to shared `run_crew_planbot` path | Integration test |
-| AC4 | Existing regression test passes unchanged | `pytest tests/test_run_client_investment_proposal.py::test_propose_reinvestment_for_maturing_holdings` |
+| AC4 | Existing regression test passes unchanged | `pytest tests/test_proposal_API.py::test_propose_reinvestment_for_maturing_holdings` |
 | AC5 | FastAPI integration: `POST /api/v1/reinvestment-proposals` returns 200 with valid payload (use `TestClient`, not real server) | `pytest tests/test_reinvestment_proposal.py::test_fastapi_propose_reinvestment` |
 | AC5d | Other proposal types (`portfolio_review`, `client_product_fit_analysis`, `product_investor_matching`, `stock_analysis_proposal`) continue to work in file-based mode — all their existing tests still pass after Sprint 2 changes | `pytest tests/` |
 
@@ -298,7 +298,7 @@ The endpoint delegates directly to the existing function.  No logic moves.
 | AC13 | Discovery endpoint accepts `product_types`, `within_days` | Integration test |
 | AC14 | Output matches `POST /api/v1/reinvestment-proposals` response shape | Snapshot test |
 | AC15 | Falls back gracefully when no maturing holdings are found | Unit test |
-| AC16 | End-to-end regression: existing test passes | `pytest tests/test_run_client_investment_proposal.py::test_propose_reinvestment_for_maturing_holdings` |
+| AC16 | End-to-end regression: existing test passes | `pytest tests/test_proposal_API.py::test_propose_reinvestment_for_maturing_holdings` |
 | AC17 | FastAPI integration: `POST .../propose_reinvestment_for_maturing_holdings` returns 200 (use `TestClient`, not real server) | `pytest tests/test_reinvestment_proposal.py::test_fastapi_propose_reinvestment_for_maturing_holdings` |
 
 

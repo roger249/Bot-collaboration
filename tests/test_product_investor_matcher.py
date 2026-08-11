@@ -160,6 +160,40 @@ class TestExtractTopPairs(unittest.TestCase):
         pairs = _extract_top_pairs("No client data here.", top_n=5)
         self.assertEqual(len(pairs), 0)
 
+    @unittest.expectedFailure
+    def test_extract_pairs_real_llm_shape_without_summary_table(self):
+        """Regression guard for refactor drift in matcher markdown shape.
+
+        The current parser requires a strict 8-column summary table beginning
+        with ``| Client ID (Name) | Buying Score | ...``. Real LLM output seen
+        in slow E2E runs may instead emit per-client sections only (for example
+        ``# Reinvestment Analysis: Client ID: ...``) and omit that summary
+        table entirely. In that shape, extraction currently returns zero pairs.
+
+        This test is marked expected-failure to document the gap until parser
+        fallback logic is implemented.
+        """
+        real_llm_shape = """# Reinvestment Analysis: Client ID: PB-HK-000005-9 (Emma Thompson)
+
+## Executive Summary
+
+Recommendation summary text.
+
+## Recommended Product: PROD003 - US Corporate Bond Fund
+
+### Detailed Justification
+
+Rationale text.
+
+#### Alternative Products to Consider
+
+- PROD007 - Asia Pacific Bond Fund
+- PROD020 - Balanced Growth & Income Fund
+"""
+
+        pairs = _extract_top_pairs(real_llm_shape, top_n=5)
+        self.assertGreater(len(pairs), 0)
+
 
 # ── Pipeline tests (real DB, mock LLM only) ─────────────────────────────
 

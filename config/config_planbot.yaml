@@ -403,4 +403,212 @@ product_groups:
       - ETF-BND     # Vanguard Total Bond Market ETF
       - ETF-AGG     # iShares Core US Aggregate Bond ETF
       - ETF-GLDM    # SPDR Gold MiniShares
-      - ETF-SHYG    # iShares 0-5Y High Yield Corp Bond ETF
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Proposal Pipeline — configuration-driven prompt assembly (new)
+# ═══════════════════════════════════════════════════════════════════════════
+
+input_defaults:
+  global:
+    prompt_section: references
+    required: false
+  by_id:
+    client_profile:
+      source: api
+      prompt_section: decision_context
+    investor_readiness_score:
+      source: api
+      prompt_section: decision_context
+    wallet_inflow_event:
+      source: api
+      prompt_section: decision_context
+    product_catalog:
+      source: api
+      prompt_section: decision_context
+    product_fitness_scores:
+      source: api
+      prompt_section: decision_context
+    market_outlook:
+      source: runtime_or_static
+    suggested_products_and_rationale:
+      source: runtime_or_static
+      prompt_section: references
+
+pipeline:
+
+  # ── Reinvestment Proposal ──────────────────────────────────────────
+  reinvestment:
+    request_contract:
+      required:
+        - client_id
+        - source_product_id
+      optional:
+        - market_outlook_text
+
+    execution:
+      model: deepseek_tool
+      output:
+        folder: runs/reinvestment_proposal
+        filename_template: reinvestment_{client_id}_{date}.md
+      logging:
+        level: INFO
+
+    inputs:
+      - id: proposal_instructions
+        source: file
+        paths:
+          - data/planbot/reinvestment_proposal/proposal_instructions/*.md
+        prompt_section: references
+        required: true
+      - id: section_guides
+        source: file
+        paths:
+          - data/planbot/shared/proposal_section_instructions/*.md
+        prompt_section: references
+        required: true
+      - id: general_guidelines
+        source: file
+        paths:
+          - data/planbot/shared/common/general_guideline.md
+        prompt_section: references
+        required: true
+      - id: financial_needs_guidelines
+        source: file
+        paths:
+          - data/planbot/shared/financial_needs/*.md
+        prompt_section: references
+        required: true
+      - id: client_profile
+        required: true
+      - id: investor_readiness_score
+      - id: wallet_inflow_event
+        required: true
+      - id: product_catalog
+        required: true
+      - id: product_fitness_scores
+      - id: market_outlook
+        source_priority:
+          - request.market_outlook_text
+          - data/planbot/shared/market_outlook/*.md
+
+    input_policy:
+      missing_data:
+        default: error
+      per_input:
+        investor_readiness_score: skip
+        market_outlook: fallback_to_static
+        product_fitness_scores: skip
+
+    prompt_packaging:
+      decision_context_order:
+        - client_profile
+        - investor_readiness_score
+        - wallet_inflow_event
+        - product_catalog
+        - product_fitness_scores
+        - market_outlook
+      references_order:
+        - proposal_instructions
+        - section_guides
+        - general_guidelines
+        - financial_needs_guidelines
+      llm_payload:
+        task_prompt_from: proposal_instructions
+        include_references: true
+
+    quality_gates:
+      required_sections:
+        - client_profile
+        - wallet_inflow_event
+        - product_catalog
+      fail_on_missing_required_input: true
+
+  # ── Product Opportunity Proposal ──────────────────────────────────
+  product_opportunity:
+    request_contract:
+      required:
+        - client_id
+        - product_id
+      optional:
+        - suggested_products_and_rationale
+        - market_outlook_text
+
+    execution:
+      model: deepseek_tool
+      output:
+        folder: runs/product_opportunity_proposal
+        filename_template: product_opportunity_{client_id}_{date}.md
+      logging:
+        level: INFO
+
+    inputs:
+      - id: proposal_instructions
+        source: file
+        paths:
+          - data/planbot/product_opportunity_proposal/proposal_instructions/*.md
+        prompt_section: references
+        required: true
+      - id: section_guides
+        source: file
+        paths:
+          - data/planbot/shared/proposal_section_instructions/*.md
+        prompt_section: references
+        required: true
+      - id: general_guidelines
+        source: file
+        paths:
+          - data/planbot/shared/common/general_guideline.md
+        prompt_section: references
+        required: true
+      - id: financial_needs_guidelines
+        source: file
+        paths:
+          - data/planbot/shared/financial_needs/*.md
+        prompt_section: references
+        required: true
+      - id: client_profile
+        required: true
+      - id: investor_readiness_score
+      - id: product_catalog
+        required: true
+      - id: product_fitness_scores
+      - id: suggested_products_and_rationale
+        source_priority:
+          - request.suggested_products_and_rationale
+          - data/planbot/product_opportunity_proposal/suggested_products/*.md
+      - id: market_outlook
+        source_priority:
+          - request.market_outlook_text
+          - data/planbot/shared/market_outlook/*.md
+
+    input_policy:
+      missing_data:
+        default: skip
+      per_input:
+        client_profile: error
+        product_catalog: error
+        suggested_products_and_rationale: fallback_to_static
+        market_outlook: fallback_to_static
+
+    prompt_packaging:
+      decision_context_order:
+        - client_profile
+        - investor_readiness_score
+        - product_catalog
+        - product_fitness_scores
+      references_order:
+        - proposal_instructions
+        - section_guides
+        - general_guidelines
+        - financial_needs_guidelines
+        - suggested_products_and_rationale
+        - market_outlook
+      llm_payload:
+        task_prompt_from: proposal_instructions
+        include_references: true
+
+    quality_gates:
+      required_sections:
+        - client_profile
+        - product_catalog
+      fail_on_missing_required_input: true

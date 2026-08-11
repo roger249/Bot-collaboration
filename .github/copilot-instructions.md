@@ -44,3 +44,12 @@
   2. Test data (seeder scripts must populate new columns with realistic values)
   3. API contract (`docs/prod_spec/tool/openapi.json` and downstream API code in `src/integrations`)
 - Documentation (`docs/prod_spec/product_schema/*.md` and `docs/prod_spec/tool/*.md`) must stay aligned with the live DuckDB schema.
+
+
+# Regression Test
+
+The test in the suite file:///Users/roger/Documents/GitHub/Bot%20collaboration@@vsc@@/Users/roger/Documents/GitHub/Bot collaboration/tests/test_proposal_API.py is a regression test that uses for end-to-end test.  It shall be executed whenever significant changes are made to the integration code but they're also very slow.  The test is designed to validate the following API endpoints:
+
+/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings
+/api/v1/product-opportunity-proposal
+/api/v1/product-opportunity-proposal-automatch

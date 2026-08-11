@@ -34,6 +34,7 @@ from src.planbot.input_loader import (
     API_PRODUCT_CATALOG,
     ReferenceDocument,
 )
+from src.planbot.pipeline_engine import PipelineEngine
 from src.shared.config_loader import load_config
 from src.shared.market_outlook_utils import (
     API_MARKET_OUTLOOK,
@@ -289,10 +290,47 @@ def product_investor_matcher(
     # ── 7. Run product_investor_matching via CrewAI ─────────────────────
     try:
         matching_output_path = f"runs/product_investor_matching/product_investor_matching_{run_id}.md"
-        reference_overrides: dict[str, list[str]] = {
+
+        # ── Resolve pipeline inputs and merge into api_resolver ────────
+        pipeline_engine = PipelineEngine(
+            app_config, config_path=_CONFIG_PATH, proposal_id="reinvestment"
+        )
+        prep = pipeline_engine.prepare(
+            client_selection=client_selection,
+            product_ids=product_ids,
+            market_outlook_text=market_outlook,
+        )
+
+        if prep.file_reference_docs:
+            _orig = api_resolver
+            _dm = {str(d.path): d for d in prep.file_reference_docs}
+
+            def _merged_matcher(path: str) -> ReferenceDocument:
+                _nm = path.replace("//", "/")
+                if _nm in _dm:
+                    return _dm[_nm]
+                return _orig(path)
+
+            api_resolver = _merged_matcher
+
+        _sm: dict[str, list[str]] = {
+            "proposal_instructions_and_format": [],
+            "guidelines": [],
             "client_profiles": [API_CLIENT_PROFILE],
             "product_catalogs": [API_PRODUCT_CATALOG],
+            "market_outlook": [],
         }
+        for inp in pipeline_engine.inputs:
+            pid = inp.id
+            if pid in ("proposal_instructions", "section_guides"):
+                _sm["proposal_instructions_and_format"].append(f"api://resolved/{pid}")
+            elif pid in ("general_guidelines", "financial_needs_guidelines"):
+                _sm["guidelines"].append(f"api://resolved/{pid}")
+            elif pid == "market_outlook":
+                if prep.resolved_inputs.get("market_outlook"):
+                    _sm["market_outlook"].append(f"api://resolved/{pid}")
+
+        reference_overrides = {k: v for k, v in _sm.items() if v}
         if market_outlook is not None:
             reference_overrides["market_outlook"] = [API_MARKET_OUTLOOK]
 

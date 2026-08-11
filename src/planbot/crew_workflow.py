@@ -459,7 +459,7 @@ def run_crew_planbot(
 
         docs = load_references(app_config.root_dir, effective_globs, api_resolver=api_resolver)
         loaded_sections[section_name] = (section_cfg.purpose, docs)
-        all_docs.extend(docs)
+        all_docs.extend(d for d in docs if d is not None)
         LOGGER.info("Loaded %s document(s) for section '%s' using globs %s", len(docs), section_name, effective_globs)
 
     urls_from_references = extract_urls_from_references(all_docs, url_reference_filename="websites.md")

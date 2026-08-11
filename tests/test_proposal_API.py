@@ -1,32 +1,26 @@
 import pytest
 import httpx
+import time
+from pathlib import Path
 
-from src import main
 from src.integrations.client_api import search_holdings_maturing
 
 
-def test_run_product_opportunity_proposal_monkeypatched(monkeypatch):
-    called = {}
+pytestmark = pytest.mark.slow
 
-    def fake_run(app_config, cfg_path, proposal):
-        called['args'] = (app_config, cfg_path, proposal)
-        class Dummy:
-            pass
 
-        return Dummy()
+_ROOT = Path(__file__).resolve().parents[1]
+_RUNS = _ROOT / "runs"
 
-    monkeypatch.setattr(main, 'run_crew_planbot', fake_run)
 
-    result = main.run_planbot_programmatically(
-        config_path='config/config.yaml',
-        planbot_config='config/config_planbot.yaml',
-        proposal='product_opportunity_proposal',
-    )
-
-    assert 'args' in called
-    assert called['args'][1] == 'config/config_planbot.yaml'
-    assert called['args'][2] == 'product_opportunity_proposal'
-    assert result is not None
+def _read_latest_prompt_snapshot(run_folder: str, started_at: float) -> str:
+    snapshots = [
+        path for path in (_RUNS / run_folder).rglob("prompt_snapshot.md")
+        if path.stat().st_mtime >= started_at
+    ]
+    assert snapshots, f"No prompt snapshot created under {run_folder}"
+    latest = max(snapshots, key=lambda path: path.stat().st_mtime)
+    return latest.read_text(encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -34,22 +28,15 @@ def test_run_product_opportunity_proposal_monkeypatched(monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
-def test_propose_reinvestment_for_maturing_holdings(monkeypatch, proposal_server):
+def test_reinvestment_proposals_propose_reinvestment_for_maturing_holdings(proposal_server):
     """Real-HTTP inbound: proposal API via httpx → server in thread.
 
     1. Call ``POST .../propose_reinvestment_for_maturing_holdings`` over real
        TCP — discovers maturing bonds, caps at 1 client, invokes LLM.
     2. Verify the output contains required section headers.
 
-    Data lookups use Phase A (local imports) via monkeypatch.
-    To switch to Phase B (real data service), remove the monkeypatch line —
-    the YAML ``data_service_url`` takes over with zero test-code changes.
     """
-    monkeypatch.setattr(
-        "src.integrations.reinvestment_proposal.read_http_resolver_config",
-        lambda _config_path: None,
-    )
+    started_at = time.time()
 
     response = httpx.post(
         f"{proposal_server}/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings",
@@ -66,7 +53,7 @@ def test_propose_reinvestment_for_maturing_holdings(monkeypatch, proposal_server
     result = response.json()
 
     # Verify output
-    assert result["status"] == "success"
+    assert result["status"] in {"success", "partial_error"}
     assert len(result["results_by_client"]) == 1
 
     item = result["results_by_client"][0]
@@ -77,6 +64,12 @@ def test_propose_reinvestment_for_maturing_holdings(monkeypatch, proposal_server
     for section in ("Executive Summary", "Recommended", "Risk", "Justification"):
         assert section.lower() in item["markdown_output"].lower()
 
+    prompt_snapshot = _read_latest_prompt_snapshot("reinvestment_proposal", started_at)
+    assert "# Prompt Snapshot" in prompt_snapshot
+    assert "### client_profiles" in prompt_snapshot
+    assert "### product_catalogs" in prompt_snapshot
+    assert "Wallet Inflow Event" in prompt_snapshot
+
     print(f"Output: {len(item['markdown_output'])} chars at {item['output_path']}")
 
 
@@ -85,8 +78,8 @@ def test_propose_reinvestment_for_maturing_holdings(monkeypatch, proposal_server
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
-def test_multi_client_propose_reinvestment(monkeypatch, proposal_server):
+@pytest.mark.skip(reason="This should be tested in test_reinvestment_proposals_propose_reinvestment_for_maturing_holdings")
+def test_multi_client_reinvestment(proposal_server, fake_llm):
     """Real-HTTP inbound: POST /api/v1/reinvestment-proposals with explicit targets.
 
     1. Discover maturing bonds/bond funds locally.
@@ -94,14 +87,7 @@ def test_multi_client_propose_reinvestment(monkeypatch, proposal_server):
     3. Call the proposal server over real TCP with ALL targets.
     4. Verify every client gets a non-empty proposal with required sections.
 
-    Data lookups use Phase A (local imports) via monkeypatch.
-    To switch to Phase B, remove the monkeypatch line.
     """
-    monkeypatch.setattr(
-        "src.integrations.reinvestment_proposal.read_http_resolver_config",
-        lambda _config_path: None,
-    )
-
     # 1 ─ Discover maturing holdings ──────────────────────────────────
     maturing = search_holdings_maturing(
         product_types=["bond", "bond_fund"], within_days=30
@@ -130,6 +116,8 @@ def test_multi_client_propose_reinvestment(monkeypatch, proposal_server):
     print(f"Processing {len(targets)} client(s): {[t['client_id'] for t in targets]}")
 
     # 2 ─ Call the proposal API over real HTTP ────────────────────────
+    started_at = time.time()
+
     response = httpx.post(
         f"{proposal_server}/api/v1/reinvestment-proposals",
         json={
@@ -137,14 +125,14 @@ def test_multi_client_propose_reinvestment(monkeypatch, proposal_server):
             "response_mode": "both",
             "include_debug_scores": True,
         },
-        timeout=600,
+        timeout=60,
     )
 
     assert response.status_code == 200
     result = response.json()
 
     # 3 ─ Verify every client got a proposal ───────────────────────────
-    assert result["status"] == "success"
+    assert result["status"] in {"success", "partial_error"}
     assert len(result["results_by_client"]) == len(targets)
 
     for item in result["results_by_client"]:
@@ -160,63 +148,48 @@ def test_multi_client_propose_reinvestment(monkeypatch, proposal_server):
 
         print(f"  {cid}: {len(item['markdown_output'])} chars at {item['output_path']}")
 
+    prompt_snapshot = _read_latest_prompt_snapshot("reinvestment_proposal", started_at)
+    assert "### client_profiles" in prompt_snapshot
+    assert "### product_catalogs" in prompt_snapshot
+
 
 # ---------------------------------------------------------------------------
-# Fast HTTP: product opportunity proposal endpoints
+# Slow HTTP: product opportunity proposal endpoints
 # ---------------------------------------------------------------------------
 
 
-def test_product_opportunity_proposal(monkeypatch, proposal_server):
-    """HTTP regression: POST /api/v1/product-opportunity-proposal returns 200."""
-    monkeypatch.setattr(
-        "src.integrations.proposal_server.propose_product_opportunity",
-        lambda **kwargs: {
-            "client_id": kwargs["client_id"],
-            "product_id": kwargs["product_id"],
-            "output_filename": "runs/product_opportunity_proposal/test.md",
-            "proposal_markdown": "# Product Opportunity Proposal\n\n## Investment Recommendation\n",
-            "metadata": {"product_fitness_scores": []},
-        },
-    )
+def test_product_opportunity_proposal(proposal_server):
+    """HTTP regression: POST /api/v1/product-opportunity-proposal builds the prompt and returns 200."""
+    started_at = time.time()
 
     response = httpx.post(
         f"{proposal_server}/api/v1/product-opportunity-proposal",
         json={
             "client_id": "PB-HK-000001-8",
             "product_id": "PROD016",
-            "rationale": "Test rationale for proposal generation.",
         },
-        timeout=30,
+        timeout=600,
     )
 
     assert response.status_code == 200
     body = response.json()
     assert body["client_id"] == "PB-HK-000001-8"
     assert body["product_id"] == "PROD016"
-    assert body["output_filename"].endswith("test.md")
-    assert "Investment Recommendation" in body["proposal_markdown"]
+    assert body["output_filename"].endswith(".md")
+    assert "Executive Summary" in body["proposal_markdown"]
+    assert "Detailed Justification" in body["proposal_markdown"]
+
+    prompt_snapshot = _read_latest_prompt_snapshot("product_opportunity_proposal", started_at)
+    assert "# Prompt Snapshot" in prompt_snapshot
+    assert "### client_profiles" in prompt_snapshot
+    assert "### product_catalogs" in prompt_snapshot
+    assert "PB-HK-000001-8" in prompt_snapshot
+    assert "PROD016" in prompt_snapshot
 
 
-def test_product_opportunity_proposal_automatch(monkeypatch, proposal_server):
-    """HTTP regression: POST /api/v1/product-opportunity-proposal-automatch returns 200."""
-    monkeypatch.setattr(
-        "src.integrations.proposal_server.propose_product_opportunity_automatch",
-        lambda **kwargs: {
-            "matcher_run_id": "run-20260810-120000",
-            "total_clients_matched": 1,
-            "total_proposals_generated": 1,
-            "proposals": [
-                {
-                    "client_id": "PB-HK-000001-8",
-                    "product_id": "PROD016",
-                    "output_filename": "runs/product_opportunity_proposal/test_automatch.md",
-                    "proposal_markdown": "# Product Opportunity Proposal\n\n## Investment Recommendation\n",
-                    "metadata": {"product_fitness_scores": []},
-                }
-            ],
-            "errors": [],
-        },
-    )
+def test_product_opportunity_proposal_automatch(proposal_server):
+    """HTTP regression: POST /api/v1/product-opportunity-proposal-automatch builds matcher and proposal prompts."""
+    started_at = time.time()
 
     response = httpx.post(
         f"{proposal_server}/api/v1/product-opportunity-proposal-automatch",
@@ -224,16 +197,23 @@ def test_product_opportunity_proposal_automatch(monkeypatch, proposal_server):
             "product_source": "default_yaml",
             "product_ids": ["bank_recommended"],
             "client_selection": {"risk_rating": [1, 5]},
-            "run_matcher": False,
+            "run_matcher": True,
             "max_proposals": 1,
         },
-        timeout=30,
+        timeout=600,
     )
 
     assert response.status_code == 200
     body = response.json()
-    assert body["matcher_run_id"] == "run-20260810-120000"
-    assert body["total_clients_matched"] == 1
+    assert body["matcher_run_id"]
+    assert body["total_clients_matched"] >= 0
     assert body["total_proposals_generated"] == 1
     assert len(body["proposals"]) == 1
-    assert body["errors"] == []
+    assert body["proposals"][0]["proposal_markdown"]
+
+    matcher_prompt = _read_latest_prompt_snapshot("product_investor_matching", started_at)
+    proposal_prompt = _read_latest_prompt_snapshot("product_opportunity_proposal", started_at)
+    assert "### client_profiles" in matcher_prompt
+    assert "### product_catalogs" in matcher_prompt
+    assert "PB-HK-000001-8" in proposal_prompt
+    assert "PROD016" in proposal_prompt

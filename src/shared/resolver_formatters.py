@@ -27,6 +27,7 @@ a new ``api://`` path is introduced.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from pathlib import Path
 
@@ -310,6 +311,74 @@ def _product_header(p: dict) -> list[str]:
     return header
 
 
+def _format_product_perf_value(val: object) -> str:
+    if val is None or val == "":
+        return "N/A"
+    if isinstance(val, float):
+        return f"{val:.2f}"
+    return str(val)
+
+
+def _product_full_details(p: dict) -> list[str]:
+    """Render full DB-backed product details for prompt references."""
+    lines = [
+        f"- Product ID: {p.get('product_id', 'N/A')}",
+        f"- ISIN: {p.get('isin', 'N/A')}",
+        f"- Name: {p.get('name', 'N/A')}",
+        f"- Ticker: {p.get('ticker', 'N/A')}",
+        f"- Type: {p.get('product_type', 'N/A')}",
+        f"- Vehicle: {p.get('vehicle', 'N/A')}",
+        f"- Trading Currency: {p.get('trading_currency', 'N/A')}",
+        f"- Region: {p.get('region', 'N/A')}",
+        f"- Country: {p.get('country', 'N/A')}",
+        f"- Sector: {p.get('sector', 'N/A')}",
+        f"- Risk Rating: {p.get('risk_rating', 'N/A')}",
+        f"- Expected Return: {p.get('expected_return', 'N/A')}%",
+        f"- Remarks: {p.get('remarks', 'N/A')}",
+    ]
+
+    perf = p.get("performance_history") or {}
+    if isinstance(perf, dict) and perf:
+        lines += [
+            "",
+            "### Performance History",
+            "",
+            "| Period | Return % | CAGR % | Max Drawdown % | Volatility % |",
+            "|---|---:|---:|---:|---:|",
+        ]
+        for period, metrics in perf.items():
+            if not isinstance(metrics, dict):
+                continue
+            lines.append(
+                "| "
+                f"{period} | "
+                f"{_format_product_perf_value(metrics.get('return'))} | "
+                f"{_format_product_perf_value(metrics.get('cagr'))} | "
+                f"{_format_product_perf_value(metrics.get('max_drawdown'))} | "
+                f"{_format_product_perf_value(metrics.get('volatility'))} |"
+            )
+
+    type_specific = p.get("type_specific") or {}
+    if isinstance(type_specific, dict) and type_specific:
+        lines += ["", "### Type Specific", ""]
+        for k, v in type_specific.items():
+            lines.append(f"- {k}: {v}")
+
+    lines += [
+        "",
+        "### Raw DB Payload",
+        "",
+        f"- type_specific_json: {json.dumps(type_specific, ensure_ascii=False, sort_keys=True)}",
+        f"- performance_history_json: {json.dumps(perf, ensure_ascii=False, sort_keys=True)}",
+    ]
+
+    note = p.get("investment_note")
+    if note:
+        lines += ["", "### Investment Note", "", note]
+
+    return lines
+
+
 def format_product_catalog(
     *,
     suggested: dict | None = None,
@@ -372,11 +441,12 @@ def format_product_catalog(
     if alternatives:
         lines += ["", "## Alternative Products", ""]
         for i, alt in enumerate(alternatives, 1):
-            lines.append(
-                f"{i}. {alt.get('product_id', '')} — {alt.get('name', '')} "
-                f"(risk={alt.get('risk_rating', 'N/A')}, "
-                f"expected_return={alt.get('expected_return', 'N/A')}%)"
-            )
+            lines += [
+                f"### {i}. {alt.get('product_id', 'N/A')} — {alt.get('name', 'N/A')}",
+                "",
+            ]
+            lines += _product_full_details(alt)
+            lines.append("")
     else:
         lines += ["", "## Alternative Products", "", "*(none)*"]
 
@@ -391,19 +461,7 @@ def format_product_catalog(
 
 
 def _product_header_suggested(p: dict) -> list[str]:
-    note = p.get("investment_note")
-    header = [
-        "## Suggested Product",
-        "",
-        f"- Product ID: {p.get('product_id', 'N/A')}",
-        f"- Name: {p.get('name', 'N/A')}",
-        f"- Type: {p.get('product_type', 'N/A')}",
-        f"- Risk Rating: {p.get('risk_rating', 'N/A')}",
-        f"- Expected Return: {p.get('expected_return', 'N/A')}%",
-    ]
-    if note:
-        header += ["", "### Investment Note", "", note]
-    return header
+    return ["## Suggested Product", ""] + _product_full_details(p)
 
 
 def format_product_single(
