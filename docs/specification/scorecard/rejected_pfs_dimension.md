@@ -7,7 +7,7 @@ Define the next-generation Product Fitness Score (PFS) framework that improves s
 This document is based on the current implemented scoring logic in:
 - `src/integrations/product_tool.py` (`search_product_by_fitness_score`)
 - `config/config_planbot.yaml` (`product_fitness_score`)
-- `tests/test_product_tool.py` (AC9 to AC14 related coverage)
+- `tests/test_product_logic.py` (AC9 to AC14 related coverage)
 
 ## Current implementation baseline (V1)
 

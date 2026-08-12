@@ -691,3 +691,81 @@ pipeline:
         - client_profile
         - product_catalog
       fail_on_missing_required_input: true
+
+  # ── Portfolio Review ──────────────────────────────────────────────
+  portfolio_review:
+    request_contract:
+      required:
+        - client_id
+      optional:
+        - market_outlook_text
+
+    execution:
+      model: deepseek_tool
+      output:
+        folder: runs/portfolio_review
+        filename_template: portfolio_review_{client_id}_{date}.md
+      logging:
+        level: INFO
+
+    inputs:
+      - id: proposal_instructions
+        source: file
+        paths:
+          - data/planbot/portfolio_review/proposal_instructions/*.md
+        prompt_section: references
+        required: true
+      - id: section_guides
+        source: file
+        paths:
+          - data/planbot/shared/proposal_section_instructions/*.md
+        prompt_section: references
+        required: true
+      - id: general_guidelines
+        source: file
+        paths:
+          - data/planbot/shared/common/general_guideline.md
+        prompt_section: references
+        required: true
+      - id: financial_needs_guidelines
+        source: file
+        paths:
+          - data/planbot/shared/financial_needs/*.md
+        prompt_section: references
+        required: true
+      - id: client_profile
+        required: true
+      - id: product_catalog
+        required: true
+      - id: market_outlook
+        source_priority:
+          - request.market_outlook_text
+          - data/planbot/shared/market_outlook/*.md
+
+    input_policy:
+      missing_data:
+        default: skip
+      per_input:
+        client_profile: error
+        product_catalog: error
+        market_outlook: fallback_to_static
+
+    prompt_packaging:
+      decision_context_order:
+        - client_profile
+        - product_catalog
+        - market_outlook
+      references_order:
+        - proposal_instructions
+        - section_guides
+        - general_guidelines
+        - financial_needs_guidelines
+      llm_payload:
+        task_prompt_from: proposal_instructions
+        include_references: true
+
+    quality_gates:
+      required_sections:
+        - client_profile
+        - product_catalog
+      fail_on_missing_required_input: true

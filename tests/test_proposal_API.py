@@ -302,3 +302,47 @@ def test_product_opportunity_proposal_automatch_prompt_handoff_mocked(
     assert "PROD003" in captured["suggested_doc"]
     assert "**Suggestion:** Buy PROD003 US Corporate Bond Fund" in captured["suggested_doc"]
     assert "**Financial need:** Emma is a risk-averse retiree" in captured["suggested_doc"]
+
+
+# ---------------------------------------------------------------------------
+# Fast: portfolio review endpoint — mocked LLM
+# ---------------------------------------------------------------------------
+
+
+def test_portfolio_review_mocked(proposal_server, monkeypatch):
+    """Fast regression: portfolio review endpoint returns 200 with mocked handler.
+
+    Verifies endpoint wiring, request model, and response shape without
+    invoking the real LLM or HTTP data service.
+    """
+
+    def fake_propose_portfolio_review(client_id: str, *, market_outlook: str | None = None) -> dict:
+        return {
+            "client_id": client_id,
+            "output_filename": f"runs/portfolio_review/portfolio_review_{client_id}_mocked.md",
+            "proposal_markdown": (
+                "# Portfolio Health Review for Test Client\n\n"
+                "## Summary\n\nPortfolio is well-diversified.\n\n"
+                "## Suggested Portfolio\n\nConsider rebalancing.\n"
+            ),
+        }
+
+    monkeypatch.setattr(
+        "src.integrations.proposal_server.propose_portfolio_review",
+        fake_propose_portfolio_review,
+    )
+
+    response = httpx.post(
+        f"{proposal_server}/api/v1/portfolio-review",
+        json={
+            "client_id": "PB-HK-000001-8",
+        },
+        timeout=30,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["client_id"] == "PB-HK-000001-8"
+    assert body["output_filename"].endswith(".md")
+    assert len(body["proposal_markdown"]) > 0
+    assert "Portfolio Health Review" in body["proposal_markdown"]

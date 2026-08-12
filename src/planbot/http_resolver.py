@@ -50,7 +50,7 @@ class HttpApiResolver:
     def __init__(
         self,
         client_id: str,
-        source_product_id: str,
+        source_product_id: str = "",
         base_url: str = "http://localhost:8000",
         timeout: float = 30.0,
         max_retries: int = 3,

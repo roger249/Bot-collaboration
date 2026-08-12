@@ -21,7 +21,3 @@ We need to know the personal demographic information for any financial or needs 
 - Income stability: Stable salaried income
 - Objective: Long-term capital growth with controlled drawdown
 
-# Implementation
-
-- 
-

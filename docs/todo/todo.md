@@ -1,6 +1,10 @@
 To Do
 =====
 
+# Optimize DAL layer
+- TTL cache
+- Move some simple logic back to DB side like maturing product?
+
 # Below are to do for a POC grade proposal generator
 
 - Product catalog / Client schema
@@ -48,3 +52,12 @@ Below are some Epics to do in the future
 # Add psychology framework to the investment guide
 - May not have sufficient information due to long questionnaire that no investor would like to take.
 
+
+
+# Specialize agents
+
+- Product matching
+    - Needs identification
+    - Product matching
+- Scenario analyst
+- Proposal writer

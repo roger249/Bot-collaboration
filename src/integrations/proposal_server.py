@@ -28,6 +28,7 @@ from src.integrations.product_opportunity_proposal import (
     propose_product_opportunity,
     propose_product_opportunity_automatch,
 )
+from src.integrations.portfolio_review import propose_portfolio_review
 
 from src.shared.logging_utils import init_logging
 
@@ -430,6 +431,46 @@ def generate_opportunity_proposal_automatch(body: AutomatchRequest) -> dict:
         market_outlook=body.market_outlook,
         run_matcher=body.run_matcher,
         max_proposals=body.max_proposals,
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Portfolio Review endpoint
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class PortfolioReviewRequest(BaseModel):
+    """Generate a portfolio health review for a single client."""
+
+    client_id: str = Field(
+        ..., description="Client identifier, e.g. 'PB-HK-000001-8'",
+        json_schema_extra={"example": "PB-HK-000001-8"},
+    )
+    market_outlook: str | None = Field(
+        default=None, json_schema_extra={"default": None},
+    )
+
+
+class PortfolioReviewResponse(BaseModel):
+    client_id: str
+    output_filename: str
+    proposal_markdown: str
+
+
+@app.post(
+    "/api/v1/portfolio-review",
+    response_model=PortfolioReviewResponse,
+)
+def generate_portfolio_review(body: PortfolioReviewRequest) -> dict:
+    """Generate a portfolio health review for a single client.
+
+    Takes only a ``client_id``.  Fetches client profile + holdings,
+    product catalog, and market outlook from the data service, then
+    invokes the LLM to produce a portfolio health review in markdown.
+    """
+    return propose_portfolio_review(
+        client_id=body.client_id,
+        market_outlook=body.market_outlook,
     )
 
 
