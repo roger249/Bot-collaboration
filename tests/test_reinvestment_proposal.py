@@ -79,16 +79,12 @@ class TestReinvestmentProposal(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Force Phase A (local imports) for all tests in this class."""
-        cls._http_cfg_patcher = patch(
-            "src.integrations.reinvestment_proposal.read_http_resolver_config",
-            return_value=None,
-        )
-        cls._http_cfg_patcher.start()
+        # Data lookups go through the adapter (DuckDB by default; REST via flag).
+        pass
 
     @classmethod
     def tearDownClass(cls):
-        cls._http_cfg_patcher.stop()
+        pass
 
     @patch("src.integrations.reinvestment_proposal.search_by_id")
     @patch("src.integrations.reinvestment_proposal.search_by_product_id")

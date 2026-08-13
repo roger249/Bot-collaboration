@@ -11,17 +11,19 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-import yaml
-
+from src.integrations.client_api import search_by_id
 from src.planbot.crew_workflow import run_crew_planbot
-from src.planbot.http_resolver import HttpApiResolver
+from src.planbot.pipeline_engine import get_input_descriptions
 from src.planbot.input_loader import (
     API_CLIENT_PROFILE,
     API_PRODUCT_CATALOG,
 )
 from src.shared.config_loader import load_config
 from src.shared.resolver_formatters import (
-    read_http_resolver_config,
+    build_proposal_resolver,
+    format_client_and_holdings,
+    format_product_catalog,
+    resolve_holdings_to_products,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -55,42 +57,22 @@ def propose_portfolio_review(
     dict
         Response with client_id, output_filename, proposal_markdown.
     """
-    http_cfg = read_http_resolver_config(_CONFIG_PATH)
-    if http_cfg is None:
-        raise RuntimeError(
-            "Portfolio review endpoint requires get_client_product_from_restapi=true "
-            "in config_planbot.yaml common section."
-        )
+    client_profile = search_by_id(client_id)
+    if client_profile is None:
+        raise LookupError(f"Client not found: {client_id}")
 
-    # ── Fetch client data via HTTP resolver ──────────────────────────
-    planbot_config = yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
-    data_service_url = (planbot_config.get("common") or {}).get("data_service_url")
-    if not data_service_url:
-        raise RuntimeError(
-            "common.data_service_url is not set in config_planbot.yaml."
-        )
-    base_url = data_service_url.replace("/api/v1", "")
+    # Resolve the client's existing holdings to full product dicts for the
+    # catalog reference (the LLM needs product details to review the portfolio).
+    holdings_products = resolve_holdings_to_products(client_profile.get("holdings", []))
 
-    resolver = HttpApiResolver(
-        client_id=client_id,
-        base_url=base_url,
-        timeout=http_cfg.get("timeout_seconds", 30),
-        max_retries=http_cfg.get("max_retries", 3),
-        retry_backoff_factor=http_cfg.get("retry_backoff_factor", 0.5),
+    api_resolver = build_proposal_resolver(
+        client_content=format_client_and_holdings(client_profile),
+        product_content=format_product_catalog(
+            holdings=holdings_products or None,
+        ),
+        market_outlook=market_outlook,
     )
 
-    try:
-        client_profile = resolver.client_profile
-    except Exception as exc:
-        raise ConnectionError(
-            f"Data service unreachable at {data_service_url}: {exc}"
-        ) from exc
-
-    if client_profile is None:
-        raise LookupError(f"Client not found via HTTP: {client_id}")
-
-    # ── Build api_resolver and runtime overrides ─────────────────────
-    api_resolver = resolver.as_callable()
     client_doc = api_resolver(API_CLIENT_PROFILE)
     product_doc = api_resolver(API_PRODUCT_CATALOG)
 
@@ -100,6 +82,12 @@ def propose_portfolio_review(
     }
     if market_outlook:
         runtime_reference_overrides["market_outlook"] = [market_outlook]
+
+    descriptions = get_input_descriptions(_CONFIG_PATH)
+    runtime_section_purposes = {
+        "client_profiles": descriptions.get("client_profile", ""),
+        "product_catalogs": descriptions.get("product_catalog", ""),
+    }
 
     # ── Invoke CrewAI ───────────────────────────────────────────────
     date_tag = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -114,6 +102,7 @@ def propose_portfolio_review(
         config_path=str(_CONFIG_PATH),
         proposal_name="portfolio_review",
         runtime_reference_overrides=runtime_reference_overrides,
+        runtime_section_purposes=runtime_section_purposes,
         output_file_override=output_file_override,
         api_resolver=api_resolver,
     )

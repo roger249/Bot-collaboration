@@ -155,12 +155,14 @@ class TestAutomatchPromptAndFields(unittest.TestCase):
         def _capture_and_return(
             app_config, config_path, proposal_name,
             runtime_reference_overrides, output_file_override, api_resolver,
+            runtime_section_purposes=None,
         ):
             self.captured_kwargs = {
                 "app_config": app_config,
                 "config_path": config_path,
                 "proposal_name": proposal_name,
                 "runtime_reference_overrides": runtime_reference_overrides,
+                "runtime_section_purposes": runtime_section_purposes,
                 "output_file_override": output_file_override,
                 "api_resolver": api_resolver,
             }
@@ -236,17 +238,28 @@ class TestAutomatchPromptAndFields(unittest.TestCase):
 
         # Load references the same way run_crew_planbot would
         loaded_sections: dict = {}
-        for section_name, section_cfg in cfg.reference_sections.items():
-            effective_globs = section_cfg.globs
-            overrides = ck["runtime_reference_overrides"]
-            if overrides and section_name in overrides:
-                override_globs = overrides[section_name]
-                effective_globs = override_globs or section_cfg.globs
+        section_defs: dict = {
+            name: (sc.globs, sc.purpose)
+            for name, sc in cfg.reference_sections.items()
+        }
+        overrides = ck["runtime_reference_overrides"] or {}
+        for name in overrides:
+            if name not in section_defs:
+                section_defs[name] = ([], "")
+
+        for section_name, (static_globs, static_purpose) in section_defs.items():
+            effective_globs = static_globs
+            purpose = static_purpose
+            if section_name in overrides:
+                effective_globs = overrides[section_name] or static_globs
+            purposes = ck.get("runtime_section_purposes") or {}
+            if section_name in purposes:
+                purpose = purposes[section_name]
             docs = load_references(
                 ck["app_config"].root_dir, effective_globs,
                 api_resolver=api_resolver,
             )
-            loaded_sections[section_name] = (section_cfg.purpose, docs)
+            loaded_sections[section_name] = (purpose, docs)
 
         reference_payload_json = _build_reference_payload(
             root_dir=ck["app_config"].root_dir,

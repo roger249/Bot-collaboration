@@ -3,6 +3,7 @@ name = "planbot-proposal-server"
 version = "0.1.0"
 requires-python = ">=3.13,<3.14"
 dependencies = [
+    "cachetools>=7.1.7",
     "crawl4ai==0.8.6",
     "crewai==1.14.4",
     "crewai-tools==1.14.4",
@@ -20,4 +21,4 @@ dependencies = [
 ]
 
 [tool.uv]
-environments = ["sys_platform == 'linux'"]
+environments = ["sys_platform == 'linux' or sys_platform == 'darwin'"]

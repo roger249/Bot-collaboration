@@ -18,10 +18,10 @@ Request (client_id, product_id, rationale, options)
        ▼
 ┌──────────────────────────────┐
 │ 1. Resolve Input Data        │
-│    - Client profile via API  │  ← `GET /client/search_by_id`
-│    - Client holdings via API │  ← (included in ClientProfile)
-│    - Product profile via API │  ← `GET /product/search_by_product_id`
-│    - Alternative products    │  ← `GET /product/search_similar`
+│    - Client profile          │  ← `search_by_id()` (client_api)
+│    - Client holdings         │  ← (included in ClientProfile)
+│    - Product profile         │  ← `search_by_product_id()` (product_tool)
+│    - Alternative products    │  ← `search_similar_to_product()`
 │    - Product fitness scores  │  ← computed or optionally cached
 └──────────────┬───────────────┘
                │
@@ -29,8 +29,8 @@ Request (client_id, product_id, rationale, options)
 ┌──────────────────────────────┐
 │ 2. Build API Resolver        │
 │    - In-memory construction  │  ← same pattern as reinvestment proposal
-│    - api_resolver() callable  │     (Phase A: direct DB calls;
-│      serves client, holdings, │      Phase B: HttpApiResolver)
+│    - api_resolver() callable  │     (data fetched via Data Access Layer
+│      serves client, holdings, │      adapters — DuckDB or bank REST)
 │      product, alternatives,   │
 │      rationale to CrewAI      │
 └──────────────┬───────────────┘
@@ -82,9 +82,10 @@ internally by the automatch endpoint.
 
 ### Internal Processing
 
-1. **Data Retrieval** — Phase A (direct calls) or Phase B (HTTP resolver).
-   - Client profile + holdings: `GET /client/search_by_id/{client_id}`
-   - Product profile: `GET /product/search_by_product_id/{product_id}`
+1. **Data Retrieval** — via the Data Access Layer adapters (DuckDB by
+   default, bank REST when `get_client_product_from_restapi: true`).
+   - Client profile + holdings: `search_by_id(client_id)`
+   - Product profile: `search_by_product_id(product_id)`
 
 2. **Matcher handoff (when `run_matcher=true`)** — Invoke
    `product_investor_matcher`.  Search `final_proposals` for the matching
@@ -189,8 +190,9 @@ automated workflow.
 > **Note on CrewAI config:** The `product_opportunity_proposal` section in
 > `config_planbot.yaml` references file globs for `client_profiles`,
 > `product_catalogs`, and `market_outlook`.  At runtime, these are
-> resolved in-memory via `HttpApiResolver` + `runtime_reference_overrides`
-> — no YAML changes required.  Same pattern as the reinvestment proposal.
+> resolved in-memory via `runtime_reference_overrides` over the Data Access
+> Layer adapters — no YAML changes required.  Same pattern as the
+> reinvestment proposal.
 
 ### Response
 
@@ -250,14 +252,18 @@ and `src/integrations/reinvestment_proposal.py`.  The same pattern
 (in-memory resolver → payload builder → LLM invocation → response assembly)
 applies.
 
-> **Phase A / Phase B:** Follows the same dual-mode pattern as the
-> reinvestment proposal.
-> - **Phase A** (default, `get_client_product_from_db: false`): Direct
->   calls to `search_by_id`, `search_by_product_id`,
->   `search_similar_to_product`, `search_product_by_fitness_score`.
-> - **Phase B** (`get_client_product_from_db: true`): All client and
->   product data fetched via `HttpApiResolver` against the data service.
->   Controlled by `config_planbot.yaml` → `common.get_client_product_from_db`.
+> **Data access:** All client and product data is fetched through the Data
+> Access Layer (`src/adapters/`), which returns plain `list[dict]` to the
+> Logic Layer.  The `common.get_client_product_from_restapi` flag in
+> `config_planbot.yaml` selects the backend:
+> - **`false`** (default): `DuckDBDataAdapter` reads the local DuckDB file
+>   (`data/planbot/db/planbot.duckdb`) — self-contained.
+> - **`true`**: `BankRestDataAdapter` calls the bank API simulator / real bank
+>   endpoints configured under `data_source.rest`.
+>
+> Enrichment and candidate selection are computed **in-process** by
+> `src/integrations/client_api.py` and `src/integrations/product_tool.py`
+> regardless of backend, so the bank stays a pure data pipe.
 
 ---
 

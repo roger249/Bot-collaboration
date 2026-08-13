@@ -2,7 +2,7 @@
 
 This document defines one standard workflow:
 
-1. Build and publish a multi-arch image to GHCR.
+1. Build and publish an AMD64 image to GHCR.
 2. Deploy that versioned image on AMD64 Linux.
 
 ## Linux Prerequisites
@@ -43,18 +43,18 @@ Configuration is centralized at the top of [docker/release_ghcr.sh](../../docker
 
 1. `GHCR_OWNER`
 2. `IMAGE_NAME`
-3. `PLATFORMS`
+3. `PLATFORMS` — currently `linux/amd64` (single-platform AMD64 build)
 4. `PUBLISH_LATEST`
 
 The script automatically:
 
-1. Prepares/uses buildx builder
+1. Prepares/uses buildx builder (cross-compiles to AMD64 from Apple Silicon)
 2. Logs in to GHCR
-3. Builds and pushes multi-arch image
-4. Verifies manifest
+3. Builds and pushes AMD64 image
+4. Verifies the pushed image
 5. Prints IMAGE_REPO and IMAGE_TAG for deployment
 
-If needed, verify manifest manually:
+If needed, verify the pushed image manually:
 
 ```bash
 docker buildx imagetools inspect ghcr.io/<org-or-user>/planbot-proposal-server:vYYYYMMDD-<gitsha>
@@ -62,11 +62,11 @@ docker buildx imagetools inspect ghcr.io/<org-or-user>/planbot-proposal-server:v
 
 ## Standard Deploy And Test (Linux AMD64)
 
-Deployment and API testing instructions are maintained in [docs/spec/README.txt](README.txt).
+Deployment and API testing instructions are maintained in [README.md](../../README.md).
 
 ## Upgrade Procedure
 
-For upgrade/deploy steps, see [docs/spec/README.txt](README.txt).
+For upgrade/deploy steps, see [README.md](../../README.md).
 
 ## Runtime Data And Config Behavior
 

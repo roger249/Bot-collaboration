@@ -473,9 +473,6 @@ class AutomatchRequest(BaseModel):
     client_selection: dict | None = Field(
         None, json_schema_extra={"example": {"risk_rating": [1, 5]}},
     )
-    market_outlook: str | None = Field(
-        default=None, json_schema_extra={"default": None},
-    )
     run_matcher: bool = Field(False, json_schema_extra={"example": True})
     max_proposals: int = Field(
         10, json_schema_extra={"example": 3},
@@ -525,7 +522,6 @@ def generate_opportunity_proposal_automatch(body: AutomatchRequest) -> dict:
         product_ids=body.product_ids,
         product_source=body.product_source,
         client_selection=body.client_selection,
-        market_outlook=body.market_outlook,
         run_matcher=body.run_matcher,
         max_proposals=body.max_proposals,
     )

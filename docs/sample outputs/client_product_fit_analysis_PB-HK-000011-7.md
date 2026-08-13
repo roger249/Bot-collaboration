@@ -40,7 +40,7 @@ The table below contrasts the expected performance of the suggested product vers
 | **Yield (Indicated)** | ~4.0% (current) | ~4.5% (dividend yield estimate) |
 | **Volatility (5‑Year)** | 1.60% | ~14% (equity fund estimate) |
 | **Max Drawdown (5‑Year)** | -0.35% | ~‑35% (estimated, peer equity fund level) |
-| **Sharpe Ratio (Estimated)** | 1.1 | 0.4 |
+| **Calmar Ratio ** | 1.1 | 0.4 |
 
 The additional 4.24% expected return comes at the cost of higher short‑term volatility, which is appropriate for the client’s long‑term growth goal and low liquidity need.
 

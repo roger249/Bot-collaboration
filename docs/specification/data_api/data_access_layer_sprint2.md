@@ -52,29 +52,30 @@ different shape.
 `reinvestment-candidates` endpoint (being removed).  In Phase B, the proposal
 server must compute candidates **in-process** instead:
 
-1. `HttpApiResolver` fetches only raw data (`source_product` + full product
-   catalog) from the simulator.
+1. The adapter (`BankRestDataAdapter`) fetches only raw data (`source_product`
+   + full product catalog) from the simulator.
 2. The proposal server calls `search_similar_to_product()` **locally** (Python)
    to rank candidates.
 
 This keeps the bank as a pure data pipe and preserves the similarity-scoring IP
 in the Logic Layer.
 
-**Blast radius (verified against code):**
+**Implemented blast radius (verified against code — broader than the 2-file
+estimate above):** rather than keeping `HttpApiResolver` and refactoring only
+`candidate_products`, the Option A change **removed `HttpApiResolver`
+entirely** and unified every proposal path onto the adapter-backed functions
+(`search_by_id` / `search_by_product_id` / `search_similar_to_product`), which
+compute enrichment + candidates in-process regardless of backend.
 
-| File | Calls `HttpApiResolver.candidate_products`? |
+| File | Change |
 |---|---|
-| `src/planbot/http_resolver.py` | ✅ internally — `_format_catalog_json()` (line 254) |
-| `src/integrations/reinvestment_proposal.py` | ✅ — line 315 (only external caller) |
-| `src/integrations/product_opportunity_proposal.py` | ❌ — uses `client_profile`/`source_product` only |
-| `src/integrations/portfolio_review.py` | ❌ — uses `client_profile` only |
-
-Only **two files** change:
-
-1. `http_resolver.py` — `candidate_products` refactored to return the raw
-   product universe (drop the `reinvestment-candidates` POST).
-2. `reinvestment_proposal.py` — applies `search_similar_to_product()` locally
-   on that universe.
+| `src/planbot/http_resolver.py` | **deleted** — `HttpApiResolver` removed |
+| `src/shared/resolver_formatters.py` | `read_http_resolver_config` removed (dead) |
+| `src/integrations/reinvestment_proposal.py` | unified on adapter-backed `search_by_id` / `search_by_product_id` / `search_similar_to_product` |
+| `src/integrations/product_opportunity_proposal.py` | same unification |
+| `src/integrations/portfolio_review.py` | same unification |
+| `tests/test_run_client_investment_proposal.py` | removed obsolete `read_http_resolver_config` monkeypatches |
+| `tests/test_reinvestment_proposal.py` | removed obsolete `read_http_resolver_config` patch |
 
 ```python
 # data_server.py — Sprint 2 (bank simulator)

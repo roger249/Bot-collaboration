@@ -5,29 +5,27 @@ common:
 # setting in the proposal section will override the common setting
   crewai_config_folder: config/crewai/planbot
   cleanup_temp_files: false # If true, temporary files generated during processing will be deleted after use.  If false, they will be kept for debugging.
-  data_service_url: http://localhost:8001/api/v1  # URL of the data service (Phase B: HTTP resolver calls this for client/product data)
-  get_client_product_from_restapi: false # When true, client_profiles and product_catalogs are fetched via API instead of file globs.
-  # HTTP resolver settings (Phase B) — used when get_client_product_from_restapi is true
-  # and the resolver makes HTTP calls to the FastAPI server.
-  http_resolver:
-    timeout_seconds: 30
-    max_retries: 3
-    retry_backoff_factor: 0.5  # exponential backoff multiplier
+  # false → client/product data read from DuckDB (self-contained); true → bank REST adapters (see data_source.rest below).
+  get_client_product_from_restapi: true
 
-# Data Access Layer backends (Sprint 2).
-# Placeholder — not yet consumed by the adapter factory.  Uncomment and fill in
-# when the Bank REST adapter is implemented.  `get_client_product_from_restapi`
-# above selects DuckDB (false) vs. REST (true).
-# data_source:
-#   duckdb:
-#     path: data/planbot/db/planbot.duckdb
-#   rest:
-#     client_base_url: https://bank-internal/crm/api/v2
-#     product_base_url: https://bank-internal/product-master/api/v1
-#     auth_token_env: BANK_API_KEY
-#     timeout_seconds: 10
-#     cache_ttl_seconds: 300    # per-entry cache expiry (0 = disable cache)
-#     cache_maxsize: 512        # max cached entries per adapter
+# Data Access Layer backends (Sprint 2) — consumed by ``build_data_adapters``.
+# ``get_client_product_from_restapi`` above selects DuckDB (false) vs. REST (true).
+data_source:
+  duckdb:
+    path: data/planbot/db/planbot.duckdb
+  # REST is only read when ``get_client_product_from_restapi: true``.  Fill in
+  # the real bank endpoints + auth token env before switching the flag on.
+  rest:
+    # base_url is the host root; the resource paths below are appended.
+    client_base_url: http://localhost:8001
+    product_base_url: http://localhost:8001
+    clients_path: /api/v1/clients
+    holdings_path: /api/v1/holdings
+    products_path: /api/v1/products
+    auth_token_env: BANK_API_KEY
+    timeout_seconds: 10
+    cache_ttl_seconds: 10    # per-entry cache expiry (0 = disable cache)
+    cache_maxsize: 512        # max cached entries per adapter
 
 # Server bind settings — consumed by data_server and proposal_server __main__ blocks.
 # Not used by the monolithic server.py (kept for backward compatibility).
@@ -76,20 +74,8 @@ reinvestment_proposal:
         purpose: Strict guidelines on all tasks.  No exception allowed
       - name: ../shared/market_outlook/*.md
         purpose: Market outlook and sentiment analysis for the recommendation
-    # client_profiles and product_catalogs will be retrieved via API when invoked in production
-    # The following files are used in prototype and kept as backward compatibility, will deprecated.
-    client_profiles:
-      - name: clients/*.md
-        purpose: Client profiles and suggested product for each client in markdown format
-      - name: clients/*.csv
-        purpose: Client profiles and suggested product for each client in csv format
-    product_catalogs: 
-      - name: ../shared/product_catalog/*.md
-        purpose: Selected products to consider for reinvestment recommendation in markdown format
-      - name: ../shared/product_catalog/*.csv
-        purpose: Full list of the investable assets available for recommendation in csv format
-      - name: ../shared/product_catalog/*.json
-        purpose: Full product details including type_specific attributes in JSON format
+    # client_profiles and product_catalogs are retrieved via API at runtime
+    # (see input_defaults.by_id).  No file globs needed here.
   llm_model: deepseek_tool
 
 product_investor_matching:
@@ -122,17 +108,9 @@ product_investor_matching:
         purpose: Strict guidelines on all tasks.  No exception allowed
       - name: ../shared/market_outlook/*.md
         purpose: Market outlook and sentiment analysis for the recommendation
-    client_profiles:
-      - name: ../shared/client_profile/*.csv
-        purpose: Client profiles and suggested product for each client in csv format
     market_outlook:
       - name: ../shared/market_outlook/*.md
         purpose: Market outlook and sentiment analysis for the recommendation
-    product_catalogs: 
-      - name: ../shared/product_catalog/*.md
-        purpose: Selected products to consider for reinvestment recommendation in markdown format
-      - name: ../shared/product_catalog/*.csv
-        purpose: Details of the investable assets available for recommendation in csv format
   llm_model: deepseek_tool
 
 product_opportunity_proposal:
@@ -153,11 +131,6 @@ product_opportunity_proposal:
         purpose: Guidelines on financial needs analysis and common financial needs
       - name: ../shared/common/general_guideline.md
         purpose: Strict guidelines on all tasks.  No exception allowed
-    client_profiles:
-      - name: clients/*.md
-        purpose: Client profiles and suggested product for each client in markdown format
-      - name: clients/*.csv
-        purpose: Client profiles and suggested product for each client in csv format
     suggested_products_and_rationale:
       # Matcher per-client analysis markdown — resolved from product_investor_matcher
       # output at runtime, but may also be supplied as a file glob by the RM.
@@ -166,11 +139,6 @@ product_opportunity_proposal:
     market_outlook:
       - name: ../shared/market_outlook/*.md
         purpose: Market outlook and sentiment analysis for the recommendation
-    product_catalogs: 
-      - name: ../shared/product_catalog/*.md
-        purpose: Selected products to consider for reinvestment recommendation in markdown format
-      - name: ../shared/product_catalog/*.csv
-        purpose: Details of the investable assets available for recommendation in csv format
   llm_model: deepseek_tool
 
 portfolio_review:
@@ -193,16 +161,6 @@ portfolio_review:
         purpose: Guidelines on financial needs analysis and common financial needs
       - name: ../shared/common/general_guideline.md
         purpose: Strict guidelines on all tasks.  No exception allowed
-    client_profiles:
-      - name: clients/*.md
-        purpose: Client profiles and suggested product for each client in markdown format
-      - name: clients/*.csv
-        purpose: Client profiles and suggested product for each client in csv format
-    product_catalogs: 
-      - name: ../shared/product_catalog/*.md
-        purpose: Selected products to consider for reinvestment recommendation in markdown format
-      - name: ../shared/product_catalog/*.csv
-        purpose: Details of the investable assets available for recommendation in csv format
   llm_model: deepseek_tool
 
 llm_models:
@@ -431,23 +389,30 @@ input_defaults:
     client_profile:
       source: api
       prompt_section: decision_context
+      description: Client profile, wallet inflow event, and existing holdings for the target client
     investor_readiness_score:
       source: api
       prompt_section: decision_context
+      description: Investor readiness score breakdown for the client
     wallet_inflow_event:
       source: api
       prompt_section: decision_context
+      description: Maturing product and expected inflow amount for the reinvestment
     product_catalog:
       source: api
       prompt_section: decision_context
+      description: Investable products for the recommendation (suggested product, holdings, alternatives, and fitness scores)
     product_fitness_scores:
       source: api
       prompt_section: decision_context
+      description: Product fitness scores across candidate products
     market_outlook:
       source: runtime_or_static
+      description: Market outlook and sentiment analysis for the recommendation
     suggested_products_and_rationale:
       source: runtime_or_static
       prompt_section: references
+      description: Suggested products, fitness scores, funding sources, and rationale for the recommended product
 
 pipeline:
 

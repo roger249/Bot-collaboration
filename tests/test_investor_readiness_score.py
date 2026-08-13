@@ -13,14 +13,16 @@ import yaml
 from src.planbot.investor_readiness_score import (
     ClientScore,
     _linear_interpolate,
-    _normalize_holdings_product_ids,
     compute_total_scores,
-    get_client_db_conn,
-    init_client_db,
     score_active_manage,
     score_cash_drag,
     score_concentration_risk,
     score_life_stage,
+)
+from src.test_data.client_seed import (
+    get_client_db_conn,
+    init_client_db,
+    _normalize_holdings_product_ids,
 )
 
 
@@ -346,8 +348,8 @@ class TestInitClientDb:
     def test_idempotent(self, tmp_path: Path, monkeypatch):
         """Running init_client_db twice should not duplicate data."""
         db_path = tmp_path / "test_idem.duckdb"
-        # Point the module to our temp DB
-        monkeypatch.setattr("src.planbot.investor_readiness_score.CLIENT_DB_PATH", db_path)
+        # Point the seeder module to our temp DB
+        monkeypatch.setattr("src.test_data.client_seed.CLIENT_DB_PATH", db_path)
 
         conn = get_client_db_conn(read_only=False)
         try:

@@ -414,6 +414,7 @@ def run_crew_planbot(
     config_path: str | Path,
     proposal_name: str = "portfolio_review",
     runtime_reference_overrides: dict[str, list[str]] | None = None,
+    runtime_section_purposes: dict[str, str] | None = None,
     output_file_override: str | Path | None = None,
     api_resolver: Callable[[str], ReferenceDocument] | None = None,
 ) -> PlanBotResult:
@@ -445,20 +446,36 @@ def run_crew_planbot(
 
     loaded_sections: dict[str, tuple[str, list[ReferenceDocument]]] = {}
     all_docs: list[ReferenceDocument] = []
-    for section_name, section_cfg in cfg.reference_sections.items():
-        effective_globs = section_cfg.globs
+
+    # Section definitions: static config first, then runtime-only sections
+    # supplied via runtime_reference_overrides (e.g. API-backed data sections
+    # that no longer exist as file globs in config_planbot.yaml).
+    section_defs: dict[str, tuple[list[str], str]] = {
+        name: (section_cfg.globs, section_cfg.purpose)
+        for name, section_cfg in cfg.reference_sections.items()
+    }
+    if runtime_reference_overrides:
+        for name in runtime_reference_overrides:
+            if name not in section_defs:
+                section_defs[name] = ([], "")
+
+    for section_name, (static_globs, static_purpose) in section_defs.items():
+        effective_globs = static_globs
+        purpose = static_purpose
         if runtime_reference_overrides and section_name in runtime_reference_overrides:
             # Per-invocation override replaces static section globs for deterministic fan-out inputs.
             override_globs = runtime_reference_overrides[section_name]
-            effective_globs = override_globs or section_cfg.globs
+            effective_globs = override_globs or static_globs
             LOGGER.info(
                 "Using runtime reference override for section '%s': %s",
                 section_name,
                 effective_globs,
             )
+        if runtime_section_purposes and section_name in runtime_section_purposes:
+            purpose = runtime_section_purposes[section_name]
 
         docs = load_references(app_config.root_dir, effective_globs, api_resolver=api_resolver)
-        loaded_sections[section_name] = (section_cfg.purpose, docs)
+        loaded_sections[section_name] = (purpose, docs)
         all_docs.extend(d for d in docs if d is not None)
         LOGGER.info("Loaded %s document(s) for section '%s' using globs %s", len(docs), section_name, effective_globs)
 

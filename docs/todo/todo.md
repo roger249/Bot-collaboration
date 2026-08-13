@@ -12,6 +12,7 @@ To Do
 
 ## Minor improvement
 
+- Add description on IRS & PFS to LLM
 - Including holding PnL in proposal consideration?
 - Let user refine the client, product after product matching and before product proposal generation
 All to-do below are too initial.  Need more investigation to confirm they are worth to do.

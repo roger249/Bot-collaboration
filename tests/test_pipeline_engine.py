@@ -95,7 +95,7 @@ def _write_temp_config(root: Path, pipeline_config: dict, filename: str = "confi
     config = {
         "common": {
             "crewai_config_folder": "config/crewai/planbot",
-            "get_client_product_from_db": False,
+            "get_client_product_from_restapi": False,
         },
         "input_defaults": pipeline_config.get("input_defaults", {}),
         "pipeline": pipeline_config.get("pipeline", {}),
@@ -499,7 +499,7 @@ class TestAcceptanceCriteria(unittest.TestCase):
 
         # Write full config with both proposals
         full_config = {
-            "common": {"crewai_config_folder": "config/crewai/planbot", "get_client_product_from_db": False},
+            "common": {"crewai_config_folder": "config/crewai/planbot", "get_client_product_from_restapi": False},
             "input_defaults": {
                 "global": {"prompt_section": "references", "required": False},
                 "by_id": {
@@ -733,7 +733,7 @@ class TestPipelineIntegration(unittest.TestCase):
         )
 
         config = {
-            "common": {"crewai_config_folder": "config/crewai/planbot", "get_client_product_from_db": False},
+            "common": {"crewai_config_folder": "config/crewai/planbot", "get_client_product_from_restapi": False},
             "input_defaults": {
                 "global": {"prompt_section": "references", "required": False},
                 "by_id": {

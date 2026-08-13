@@ -6,8 +6,10 @@ set -euo pipefail
 # -----------------------------
 GHCR_OWNER="roger249"
 IMAGE_NAME="planbot-proposal-server"
-PLATFORMS="linux/amd64,linux/arm64"
-BUILDER_NAME="multiarch-builder"
+# Single-platform AMD64 build.  buildx is still used because the build
+# runs on Apple Silicon and must cross-compile to linux/amd64.
+PLATFORMS="linux/amd64"
+BUILDER_NAME="amd64-builder"
 
 # Tag format: vYYYYMMDD-<gitsha>
 DATE_TAG="$(date +%Y%m%d)"
@@ -65,7 +67,7 @@ if [[ "${PUBLISH_LATEST}" == "true" ]]; then
     .
 fi
 
-echo "Verifying pushed manifest"
+echo "Verifying pushed image"
 docker buildx imagetools inspect "${IMAGE_REF}"
 
 echo

@@ -6,8 +6,8 @@ over real TCP — no ``TestClient``, no monkeypatched transport.
 
 Data lookups remain monkeypatched (Phase A / local imports) by individual
 tests.  When the external data service is ready, remove the monkeypatch line
-and the YAML ``get_client_product_from_db`` + ``data_service_url`` take over
-automatically with zero code changes in the test.
+and the YAML ``get_client_product_from_restapi`` flag selects the bank REST
+adapters automatically with zero code changes in the test.
 """
 
 from __future__ import annotations

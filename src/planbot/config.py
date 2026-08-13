@@ -116,7 +116,7 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
     _non_proposal_keys = {
         "common", "llm_models", "run_configurations",
         "investor_readiness_score", "product_fitness_score", "server",
-        "product_groups", "input_defaults", "pipeline",
+        "product_groups", "input_defaults", "pipeline", "data_source",
     }
     proposals_raw: dict[str, Any] = {
         k: v for k, v in data.items() if k not in _non_proposal_keys

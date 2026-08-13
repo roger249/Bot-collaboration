@@ -18,8 +18,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from src.integrations.client_api import search_by_id
 from src.integrations.product_tool import (
     search_by_product_id,
@@ -27,7 +25,6 @@ from src.integrations.product_tool import (
     search_product_by_fitness_score,
 )
 from src.planbot.crew_workflow import run_crew_planbot
-from src.planbot.http_resolver import HttpApiResolver
 from src.planbot.input_loader import (
     API_CLIENT_PROFILE,
     API_PRODUCT_CATALOG,
@@ -44,7 +41,6 @@ from src.shared.resolver_formatters import (
     compute_pfs_for_products,
     format_client_and_holdings,
     format_product_catalog,
-    read_http_resolver_config,
     resolve_holdings_to_products,
 )
 
@@ -270,113 +266,79 @@ def _process_one_pair(
         "product_id": product_id,
     }
 
-    http_cfg = read_http_resolver_config(_CONFIG_PATH)
+    # Data is fetched through the adapter-backed functions below.  With
+    # ``get_client_product_from_restapi: false`` these hit DuckDB directly; with
+    # ``true`` they use the REST adapter → bank simulator.  Enrichment and
+    # alternative selection are computed in-process.
 
-    if http_cfg is not None:
-        # ── Phase B: HTTP resolver ──────────────────────────────────
-        planbot_config = yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
-        data_service_url = (planbot_config.get("common") or {}).get("data_service_url")
-        if not data_service_url:
-            raise RuntimeError(
-                "common.data_service_url is not set in config_planbot.yaml."
-            )
-        base_url = data_service_url.replace("/api/v1", "")
+    client_profile = search_by_id(client_id)
+    if client_profile is None:
+        raise LookupError(f"Client not found: {client_id}")
 
-        resolver = HttpApiResolver(
-            client_id=client_id,
-            source_product_id=product_id,
-            base_url=base_url,
-            timeout=http_cfg.get("timeout_seconds", 30),
-            max_retries=http_cfg.get("max_retries", 3),
-            retry_backoff_factor=http_cfg.get("retry_backoff_factor", 0.5),
-        )
+    source_product = search_by_product_id(product_id)
+    if source_product is None:
+        raise LookupError(f"Product not found: {product_id}")
 
-        try:
-            client_profile = resolver.client_profile
-            source_product = resolver.source_product
-        except Exception as exc:
-            raise ConnectionError(
-                f"Data service unreachable at {data_service_url}: {exc}"
-            ) from exc
+    client_data = client_profile
+    product_data = source_product
 
-        if client_profile is None:
-            raise LookupError(f"Client not found via HTTP: {client_id}")
-
-        if source_product is None:
-            raise LookupError(f"Product not found via HTTP: {product_id}")
-
-        api_resolver = resolver.as_callable()
+    # Resolve alternatives
+    alt_products: list[dict] = []
+    if matcher_alternatives:
+        for alt_id in matcher_alternatives:
+            alt = search_by_product_id(alt_id)
+            if alt:
+                alt_products.append(alt)
     else:
-        # ── Phase A: direct calls ───────────────────────────────────
-        client_profile = search_by_id(client_id)
-        if client_profile is None:
-            raise LookupError(f"Client not found: {client_id}")
-
-        source_product = search_by_product_id(product_id)
-        if source_product is None:
-            raise LookupError(f"Product not found: {product_id}")
-
-        # ── Build api_resolver inline ───────────────────────────
-        client_data = client_profile
-        product_data = source_product
-
-        # Resolve alternatives
-        alt_products: list[dict] = []
-        if matcher_alternatives:
-            for alt_id in matcher_alternatives:
-                alt = search_by_product_id(alt_id)
-                if alt:
-                    alt_products.append(alt)
-        else:
-            sim_result = search_similar_to_product(
-                product_data,
-                top_n=alternative_count,
-                diversification=True,
-            )
-            for r in sim_result.get("results", []):
-                alt = search_by_product_id(r["product_id"])
-                if alt:
-                    alt_products.append(alt)
-
-        # Resolve holdings to full product dicts for the catalog
-        holdings_products = resolve_holdings_to_products(client_data.get("holdings", []))
-
-        # Compute PFS (suggested + alternatives) for the LLM prompt
-        pfs_scores = compute_pfs_for_products(
-            client_id=str(client_data.get("client_id", "")),
-            suggested_product_id=str(product_data.get("product_id", "")),
-            alternative_products=alt_products,
+        sim_result = search_similar_to_product(
+            product_data,
+            top_n=alternative_count,
+            diversification=True,
         )
+        for r in sim_result.get("results", []):
+            alt = search_by_product_id(r["product_id"])
+            if alt:
+                alt_products.append(alt)
 
-        # Build rationale/context document
-        rationale_content = ""
-        if suggested_products_and_rationale:
-            rationale_content += suggested_products_and_rationale
-        if rationale:
-            if rationale_content:
-                rationale_content += "\n\n"
-            rationale_content += f"## Rationale\n\n{rationale}\n"
+    # Resolve holdings to full product dicts for the catalog
+    holdings_products = resolve_holdings_to_products(client_data.get("holdings", []))
 
-        extra_docs: dict[str, ReferenceDocument] = {}
+    # Compute PFS (suggested + alternatives) for the LLM prompt
+    pfs_scores = compute_pfs_for_products(
+        client_id=str(client_data.get("client_id", "")),
+        suggested_product_id=str(product_data.get("product_id", "")),
+        alternative_products=alt_products,
+    )
+
+    # Build rationale/context document
+    rationale_content = ""
+    if suggested_products_and_rationale:
+        rationale_content += suggested_products_and_rationale
+    if rationale:
         if rationale_content:
-            extra_docs[API_SUGGESTED_PRODUCTS_AND_RATIONALE] = ReferenceDocument(
-                path=Path(API_SUGGESTED_PRODUCTS_AND_RATIONALE),
-                content=rationale_content,
-                source_type="markdown",
-            )
+            rationale_content += "\n\n"
+        rationale_content += f"## Rationale\n\n{rationale}\n"
 
-        api_resolver = build_proposal_resolver(
-            client_content=format_client_and_holdings(client_data),
-            product_content=format_product_catalog(
-                suggested=product_data,
-                holdings=holdings_products or None,
-                alternatives=alt_products or None,
-                include_alternatives_section=(alternative_count > 0) or bool(matcher_alternatives),
-                pfs_scores=pfs_scores or None,
-            ),
-            market_outlook=market_outlook,
-            extra_docs=extra_docs or None,
+    extra_docs: dict[str, ReferenceDocument] = {}
+    if rationale_content:
+        extra_docs[API_SUGGESTED_PRODUCTS_AND_RATIONALE] = ReferenceDocument(
+            path=Path(API_SUGGESTED_PRODUCTS_AND_RATIONALE),
+            content=rationale_content,
+            source_type="markdown",
         )
+
+    api_resolver = build_proposal_resolver(
+        client_content=format_client_and_holdings(client_data),
+        product_content=format_product_catalog(
+            suggested=product_data,
+            holdings=holdings_products or None,
+            alternatives=alt_products or None,
+            include_alternatives_section=(alternative_count > 0) or bool(matcher_alternatives),
+            pfs_scores=pfs_scores or None,
+        ),
+        market_outlook=market_outlook,
+        extra_docs=extra_docs or None,
+    )
 
     # ── Compute fitness scores (when not from matcher) ──────────────
     product_fitness_scores: dict[str, float] = {}
@@ -431,6 +393,7 @@ def _process_one_pair(
             "market_outlook": [],
             "suggested_products_and_rationale": [],
         }
+        _section_purposes_po: dict[str, str] = {}
         for inp in pipeline_engine.inputs:
             pid = inp.id
             if pid in ("proposal_instructions", "section_guides"):
@@ -445,8 +408,12 @@ def _process_one_pair(
                     _section_map_po["suggested_products_and_rationale"].append(f"api://resolved/{pid}")
             elif pid == "client_profile":
                 _section_map_po["client_profiles"].append(API_CLIENT_PROFILE)
+                if inp.description:
+                    _section_purposes_po["client_profiles"] = inp.description
             elif pid == "product_catalog":
                 _section_map_po["product_catalogs"].append(API_PRODUCT_CATALOG)
+                if inp.description:
+                    _section_purposes_po["product_catalogs"] = inp.description
 
         overrides = {k: v for k, v in _section_map_po.items() if v}
         LOGGER.info(
@@ -461,6 +428,7 @@ def _process_one_pair(
         config_path=str(_CONFIG_PATH),
         proposal_name="product_opportunity_proposal",
         runtime_reference_overrides=overrides,
+        runtime_section_purposes=_section_purposes_po,
         output_file_override=output_path,
         api_resolver=api_resolver,
     )

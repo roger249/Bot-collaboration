@@ -93,6 +93,22 @@ class _InputDef:
     prompt_section: str = "references"  # "decision_context" or "references"
     required: bool = False
     source_priority: list[str] = field(default_factory=list)
+    description: str = ""
+
+
+def get_input_descriptions(config_path: str | Path) -> dict[str, str]:
+    """Read input ``description`` fields from ``input_defaults.by_id``.
+
+    Used by callers that build runtime section purposes without a full
+    ``PipelineEngine`` instance (e.g. portfolio_review).
+    """
+    raw = yaml.safe_load(Path(config_path).read_text(encoding="utf-8")) or {}
+    by_id = raw.get("input_defaults", {}).get("by_id", {}) or {}
+    return {
+        str(key): str(value.get("description", "") or "")
+        for key, value in by_id.items()
+        if isinstance(value, dict)
+    }
 
 
 # ── Pipeline Engine ──────────────────────────────────────────────────────
@@ -354,6 +370,10 @@ class PipelineEngine:
                 "required",
                 id_defaults.get("required", global_defaults.get("required", False)),
             )
+            description = inp.get(
+                "description",
+                id_defaults.get("description", global_defaults.get("description", "")),
+            )
 
             resolved_def = _InputDef(
                 id=input_id,
@@ -362,6 +382,7 @@ class PipelineEngine:
                 prompt_section=prompt_section,
                 required=required,
                 source_priority=inp.get("source_priority", []),
+                description=description or "",
             )
             self._inputs.append(resolved_def)
 

@@ -44,7 +44,7 @@ from src.shared.resolver_formatters import (
     format_client_and_holdings,
     format_irs_section,
     format_pfs_table,
-    format_product_multi,
+    format_product_catalog,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -334,11 +334,19 @@ def product_investor_matcher(
         if market_outlook is not None:
             reference_overrides["market_outlook"] = [API_MARKET_OUTLOOK]
 
+        _section_purposes: dict[str, str] = {}
+        for inp in pipeline_engine.inputs:
+            if inp.id == "client_profile" and inp.description:
+                _section_purposes["client_profiles"] = inp.description
+            elif inp.id == "product_catalog" and inp.description:
+                _section_purposes["product_catalogs"] = inp.description
+
         crew_result = run_crew_planbot(
             app_config=app_config,
             config_path=str(_CONFIG_PATH),
             proposal_name="product_investor_matching",
             runtime_reference_overrides=reference_overrides,
+            runtime_section_purposes=_section_purposes,
             output_file_override=matching_output_path,
             api_resolver=api_resolver,
         )
@@ -794,7 +802,11 @@ def _build_matcher_api_resolver(
 
     def _format_product_catalog() -> str:
         products = [products_data[pid] for pid in product_universe if pid in products_data]
-        content = format_product_multi(products)
+        content = format_product_catalog(
+            alternatives=products,
+            include_suggested_section=False,
+            include_holdings_section=False,
+        )
         # Append fitness score summary per client (uses shared format_pfs_table)
         lines = [content, "", "## Product Fitness Scores (per client)", ""]
         for cid in eligible_client_ids:

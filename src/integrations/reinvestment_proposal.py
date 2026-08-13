@@ -15,15 +15,12 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from src.integrations.client_api import search_by_id, search_holdings_maturing
 from src.integrations.product_tool import (
     search_by_product_id,
     search_similar_to_product,
 )
 from src.planbot.crew_workflow import run_crew_planbot
-from src.planbot.http_resolver import HttpApiResolver
 from src.planbot.input_loader import (
     API_CLIENT_PROFILE,
     API_PRODUCT_CATALOG,
@@ -38,7 +35,6 @@ from src.shared.resolver_formatters import (
     format_client_and_holdings,
     format_irs_section,
     format_product_catalog,
-    read_http_resolver_config,
     resolve_holdings_to_products,
 )
 
@@ -260,136 +256,80 @@ def _process_one_target(
         "source_product_id": source_product_id,
     }
 
-    http_cfg = read_http_resolver_config(_CONFIG_PATH)
+    # Data is fetched through the adapter-backed functions below.  With
+    # ``get_client_product_from_restapi: false`` these hit DuckDB directly; with
+    # ``true`` they use the REST adapter → bank simulator.  Enrichment
+    # (derived fields) and candidate selection are computed in-process, so the
+    # bank stays a pure data pipe.
 
-    if http_cfg is not None:
-        # ── Phase B: HTTP resolver ──────────────────────────────────
-        planbot_config = yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
-        data_service_url = (planbot_config.get("common") or {}).get("data_service_url")
-        if not data_service_url:
-            raise RuntimeError(
-                "common.data_service_url is not set in config_planbot.yaml."
-            )
-        # Strip /api/v1 if present — HttpApiResolver appends paths.
-        base_url = data_service_url.replace("/api/v1", "")
+    client_profile = search_by_id(client_id)
+    if client_profile is None:
+        msg = f"Client not found: {client_id}"
+        LOGGER.warning(msg)
+        raise LookupError(msg)
 
-        resolver = HttpApiResolver(
-            client_id=client_id,
-            source_product_id=source_product_id,
-            base_url=base_url,
-            timeout=http_cfg.get("timeout_seconds", 30),
-            max_retries=http_cfg.get("max_retries", 3),
-            retry_backoff_factor=http_cfg.get("retry_backoff_factor", 0.5),
-        )
+    source_product = search_by_product_id(source_product_id)
+    if source_product is None:
+        msg = f"Source product not found: {source_product_id}"
+        LOGGER.warning(msg)
+        raise LookupError(msg)
 
-        # Access resolver properties to trigger HTTP calls.
-        # Wrap in try/except so network errors include the failing URL.
-        try:
-            _client_ok = resolver.client_profile
-            _product_ok = resolver.source_product
-        except Exception as exc:
-            msg = (
-                f"Data service unreachable at {data_service_url}: {exc}. "
-                f"Is the data server running?"
-            )
-            LOGGER.error(msg)
-            raise ConnectionError(msg) from exc
+    cand_result = search_similar_to_product(
+        source_product,
+        top_n=top_n_per_client,
+        max_per_product_type=max_per_product_type,
+        risk_rating_hard_filter=risk_rating_hard_filter,
+    )
+    candidates_raw = cand_result.get("results", [])
 
-        # Early-exit checks — surface data errors as structured failures
-        if _client_ok is None:
-            msg = (
-                f"Client not found via HTTP: {client_id} "
-                f"(data_service_url={data_service_url})"
-            )
-            LOGGER.warning(msg)
-            raise LookupError(msg)
+    candidate_products = []
+    for c in candidates_raw:
+        pid = c.get("product_id", "")
+        prod = search_by_product_id(pid) or {}
+        full = dict(prod)
+        full["similarity_score"] = c.get("similarity_score")
+        candidate_products.append(full)
 
-        if _product_ok is None:
-            msg = (
-                f"Source product not found via HTTP: {source_product_id} "
-                f"(data_service_url={data_service_url})"
-            )
-            LOGGER.warning(msg)
-            raise LookupError(msg)
+    item["candidate_products"] = candidate_products
 
-        candidate_products = resolver.candidate_products
-        item["candidate_products"] = candidate_products
+    # ── Compute PFS for suggested + alternatives ──────────────
+    pfs_scores = compute_pfs_for_products(
+        client_id=client_id,
+        suggested_product_id=source_product_id,
+        alternative_products=candidate_products,
+    )
 
-        api_resolver = resolver.as_callable()
+    # ── Build api_resolver with IRS + wallet inflow extras ──────
+    cp = client_profile
+    extra: list[str] = []
+    irs_text = format_irs_section(
+        total=cp.get("investor_readiness_score"),
+        cash_drag=cp.get("cash_score"),
+        concentration=cp.get("concentration_score"),
+        active_management=cp.get("active_score"),
+        life_stage=cp.get("life_stage_score"),
+    )
+    if irs_text:
+        extra.append(irs_text)
+    extra.append(
+        "# Wallet Inflow Event\n\n"
+        "The following product is maturing:\n"
+        f"- Product ID: {source_product_id}\n"
+        f"- Product Name: {source_product.get('name', source_product_id)}"
+    )
 
-        # For llm_input / debug_scores, use the cached raw data
-        client_profile = resolver.client_profile
-        source_product = resolver.source_product
-    else:
-        # ── Phase A: local imports (fallback) ──────────────────────
-        client_profile = search_by_id(client_id)
-        if client_profile is None:
-            msg = f"Client not found: {client_id}"
-            LOGGER.warning(msg)
-            raise LookupError(msg)
+    # Resolve holdings to full product dicts for the catalog.
+    holdings_products = resolve_holdings_to_products(cp.get("holdings", []))
 
-        source_product = search_by_product_id(source_product_id)
-        if source_product is None:
-            msg = f"Source product not found: {source_product_id}"
-            LOGGER.warning(msg)
-            raise LookupError(msg)
-
-        cand_result = search_similar_to_product(
-            source_product,
-            top_n=top_n_per_client,
-            max_per_product_type=max_per_product_type,
-            risk_rating_hard_filter=risk_rating_hard_filter,
-        )
-        candidates_raw = cand_result.get("results", [])
-
-        candidate_products = []
-        for c in candidates_raw:
-            pid = c.get("product_id", "")
-            prod = search_by_product_id(pid) or {}
-            full = dict(prod)
-            full["similarity_score"] = c.get("similarity_score")
-            candidate_products.append(full)
-
-        item["candidate_products"] = candidate_products
-
-        # ── Compute PFS for suggested + alternatives ──────────────
-        pfs_scores = compute_pfs_for_products(
-            client_id=client_id,
-            suggested_product_id=source_product_id,
-            alternative_products=candidate_products,
-        )
-
-        # ── Build api_resolver with IRS + wallet inflow extras ──────
-        cp = client_profile
-        extra: list[str] = []
-        irs_text = format_irs_section(
-            total=cp.get("investor_readiness_score"),
-            cash_drag=cp.get("cash_score"),
-            concentration=cp.get("concentration_score"),
-            active_management=cp.get("active_score"),
-            life_stage=cp.get("life_stage_score"),
-        )
-        if irs_text:
-            extra.append(irs_text)
-        extra.append(
-            "# Wallet Inflow Event\n\n"
-            "The following product is maturing:\n"
-            f"- Product ID: {source_product_id}\n"
-            f"- Product Name: {source_product.get('name', source_product_id)}"
-        )
-
-        # Resolve holdings to full product dicts for the catalog.
-        holdings_products = resolve_holdings_to_products(cp.get("holdings", []))
-
-        api_resolver = build_proposal_resolver(
-            client_content=format_client_and_holdings(cp, extra_sections=extra),
-            product_content=format_product_catalog(
-                suggested=source_product,
-                holdings=holdings_products or None,
-                alternatives=candidate_products or None,
-                pfs_scores=pfs_scores or None,
-            ),
-        )
+    api_resolver = build_proposal_resolver(
+        client_content=format_client_and_holdings(cp, extra_sections=extra),
+        product_content=format_product_catalog(
+            suggested=source_product,
+            holdings=holdings_products or None,
+            alternatives=candidate_products or None,
+            pfs_scores=pfs_scores or None,
+        ),
+    )
 
     # ── Pipeline resolve: merge pre-resolved file content into api_resolver ──
     pipeline_engine = PipelineEngine(
@@ -422,6 +362,7 @@ def _process_one_target(
         "client_profiles": [],
         "product_catalogs": [],
     }
+    _section_purposes: dict[str, str] = {}
     for inp in pipeline_engine.inputs:
         pid = inp.id
         if pid in ("proposal_instructions", "section_guides"):
@@ -430,8 +371,12 @@ def _process_one_target(
             _section_map["guidelines"].append(f"api://resolved/{pid}")
         elif pid == "client_profile":
             _section_map["client_profiles"].append(API_CLIENT_PROFILE)
+            if inp.description:
+                _section_purposes["client_profiles"] = inp.description
         elif pid == "product_catalog":
             _section_map["product_catalogs"].append(API_PRODUCT_CATALOG)
+            if inp.description:
+                _section_purposes["product_catalogs"] = inp.description
 
     runtime_overrides = {k: v for k, v in _section_map.items() if v}
     LOGGER.info(
@@ -450,6 +395,7 @@ def _process_one_target(
         config_path=str(_CONFIG_PATH),
         proposal_name="reinvestment_proposal",
         runtime_reference_overrides=runtime_overrides,
+        runtime_section_purposes=_section_purposes,
         output_file_override=output_override,
         api_resolver=api_resolver,
     )

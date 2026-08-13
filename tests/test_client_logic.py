@@ -20,7 +20,7 @@ from src.integrations.client_api import (
     search_by_investor_readiness_score,
     search_holdings_maturing,
 )
-from src.planbot.investor_readiness_score import (
+from src.test_data.client_seed import (
     init_client_db,
     get_client_db_conn,
 )

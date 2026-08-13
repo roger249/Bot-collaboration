@@ -42,15 +42,8 @@ def test_propose_reinvestment_for_maturing_holdings(monkeypatch, proposal_server
        TCP — discovers maturing bonds, caps at 1 client, invokes LLM.
     2. Verify the output contains required section headers.
 
-    Data lookups use Phase A (local imports) via monkeypatch.
-    To switch to Phase B (real data service), remove the monkeypatch line —
-    the YAML ``data_service_url`` takes over with zero test-code changes.
+    Data lookups use the adapter (DuckDB by default; REST via the config flag).
     """
-    monkeypatch.setattr(
-        "src.integrations.reinvestment_proposal.read_http_resolver_config",
-        lambda _config_path: None,
-    )
-
     response = httpx.post(
         f"{proposal_server}/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings",
         json={
@@ -94,14 +87,8 @@ def test_multi_client_propose_reinvestment(monkeypatch, proposal_server):
     3. Call the proposal server over real TCP with ALL targets.
     4. Verify every client gets a non-empty proposal with required sections.
 
-    Data lookups use Phase A (local imports) via monkeypatch.
-    To switch to Phase B, remove the monkeypatch line.
+    Data lookups use the adapter (DuckDB by default; REST via the config flag).
     """
-    monkeypatch.setattr(
-        "src.integrations.reinvestment_proposal.read_http_resolver_config",
-        lambda _config_path: None,
-    )
-
     # 1 ─ Discover maturing holdings ──────────────────────────────────
     maturing = search_holdings_maturing(
         product_types=["bond", "bond_fund"], within_days=30

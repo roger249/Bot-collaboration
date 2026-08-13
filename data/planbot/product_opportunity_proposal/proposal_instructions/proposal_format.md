@@ -66,7 +66,7 @@ instructions: |
   | 3Y CAGR | X% | Y% |
   | 5Y CAGR | X% | Y% |
   | Max Drawdown | X% | Y% |
-  | Sharpe Ratio | X | Y |
+  | Calmar Ratio | X | Y |
 
   If historical data is unavailable for either product, state "Data unavailable"
   for the missing cells and note the limitation in one sentence below the table.

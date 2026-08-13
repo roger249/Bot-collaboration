@@ -5,7 +5,7 @@ This guide is intended for GitHub readers who need to:
 1. Deploy on Linux.
 2. Test proposal APIs from Swagger.
 
-For image build and publish instructions, see [docs/spec/dockerization.md](dockerization.md).
+For image build and publish instructions, see [docs/docker/release_runbook.md](docs/docker/release_runbook.md).
 
 ## 1. Deploy on Linux (AMD64)
 

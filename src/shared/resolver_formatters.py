@@ -27,11 +27,8 @@ a new ``api://`` path is introduced.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable
 from pathlib import Path
-
-import yaml
 
 from src.planbot.input_loader import (
     API_CLIENT_PROFILE,
@@ -42,22 +39,6 @@ from src.shared.market_outlook_utils import (
     API_MARKET_OUTLOOK,
     format_market_outlook_section,
 )
-
-# ═══════════════════════════════════════════════════════════════════════════
-# Shared HTTP resolver config reader (used by all proposal integrations)
-# ═══════════════════════════════════════════════════════════════════════════
-
-
-def read_http_resolver_config(config_path: Path) -> dict | None:
-    """Read HTTP resolver settings from config_planbot.yaml common section.
-
-    Returns None if the section is absent (Phase A / local-import fallback).
-    """
-    planbot_config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
-    common = planbot_config.get("common") or {}
-    if not common.get("get_client_product_from_restapi"):
-        return None
-    return common.get("http_resolver")  # None if not configured → Phase A
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -296,20 +277,6 @@ def format_holdings_csv(holdings: list[dict]) -> str:
 # ═══════════════════════════════════════════════════════════════════════════
 
 
-def _product_header(p: dict) -> list[str]:
-    note = p.get("investment_note")
-    header = [
-        f"- Product ID: {p.get('product_id', 'N/A')}",
-        f"- Name: {p.get('name', 'N/A')}",
-        f"- Type: {p.get('product_type', 'N/A')}",
-        f"- Risk Rating: {p.get('risk_rating', 'N/A')}",
-        f"- Expected Return: {p.get('expected_return', 'N/A')}%",
-    ]
-    if note:
-        header += ["", "## Investment Note", "", note]
-    return header
-
-
 def _format_product_perf_value(val: object) -> str:
     if val is None or val == "":
         return "N/A"
@@ -363,14 +330,6 @@ def _product_full_details(p: dict) -> list[str]:
         for k, v in type_specific.items():
             lines.append(f"- {k}: {v}")
 
-    lines += [
-        "",
-        "### Raw DB Payload",
-        "",
-        f"- type_specific_json: {json.dumps(type_specific, ensure_ascii=False, sort_keys=True)}",
-        f"- performance_history_json: {json.dumps(perf, ensure_ascii=False, sort_keys=True)}",
-    ]
-
     note = p.get("investment_note")
     if note:
         lines += ["", "### Investment Note", "", note]
@@ -383,6 +342,8 @@ def format_product_catalog(
     suggested: dict | None = None,
     holdings: list[dict] | None = None,
     alternatives: list[dict] | None = None,
+    include_suggested_section: bool = True,
+    include_holdings_section: bool = True,
     include_alternatives_section: bool = True,
     pfs_scores: dict[str, dict] | None = None,
 ) -> str:
@@ -402,6 +363,11 @@ def format_product_catalog(
         Client's existing holdings, resolved to full product dicts.
     alternatives : list[dict] | None
         Alternative products, resolved to full product dicts.
+    include_suggested_section : bool
+        When False, suppress the ``## Suggested Product`` section (e.g. when
+        rendering a bare product universe with no single recommendation).
+    include_holdings_section : bool
+        When False, suppress the ``## Client Holdings`` section.
     include_alternatives_section : bool
         When False, suppress the entire ``## Alternative Products`` section.
         Use this when alternatives are intentionally disabled (for example,
@@ -423,23 +389,25 @@ def format_product_catalog(
     lines = ["# Product Catalog", ""]
 
     # ── 1. Suggested Product ───────────────────────────────────────
-    if suggested:
-        lines += _product_header_suggested(suggested)
-    else:
-        lines.append("*(no suggested product)*")
+    if include_suggested_section:
+        if suggested:
+            lines += _product_header_suggested(suggested)
+        else:
+            lines.append("*(no suggested product)*")
 
     # ── 2. Client Holdings ─────────────────────────────────────────
-    if holdings:
-        lines += ["", "## Client Holdings", ""]
-        for i, h in enumerate(holdings, 1):
-            lines.append(
-                f"{i}. {h.get('product_id', '')} — {h.get('name', 'N/A')} "
-                f"(risk={h.get('risk_rating', 'N/A')}, "
-                f"expected_return={h.get('expected_return', 'N/A')}%, "
-                f"type={h.get('product_type', 'N/A')})"
-            )
-    else:
-        lines += ["", "## Client Holdings", "", "*(no holdings data)*"]
+    if include_holdings_section:
+        if holdings:
+            lines += ["", "## Client Holdings", ""]
+            for i, h in enumerate(holdings, 1):
+                lines += [
+                    f"### {i}. {h.get('product_id', 'N/A')} — {h.get('name', 'N/A')}",
+                    "",
+                ]
+                lines += _product_full_details(h)
+                lines.append("")
+        else:
+            lines += ["", "## Client Holdings", "", "*(no holdings data)*"]
 
     # ── 3. Alternative Products ────────────────────────────────────
     if include_alternatives_section:
@@ -467,43 +435,6 @@ def format_product_catalog(
 
 def _product_header_suggested(p: dict) -> list[str]:
     return ["## Suggested Product", ""] + _product_full_details(p)
-
-
-def format_product_single(
-    product: dict,
-    *,
-    alternatives: list[dict] | None = None,
-    holdings: list[dict] | None = None,
-) -> str:
-    """DEPRECATED: Use format_product_catalog() instead."""
-    return format_product_catalog(
-        suggested=product,
-        holdings=holdings,
-        alternatives=alternatives,
-    )
-
-
-def format_product_single_recommended(product: dict) -> str:
-    """Single product as 'Recommended Product' heading (matcher per-pair)."""
-    lines = ["# Recommended Product", ""] + _product_header(product)
-    return "\n".join(lines)
-
-
-def format_product_multi(products: list[dict]) -> str:
-    """Multi-product catalog listing."""
-    lines = ["# Product Catalog", ""]
-    for p in products:
-        lines.append(f"## {p.get('product_id', '')} — {p.get('name', 'N/A')}")
-        lines.append(f"- Type: {p.get('product_type', 'N/A')}")
-        lines.append(f"- Risk Rating: {p.get('risk_rating', 'N/A')}")
-        lines.append(f"- Expected Return: {p.get('expected_return', 'N/A')}%")
-        lines.append(f"- Region: {p.get('region', 'N/A')}")
-        lines.append(f"- Sector: {p.get('sector', 'N/A')}")
-        note = p.get("investment_note")
-        if note:
-            lines.append(f"- Investment Note: {note}")
-        lines.append("")
-    return "\n".join(lines)
 
 
 def resolve_holdings_to_products(holdings: list[dict]) -> list[dict]:

@@ -46,7 +46,8 @@ class TestFormatProductCatalog(unittest.TestCase):
         self.assertIn("| 1y | 3.65 | 3.72 | 0.00 | 0.20 |", output)
         self.assertIn("### 1. PROD054", output)
         self.assertIn("| 1y | 3.55 | 3.62 | -0.01 | 0.21 |", output)
-        self.assertIn("performance_history_json", output)
+        self.assertNotIn("### Raw DB Payload", output)
+        self.assertNotIn("performance_history_json", output)
 
     def test_handles_missing_optional_product_fields(self):
         suggested = {
