@@ -193,6 +193,24 @@ class BankRestDataAdapter:
         ...
 ```
 
+Factory:
+
+```python
+def build_data_adapters(config: dict) -> tuple[DataAdapter, DataAdapter]:
+    use_rest = config.get("common", {}).get("get_client_product_from_restapi", False)
+    if use_rest:
+        rest = config.get("data_source", {}).get("rest", {})
+        client = BankRestDataAdapter(base_url=rest["client_base_url"], ...)
+        product = BankRestDataAdapter(base_url=rest["product_base_url"], ...)
+        return client, product
+    else:
+        db_path = config.get("data_source", {}).get("duckdb", {}).get(
+            "path", "data/planbot/db/planbot.duckdb"
+        )
+        adapter = DuckDBDataAdapter(Path(db_path))
+        return adapter, adapter  # same instance for client and product
+```
+
 ### Adapter Caching
 
 Bank REST adapters need a cache — upstream APIs are slow, rate-limited, and
@@ -415,13 +433,27 @@ documented Python API entry points while keeping scorecard IP in its own modules
 ```python
 # client_api.py (after refactor)
 
-def search_by_id(adapter: DataAdapter, client_id: str) -> dict | None:
-    enriched = _get_enriched_clients(adapter, [client_id])
+def search_by_id(
+    client_adapter: DataAdapter,
+    product_adapter: DataAdapter,
+    client_id: str,
+) -> dict | None:
+    clients = client_adapter.fetch_clients([client_id])
+    holdings = client_adapter.fetch_holdings([client_id])
+    products = product_adapter.fetch_products()
+    enriched = compute_derived_fields(clients, holdings, products, score_config)
     return enriched.get(client_id)
 
 
-def search(adapter: DataAdapter, **criteria) -> list[dict]:
-    enriched = _get_enriched_clients(adapter)
+def search(
+    client_adapter: DataAdapter,
+    product_adapter: DataAdapter,
+    **criteria,
+) -> list[dict]:
+    clients = client_adapter.fetch_clients()
+    holdings = client_adapter.fetch_holdings()
+    products = product_adapter.fetch_products()
+    enriched = compute_derived_fields(clients, holdings, products, score_config)
     results = [c for c in enriched.values() if _match_criteria(c, criteria)]
     return sorted(results, key=lambda c: c.get("investor_readiness_score", 0), reverse=True)
 ```
@@ -465,6 +497,28 @@ def _parse_maturity(product: dict) -> date | None:
     if not raw:
         return None
     return date.fromisoformat(str(raw).strip())
+```
+
+### Readiness ranking
+
+`search_by_investor_readiness_score()` replaces `run_score_card()` after the
+refactor.  It fetches raw rows via the adapter, computes derived fields, then
+sorts by readiness score:
+
+```python
+def search_by_investor_readiness_score(
+    client_adapter, product_adapter, top_n=None
+) -> list[dict]:
+    clients = client_adapter.fetch_clients()
+    holdings = client_adapter.fetch_holdings()
+    products = product_adapter.fetch_products()
+    enriched = compute_derived_fields(clients, holdings, products, score_config)
+    ranked = sorted(enriched.values(),
+                    key=lambda c: c.get("investor_readiness_score", 0),
+                    reverse=True)
+    if top_n:
+        ranked = ranked[:top_n]
+    return ranked
 ```
 
 ### Product scoring split — `product_scoring.py` (pure) + `product_tool.py` (thin orchestrator)
@@ -574,23 +628,24 @@ src/
 |---|---|---|
 | New: `src/adapters/` (protocol, factory, DuckDB impl) | Create 3 files | Low |
 | `investor_readiness_score.py` 4 score functions | Accept `list[dict]` instead of `conn` | Medium |
-| `client_api.py` `_compute_derived_fields()` | Accept `list[dict]` instead of `conn` | Medium |
+| `client_api.py` `_compute_derived_fields()` | **Move** to `src/planbot/client_enrichment.py` as `compute_derived_fields(clients, holdings, products, config)` | Medium |
 | `product_tool.py` scoring (similarity, fitness) | Accept `list[dict]` instead of `conn` | Medium |
 | `client_api.py` search/get-by-id | Get data from adapter, pass to logic | Low |
 | `product_tool.py` search/get-by-id | Get data from adapter, pass to logic | Low |
-| `data_server.py` | Wire `build_data_adapters()` at startup | Low |
+| `data_server.py` | Wire `build_data_adapters()` at startup (Sprint 2) | Low |
 
 | Component | Change? | Effort |
 |---|---|---|
-| FastAPI route handlers (`data_server.py`, `proposal_server.py`) | **Zero** | None |
+| FastAPI route handlers (`data_server.py`, `proposal_server.py`) | **Zero** in Sprint 1; Low in Sprint 2 (inject adapter as first arg) | None / Low |
 | OpenAPI contract (`openapi.json`) | **Zero** | None |
 | LLM prompts / CrewAI | **Zero** | None |
 | All existing tests | **Zero** (run against DuckDB adapter) | None |
 
 ## Cost-Saving Tactics
 
-1. **Incremental migration** — Keep DuckDB for products while switching only clients
-   to a bank system. Mixed backends are supported per domain.
+1. **Incremental migration** — Keep DuckDB as the default; switch to bank REST
+   via a single config flag once the bank integration is ready.  No per-domain
+   mixed backends — one switch for both client and product data.
 
 2. **Response caching in adapter** — Bank APIs are expensive/slow. Add a TTL cache
    in the adapter layer so repeated reads (common in LLM scoring loops) don't
@@ -640,10 +695,10 @@ switch.  Bank REST adapter is built and tested.
 1. Wire `build_data_adapters()` into `data_server.py` at startup.
 2. Add `get_client_product_from_restapi: true` path — swap to `BankRestDataAdapter`.
 3. Implement `BankRestDataAdapter` calling `GET /crm/clients`, `GET /custody/holdings`, `GET /product-master/products`.
-4. Split the config flag into `get_client_from_restapi` / `get_product_from_restapi` for mixed-backend migration (Issue 9).
-5. Add adapter caching — in-memory TTL for REST adapters.
-6. Add `@pytest.mark.rest` tests against a mock bank REST server.
-7. Tier 2/3 cross-system inconsistency handling (retry + markdown caveat) — monitor orphan rate first.
+4. Add adapter caching — in-memory TTL for REST adapters.
+5. Add `@pytest.mark.rest` tests against a mock bank REST server.
+6. Tier 2/3 cross-system inconsistency handling (retry + markdown caveat) — monitor orphan rate first.
+7. Move seeder/ETL code out of `investor_readiness_score.py` into an isolated module under `src/test_data/` (e.g. `client_seed.py`). The scorecard file keeps only pure functions; the seeder keeps `duckdb` import.
 
 ## What NOT to Do
 
@@ -697,138 +752,3 @@ What changes in practice:
 - All existing assertions stay; only the data source is injected.
 - A `pytest.mark.rest` marker gates REST-specific tests (auth, pagination, caching)
   that are meaningless against DuckDB.
-
----
-
-## Outstanding Issues — Cross-Review Gaps
-
-The following were identified during a cross-review of this design against the
-live codebase.  Each is numbered with a suggested resolution.
-
-### 2. Unify `search_by_id` signature everywhere
-
-**Current:** Python API Surface shows `search_by_id(adapter, client_id)` but
-Testing Strategy shows `search_by_id(client_adapter, product_adapter, cid)`.
-The real function needs product catalog data (for `product_families_in_holdings`,
-`has_fund`), so it needs both adapters.
-
-**Fix:** Standardize on `search_by_id(client_adapter, product_adapter, client_id)`.
-Update Python API Surface example to match.
-
-### 7. `search_by_investor_readiness_score()` destination
-
-**Current:** This function calls `run_score_card()` which opens a DB connection
-and runs SQL.  Neither the design body nor the migration plan mention it.
-
-**Fix:** After the refactor, `run_score_card()` is replaced by:
-
-```python
-def search_by_investor_readiness_score(
-    client_adapter, product_adapter, top_n=None
-) -> list[dict]:
-    clients = client_adapter.fetch_clients()
-    holdings = client_adapter.fetch_holdings()
-    products = product_adapter.fetch_products()
-    enriched = compute_derived_fields(clients, holdings, products, score_config)
-    ranked = sorted(enriched.values(),
-                    key=lambda c: c.get("investor_readiness_score", 0),
-                    reverse=True)
-    if top_n:
-        ranked = ranked[:top_n]
-    return ranked
-```
-
-Add this to Phase 2 step 7.
-
-### 8. `data_server.py` handlers change in Sprint 2, not Sprint 1
-
-**Current:** The Scope of Changes table says "FastAPI route handlers — Zero
-changes."  This is true for Sprint 1 (Issue 13 defers adapter wiring).
-
-**Fix:** In Sprint 2, every handler must pass the adapter.  Change the Scope
-row to: "Zero in Sprint 1; Low in Sprint 2 — inject adapter as first argument
-to `client_api`/`product_tool` calls."  The handler logic (response shape,
-error handling) stays the same; only the first argument changes.
-
-### 9. "Mixed backends per domain" is not supported by the single boolean flag
-
-**Current:** Cost-Saving Tactic #1 says "Keep DuckDB for products while switching
-only clients."  But `get_client_product_from_restapi` is one boolean — it
-switches both together.
-
-**Fix:** Either:
-
-- **Option A:** Keep the single boolean and remove the "mixed backends" claim.
-  Simpler but less flexible.
-- **Option B:** Split the flag into two: `get_client_from_restapi` and
-  `get_product_from_restapi`.  This supports migration "client first, products
-  later."  Recommended — minimal extra complexity.
-
-Choose Option B and update the config YAML and factory accordingly.
-
-### 10. Phase 2 step #5 wording doesn't match the design
-
-**Current:** Phase 2 says "Refactor `_compute_derived_fields()` to accept
-`list[dict]`."  But the design already says it moves to a new file
-`src/planbot/client_enrichment.py`.
-
-**Fix:** Rewrite as:
-> **Move** `_compute_derived_fields()` from `client_api.py` to
-> `src/planbot/client_enrichment.py` as `compute_derived_fields()` —
-> a pure function accepting `(clients, holdings, products, config)`.
-
-### 11. `investor_readiness_score.py` dual role — seeder vs scorecard
-
-**Current:** This file contains both seeder/ETL functions (`init_client_db`,
-`get_client_db_conn`, `_normalize_holdings_product_ids`) and scorecard
-functions (`score_cash_drag`, `score_concentration_risk`, etc.).  The scorecard
-functions go pure in Phase 2 but the seeders still need a DB connection.
-
-**Fix:** Do **not** split the file.  Keep seeders and scorecard together.
-The seeders import `duckdb` (they operate on the DB file directly, not through
-the adapter — correct, since they populate the file).  The scorecard functions
-no longer import `duckdb` after Phase 2.  Add a comment in the file:
-`# Seeder helpers — use duckdb.  Scorecard functions below are I/O-free.`
-
-### 12. `build_data_adapters()` factory needs the DB path for DuckDB mode
-
-**Current:** The Wiring section shows `client_adapter, product_adapter = build_data_adapters(config)` but doesn't show how the DuckDB path flows in.
-
-**Fix:** The factory reads `config.data_source.duckdb.path`:
-
-```python
-def build_data_adapters(config: dict) -> tuple[DataAdapter, DataAdapter]:
-    use_rest = config.get("common", {}).get("get_client_product_from_restapi", False)
-    if use_rest:
-        rest = config.get("data_source", {}).get("rest", {})
-        client = BankRestDataAdapter(base_url=rest["client_base_url"], ...)
-        product = BankRestDataAdapter(base_url=rest["product_base_url"], ...)
-        return client, product
-    else:
-        db_path = config.get("data_source", {}).get("duckdb", {}).get(
-            "path", "data/planbot/db/planbot.duckdb"
-        )
-        adapter = DuckDBDataAdapter(Path(db_path))
-        return adapter, adapter  # same instance for client and product
-```
-
-Add this to the Wiring section or the Target Contract section.
-
-### 13. Defer `data_server.py` adapter wiring to Sprint 2
-
-**Current:** `data_server.py` already serves DuckDB-powered endpoints today via
-direct calls to `client_api.py` and `product_tool.py`.  The Phase 1 plan says
-to wire `build_data_adapters()` into `data_server.py` immediately, which risks
-breaking the working OpenAPI surface during the refactor.
-
-**Fix:** Sprint 1 keeps `data_server.py` exactly as-is — no adapter wiring.
-The DuckDB adapter is used **only** by the Logic Layer functions internally
-during the scorecard refactor.  Sprint 2 adds the config flag and switches
-`data_server.py` handlers to use `build_data_adapters()`.
-
-| Sprint | `data_server.py` behavior |
-|---|---|
-| 1 | Unchanged — calls `client_api.py`/`product_tool.py` directly. DuckDB adapter is wired inside the Logic Layer only. |
-| 2 | Wires `build_data_adapters()` at startup. Switches between DuckDB and REST per `get_client_product_from_restapi`. |
-
-This means the OpenAPI surface (`GET /api/v1/clients/{id}`, `POST /api/v1/products/search_similar`, etc.) continues to work throughout Sprint 1 with zero downtime.  Bank REST integration testing can happen in Sprint 2 with the same endpoints, just pointed at a different adapter.
