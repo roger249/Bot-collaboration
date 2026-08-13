@@ -55,7 +55,7 @@ def read_http_resolver_config(config_path: Path) -> dict | None:
     """
     planbot_config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
     common = planbot_config.get("common") or {}
-    if not common.get("get_client_product_from_db"):
+    if not common.get("get_client_product_from_restapi"):
         return None
     return common.get("http_resolver")  # None if not configured → Phase A
 
@@ -251,14 +251,13 @@ def format_holdings_table(holdings: list[dict]) -> str:
         return "# Holdings\n\n(No holdings data available)"
     lines = ["# Holdings", ""]
     lines.append(
-        "| # | Product ID | Name | Asset Class | Market Value | Yield % | Risk |",
+        "| # | Product ID | Name | Asset Class | Market Value |",
     )
-    lines.append("|---|---|---|---|---|---|---|")
+    lines.append("|---|---|---|---|---|")
     for i, h in enumerate(holdings, 1):
         lines.append(
             f"| {i} | {h.get('product_id', '')} | {h.get('instrument_name', '')} | "
-            f"{h.get('asset_class', '')} | ${h.get('market_value', 0):,.0f} | "
-            f"{h.get('yield_pct', '')} | {h.get('risk_bucket', '')} |"
+            f"{h.get('asset_class', '')} | ${h.get('market_value', 0):,.0f} |"
         )
     return "\n".join(lines)
 
@@ -505,6 +504,23 @@ def format_product_multi(products: list[dict]) -> str:
             lines.append(f"- Investment Note: {note}")
         lines.append("")
     return "\n".join(lines)
+
+
+def resolve_holdings_to_products(holdings: list[dict]) -> list[dict]:
+    """Resolve raw holding rows to full product dicts in a single batch query.
+
+    ``format_product_catalog(holdings=…)`` requires holdings *resolved to full
+    product dicts* (name, risk_rating, expected_return, product_type).  Raw
+    holding rows from ``search_by_id()`` only carry ``product_id`` + market
+    metadata, so each must be enriched via the product catalog.
+
+    All product IDs are looked up in ONE query (no per-holding round-trip).
+    Holdings whose product_id is not in the catalog are silently dropped.
+    """
+    from src.integrations.product_tool import search_by_product_ids
+
+    pids = [h.get("product_id", "") for h in holdings]
+    return search_by_product_ids(pids)
 
 
 # ═══════════════════════════════════════════════════════════════════════════

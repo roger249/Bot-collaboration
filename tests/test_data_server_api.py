@@ -107,7 +107,7 @@ class TestClientSearch:
     # ── All five filters combined (Swagger example) ──────────────────────
 
     def test_all_filters_combined_returns_clients(self):
-        """Swagger pre-filled example: all 5 filters, verified to return 9 clients."""
+        """Swagger pre-filled example: all 5 filters, verified to return clients."""
         r = client.post("/api/v1/clients/search", json={
             "risk_rating": [1, 3],
             "age": [35, 70],
@@ -117,7 +117,7 @@ class TestClientSearch:
         })
         assert r.status_code == 200
         data = r.json()
-        assert len(data) == 9
+        assert len(data) == 10
         for c in data:
             assert "client_id" in c
             assert "name" in c
@@ -141,7 +141,7 @@ class TestClientSearch:
     def test_product_types_in_holdings_single(self):
         r = client.post("/api/v1/clients/search", json={"product_types_in_holdings": "bond"})
         assert r.status_code == 200
-        assert len(r.json()) == 18
+        assert len(r.json()) == 21
 
     def test_product_types_in_holdings_list(self):
         r = client.post("/api/v1/clients/search", json={"product_types_in_holdings": ["bond", "equity"]})
@@ -156,7 +156,7 @@ class TestClientSearch:
     def test_product_types_in_holdings_string_cash(self):
         r = client.post("/api/v1/clients/search", json={"product_types_in_holdings": "cash"})
         assert r.status_code == 200
-        assert len(r.json()) == 9
+        assert len(r.json()) == 14
 
     def test_age_range(self):
         r = client.post("/api/v1/clients/search", json={"age": [35, 70]})

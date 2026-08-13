@@ -275,6 +275,8 @@ class FitnessScoreItem(BaseModel):
 
     client_id: str = Field(..., json_schema_extra={"example": "PB-HK-000007-5"})
     product_id: str = Field(..., json_schema_extra={"example": "PROD054"})
+    product_name: str | None = Field(None, json_schema_extra={"example": "US Treasury 3.75% 30Jun27"})
+    investment_note: str | None = Field(None)
     fitness_score: float = Field(..., json_schema_extra={"example": 8.35})
     component_scores: ComponentScores = Field(
         ...,

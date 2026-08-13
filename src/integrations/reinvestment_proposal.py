@@ -39,6 +39,7 @@ from src.shared.resolver_formatters import (
     format_irs_section,
     format_product_catalog,
     read_http_resolver_config,
+    resolve_holdings_to_products,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -264,7 +265,11 @@ def _process_one_target(
     if http_cfg is not None:
         # ── Phase B: HTTP resolver ──────────────────────────────────
         planbot_config = yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
-        data_service_url: str = (planbot_config.get("common") or {}).get("data_service_url", "http://localhost:8000/api/v1")
+        data_service_url = (planbot_config.get("common") or {}).get("data_service_url")
+        if not data_service_url:
+            raise RuntimeError(
+                "common.data_service_url is not set in config_planbot.yaml."
+            )
         # Strip /api/v1 if present — HttpApiResolver appends paths.
         base_url = data_service_url.replace("/api/v1", "")
 
@@ -372,11 +377,15 @@ def _process_one_target(
             f"- Product ID: {source_product_id}\n"
             f"- Product Name: {source_product.get('name', source_product_id)}"
         )
+
+        # Resolve holdings to full product dicts for the catalog.
+        holdings_products = resolve_holdings_to_products(cp.get("holdings", []))
+
         api_resolver = build_proposal_resolver(
             client_content=format_client_and_holdings(cp, extra_sections=extra),
             product_content=format_product_catalog(
                 suggested=source_product,
-                holdings=cp.get("holdings", []),
+                holdings=holdings_products or None,
                 alternatives=candidate_products or None,
                 pfs_scores=pfs_scores or None,
             ),

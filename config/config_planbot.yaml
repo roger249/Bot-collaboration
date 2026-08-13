@@ -6,13 +6,28 @@ common:
   crewai_config_folder: config/crewai/planbot
   cleanup_temp_files: false # If true, temporary files generated during processing will be deleted after use.  If false, they will be kept for debugging.
   data_service_url: http://localhost:8001/api/v1  # URL of the data service (Phase B: HTTP resolver calls this for client/product data)
-  get_client_product_from_db: false # When true, client_profiles and product_catalogs are fetched via API instead of file globs.
-  # HTTP resolver settings (Phase B) — used when get_client_product_from_db is true
+  get_client_product_from_restapi: false # When true, client_profiles and product_catalogs are fetched via API instead of file globs.
+  # HTTP resolver settings (Phase B) — used when get_client_product_from_restapi is true
   # and the resolver makes HTTP calls to the FastAPI server.
   http_resolver:
     timeout_seconds: 30
     max_retries: 3
     retry_backoff_factor: 0.5  # exponential backoff multiplier
+
+# Data Access Layer backends (Sprint 2).
+# Placeholder — not yet consumed by the adapter factory.  Uncomment and fill in
+# when the Bank REST adapter is implemented.  `get_client_product_from_restapi`
+# above selects DuckDB (false) vs. REST (true).
+# data_source:
+#   duckdb:
+#     path: data/planbot/db/planbot.duckdb
+#   rest:
+#     client_base_url: https://bank-internal/crm/api/v2
+#     product_base_url: https://bank-internal/product-master/api/v1
+#     auth_token_env: BANK_API_KEY
+#     timeout_seconds: 10
+#     cache_ttl_seconds: 300    # per-entry cache expiry (0 = disable cache)
+#     cache_maxsize: 512        # max cached entries per adapter
 
 # Server bind settings — consumed by data_server and proposal_server __main__ blocks.
 # Not used by the monolithic server.py (kept for backward compatibility).

@@ -1,10 +1,6 @@
 To Do
 =====
 
-# Optimize DAL layer
-- TTL cache
-- Move some simple logic back to DB side like maturing product?
-
 # Below are to do for a POC grade proposal generator
 
 - Product catalog / Client schema
@@ -16,6 +12,8 @@ To Do
 
 ## Minor improvement
 
+- Including holding PnL in proposal consideration?
+- Let user refine the client, product after product matching and before product proposal generation
 All to-do below are too initial.  Need more investigation to confirm they are worth to do.
 - Further divide risk rating to compare drawdown, vol during crisis period instead of general comparison
 - Organized way to repopulate into DuckDB?

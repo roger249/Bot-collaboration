@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 from enum import Enum
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -48,9 +49,40 @@ async def _on_startup() -> None:
     LOGGER.info("Proposal Server startup complete.")
 
 
+# Shared request-body documentation, rendered by Swagger UI as Markdown at the
+# top of each reinvestment endpoint.  Kept as module constants so the two
+# reinvestment endpoints (explicit targets + maturing-holdings) stay in sync.
+_RESPONSE_MODE_DOC = (
+    "How the proposal is returned in the response:\n"
+    "- `path` — return only the output file path.\n"
+    "- `markdown` — return only the proposal markdown.\n"
+    "- `both` — return the path **and** the markdown."
+)
+
+_COMMON_SCORING_PARAMS_DOC = (
+    "| Field | Type | Description |\n"
+    "|---|---|---|\n"
+    "| `max_per_product_type` | int (1–10) | Diversification cap on how many "
+    "candidate products are kept per product type. Default `2`. |\n"
+    "| `top_n_per_client` | int (1–50) | Max candidate products passed to the "
+    "LLM per client. Default `10`. |\n"
+    "| `risk_rating_hard_filter` | bool | When `true`, only products with "
+    "`risk_rating <= client.risk_rating` are considered. Default `true`. |\n"
+    "| `response_mode` | enum | " + _RESPONSE_MODE_DOC + " Default `path`. |\n"
+    "| `include_llm_input` | bool | Include the assembled LLM prompt in the "
+    "response. Default `false`. |\n"
+    "| `include_market_outlook` | bool | Include the market outlook section. "
+    "Default `true`. |\n"
+    "| `include_debug_scores` | bool | Include debug scoring details. Default "
+    "`false`. |"
+)
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Request models
 # ═══════════════════════════════════════════════════════════════════════════
+
+ResponseMode = Literal["path", "markdown", "both"]
 
 
 class ReinvestmentTarget(BaseModel):
@@ -71,39 +103,57 @@ class ReinvestmentTarget(BaseModel):
 class ProposeReinvestmentRequest(BaseModel):
     """Generate reinvestment proposals for one or more target pairs."""
 
-    model_config = ConfigDict(extra="allow")  # backward compat with old body: dict
-
     reinvestment_targets: list[ReinvestmentTarget] = Field(
-        ..., description="List of (client_id, source_product_id) pairs to process",
+        ...,
+        description="List of (client_id, source_product_id) pairs to process. "
+        "Each pair produces one reinvestment proposal.",
         min_length=1,
+        json_schema_extra={
+            "example": [
+                {"client_id": "PB-HK-000007-5", "source_product_id": "PROD053"},
+            ],
+        },
     )
     max_per_product_type: int = Field(
-        2, description="Max candidates per product type", ge=1, le=10,
+        2,
+        description="Max candidate products per product type. "
+        "Diversification cap applied when selecting similar products.",
+        ge=1, le=10,
     )
     top_n_per_client: int = Field(
-        10, description="Max candidate products per client", ge=1, le=50,
+        10,
+        description="Max candidate products per client. "
+        "Total number of replacement candidates passed to the LLM.",
+        ge=1, le=50,
     )
     risk_rating_hard_filter: bool = Field(
-        True, description="If True, only return products within client's risk tolerance",
+        True,
+        description="If True, only products with risk_rating <= client's "
+        "risk_rating are considered.",
     )
-    response_mode: str = Field(
-        "path", description="'path' | 'inline' | 'both' — how to return the proposal",
+    response_mode: ResponseMode = Field(
+        "path",
+        description="How the proposal is returned in the response. "
+        "'path' = only the output file path. 'markdown' = only the markdown. "
+        "'both' = path + markdown.",
     )
     include_llm_input: bool = Field(
-        False, description="Include the raw LLM input in the response",
+        False,
+        description="Include the raw LLM input (assembled prompt) in the response.",
     )
     include_market_outlook: bool = Field(
-        True, description="Include market outlook in the proposal",
+        True,
+        description="Include the market outlook section in the proposal.",
     )
     include_debug_scores: bool = Field(
-        False, description="Include debug scoring details in the response",
+        False,
+        description="Include debug scoring details (candidate similarity "
+        "scores) in the response.",
     )
 
 
 class MaturingHoldingsRequest(BaseModel):
     """Discover clients with maturing bonds and generate proposals."""
-
-    model_config = ConfigDict(extra="allow")  # backward compat with old body: dict
 
     within_days: int = Field(
         365, description="Look ahead this many days for maturing holdings", ge=1,
@@ -125,8 +175,11 @@ class MaturingHoldingsRequest(BaseModel):
     risk_rating_hard_filter: bool = Field(
         True, description="If True, only return products within client's risk tolerance",
     )
-    response_mode: str = Field(
-        "path", description="'path' | 'inline' | 'both' — how to return the proposal",
+    response_mode: ResponseMode = Field(
+        "path",
+        description="How the proposal is returned in the response. "
+        "'path' = only the output file path. 'markdown' = only the markdown. "
+        "'both' = path + markdown.",
     )
     include_llm_input: bool = Field(
         False, description="Include the raw LLM input in the response",
@@ -278,7 +331,36 @@ def match_products_to_investors_endpoint(
 # ═══════════════════════════════════════════════════════════════════════════
 
 
-@app.post("/api/v1/reinvestment-proposals", response_model=ProposalResponse)
+@app.post(
+    "/api/v1/reinvestment-proposals",
+    response_model=ProposalResponse,
+    summary="Generate reinvestment proposals for explicit client×product targets",
+    description=(
+        "Generate one reinvestment proposal per (client_id, source_product_id) "
+        "pair.\n\n"
+        "### Request body\n\n"
+        "| Field | Type | Description |\n"
+        "|---|---|---|\n"
+        "| `reinvestment_targets` | array (required) | List of "
+        "`{client_id, source_product_id}` pairs. Each pair produces one "
+        "proposal. |\n"
+        + _COMMON_SCORING_PARAMS_DOC
+        + "\n\n"
+        "### Example\n\n"
+        "```json\n"
+        "{\n"
+        "  \"reinvestment_targets\": [\n"
+        "    {\"client_id\": \"PB-HK-000007-5\", \"source_product_id\": \"PROD053\"}\n"
+        "  ],\n"
+        "  \"max_per_product_type\": 2,\n"
+        "  \"top_n_per_client\": 10,\n"
+        "  \"risk_rating_hard_filter\": true,\n"
+        "  \"response_mode\": \"both\",\n"
+        "  \"include_debug_scores\": false\n"
+        "}\n"
+        "```"
+    ),
+)
 def get_reinvestment_proposals(body: ProposeReinvestmentRequest) -> dict:
     """Generate reinvestment proposals for one or more target pairs."""
     return propose_reinvestment(
@@ -296,6 +378,21 @@ def get_reinvestment_proposals(body: ProposeReinvestmentRequest) -> dict:
 @app.post(
     "/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings",
     response_model=ProposalResponse,
+    summary="Discover maturing holdings and generate reinvestment proposals",
+    description=(
+        "Discover clients with maturing bond/bond-fund holdings within a "
+        "look-ahead window, then generate one reinvestment proposal per client.\n\n"
+        "### Request body\n\n"
+        "| Field | Type | Description |\n"
+        "|---|---|---|\n"
+        "| `within_days` | int (≥1) | Look ahead this many days for maturing "
+        "holdings. Default `365`. |\n"
+        "| `as_of_date` | string (ISO 8601) | Reference date for maturity "
+        "calculation. Defaults to today. |\n"
+        "| `max_clients` | int (1–100) | Cap on number of clients to process. "
+        "Default `2`. |\n"
+        + _COMMON_SCORING_PARAMS_DOC
+    ),
 )
 def propose_for_maturing_holdings(body: MaturingHoldingsRequest) -> dict:
     """Discover clients with maturing bond/bond-fund holdings and generate reinvestment proposals."""

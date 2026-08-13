@@ -339,7 +339,9 @@ def _linear_interpolate(x: float, pivot: dict[float, float]) -> float:
 # ---------------------------------------------------------------------------
 
 
-def score_cash_drag(conn: duckdb.DuckDBPyConnection, config: dict) -> dict[str, float]:
+def score_cash_drag(
+    clients: list[dict], holdings: list[dict], config: dict
+) -> dict[str, float]:
     """Score each client on cash drag.
 
     k_cash = (cash_pct + MMF pct) / 100, then interpolated through pivot.
@@ -349,25 +351,24 @@ def score_cash_drag(conn: duckdb.DuckDBPyConnection, config: dict) -> dict[str, 
     weight = float(config.get("weight", 1))
     pivot = {float(k): float(v) for k, v in config.get("pivot", {}).items()}
 
-    # Compute effective cash %: reported cash_pct + market value of Cash-class holdings / aum
-    rows = conn.execute("""
-        SELECT
-            c.client_id,
-            c.aum,
-            c.cash_pct,
-            COALESCE(SUM(CASE WHEN h.asset_class = 'Cash' THEN h.market_value ELSE 0 END), 0) AS mmf_value
-        FROM clients c
-        LEFT JOIN holdings h ON c.client_id = h.client_id
-        GROUP BY c.client_id, c.aum, c.cash_pct
-    """).fetchall()
+    # Sum Cash-class market value per client.
+    mmf_by_client: dict[str, float] = {}
+    for h in holdings:
+        if h.get("asset_class") == "Cash":
+            mmf_by_client[h["client_id"]] = mmf_by_client.get(h["client_id"], 0.0) + (h.get("market_value") or 0.0)
 
     scores: dict[str, float] = {}
-    for client_id, aum, cash_pct, mmf_value in rows:
+    for c in clients:
+        client_id = c["client_id"]
+        aum = c.get("aum") or 0
+        cash_pct = c.get("cash_pct") or 0
+        mmf_value = mmf_by_client.get(client_id, 0.0)
+
         if aum and aum > 0:
             mmf_pct = (mmf_value / aum) * 100 if mmf_value else 0
             # cash_pct already includes some cash; MMF is additionally in Cash asset class.
             # Use the larger of the two to avoid double-counting (cash_pct may subsume MMF).
-            effective_cash_pct = max(cash_pct or 0, mmf_pct)
+            effective_cash_pct = max(cash_pct, mmf_pct)
             k_cash = effective_cash_pct / 100.0
         else:
             k_cash = 0.0
@@ -379,7 +380,7 @@ def score_cash_drag(conn: duckdb.DuckDBPyConnection, config: dict) -> dict[str, 
 
 
 def score_concentration_risk(
-    conn: duckdb.DuckDBPyConnection, config: dict
+    clients: list[dict], holdings: list[dict], config: dict
 ) -> dict[str, float]:
     """Score each client on concentration risk.
 
@@ -399,40 +400,31 @@ def score_concentration_risk(
         float(k): float(v) for k, v in config.get("s_asset_class_exposure", {}).items()
     }
 
-    # Per-client: single holding max, region max, asset class max
-    rows = conn.execute("""
-        SELECT c.client_id, c.aum
-        FROM clients c
-    """).fetchall()
-
-    client_aum = {row[0]: row[1] for row in rows if row[1] and row[1] > 0}
+    client_aum = {c["client_id"]: c["aum"] for c in clients if c.get("aum") and c["aum"] > 0}
 
     # Single holding exposure
-    single_rows = conn.execute("""
-        SELECT client_id, MAX(market_value) AS max_mv
-        FROM holdings
-        WHERE market_value IS NOT NULL
-        GROUP BY client_id
-    """).fetchall()
-
+    single_max: dict[str, float] = {}
+    for h in holdings:
+        mv = h.get("market_value")
+        if mv is None:
+            continue
+        cid = h["client_id"]
+        if cid not in single_max or mv > single_max[cid]:
+            single_max[cid] = mv
     single_exposure: dict[str, float] = {}
-    for client_id, max_mv in single_rows:
+    for client_id, max_mv in single_max.items():
         aum = client_aum.get(client_id, 0)
         single_exposure[client_id] = (max_mv / aum) if aum > 0 else 0.0
 
     # Region exposure
-    region_rows = conn.execute("""
-        SELECT client_id, region,
-               SUM(market_value) AS total_mv
-        FROM holdings
-        WHERE market_value IS NOT NULL AND region IS NOT NULL AND region != ''
-        GROUP BY client_id, region
-    """).fetchall()
-
     region_by_client: dict[str, dict[str, float]] = {}
-    for client_id, region, total_mv in region_rows:
-        region_by_client.setdefault(client_id, {})[region] = total_mv
-
+    for h in holdings:
+        mv = h.get("market_value")
+        region = h.get("region")
+        if mv is None or region is None or region == "":
+            continue
+        bucket = region_by_client.setdefault(h["client_id"], {})
+        bucket[region] = bucket.get(region, 0.0) + mv
     region_exposure: dict[str, float] = {}
     for client_id, regions in region_by_client.items():
         aum = client_aum.get(client_id, 0)
@@ -440,18 +432,14 @@ def score_concentration_risk(
         region_exposure[client_id] = max_pct
 
     # Asset class exposure
-    asset_rows = conn.execute("""
-        SELECT client_id, asset_class,
-               SUM(market_value) AS total_mv
-        FROM holdings
-        WHERE market_value IS NOT NULL AND asset_class IS NOT NULL AND asset_class != ''
-        GROUP BY client_id, asset_class
-    """).fetchall()
-
     asset_by_client: dict[str, dict[str, float]] = {}
-    for client_id, asset_class, total_mv in asset_rows:
-        asset_by_client.setdefault(client_id, {})[asset_class] = total_mv
-
+    for h in holdings:
+        mv = h.get("market_value")
+        asset_class = h.get("asset_class")
+        if mv is None or asset_class is None or asset_class == "":
+            continue
+        bucket = asset_by_client.setdefault(h["client_id"], {})
+        bucket[asset_class] = bucket.get(asset_class, 0.0) + mv
     asset_exposure: dict[str, float] = {}
     for client_id, assets in asset_by_client.items():
         aum = client_aum.get(client_id, 0)
@@ -471,7 +459,7 @@ def score_concentration_risk(
 
 
 def score_active_manage(
-    conn: duckdb.DuckDBPyConnection, config: dict
+    clients: list[dict], holdings: list[dict], config: dict
 ) -> dict[str, float]:
     """Score each client on investment experience.
 
@@ -484,34 +472,26 @@ def score_active_manage(
     weight = float(config.get("weight", 1))
     has_fund_score = float(config.get("has_fund", 3))
 
-    # A client "has fund" if they hold any non-Cash asset class
-    rows = conn.execute("""
-        SELECT client_id,
-               MAX(CASE WHEN asset_class != 'Cash' THEN 1 ELSE 0 END) AS has_non_cash
-        FROM holdings
-        GROUP BY client_id
-    """).fetchall()
-
     scores: dict[str, float] = {}
-    for client_id, has_non_cash in rows:
-        # Scale has_fund_score 0-10: if has fund → has_fund_score, else 0
-        # The score is on a 0-10 scale
-        if has_non_cash:
-            scores[client_id] = round(has_fund_score, 2)
-        else:
-            scores[client_id] = 0.0
+    for h in holdings:
+        cid = h["client_id"]
+        asset_class = h.get("asset_class")
+        if asset_class is not None and asset_class != "Cash":
+            scores[cid] = round(has_fund_score, 2)
+        elif cid not in scores:
+            scores[cid] = 0.0
 
     # Also include clients with no holdings at all
-    all_clients = conn.execute("SELECT client_id FROM clients").fetchall()
-    for (client_id,) in all_clients:
-        if client_id not in scores:
-            scores[client_id] = 0.0
+    for c in clients:
+        cid = c["client_id"]
+        if cid not in scores:
+            scores[cid] = 0.0
 
     return scores
 
 
 def score_life_stage(
-    conn: duckdb.DuckDBPyConnection, config: dict
+    clients: list[dict], config: dict
 ) -> dict[str, float]:
     """Score each client on life stage.
 
@@ -527,19 +507,16 @@ def score_life_stage(
 
     today = date.today()
 
-    rows = conn.execute("""
-        SELECT client_id, birthdate
-        FROM clients
-    """).fetchall()
-
     scores: dict[str, float] = {}
-    for client_id, birthdate_str in rows:
-        if not birthdate_str or birthdate_str.upper() in ("N/A", ""):
+    for c in clients:
+        client_id = c["client_id"]
+        birthdate_str = c.get("birthdate")
+        if not birthdate_str or str(birthdate_str).upper() in ("N/A", ""):
             scores[client_id] = 0.0
             continue
 
         try:
-            parts = birthdate_str.strip().split("-")
+            parts = str(birthdate_str).strip().split("-")
             if len(parts) < 3:
                 scores[client_id] = 0.0
                 continue
@@ -572,7 +549,7 @@ class ClientScore:
 
 
 def compute_total_scores(
-    conn: duckdb.DuckDBPyConnection, config: dict
+    clients: list[dict], holdings: list[dict], config: dict
 ) -> list[ClientScore]:
     """Compute weighted total score for all clients. Returns ranked list."""
 
@@ -591,17 +568,15 @@ def compute_total_scores(
     )
 
     # Per-dimension scores
-    cash_scores = score_cash_drag(conn, config.get("score_cash_drag", {}))
-    conc_scores = score_concentration_risk(conn, config.get("score_concentration_risk", {}))
-    active_scores = score_active_manage(conn, config.get("score_active_manage", {}))
-    life_scores = score_life_stage(conn, config.get("score_life_stage", {}))
-
-    # Fetch client names
-    client_rows = conn.execute("SELECT client_id, name FROM clients").fetchall()
-    client_names = {row[0]: row[1] for row in client_rows}
+    cash_scores = score_cash_drag(clients, holdings, config.get("score_cash_drag", {}))
+    conc_scores = score_concentration_risk(clients, holdings, config.get("score_concentration_risk", {}))
+    active_scores = score_active_manage(clients, holdings, config.get("score_active_manage", {}))
+    life_scores = score_life_stage(clients, config.get("score_life_stage", {}))
 
     results: list[ClientScore] = []
-    for client_id in client_names:
+    for c in clients:
+        client_id = c["client_id"]
+        name = c.get("name")
         s_cash = cash_scores.get(client_id, 0)
         s_conc = conc_scores.get(client_id, 0)
         s_active = active_scores.get(client_id, 0)
@@ -617,7 +592,7 @@ def compute_total_scores(
         results.append(
             ClientScore(
                 client_id=client_id,
-                name=client_names[client_id],
+                name=name,
                 total_score=round(total, 2),
                 s_cash=s_cash,
                 s_concentration=s_conc,
@@ -664,6 +639,13 @@ def export_csv(scores: list[ClientScore], output_path: Path) -> None:
     LOGGER.info("Exported %d client scores to %s", len(scores), output_path)
 
 
+def _fetch_table_as_dicts(conn: duckdb.DuckDBPyConnection, table: str) -> list[dict]:
+    """Fetch a full table as a list of dicts (seeder/CLI helper)."""
+    cursor = conn.execute(f"SELECT * FROM {table}")
+    cols = [d[0] for d in cursor.description]
+    return [dict(zip(cols, row)) for row in cursor.fetchall()]
+
+
 def run_score_card(
     config_path: str | Path = "config/config_planbot.yaml",
 ) -> list[ClientScore]:
@@ -696,7 +678,9 @@ def run_score_card(
         # DB already populated — use read-only to avoid lock conflicts
         conn = duckdb.connect(str(CLIENT_DB_PATH), read_only=True)
         try:
-            return compute_total_scores(conn, score_config)
+            clients = _fetch_table_as_dicts(conn, "clients")
+            holdings = _fetch_table_as_dicts(conn, "holdings")
+            return compute_total_scores(clients, holdings, score_config)
         finally:
             conn.close()
 
@@ -704,7 +688,9 @@ def run_score_card(
     conn = get_client_db_conn(read_only=False)
     try:
         init_client_db(conn)
-        scores = compute_total_scores(conn, score_config)
+        clients = _fetch_table_as_dicts(conn, "clients")
+        holdings = _fetch_table_as_dicts(conn, "holdings")
+        scores = compute_total_scores(clients, holdings, score_config)
         export_csv(scores, output_csv)
         return scores
     finally:

@@ -527,7 +527,6 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
         response = self.client.post(
             "/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings",
             json={
-                "product_types": ["bond", "bond_fund"],
                 "within_days": 180,
                 "response_mode": "path",
                 "include_debug_scores": False,

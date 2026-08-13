@@ -685,20 +685,9 @@ to DuckDB remain direct SQL during this sprint.
 | AC14 | All existing tests pass with the DuckDB adapter (same assertions, same data, adapter injected via fixture). |
 | AC15 | No `duckdb` or `httpx` import in any Logic Layer file (`client_api.py`, `product_tool.py`, `client_enrichment.py`, `product_scoring.py`, `investor_readiness_score.py` scorecard functions). |
 
-### Sprint 2 — Bank Adapter + `data_server.py` Wiring (scope; refine before start)
+### Sprint 2 — Bank Adapter + `data_server.py` Wiring
 
-**Objective:** Enable the REST backend path.  `data_server.py` gets the adapter
-switch.  Bank REST adapter is built and tested.
-
-**Tasks (brief — refine before Sprint 2 planning):**
-
-1. Wire `build_data_adapters()` into `data_server.py` at startup.
-2. Add `get_client_product_from_restapi: true` path — swap to `BankRestDataAdapter`.
-3. Implement `BankRestDataAdapter` calling `GET /crm/clients`, `GET /custody/holdings`, `GET /product-master/products`.
-4. Add adapter caching — in-memory TTL for REST adapters.
-5. Add `@pytest.mark.rest` tests against a mock bank REST server.
-6. Tier 2/3 cross-system inconsistency handling (retry + markdown caveat) — monitor orphan rate first.
-7. Move seeder/ETL code out of `investor_readiness_score.py` into an isolated module under `src/test_data/` (e.g. `client_seed.py`). The scorecard file keeps only pure functions; the seeder keeps `duckdb` import.
+Extracted to [data_access_layer_sprint2.md](data_access_layer_sprint2.md).
 
 ## What NOT to Do
 

@@ -129,6 +129,15 @@ def score_config() -> dict:
     }
 
 
+def _fetch_dicts(conn: duckdb.DuckDBPyConnection) -> tuple[list[dict], list[dict]]:
+    """Fetch clients + holdings as plain dicts from a DuckDB connection."""
+    def _fetch(table: str) -> list[dict]:
+        cur = conn.execute(f"SELECT * FROM {table}")
+        cols = [d[0] for d in cur.description]
+        return [dict(zip(cols, row)) for row in cur.fetchall()]
+    return _fetch("clients"), _fetch("holdings")
+
+
 # ---------------------------------------------------------------------------
 # Tests: _linear_interpolate
 # ---------------------------------------------------------------------------
@@ -167,19 +176,19 @@ class TestLinearInterpolate:
 
 class TestScoreCashDrag:
     def test_low_cash_scores_low(self, seeded_db, score_config):
-        scores = score_cash_drag(seeded_db, score_config["score_cash_drag"])
+        scores = score_cash_drag(*_fetch_dicts(seeded_db), score_config["score_cash_drag"])
         # Alice has 5% cash reported + $50K MMF / $1M AUM = 5% → effective 5%
         # That's k=0.05, which is below 0.2 pivot → score=0
         assert scores["PB-S-001"] <= 2.0
 
     def test_high_cash_scores_high(self, seeded_db, score_config):
-        scores = score_cash_drag(seeded_db, score_config["score_cash_drag"])
+        scores = score_cash_drag(*_fetch_dicts(seeded_db), score_config["score_cash_drag"])
         # Carol has 80% cash + $80K / $100K = 80% → effective 80%
         # k=0.8, between 0.5 and 1.0 → high score
         assert scores["PB-S-003"] >= 5.0
 
     def test_all_clients_have_scores(self, seeded_db, score_config):
-        scores = score_cash_drag(seeded_db, score_config["score_cash_drag"])
+        scores = score_cash_drag(*_fetch_dicts(seeded_db), score_config["score_cash_drag"])
         for cid in ["PB-S-001", "PB-S-002", "PB-S-003"]:
             assert cid in scores
             assert 0.0 <= scores[cid] <= 10.0
@@ -192,17 +201,17 @@ class TestScoreCashDrag:
 
 class TestScoreConcentrationRisk:
     def test_high_concentration_scores_high(self, seeded_db, score_config):
-        scores = score_concentration_risk(seeded_db, score_config["score_concentration_risk"])
+        scores = score_concentration_risk(*_fetch_dicts(seeded_db), score_config["score_concentration_risk"])
         # Bob has 1 holding of $350K / $500K = 70% in one stock → high concentration
         assert scores["PB-S-002"] >= 5.0
 
     def test_diversified_scores_lower(self, seeded_db, score_config):
-        scores = score_concentration_risk(seeded_db, score_config["score_concentration_risk"])
+        scores = score_concentration_risk(*_fetch_dicts(seeded_db), score_config["score_concentration_risk"])
         # Alice has 2 holdings: 50% stock, 5% cash → max is 50%
         assert scores["PB-S-001"] <= scores["PB-S-002"]
 
     def test_all_scores_in_range(self, seeded_db, score_config):
-        scores = score_concentration_risk(seeded_db, score_config["score_concentration_risk"])
+        scores = score_concentration_risk(*_fetch_dicts(seeded_db), score_config["score_concentration_risk"])
         for v in scores.values():
             assert 0.0 <= v <= 10.0
 
@@ -214,13 +223,13 @@ class TestScoreConcentrationRisk:
 
 class TestScoreActiveManage:
     def test_clients_with_non_cash_get_score(self, seeded_db, score_config):
-        scores = score_active_manage(seeded_db, score_config["score_active_manage"])
+        scores = score_active_manage(*_fetch_dicts(seeded_db), score_config["score_active_manage"])
         # Alice and Bob have non-Cash holdings
         assert scores["PB-S-001"] == 3.0
         assert scores["PB-S-002"] == 3.0
 
     def test_cash_only_client_scores_zero(self, seeded_db, score_config):
-        scores = score_active_manage(seeded_db, score_config["score_active_manage"])
+        scores = score_active_manage(*_fetch_dicts(seeded_db), score_config["score_active_manage"])
         # Carol only has Cash asset class
         assert scores["PB-S-003"] == 0.0
 
@@ -232,12 +241,12 @@ class TestScoreActiveManage:
 
 class TestScoreLifeStage:
     def test_mid_age_scores_high(self, seeded_db, score_config):
-        scores = score_life_stage(seeded_db, score_config["score_life_stage"])
+        scores = score_life_stage(_fetch_dicts(seeded_db)[0], score_config["score_life_stage"])
         # Alice born 1980 (~46 years old) → between 45 and 65 pivot → score ~10
         assert scores["PB-S-001"] >= 5.0
 
     def test_missing_birthdate_scores_zero(self, seeded_db, score_config):
-        scores = score_life_stage(seeded_db, score_config["score_life_stage"])
+        scores = score_life_stage(_fetch_dicts(seeded_db)[0], score_config["score_life_stage"])
         for v in scores.values():
             assert 0.0 <= v <= 10.0
 
@@ -249,16 +258,16 @@ class TestScoreLifeStage:
 
 class TestComputeTotalScores:
     def test_returns_all_clients(self, seeded_db, score_config):
-        scores = compute_total_scores(seeded_db, score_config)
+        scores = compute_total_scores(*_fetch_dicts(seeded_db), score_config)
         assert len(scores) == 3
 
     def test_sorted_descending(self, seeded_db, score_config):
-        scores = compute_total_scores(seeded_db, score_config)
+        scores = compute_total_scores(*_fetch_dicts(seeded_db), score_config)
         for i in range(len(scores) - 1):
             assert scores[i].total_score >= scores[i + 1].total_score
 
     def test_client_score_structure(self, seeded_db, score_config):
-        scores = compute_total_scores(seeded_db, score_config)
+        scores = compute_total_scores(*_fetch_dicts(seeded_db), score_config)
         s = scores[0]
         assert isinstance(s, ClientScore)
         assert s.client_id

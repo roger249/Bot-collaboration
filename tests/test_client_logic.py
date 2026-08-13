@@ -144,10 +144,7 @@ def test_db_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     db_path = tmp_path / "test_planbot.duckdb"
     _seed_minimal_db(db_path)
 
-    # Patch DB_PATH and CONFIG_PATH in client_api
-    monkeypatch.setattr("src.integrations.client_api.DB_PATH", db_path)
-
-    # Also write a minimal config for scoring
+    # Write a minimal config for scoring
     config_path = tmp_path / "config_planbot.yaml"
     config_path.write_text(
         yaml.dump({
@@ -166,7 +163,20 @@ def test_db_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         }),
         encoding="utf-8",
     )
-    monkeypatch.setattr("src.integrations.client_api.CONFIG_PATH", config_path)
+
+    planbot_config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+
+    from src.adapters.duckdb_adapter import DuckDBDataAdapter
+
+    adapter = DuckDBDataAdapter(db_path)
+    monkeypatch.setattr(
+        "src.integrations.client_api._get_adapters",
+        lambda: (adapter, adapter),
+    )
+    monkeypatch.setattr(
+        "src.integrations.client_api._load_planbot_config",
+        lambda: planbot_config,
+    )
 
     return db_path
 
@@ -297,24 +307,6 @@ class TestSearchHoldingsMaturing:
 
 
 class TestSearchByInvestorReadinessScore:
-    @pytest.fixture(autouse=True)
-    def _patch_run_score_card(self, monkeypatch, test_db_path):
-        """Patch run_score_card to use the test DB instead of re-seeding from CSV."""
-        from src.planbot import investor_readiness_score as irs
-
-        def _fake_run_score_card(config_path="config/config_planbot.yaml"):
-            conn = duckdb.connect(str(test_db_path), read_only=False)
-            try:
-                raw = yaml.safe_load(Path("config/config_planbot.yaml").read_text()) or {}
-                score_config = raw.get("investor_readiness_score", {})
-                return irs.compute_total_scores(conn, score_config)
-            finally:
-                conn.close()
-
-        monkeypatch.setattr(
-            "src.integrations.client_api.run_score_card", _fake_run_score_card
-        )
-
     def test_returns_ranked_clients(self, test_db_path: Path):
         results = search_by_investor_readiness_score()
         assert len(results) == 3

@@ -45,6 +45,7 @@ from src.shared.resolver_formatters import (
     format_client_and_holdings,
     format_product_catalog,
     read_http_resolver_config,
+    resolve_holdings_to_products,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -274,9 +275,11 @@ def _process_one_pair(
     if http_cfg is not None:
         # ── Phase B: HTTP resolver ──────────────────────────────────
         planbot_config = yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
-        data_service_url = (planbot_config.get("common") or {}).get(
-            "data_service_url", "http://localhost:8000/api/v1",
-        )
+        data_service_url = (planbot_config.get("common") or {}).get("data_service_url")
+        if not data_service_url:
+            raise RuntimeError(
+                "common.data_service_url is not set in config_planbot.yaml."
+            )
         base_url = data_service_url.replace("/api/v1", "")
 
         resolver = HttpApiResolver(
@@ -336,12 +339,7 @@ def _process_one_pair(
                     alt_products.append(alt)
 
         # Resolve holdings to full product dicts for the catalog
-        holdings = client_data.get("holdings", [])
-        holdings_products: list[dict] = []
-        for h in holdings:
-            hp = search_by_product_id(h.get("product_id", ""))
-            if hp:
-                holdings_products.append(hp)
+        holdings_products = resolve_holdings_to_products(client_data.get("holdings", []))
 
         # Compute PFS (suggested + alternatives) for the LLM prompt
         pfs_scores = compute_pfs_for_products(

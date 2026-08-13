@@ -1,10 +1,10 @@
 """
-Product Tool API — Python methods for querying products from DuckDB.
+Product Tool API — thin orchestrator (Logic Layer, no I/O).
 
 Implements the four methods defined in:
     docs/prompts/prod_spec/tool/product_tool.md
 
-All product data lives in: data/planbot/db/planbot.duckdb
+All product data is retrieved through the Data Access Layer adapters.
 """
 
 from __future__ import annotations
@@ -12,178 +12,54 @@ from __future__ import annotations
 import json
 import logging
 import math
-import re
 from datetime import date
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-import duckdb
 import yaml
 
 from src.shared.product_family import get_product_family
 from src.planbot.investor_readiness_score import score_concentration_risk
+from src.planbot.product_scoring import (
+    _build_similarity_query_from_product,
+    _derive_asset_class,
+    _extract_coupon,
+    _extract_time_to_maturity_days,
+    _get_product_expected_return,
+    _parse_time_to_maturity,
+    compute_concentration_risk,
+    compute_similarity_score,
+)
 
 LOGGER = logging.getLogger(__name__)
 
-DB_PATH = Path("data/planbot/db/planbot.duckdb")
-CONFIG_PATH = Path("config/config_planbot.yaml")
-
-# ---------------------------------------------------------------------------
-# DB connection
-# ---------------------------------------------------------------------------
-
-
-def _get_conn(read_only: bool = True) -> duckdb.DuckDBPyConnection:
-    if not DB_PATH.exists():
-        raise FileNotFoundError(
-            f"Shared DuckDB not found at {DB_PATH}. "
-            "Run investor_readiness_score.py and product_catalog_seed.py first."
-        )
-    conn = duckdb.connect(str(DB_PATH), read_only=read_only)
-    conn.execute("PRAGMA enable_progress_bar=false;")
-    return conn
+_ROOT_DIR = Path(__file__).resolve().parents[2]
+_CONFIG_PATH = _ROOT_DIR / "config" / "config_planbot.yaml"
 
 
 # ---------------------------------------------------------------------------
-# Config helpers
+# Config + adapter (loaded once per process)
 # ---------------------------------------------------------------------------
 
 
-def _load_product_scoring_config() -> dict:
-    raw = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8")) or {}
-    return raw.get("product_fitness_score", {})
+@lru_cache(maxsize=1)
+def _load_planbot_config() -> dict:
+    return yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
+
+
+def _get_adapters():
+    from src.adapters.data_adapter import build_data_adapters
+
+    return build_data_adapters(_load_planbot_config())
+
+
+def _product_scoring_config() -> dict:
+    return _load_planbot_config().get("product_fitness_score", {})
 
 
 # ---------------------------------------------------------------------------
-# Time-to-maturity helpers
-# ---------------------------------------------------------------------------
-
-_TIME_UNIT_TO_DAYS: dict[str, float] = {
-    "d": 1.0,
-    "w": 7.0,
-    "m": 30.4375,  # 365.25 / 12
-    "y": 365.25,
-}
-
-
-def _parse_time_to_maturity(raw: str) -> float | None:
-    """Parse '2y', '30d', '6m' → days as float."""
-    m = re.match(r"^([\d.]+)\s*([dwmy])$", raw.strip().lower())
-    if not m:
-        return None
-    value = float(m.group(1))
-    unit = m.group(2)
-    return value * _TIME_UNIT_TO_DAYS.get(unit, 365.25)
-
-
-def _extract_time_to_maturity_days(
-    product: dict, trade_date: str
-) -> float | None:
-    """Extract time-to-maturity in days from a product dict."""
-    ts = product.get("type_specific") or {}
-    product_type = product.get("product_type", "")
-
-    if product_type == "bond":
-        maturity_str = ts.get("maturity")
-        if maturity_str:
-            try:
-                maturity_date = date.fromisoformat(maturity_str)
-                ref = date.fromisoformat(trade_date)
-                return float((maturity_date - ref).days)
-            except (ValueError, TypeError):
-                return None
-    elif product_type == "bond_fund":
-        duration = ts.get("effective_duration")
-        if duration is not None:
-            try:
-                return float(duration) * 365.0
-            except (ValueError, TypeError):
-                return None
-    return None
-
-
-# ---------------------------------------------------------------------------
-# Coupon extraction helpers
-# ---------------------------------------------------------------------------
-
-_COUPON_JSON_PATHS: dict[str, str] = {
-    "bond": "$.coupon_rate",
-    "bond_fund": "$.ytm",
-    "equity_fund": "$.dividend_yield",
-    "stock": "$.dividend_yield",
-    "balanced_fund": "$.dividend_yield",
-    "money_market_fund": "$.yield_type",
-}
-
-
-def _extract_coupon(product: dict) -> float | None:
-    """Extract coupon/dividend yield from type_specific JSON."""
-    product_type = product.get("product_type", "")
-    ts = product.get("type_specific") or {}
-
-    if product_type == "bond":
-        val = ts.get("coupon_rate")
-        return float(val) if val is not None else None
-    elif product_type == "bond_fund":
-        val = ts.get("ytm")
-        return float(val) if val is not None else None
-    elif product_type in ("equity_fund", "stock", "balanced_fund"):
-        val = ts.get("dividend_yield")
-        return float(val) if val is not None else None
-    elif product_type == "money_market_fund":
-        val = ts.get("yield_type")
-        if val is not None:
-            try:
-                return float(val)
-            except (ValueError, TypeError):
-                pass
-    return None
-
-
-# ---------------------------------------------------------------------------
-# Asset class derivation
-# ---------------------------------------------------------------------------
-
-_ASSET_CLASS_MAP: dict[str, str] = {
-    "bond": "fixed_income",
-    "bond_fund": "fixed_income",
-    "equity_fund": "equity",
-    "stock": "equity",
-    "money_market_fund": "cash",
-    "balanced_fund": "balanced",
-}
-
-
-def _derive_asset_class(product_type: str) -> str:
-    return _ASSET_CLASS_MAP.get(product_type, product_type)
-
-
-# ---------------------------------------------------------------------------
-# Linear interpolation (copied from investor_readiness_score for self-contained use)
-# ---------------------------------------------------------------------------
-
-
-def _linear_interpolate(x: float, pivot: dict[float, float]) -> float:
-    """Linear interpolate (or extrapolate flat) x against pivot dict."""
-    if not pivot:
-        return 0.0
-    sorted_keys = sorted(pivot.keys())
-    if x <= sorted_keys[0]:
-        return pivot[sorted_keys[0]]
-    if x >= sorted_keys[-1]:
-        return pivot[sorted_keys[-1]]
-    for i in range(len(sorted_keys) - 1):
-        x0, x1 = sorted_keys[i], sorted_keys[i + 1]
-        if x0 <= x <= x1:
-            y0, y1 = pivot[x0], pivot[x1]
-            if x1 == x0:
-                return y0
-            return y0 + (y1 - y0) * (x - x0) / (x1 - x0)
-    return 0.0
-
-
-# ---------------------------------------------------------------------------
-# Product row helpers
+# Product row helpers (kept for backward-compatible imports)
 # ---------------------------------------------------------------------------
 
 COLUMNS = [
@@ -217,91 +93,29 @@ def _row_to_dict(row: tuple, cols: list[str] = COLUMNS) -> dict:
 def search_by_product_id(product_id: str) -> dict | None:
     """Look up a single product by its ``product_id``."""
     LOGGER.debug("search_by_product_id input: product_id=%s", product_id)
-    conn = _get_conn(read_only=True)
-    try:
-        sql = f"SELECT {', '.join(COLUMNS)} FROM products WHERE product_id = ?"
-        row = conn.execute(sql, [product_id]).fetchone()
-        if row is None:
-            LOGGER.debug("search_by_product_id output: product_id=%s found=False", product_id)
-            return None
-        result = _row_to_dict(row)
-        LOGGER.debug("search_by_product_id output: %s", result)
-        return result
-    finally:
-        conn.close()
+    rows = search_by_product_ids([product_id])
+    if not rows:
+        LOGGER.debug("search_by_product_id output: product_id=%s found=False", product_id)
+        return None
+    result = rows[0]
+    LOGGER.debug("search_by_product_id output: %s", result)
+    return result
+
+
+def search_by_product_ids(product_ids: list[str]) -> list[dict]:
+    """Batch look up products by ``product_id`` in a single query.
+
+    Returns full product dicts in the order requested (missing IDs omitted).
+    """
+    if not product_ids:
+        return []
+    _, product_adapter = _get_adapters()
+    rows = product_adapter.fetch_products(list(product_ids))
+    by_id = {r["product_id"]: r for r in rows}
+    return [by_id[pid] for pid in product_ids if pid in by_id]
 
 
 # ── 2. search_similar ─────────────────────────────────────────────────────
-
-
-def _compute_similarity_score(
-    product: dict,
-    query: dict,
-    sigmas: dict[str, float],
-    weights: dict[str, float],
-    *,
-    risk_rating_hard_filter: bool = True,
-    trade_date: str = "",
-) -> float:
-    """Compute similarity score for a single product against the query."""
-    score = 0.0
-    total_weight = 0.0
-
-    # --- numeric dimensions ---
-    for dim in ("risk_rating", "expected_return"):
-        q_val = query.get(dim)
-        if q_val is None:
-            continue
-        p_val = product.get(dim)
-        if p_val is None:
-            continue
-        sigma = sigmas.get(dim, 1.0)
-        s_i = 1.0 - min(abs(p_val - q_val) / sigma, 1.0)
-        w = weights.get(dim, 0.0)
-        score += w * s_i
-        total_weight += w
-
-    # --- categorical dimensions ---
-    for dim in ("product_type", "asset_class", "region", "sector"):
-        q_val = query.get(dim)
-        if q_val is None:
-            continue
-        if dim == "asset_class":
-            p_val = _derive_asset_class(product.get("product_type", ""))
-        else:
-            p_val = product.get(dim)
-        s_i = 1.0 if str(p_val or "").lower() == str(q_val or "").lower() else 0.0
-        w = weights.get(dim, 0.0)
-        score += w * s_i
-        total_weight += w
-
-    # --- time_to_maturity ---
-    q_ttm = query.get("time_to_maturity")
-    if q_ttm is not None:
-        p_days = _extract_time_to_maturity_days(product, trade_date)
-        if p_days is not None:
-            q_days = _parse_time_to_maturity(str(q_ttm))
-            if q_days is not None:
-                sigma = sigmas.get("time_to_maturity", 730.0)
-                s_i = 1.0 - min(abs(p_days - q_days) / sigma, 1.0)
-                w = weights.get("time_to_maturity", 0.0)
-                score += w * s_i
-                total_weight += w
-
-    # --- coupon ---
-    q_coupon = query.get("coupon")
-    if q_coupon is not None:
-        p_coupon = _extract_coupon(product)
-        if p_coupon is not None:
-            sigma = sigmas.get("coupon", 2.0)
-            s_i = 1.0 - min(abs(p_coupon - float(q_coupon)) / sigma, 1.0)
-            w = weights.get("coupon", 0.0)
-            score += w * s_i
-            total_weight += w
-
-    if total_weight == 0:
-        return 0.0
-    return score / total_weight  # renormalized by included dimensions
 
 
 def search_similar(
@@ -331,7 +145,7 @@ def search_similar(
     exclude_product_ids : list[str] | None
         Product IDs to exclude.
     """
-    config = _load_product_scoring_config()
+    config = _product_scoring_config()
     weights = config.get("search_similar_weights", {})
     sigmas_yaml = config.get("search_similar_sigmas", {})
 
@@ -341,15 +155,8 @@ def search_similar(
     LOGGER.debug("search_similar input: top_n=%s risk_rating_hard_filter=%s diversification=%s max_per_product_type=%s exclude=%s query=%s",
                  top_n, risk_rating_hard_filter, diversification, max_per_product_type, exclude_product_ids, query)
 
-    conn = _get_conn(read_only=True)
-    try:
-        # Fetch all products
-        sql = f"SELECT {', '.join(COLUMNS)} FROM products"
-        rows = conn.execute(sql).fetchall()
-    finally:
-        conn.close()
-
-    products = [_row_to_dict(r) for r in rows]
+    _, product_adapter = _get_adapters()
+    products = product_adapter.fetch_products()
 
     # Exclude
     exclude = set(exclude_product_ids or [])
@@ -386,7 +193,7 @@ def search_similar(
     # Score all products
     scored = []
     for p in products:
-        score = _compute_similarity_score(
+        score = compute_similarity_score(
             p, query, sigmas, weights,
             risk_rating_hard_filter=False,  # already handled above
             trade_date=trade_date_str,
@@ -430,31 +237,6 @@ def search_similar(
 
 
 # ── 3. search_reinvestment_candidates ─────────────────────────────────────
-
-
-def _build_similarity_query_from_product(product: dict) -> dict:
-    """Build a search_similar query dict from a product's attributes."""
-    query: dict[str, Any] = {
-        "risk_rating": product["risk_rating"],
-        "expected_return": product["expected_return"],
-        "product_type": product["product_type"],
-        "region": product["region"],
-        "sector": product["sector"],
-    }
-    query["asset_class"] = _derive_asset_class(product["product_type"])
-
-    # For bonds/bond_funds, include maturity and coupon
-    pt = product.get("product_type", "")
-    if pt in ("bond", "bond_fund"):
-        ts = product.get("type_specific") or {}
-        if pt == "bond":
-            query["time_to_maturity"] = "2y"
-        else:
-            dur = ts.get("effective_duration")
-            if dur:
-                query["time_to_maturity"] = f"{float(dur)}y"
-
-    return query
 
 
 def search_similar_to_product(
@@ -567,7 +349,7 @@ def search_product_by_fitness_score(
     exclude_dimensions : list[str] | None
         Dimensions to exclude. None = all 4 included.
     """
-    config = _load_product_scoring_config()
+    config = _product_scoring_config()
     weights = config.get("product_fitness_weights", {})
     params = config.get("product_fitness_params", {})
 
@@ -579,86 +361,34 @@ def search_product_by_fitness_score(
         sorted(exclude) if exclude else "none",
     )
 
-    # --- Load clients, holdings, products ---
-    conn = _get_conn(read_only=True)
-    try:
-        # Clients
-        client_rows = conn.execute(
-            "SELECT client_id, name, aum, risk_rating FROM clients WHERE client_id IN ("
-            + ",".join("?" for _ in client_ids) + ")",
-            client_ids,
-        ).fetchall()
+    client_adapter, product_adapter = _get_adapters()
+    clients = client_adapter.fetch_clients(client_ids)
+    products = product_adapter.fetch_products(product_ids)
+    holdings = client_adapter.fetch_holdings(client_ids)
 
-        client_cols = ["client_id", "name", "aum", "risk_rating"]
-        clients_map: dict[str, dict] = {
-            r[0]: dict(zip(client_cols, r)) for r in client_rows
-        }
+    clients_map: dict[str, dict] = {c["client_id"]: c for c in clients}
+    products_map: dict[str, dict] = {p["product_id"]: p for p in products}
 
-        # Products
-        prod_rows = conn.execute(
-            "SELECT " + ", ".join(COLUMNS) + " FROM products WHERE product_id IN ("
-            + ",".join("?" for _ in product_ids) + ")",
-            product_ids,
-        ).fetchall()
-        products_map: dict[str, dict] = {r[0]: _row_to_dict(r) for r in prod_rows}
+    # Group + normalize holdings by client, enriching with product_type
+    holdings_by_client: dict[str, list[dict]] = {}
+    for h in holdings:
+        hh = dict(h)
+        hh["market_value"] = hh.get("market_value") or 0
+        hh["region"] = hh.get("region") or ""
+        hh["asset_class"] = hh.get("asset_class") or ""
+        p = products_map.get(hh.get("product_id"))
+        hh["product_type"] = p.get("product_type", "") if p else ""
+        holdings_by_client.setdefault(hh["client_id"], []).append(hh)
 
-        # Holdings — all for these clients
-        hold_rows = conn.execute(
-            "SELECT client_id, product_id, market_value FROM holdings WHERE client_id IN ("
-            + ",".join("?" for _ in client_ids) + ")",
-            client_ids,
-        ).fetchall()
-        holdings_by_client: dict[str, list[dict]] = {}
-        for cid, pid, mv in hold_rows:
-            holdings_by_client.setdefault(cid, []).append({
-                "product_id": pid,
-                "market_value": mv or 0,
-            })
-
-        # Enrich holdings with product_type from products table
-        all_hold_prod_ids = list({h["product_id"] for hh in holdings_by_client.values() for h in hh})
-        if all_hold_prod_ids:
-            prod_type_rows = conn.execute(
-                "SELECT product_id, product_type FROM products WHERE product_id IN ("
-                + ",".join("?" for _ in all_hold_prod_ids) + ")",
-                all_hold_prod_ids,
-            ).fetchall()
-            prod_type_map = {r[0]: r[1] for r in prod_type_rows}
-        else:
-            prod_type_map = {}
-
-        for cid in holdings_by_client:
-            for h in holdings_by_client[cid]:
-                h["product_type"] = prod_type_map.get(h["product_id"], "")
-
-        # --- Concentration config ---
-        conc_config_raw = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8")) or {}
-        conc_config = conc_config_raw.get("investor_readiness_score", {}).get(
+    # Concentration config
+    conc_config = (
+        _load_planbot_config().get("investor_readiness_score", {}).get(
             "score_concentration_risk", {}
         )
+    )
 
-        # Pre-compute concentration scores for all clients (connection still open)
-        concentration_scores = score_concentration_risk(conn, conc_config) if conc_config else {}
-
-        # Also fetch holdings with asset_class/region for hypothetical calc
-        hold_detail_rows = conn.execute(
-            "SELECT h.client_id, h.product_id, h.market_value, h.region, h.asset_class "
-            "FROM holdings h WHERE h.client_id IN ("
-            + ",".join("?" for _ in client_ids) + ")",
-            client_ids,
-        ).fetchall()
-        hold_details: dict[str, list[dict]] = {}
-        for row in hold_detail_rows:
-            cid, pid, mv, reg, ac = row
-            hold_details.setdefault(cid, []).append({
-                "product_id": pid,
-                "market_value": mv or 0,
-                "region": reg or "",
-                "asset_class": ac or "",
-            })
-
-    finally:
-        conn.close()
+    # Pre-compute concentration scores for all clients
+    concentration_scores = score_concentration_risk(clients, holdings, conc_config) if conc_config else {}
 
     # --- Score every pair ---
     results: list[dict] = []
@@ -671,8 +401,8 @@ def search_product_by_fitness_score(
         client_rr = client.get("risk_rating")
         client_aum = float(client.get("aum") or 0)
 
-        holdings = holdings_by_client.get(cid, [])
-        held_product_types = {h["product_type"] for h in holdings if h["product_type"]}
+        holdings_cid = holdings_by_client.get(cid, [])
+        held_product_types = {h["product_type"] for h in holdings_cid if h["product_type"]}
         held_product_families = {get_product_family(pt) for pt in held_product_types}
 
         for pid in product_ids:
@@ -712,8 +442,8 @@ def search_product_by_fitness_score(
                 conc_test_pct = float(params.get("concentration_test_position_pct_aum", 0.10))
                 test_notional = conc_test_pct * client_aum
 
-                hypo_risk = _compute_hypothetical_concentration_risk(
-                    cid, product, hold_details.get(cid, []),
+                hypo_risk = compute_concentration_risk(
+                    cid, product, holdings_cid,
                     client_aum, test_notional, conc_config,
                     concentration_scores.get(cid, 5.0),
                 )
@@ -736,7 +466,7 @@ def search_product_by_fitness_score(
             if dims["better_product_score"]:
                 prod_type = product.get("product_type", "")
                 candidate_er = product.get("expected_return")
-                comparable = [h for h in holdings if h["product_type"] == prod_type]
+                comparable = [h for h in holdings_cid if h["product_type"] == prod_type]
 
                 if comparable and candidate_er is not None:
                     total_mv = sum(h["market_value"] for h in comparable)
@@ -807,87 +537,3 @@ def search_product_by_fitness_score(
     results = results[:top_n]
 
     return {"results": results}
-
-
-# ---------------------------------------------------------------------------
-# Concentration helper for PFS
-# ---------------------------------------------------------------------------
-
-
-def _compute_hypothetical_concentration_risk(
-    client_id: str,
-    candidate_product: dict,
-    hold_details: list[dict],
-    aum: float,
-    test_notional: float,
-    conc_config: dict,
-    existing_concentration_score: float,
-) -> float:
-    """Compute hypothetical concentration risk after adding candidate product.
-
-    Takes the existing concentration score and adjusts for the candidate's
-    impact on single-holding, region, and asset-class exposures.
-    """
-    if aum <= 0:
-        return existing_concentration_score
-
-    single_pivot = {
-        float(k): float(v)
-        for k, v in conc_config.get("s_single_holding", {"0.2": 0, "1.0": 10}).items()
-    }
-    region_pivot = {
-        float(k): float(v)
-        for k, v in conc_config.get("s_region_exposure", {"0.4": 0, "1.0": 10}).items()
-    }
-    asset_pivot = {
-        float(k): float(v)
-        for k, v in conc_config.get("s_asset_class_exposure", {"0.6": 0, "1.0": 10}).items()
-    }
-
-    # Existing exposures
-    existing_single_max = max((h["market_value"] for h in hold_details), default=0)
-    new_single_max = max(existing_single_max, test_notional)
-    new_single_pct = new_single_max / aum
-    s_single = _linear_interpolate(new_single_pct, single_pivot)
-
-    # Region exposure
-    candidate_region = candidate_product.get("region", "")
-    region_totals: dict[str, float] = {}
-    for h in hold_details:
-        reg = h.get("region", "")
-        if reg:
-            region_totals[reg] = region_totals.get(reg, 0) + h["market_value"]
-    if candidate_region:
-        region_totals[candidate_region] = region_totals.get(candidate_region, 0) + test_notional
-    max_region_pct = max(v / aum for v in region_totals.values()) if region_totals else 0
-    s_region = _linear_interpolate(max_region_pct, region_pivot)
-
-    # Asset class exposure
-    candidate_ac = candidate_product.get("asset_class", "") or _derive_asset_class(
-        candidate_product.get("product_type", "")
-    )
-    ac_totals: dict[str, float] = {}
-    for h in hold_details:
-        ac = h.get("asset_class", "")
-        if ac:
-            ac_totals[ac] = ac_totals.get(ac, 0) + h["market_value"]
-    if candidate_ac:
-        ac_totals[candidate_ac] = ac_totals.get(candidate_ac, 0) + test_notional
-    max_ac_pct = max(v / aum for v in ac_totals.values()) if ac_totals else 0
-    s_asset = _linear_interpolate(max_ac_pct, asset_pivot)
-
-    return max(s_single, s_region, s_asset)
-
-
-def _get_product_expected_return(
-    product_id: str, products_map: dict[str, dict]
-) -> float | None:
-    """Helper to get expected_return, checking both the products_map cache and DB."""
-    if product_id in products_map:
-        return products_map[product_id].get("expected_return")
-    # fallback: try DB
-    prod = search_by_product_id(product_id)
-    if prod:
-        products_map[product_id] = prod
-        return prod.get("expected_return")
-    return None

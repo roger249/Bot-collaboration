@@ -1,180 +1,67 @@
 """
-Client API — Python methods for querying client data from the unified DuckDB.
+Client API — thin orchestrator (Logic Layer, no I/O).
 
 Implements the four methods defined in:
     docs/prompts/prod_spec/tool/client_tool.md
 
-All data lives in a single DuckDB: data/planbot/db/planbot.duckdb
+All data is retrieved through the Data Access Layer adapters.
 """
 
 from __future__ import annotations
 
 import logging
-from datetime import date
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-import duckdb
 import yaml
 
-from src.planbot.investor_readiness_score import (
-    score_cash_drag,
-    score_concentration_risk,
-    score_active_manage,
-    score_life_stage,
-    compute_total_scores,
-    run_score_card,
+from src.adapters.data_adapter import DataAdapter, build_data_adapters
+from src.planbot.client_enrichment import (
+    _match_range,
+    compute_derived_fields,
+    search_holdings_maturing as _pure_search_holdings_maturing,
 )
-from src.shared.product_family import get_product_family
 
 LOGGER = logging.getLogger(__name__)
 
-DB_PATH = Path("data/planbot/db/planbot.duckdb")
-CONFIG_PATH = Path("config/config_planbot.yaml")
-
-# ---------------------------------------------------------------------------
-# DB connection
-# ---------------------------------------------------------------------------
-
-
-def _get_conn(read_only: bool = True) -> duckdb.DuckDBPyConnection:
-    if not DB_PATH.exists():
-        raise FileNotFoundError(
-            f"Shared DuckDB not found at {DB_PATH}. "
-            "Run investor_readiness_score.py and product_catalog_seed.py first."
-        )
-    conn = duckdb.connect(str(DB_PATH), read_only=read_only)
-    conn.execute("PRAGMA enable_progress_bar=false;")
-    return conn
+_ROOT_DIR = Path(__file__).resolve().parents[2]
+_CONFIG_PATH = _ROOT_DIR / "config" / "config_planbot.yaml"
 
 
 # ---------------------------------------------------------------------------
-# Config helpers
+# Config + adapter (loaded once per process)
 # ---------------------------------------------------------------------------
 
 
-def _load_score_config() -> dict:
-    raw = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8")) or {}
-    return raw.get("investor_readiness_score", {})
+@lru_cache(maxsize=1)
+def _load_planbot_config() -> dict:
+    return yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
+
+
+def _get_adapters() -> tuple[DataAdapter, DataAdapter]:
+    return build_data_adapters(_load_planbot_config())
+
+
+def _score_config() -> dict:
+    return _load_planbot_config().get("investor_readiness_score", {})
 
 
 # ---------------------------------------------------------------------------
-# Derived field computation
+# Holding formatting
 # ---------------------------------------------------------------------------
 
-
-def _compute_derived_fields(conn: duckdb.DuckDBPyConnection) -> dict[str, dict[str, Any]]:
-    """Pre-compute all derived fields for every client."""
-    score_config = _load_score_config()
-
-    rows = conn.execute("""
-        SELECT client_id, name, aum, cash_pct, region,
-               birthdate, occupation, risk_rating, marital_status,
-               children_info, liquidity_need, income_stability,
-               investment_objective, qualitative_profile
-        FROM clients
-    """).fetchall()
-
-    cols = ["client_id", "name", "aum", "cash_pct", "region",
-            "birthdate", "occupation", "risk_rating", "marital_status",
-            "children_info", "liquidity_need", "income_stability",
-            "investment_objective", "qualitative_profile"]
-    clients: dict[str, dict] = {row[0]: dict(zip(cols, row)) for row in rows}
-
-    today = date.today()
-    for c in clients.values():
-        # Normalize risk_rating to int (may be stored as VARCHAR after migration)
-        rr = c.get("risk_rating")
-        if rr is not None and not isinstance(rr, int):
-            try:
-                c["risk_rating"] = int(rr)
-            except (ValueError, TypeError):
-                c["risk_rating"] = None
-        bd = c.get("birthdate")
-        if not bd or str(bd).upper() in ("N/A", ""):
-            c["age"] = None
-        else:
-            try:
-                parts = str(bd).strip().split("-")
-                bdate = date(int(parts[0]), int(parts[1]), int(parts[2]))
-                c["age"] = today.year - bdate.year - ((today.month, today.day) < (bdate.month, bdate.day))
-            except (ValueError, IndexError):
-                c["age"] = None
-
-    # has_fund
-    hf = conn.execute("""
-        SELECT DISTINCT h.client_id
-        FROM holdings h JOIN products p ON h.product_id = p.product_id
-        WHERE p.product_type != 'money_market_fund'
-    """).fetchall()
-    hf_set = {r[0] for r in hf}
-    for cid, c in clients.items():
-        c["has_fund"] = cid in hf_set
-
-    # product_types_in_holdings
-    ptr = conn.execute("""
-        SELECT h.client_id, p.product_type
-        FROM holdings h JOIN products p ON h.product_id = p.product_id
-    """).fetchall()
-    pt_map: dict[str, set] = {}
-    for cid, pt in ptr:
-        pt_map.setdefault(cid, set()).add(pt)
-    for cid, c in clients.items():
-        pts = pt_map.get(cid, set())
-        c["product_types_in_holdings"] = sorted(pts)
-        c["product_families_in_holdings"] = sorted({get_product_family(p) for p in pts})
-
-    # cash_pct
-    cpr = conn.execute("""
-        SELECT c.client_id, c.cash_pct,
-               COALESCE(SUM(CASE WHEN h.asset_class='Cash' THEN h.market_value ELSE 0 END),0)
-        FROM clients c LEFT JOIN holdings h ON c.client_id = h.client_id
-        GROUP BY c.client_id, c.aum, c.cash_pct
-    """).fetchall()
-    for cid, raw_cp, mmf in cpr:
-        aum = clients.get(cid, {}).get("aum", 0)
-        if aum and aum > 0:
-            mmf_pct = (mmf / aum) * 100 if mmf else 0
-            clients[cid]["cash_pct_computed"] = round(max(raw_cp or 0, mmf_pct), 2)
-        else:
-            clients[cid]["cash_pct_computed"] = 0.0
-
-    # Scores from investor_readiness_score module
-    cash_sc = score_cash_drag(conn, score_config.get("score_cash_drag", {}))
-    conc_sc = score_concentration_risk(conn, score_config.get("score_concentration_risk", {}))
-    act_sc = score_active_manage(conn, score_config.get("score_active_manage", {}))
-    life_sc = score_life_stage(conn, score_config.get("score_life_stage", {}))
-    total_sc = {s.client_id: s.total_score for s in compute_total_scores(conn, score_config)}
-
-    for cid in clients:
-        clients[cid]["cash_score"] = cash_sc.get(cid, 0.0)
-        clients[cid]["concentration_score"] = conc_sc.get(cid, 0.0)
-        clients[cid]["active_score"] = act_sc.get(cid, 0.0)
-        clients[cid]["life_stage_score"] = life_sc.get(cid, 0.0)
-        clients[cid]["investor_readiness_score"] = total_sc.get(cid, 0.0)
-
-    return clients
+_HOLDING_FIELDS = [
+    "holding_idx", "holding_id", "product_id", "instrument_name", "symbol",
+    "asset_class", "region", "currency", "quantity", "book_cost", "market_value",
+    "unrealized_pl", "unrealized_pl_pct", "yield_pct", "risk_bucket", "esg_score", "liquidity",
+]
 
 
-def _enrich_holdings(conn: duckdb.DuckDBPyConnection, client_id: str) -> list[dict]:
-    rows = conn.execute("""
-        SELECT holding_idx, holding_id, product_id, instrument_name, symbol,
-               asset_class, region, currency, quantity, book_cost, market_value,
-               unrealized_pl, unrealized_pl_pct, yield_pct, risk_bucket, esg_score, liquidity
-        FROM holdings WHERE client_id = ? ORDER BY holding_idx
-    """, [client_id]).fetchall()
-
-    return [
-        {
-            "holding_idx": r[0], "holding_id": r[1], "product_id": r[2],
-            "instrument_name": r[3], "symbol": r[4], "asset_class": r[5],
-            "region": r[6], "currency": r[7], "quantity": r[8],
-            "book_cost": r[9], "market_value": r[10], "unrealized_pl": r[11],
-            "unrealized_pl_pct": r[12], "yield_pct": r[13],
-            "risk_bucket": r[14], "esg_score": r[15], "liquidity": r[16],
-        }
-        for r in rows
-    ]
+def _format_holdings(holdings: list[dict]) -> list[dict]:
+    """Order and trim raw holding dicts to the nested-holding shape."""
+    ordered = sorted(holdings, key=lambda h: h.get("holding_idx") or 0)
+    return [{k: h.get(k) for k in _HOLDING_FIELDS} for h in ordered]
 
 
 # ---------------------------------------------------------------------------
@@ -185,45 +72,20 @@ def _enrich_holdings(conn: duckdb.DuckDBPyConnection, client_id: str) -> list[di
 def search_by_id(client_id: str) -> dict | None:
     """Return full client profile with nested holdings."""
     LOGGER.debug("search_by_id input: client_id=%s", client_id)
-    conn = _get_conn(read_only=True)
-    try:
-        row = conn.execute("""
-            SELECT client_id, name, aum, cash_pct, region,
-                   birthdate, occupation, risk_rating, marital_status,
-                   children_info, liquidity_need, income_stability,
-                   investment_objective, qualitative_profile
-            FROM clients
-            WHERE client_id = ?
-        """, [client_id]).fetchone()
-        if row is None:
-            return None
+    client_adapter, product_adapter = _get_adapters()
+    clients = client_adapter.fetch_clients([client_id])
+    holdings = client_adapter.fetch_holdings([client_id])
+    products = product_adapter.fetch_products()
 
-        cols = ["client_id", "name", "aum", "cash_pct", "region",
-                "birthdate", "occupation", "risk_rating", "marital_status",
-                "children_info", "liquidity_need", "income_stability",
-                "investment_objective", "qualitative_profile"]
-        client = dict(zip(cols, row))
+    enriched = compute_derived_fields(clients, holdings, products, _score_config())
+    client = enriched.get(client_id)
+    if client is None:
+        LOGGER.debug("search_by_id output: client_id=%s found=False", client_id)
+        return None
 
-        # Normalize risk_rating to int
-        rr = client.get("risk_rating")
-        if rr is not None and not isinstance(rr, int):
-            try:
-                client["risk_rating"] = int(rr)
-            except (ValueError, TypeError):
-                client["risk_rating"] = None
-
-        derived = _compute_derived_fields(conn)
-        cid = client["client_id"]
-        if cid in derived:
-            for k, v in derived[cid].items():
-                if k not in client:
-                    client[k] = v
-
-        client["holdings"] = _enrich_holdings(conn, cid)
-        LOGGER.debug("search_by_id output: %s", client)
-        return client
-    finally:
-        conn.close()
+    client["holdings"] = _format_holdings(holdings)
+    LOGGER.debug("search_by_id output: %s", client)
+    return client
 
 
 def search(**criteria: Any) -> list[dict]:
@@ -237,37 +99,38 @@ def search(**criteria: Any) -> list[dict]:
         cash_score: float or [min, max]
     """
     LOGGER.debug("search input: criteria=%s", criteria)
-    conn = _get_conn(read_only=True)
-    try:
-        all_clients = _compute_derived_fields(conn)
+    client_adapter, product_adapter = _get_adapters()
+    clients = client_adapter.fetch_clients()
+    holdings = client_adapter.fetch_holdings()
+    products = product_adapter.fetch_products()
 
-        results = []
-        for cid, c in all_clients.items():
-            if not _match_range(c.get("risk_rating"), criteria.get("risk_rating")):
+    all_clients = compute_derived_fields(clients, holdings, products, _score_config())
+
+    results = []
+    for cid, c in all_clients.items():
+        if not _match_range(c.get("risk_rating"), criteria.get("risk_rating")):
+            continue
+        if "age" in criteria and criteria["age"] is not None:
+            if not _match_range(c.get("age"), criteria["age"]):
                 continue
-            if "age" in criteria and criteria["age"] is not None:
-                if not _match_range(c.get("age"), criteria["age"]):
-                    continue
-            if "product_types_in_holdings" in criteria and criteria["product_types_in_holdings"] is not None:
-                cats = set(c.get("product_families_in_holdings", []))
-                req = criteria["product_types_in_holdings"]
-                if isinstance(req, str):
-                    req = [req]
-                if not cats.intersection(req):
-                    continue
-            if "concentration_score" in criteria and criteria["concentration_score"] is not None:
-                if not _match_range(c.get("concentration_score"), criteria["concentration_score"]):
-                    continue
-            if "cash_score" in criteria and criteria["cash_score"] is not None:
-                if not _match_range(c.get("cash_score"), criteria["cash_score"]):
-                    continue
-            results.append(c)
+        if "product_types_in_holdings" in criteria and criteria["product_types_in_holdings"] is not None:
+            cats = set(c.get("product_families_in_holdings", []))
+            req = criteria["product_types_in_holdings"]
+            if isinstance(req, str):
+                req = [req]
+            if not cats.intersection(req):
+                continue
+        if "concentration_score" in criteria and criteria["concentration_score"] is not None:
+            if not _match_range(c.get("concentration_score"), criteria["concentration_score"]):
+                continue
+        if "cash_score" in criteria and criteria["cash_score"] is not None:
+            if not _match_range(c.get("cash_score"), criteria["cash_score"]):
+                continue
+        results.append(c)
 
-        results.sort(key=lambda x: x.get("investor_readiness_score", 0), reverse=True)
-        LOGGER.debug("search output: %s", results)
-        return results
-    finally:
-        conn.close()
+    results.sort(key=lambda x: x.get("investor_readiness_score", 0), reverse=True)
+    LOGGER.debug("search output: %s", results)
+    return results
 
 
 def search_holdings_maturing(
@@ -275,67 +138,46 @@ def search_holdings_maturing(
     within_days: int = 14,
     as_of_date: str | None = None,
 ) -> list[dict]:
-    """Find bonds/FI maturing within a given window.
-
-    Joins holdings → products, extracts $.maturity from type_specific JSON.
-    """
+    """Find bonds/FI maturing within a given window (pure Logic Layer)."""
     LOGGER.debug("search_holdings_maturing input: product_types=%s within_days=%s as_of_date=%s", product_types, within_days, as_of_date)
-    conn = _get_conn(read_only=True)
-    try:
-        if product_types is None:
-            product_types = ["bond"]
-        ref = as_of_date or date.today().isoformat()
-        ph = ",".join("?" for _ in product_types)
-
-        # DuckDB supports date + integer for day arithmetic (unlike INTERVAL with params)
-        query = f"""
-            SELECT h.client_id, h.product_id, h.market_value,
-                   DATEDIFF('day', CAST(? AS DATE),
-                     CAST(json_extract_string(p.type_specific, '$.maturity') AS DATE))
-            FROM holdings h JOIN products p ON h.product_id = p.product_id
-            WHERE p.product_type IN ({ph})
-              AND json_extract_string(p.type_specific, '$.maturity') IS NOT NULL
-              AND CAST(json_extract_string(p.type_specific, '$.maturity') AS DATE)
-                  BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) + ?
-            ORDER BY 4 ASC, h.market_value DESC
-        """
-        params = [ref] + list(product_types) + [ref, ref, within_days]
-        rows = conn.execute(query, params).fetchall()
-
-        result = [{"client_id": r[0], "product_id": r[1], "market_value": r[2], "days_to_mature": r[3]} for r in rows]
-        LOGGER.debug("search_holdings_maturing output: %s", result)
-        return result
-    finally:
-        conn.close()
+    client_adapter, product_adapter = _get_adapters()
+    holdings = client_adapter.fetch_holdings()
+    products = product_adapter.fetch_products()
+    result = _pure_search_holdings_maturing(holdings, products, product_types, within_days, as_of_date)
+    LOGGER.debug("search_holdings_maturing output: %s", result)
+    return result
 
 
 def search_by_investor_readiness_score(top_n: int | None = None) -> list[dict]:
     """Return clients ranked by investor readiness score."""
     LOGGER.debug("search_by_investor_readiness_score input: top_n=%s", top_n)
-    scores = run_score_card()
+    client_adapter, product_adapter = _get_adapters()
+    clients = client_adapter.fetch_clients()
+    holdings = client_adapter.fetch_holdings()
+    products = product_adapter.fetch_products()
+
+    enriched = compute_derived_fields(clients, holdings, products, _score_config())
+    ranked = sorted(
+        enriched.values(),
+        key=lambda c: c.get("investor_readiness_score", 0),
+        reverse=True,
+    )
     if top_n is not None and top_n > 0:
-        scores = scores[:top_n]
+        ranked = ranked[:top_n]
 
     result = [
         {
-            "rank": i, "client_id": s.client_id, "name": s.name,
-            "total_score": s.total_score, "s_cash": s.s_cash,
-            "s_concentration": s.s_concentration, "s_active": s.s_active,
-            "s_lifestage": s.s_lifestage,
+            "rank": i,
+            "client_id": c["client_id"],
+            "name": c.get("name"),
+            "total_score": c.get("investor_readiness_score", 0),
+            "s_cash": c.get("cash_score", 0),
+            "s_concentration": c.get("concentration_score", 0),
+            "s_active": c.get("active_score", 0),
+            "s_lifestage": c.get("life_stage_score", 0),
         }
-        for i, s in enumerate(scores, 1)
+        for i, c in enumerate(ranked, 1)
     ]
     LOGGER.info("IRS: %d clients scored (top_n=%s)", len(result), top_n)
     LOGGER.debug("search_by_investor_readiness_score output: %s", result)
     return result
-
-
-def _match_range(value: Any, criterion: Any) -> bool:
-    if criterion is None:
-        return True
-    if value is None:
-        return False
-    if isinstance(criterion, (list, tuple)) and len(criterion) == 2:
-        lo, hi = criterion
-        return (lo is None or value >= lo) and (hi is None or value <= hi)
-    return value == criterion

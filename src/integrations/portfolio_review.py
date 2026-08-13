@@ -58,15 +58,17 @@ def propose_portfolio_review(
     http_cfg = read_http_resolver_config(_CONFIG_PATH)
     if http_cfg is None:
         raise RuntimeError(
-            "Portfolio review endpoint requires get_client_product_from_db=true "
+            "Portfolio review endpoint requires get_client_product_from_restapi=true "
             "in config_planbot.yaml common section."
         )
 
     # ── Fetch client data via HTTP resolver ──────────────────────────
     planbot_config = yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
-    data_service_url = (planbot_config.get("common") or {}).get(
-        "data_service_url", "http://localhost:8000/api/v1",
-    )
+    data_service_url = (planbot_config.get("common") or {}).get("data_service_url")
+    if not data_service_url:
+        raise RuntimeError(
+            "common.data_service_url is not set in config_planbot.yaml."
+        )
     base_url = data_service_url.replace("/api/v1", "")
 
     resolver = HttpApiResolver(
