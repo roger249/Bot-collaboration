@@ -124,7 +124,7 @@ def search_similar(
     top_n: int = 3,
     risk_rating_hard_filter: bool = True,
     diversification: bool = True,
-    max_per_product_type: int = 2,
+    max_candidates_per_product_type: int = 2,
     exclude_product_ids: list[str] | None = None,
 ) -> dict:
     """Proximity search returning products ranked by similarity.
@@ -139,9 +139,9 @@ def search_similar(
     risk_rating_hard_filter : bool
         If True, enforce product.risk_rating <= query.risk_rating.
     diversification : bool
-        If True, group by product_type and select top max_per_product_type per group.
-    max_per_product_type : int
-        Max products per product_type group when diversification=True.
+        If True, group by product_type and select top max_candidates_per_product_type per group.
+    max_candidates_per_product_type : int
+        Max candidates per product_type group when diversification=True.
     exclude_product_ids : list[str] | None
         Product IDs to exclude.
     """
@@ -152,8 +152,8 @@ def search_similar(
     query = query or {}
     trade_date_str = query.get("trade_date", date.today().isoformat())
 
-    LOGGER.debug("search_similar input: top_n=%s risk_rating_hard_filter=%s diversification=%s max_per_product_type=%s exclude=%s query=%s",
-                 top_n, risk_rating_hard_filter, diversification, max_per_product_type, exclude_product_ids, query)
+    LOGGER.debug("search_similar input: top_n=%s risk_rating_hard_filter=%s diversification=%s max_candidates_per_product_type=%s exclude=%s query=%s",
+                 top_n, risk_rating_hard_filter, diversification, max_candidates_per_product_type, exclude_product_ids, query)
 
     _, product_adapter = _get_adapters()
     products = product_adapter.fetch_products()
@@ -211,7 +211,7 @@ def search_similar(
             grouped.setdefault(pt, []).append(p)
         result = []
         for pt, items in grouped.items():
-            result.extend(items[:max_per_product_type])
+            result.extend(items[:max_candidates_per_product_type])
         result.sort(key=lambda x: x["similarity_score"], reverse=True)
         result = result[:top_n]
     else:
@@ -244,7 +244,7 @@ def search_similar_to_product(
     *,
     top_n: int = 3,
     diversification: bool = True,
-    max_per_product_type: int = 2,
+    max_candidates_per_product_type: int = 2,
     risk_rating_hard_filter: bool = True,
     exclude_product_ids: list[str] | None = None,
 ) -> dict:
@@ -259,7 +259,7 @@ def search_similar_to_product(
         query=_build_similarity_query_from_product(product),
         top_n=top_n,
         diversification=diversification,
-        max_per_product_type=max_per_product_type,
+        max_candidates_per_product_type=max_candidates_per_product_type,
         risk_rating_hard_filter=risk_rating_hard_filter,
         exclude_product_ids=exclude,
     )
@@ -269,8 +269,8 @@ def search_reinvestment_candidates(
     client_ids: list[str],
     source_product_id: str,
     *,
-    max_per_product_type: int = 2,
-    top_n_per_client: int | None = None,
+    max_candidates_per_product_type: int = 2,
+    max_candidates_per_client: int | None = None,
     risk_rating_hard_filter: bool = True,
     exclude_product_ids: list[str] | None = None,
 ) -> dict:
@@ -282,17 +282,17 @@ def search_reinvestment_candidates(
         Client IDs to generate candidates for.
     source_product_id : str
         Product ID whose attributes are used as the similarity query.
-    max_per_product_type : int
-        Max products per product_type group (diversification).
-    top_n_per_client : int | None
+    max_candidates_per_product_type : int
+        Max candidates per product_type group (diversification).
+    max_candidates_per_client : int | None
         Max results per client. None = return all.
     risk_rating_hard_filter : bool
         Passed through to search_similar.
     exclude_product_ids : list[str] | None
         Passed through to search_similar.
     """
-    LOGGER.debug("search_reinvestment_candidates input: client_ids=%s source_product_id=%s max_per_product_type=%s top_n_per_client=%s risk_rating_hard_filter=%s exclude=%s",
-                 client_ids, source_product_id, max_per_product_type, top_n_per_client, risk_rating_hard_filter, exclude_product_ids)
+    LOGGER.debug("search_reinvestment_candidates input: client_ids=%s source_product_id=%s max_candidates_per_product_type=%s max_candidates_per_client=%s risk_rating_hard_filter=%s exclude=%s",
+                 client_ids, source_product_id, max_candidates_per_product_type, max_candidates_per_client, risk_rating_hard_filter, exclude_product_ids)
     source = search_by_product_id(source_product_id)
     if source is None:
         raise ValueError(f"Source product not found: {source_product_id}")
@@ -301,15 +301,15 @@ def search_reinvestment_candidates(
     for cid in client_ids:
         sim_result = search_similar_to_product(
             source,
-            top_n=top_n_per_client or 9999,  # large, diversification + limit after
+            top_n=max_candidates_per_client or 9999,  # large, diversification + limit after
             risk_rating_hard_filter=risk_rating_hard_filter,
             diversification=True,
-            max_per_product_type=max_per_product_type,
+            max_candidates_per_product_type=max_candidates_per_product_type,
             exclude_product_ids=exclude_product_ids,
         )
         client_results = sim_result.get("results", [])
-        if top_n_per_client:
-            client_results = client_results[:top_n_per_client]
+        if max_candidates_per_client:
+            client_results = client_results[:max_candidates_per_client]
         results[cid] = [
             {
                 "product_id": r["product_id"],
@@ -413,7 +413,7 @@ def search_product_by_fitness_score(
             # Determine included dimensions
             dims = {
                 "risk_rating_match_score": "risk_rating_match_score" not in exclude,
-                "concentration_score": "concentration_score" not in exclude,
+                "diversification_score": "diversification_score" not in exclude,
                 "has_similar_investment_experience_score": "has_similar_investment_experience_score" not in exclude,
                 "better_product_score": "better_product_score" not in exclude,
             }
@@ -437,8 +437,8 @@ def search_product_by_fitness_score(
                 else:
                     comp_scores["risk_rating_match_score"] = 5.0  # neutral if unknown
 
-            # 2) concentration_score
-            if dims["concentration_score"]:
+            # 2) diversification_score
+            if dims["diversification_score"]:
                 conc_test_pct = float(params.get("concentration_test_position_pct_aum", 0.10))
                 test_notional = conc_test_pct * client_aum
 
@@ -447,7 +447,7 @@ def search_product_by_fitness_score(
                     client_aum, test_notional, conc_config,
                     concentration_scores.get(cid, 5.0),
                 )
-                comp_scores["concentration_score"] = round(max(0.0, min(10.0, 10.0 - hypo_risk)), 2)
+                comp_scores["diversification_score"] = round(max(0.0, min(10.0, 10.0 - hypo_risk)), 2)
 
             # 3) has_similar_investment_experience_score
             if dims["has_similar_investment_experience_score"]:

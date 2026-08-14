@@ -157,8 +157,8 @@ Suggested signature:
 ```python
 generate_reinvestment_proposal(
    reinvestment_targets: list[dict[str, str]],
-   max_per_product_type: int = 2,
-   top_n_per_client: int = 10,
+   max_candidates_per_product_type: int = 2,
+   max_candidates_per_client: int = 10,
    risk_rating_hard_filter: bool = True,
    response_mode: str = "path",  # one of: path, markdown, both
    include_llm_input: bool = False,
@@ -173,8 +173,8 @@ generate_reinvestment_proposal(
 - `reinvestment_targets`: list of target objects. Each object must contain:
    - `client_id`
    - `source_product_id`
-- `max_per_product_type`: diversification cap for candidate selection.
-- `top_n_per_client`: maximum number of candidate products passed to the LLM.
+- `max_candidates_per_product_type`: diversification cap for candidate selection.
+- `max_candidates_per_client`: maximum number of candidate products passed to the LLM.
 - `risk_rating_hard_filter`: boolean, whether to enforce the hard risk filter in the product API. Default is `True`.
 - `response_mode`: one of `path`, `markdown`, `both`. Default is `path`.
 - `include_llm_input`: whether to include the assembled LLM input block in API output. Default is `False` (not included).
@@ -211,8 +211,8 @@ Proposed endpoint:
       {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
       {"client_id": "PB-HK-000002-6", "source_product_id": "BOND-ABC"}
    ],
-   "max_per_product_type": 2,
-   "top_n_per_client": 10,
+   "max_candidates_per_product_type": 2,
+   "max_candidates_per_client": 10,
    "risk_rating_hard_filter": true,
    "response_mode": "path",
    "include_llm_input": false,
@@ -345,7 +345,7 @@ Implemented `POST /api/v1/reinvestment-proposals` in `src/integrations/server.py
 |---|---|---|
 | AC1 | Reinvestment proposal generation can run from a Python function without reading client/product static files | Unit test with mocked APIs |
 | AC2 | The Python function retrieves client and product data only through the APIs | Code review and integration test |
-| AC3 | Candidate selection uses `search_reinvestment_candidates` and honors `max_per_product_type` | Unit test with known candidate pool |
+| AC3 | Candidate selection uses `search_reinvestment_candidates` and honors `max_candidates_per_product_type` | Unit test with known candidate pool |
 | AC4 | The `llm_input` payload includes client, holdings, source product, candidates, and market outlook blocks | Snapshot test of assembled payload |
 | AC5 | The same Python function is callable through a FastAPI endpoint | HTTP integration test |
 | AC6 | Output remains compatible with the current reinvestment proposal structure | Validate required section headers (in expected order), ensure each required section is non-empty, and check critical anchors (recommended product ID and risk disclosure presence) |

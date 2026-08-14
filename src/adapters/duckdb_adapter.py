@@ -34,6 +34,7 @@ class DuckDBDataAdapter:
         id_col: str | None,
         *,
         json_cols: tuple[str, ...] = (),
+        order_by: str | None = None,
     ) -> list[dict]:
         if not self._db_path.exists():
             raise FileNotFoundError(
@@ -49,6 +50,8 @@ class DuckDBDataAdapter:
                 placeholders = ",".join("?" for _ in ids)
                 query += f" WHERE {id_col} IN ({placeholders})"
                 params = list(ids)
+            if order_by:
+                query += f" ORDER BY {order_by}"
             cursor = conn.execute(query, params)
             cols = [d[0] for d in cursor.description]
             rows = [dict(zip(cols, row)) for row in cursor.fetchall()]
@@ -72,7 +75,7 @@ class DuckDBDataAdapter:
         limit: int | None = None,
         offset: int = 0,
     ) -> list[dict]:
-        rows = self._fetch("clients", client_ids, "client_id")
+        rows = self._fetch("clients", client_ids, "client_id", order_by="client_id")
         return rows[offset : offset + limit] if limit is not None else rows[offset:]
 
     def fetch_holdings(
@@ -82,7 +85,10 @@ class DuckDBDataAdapter:
         limit: int | None = None,
         offset: int = 0,
     ) -> list[dict]:
-        rows = self._fetch("holdings", client_ids, "client_id")
+        rows = self._fetch(
+            "holdings", client_ids, "client_id",
+            order_by="client_id, holding_idx",
+        )
         return rows[offset : offset + limit] if limit is not None else rows[offset:]
 
     def fetch_products(
@@ -93,7 +99,8 @@ class DuckDBDataAdapter:
         offset: int = 0,
     ) -> list[dict]:
         rows = self._fetch(
-            "products", product_ids, "product_id", json_cols=_PRODUCT_JSON_COLUMNS
+            "products", product_ids, "product_id", json_cols=_PRODUCT_JSON_COLUMNS,
+            order_by="product_id",
         )
         return rows[offset : offset + limit] if limit is not None else rows[offset:]
 

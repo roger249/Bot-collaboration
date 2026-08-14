@@ -12,13 +12,14 @@ Start with:
 from __future__ import annotations
 
 import logging
+from contextlib import asynccontextmanager
 from enum import Enum
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 
 from src.integrations.reinvestment_proposal import (
     propose_reinvestment,
@@ -30,23 +31,34 @@ from src.integrations.product_opportunity_proposal import (
     propose_product_opportunity_automatch,
 )
 from src.integrations.portfolio_review import propose_portfolio_review
+from src.integrations.client_api import (
+    search_by_investor_readiness_score,
+    search_holdings_maturing,
+)
+from src.integrations.product_tool import (
+    search_product_by_fitness_score,
+    search_reinvestment_candidates,
+    search_similar,
+)
 
 from src.shared.logging_utils import init_logging
 
 LOGGER = logging.getLogger(__name__)
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_logging()
+    LOGGER.info("Proposal Server startup complete.")
+    yield
+
+
 app = FastAPI(
     title="PlanBot Proposal API",
     description="Reinvestment proposal generation API.",
     version="0.1.0",
+    lifespan=lifespan,
 )
-
-
-@app.on_event("startup")
-async def _on_startup() -> None:
-    init_logging()
-    LOGGER.info("Proposal Server startup complete.")
 
 
 # Shared request-body documentation, rendered by Swagger UI as Markdown at the
@@ -62,9 +74,9 @@ _RESPONSE_MODE_DOC = (
 _COMMON_SCORING_PARAMS_DOC = (
     "| Field | Type | Description |\n"
     "|---|---|---|\n"
-    "| `max_per_product_type` | int (1–10) | Diversification cap on how many "
+    "| `max_candidates_per_product_type` | int (1–10) | Diversification cap on how many "
     "candidate products are kept per product type. Default `2`. |\n"
-    "| `top_n_per_client` | int (1–50) | Max candidate products passed to the "
+    "| `max_candidates_per_client` | int (1–50) | Max candidate products passed to the "
     "LLM per client. Default `10`. |\n"
     "| `risk_rating_hard_filter` | bool | When `true`, only products with "
     "`risk_rating <= client.risk_rating` are considered. Default `true`. |\n"
@@ -114,13 +126,13 @@ class ProposeReinvestmentRequest(BaseModel):
             ],
         },
     )
-    max_per_product_type: int = Field(
+    max_candidates_per_product_type: int = Field(
         2,
         description="Max candidate products per product type. "
         "Diversification cap applied when selecting similar products.",
         ge=1, le=10,
     )
-    top_n_per_client: int = Field(
+    max_candidates_per_client: int = Field(
         10,
         description="Max candidate products per client. "
         "Total number of replacement candidates passed to the LLM.",
@@ -166,10 +178,10 @@ class MaturingHoldingsRequest(BaseModel):
     max_clients: int = Field(
         2, description="Cap on number of clients to process", ge=1, le=100,
     )
-    max_per_product_type: int = Field(
+    max_candidates_per_product_type: int = Field(
         2, description="Max candidates per product type", ge=1, le=10,
     )
-    top_n_per_client: int = Field(
+    max_candidates_per_client: int = Field(
         10, description="Max candidate products per client", ge=1, le=50,
     )
     risk_rating_hard_filter: bool = Field(
@@ -286,7 +298,7 @@ class ProductInvestorMatcherRequest(BaseModel):
     )
     top_n: int = Field(3, ge=1, le=20, json_schema_extra={"example": 3})
     market_outlook: str | None = Field(
-        default=None, json_schema_extra={"default": None},
+        default=None, json_schema_extra={"example": "Rates remain elevated; favor short-duration high-quality credit over long duration."},
     )
 
 
@@ -352,8 +364,8 @@ def match_products_to_investors_endpoint(
         "  \"reinvestment_targets\": [\n"
         "    {\"client_id\": \"PB-HK-000007-5\", \"source_product_id\": \"PROD053\"}\n"
         "  ],\n"
-        "  \"max_per_product_type\": 2,\n"
-        "  \"top_n_per_client\": 10,\n"
+        "  \"max_candidates_per_product_type\": 2,\n"
+        "  \"max_candidates_per_client\": 10,\n"
         "  \"risk_rating_hard_filter\": true,\n"
         "  \"response_mode\": \"both\",\n"
         "  \"include_debug_scores\": false\n"
@@ -365,8 +377,8 @@ def get_reinvestment_proposals(body: ProposeReinvestmentRequest) -> dict:
     """Generate reinvestment proposals for one or more target pairs."""
     return propose_reinvestment(
         reinvestment_targets=[t.model_dump() for t in body.reinvestment_targets],
-        max_per_product_type=body.max_per_product_type,
-        top_n_per_client=body.top_n_per_client,
+        max_candidates_per_product_type=body.max_candidates_per_product_type,
+        max_candidates_per_client=body.max_candidates_per_client,
         risk_rating_hard_filter=body.risk_rating_hard_filter,
         response_mode=body.response_mode,
         include_llm_input=body.include_llm_input,
@@ -400,8 +412,8 @@ def propose_for_maturing_holdings(body: MaturingHoldingsRequest) -> dict:
         within_days=body.within_days,
         as_of_date=body.as_of_date,
         max_clients=body.max_clients,
-        max_per_product_type=body.max_per_product_type,
-        top_n_per_client=body.top_n_per_client,
+        max_candidates_per_product_type=body.max_candidates_per_product_type,
+        max_candidates_per_client=body.max_candidates_per_client,
         risk_rating_hard_filter=body.risk_rating_hard_filter,
         response_mode=body.response_mode,
         include_llm_input=body.include_llm_input,
@@ -419,8 +431,14 @@ class OpportunityProposalRequest(BaseModel):
     """Single-shot product opportunity proposal."""
     model_config = ConfigDict(extra="allow")
 
-    client_id: str = Field(..., description="Client identifier")
-    product_id: str = Field(..., description="Primary suggested product ID")
+    client_id: str = Field(
+        ..., description="Client identifier",
+        json_schema_extra={"example": "PB-HK-000007-5"},
+    )
+    product_id: str = Field(
+        ..., description="Primary suggested product ID",
+        json_schema_extra={"example": "PROD054"},
+    )
     rationale: str = Field("", description="Freeform markdown rationale")
     suggested_products_and_rationale: str = Field(
         "",
@@ -429,7 +447,7 @@ class OpportunityProposalRequest(BaseModel):
     )
     run_matcher: bool = Field(False, description="Run matcher to obtain rationale")
     market_outlook: str | None = Field(
-        default=None, json_schema_extra={"default": None},
+        default=None, json_schema_extra={"example": "Rates remain elevated; favor short-duration high-quality credit over long duration."},
     )
     alternative_count: int = Field(3, description="Number of alternative products", ge=0)
 
@@ -452,7 +470,7 @@ class AutomatchRequest(BaseModel):
           "product_ids": ["bank_recommended"],
           "client_selection": {"risk_rating": [1, 5]},
           "run_matcher": true,
-          "max_proposals": 3
+          "max_proposals": 2
         }
 
     When *product_source* is ``default_yaml``, *product_ids* may contain
@@ -475,7 +493,7 @@ class AutomatchRequest(BaseModel):
     )
     run_matcher: bool = Field(False, json_schema_extra={"example": True})
     max_proposals: int = Field(
-        10, json_schema_extra={"example": 3},
+        10, json_schema_extra={"example": 2},
     )
 
 
@@ -540,7 +558,7 @@ class PortfolioReviewRequest(BaseModel):
         json_schema_extra={"example": "PB-HK-000001-8"},
     )
     market_outlook: str | None = Field(
-        default=None, json_schema_extra={"default": None},
+        default=None, json_schema_extra={"example": "Rates remain elevated; favor short-duration high-quality credit over long duration."},
     )
 
 
@@ -564,6 +582,303 @@ def generate_portfolio_review(body: PortfolioReviewRequest) -> dict:
     return propose_portfolio_review(
         client_id=body.client_id,
         market_outlook=body.market_outlook,
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Data lookup endpoints (moved from the data server for the front-end app)
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class SimilarProductSearchRequest(BaseModel):
+    """Proximity search returning products ranked by similarity."""
+
+    query: dict = Field(
+        ..., description="Product attributes to match against",
+        json_schema_extra={"example": {"risk_rating": 1, "expected_return": 3.7, "product_type": "bond"}},
+    )
+    top_n: int = Field(3, ge=1, le=50)
+    risk_rating_hard_filter: bool = True
+    diversification: bool = True
+    max_candidates_per_product_type: int = Field(2, ge=1, le=10)
+    exclude_product_ids: list[str] | None = Field(
+        None, json_schema_extra={"example": ["PROD053"]},
+    )
+
+
+class ReinvestmentCandidatesRequest(BaseModel):
+    """Find reinvestment candidates for a list of clients."""
+
+    client_ids: list[str] = Field(
+        ..., min_length=1, json_schema_extra={"example": ["PB-HK-000007-5"]},
+    )
+    source_product_id: str = Field(
+        ..., description="Maturing product to find replacements for",
+        json_schema_extra={"example": "PROD053"},
+    )
+    max_candidates_per_product_type: int = Field(2, ge=1, le=10)
+    max_candidates_per_client: int | None = Field(None, ge=1, le=50)
+    risk_rating_hard_filter: bool = True
+    exclude_product_ids: list[str] | None = None
+
+
+class FitnessScoreRequest(BaseModel):
+    """Compute product fitness scores for client×product pairs."""
+
+    client_ids: list[str] = Field(
+        ..., min_length=1, json_schema_extra={"example": ["PB-HK-000007-5"]},
+    )
+    product_ids: list[str] = Field(
+        ..., min_length=1, json_schema_extra={"example": ["PROD054", "ETF-BIL", "ETF-SHV"]},
+    )
+    top_n: int = Field(10, ge=1, le=50)
+    risk_rating_hard_filter: bool = True
+    exclude_dimensions: list[str] | None = Field(
+        None, json_schema_extra={"example": ["diversification_score"]},
+    )
+
+
+# ── Response models (for OpenAPI documentation only) ──────────────────────
+
+
+class SimilarProductSearchResult(BaseModel):
+    results: list[dict] = Field(default_factory=list)
+
+
+class CandidateResultItem(BaseModel):
+    product_id: str = Field(..., json_schema_extra={"example": "PROD054"})
+    similarity_score: float = Field(..., json_schema_extra={"example": 0.9933})
+    name: str | None = None
+    product_type: str | None = None
+    investment_note: str | None = None
+
+
+class CandidatesResult(BaseModel):
+    results_by_client: dict[str, list[CandidateResultItem]] = Field(default_factory=dict)
+
+
+class ComponentScores(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    risk_rating_match_score: float | None = None
+    diversification_score: float | None = None
+    has_similar_investment_experience_score: float | None = None
+    better_product_score: float | None = None
+
+
+class FitnessScoreItem(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    client_id: str
+    product_id: str
+    product_name: str | None = None
+    investment_note: str | None = None
+    fitness_score: float
+    component_scores: ComponentScores
+
+
+class FitnessScoreResult(BaseModel):
+    results: list[FitnessScoreItem] = Field(default_factory=list)
+
+
+class ReadinessItem(BaseModel):
+    rank: int
+    client_id: str
+    name: str
+    investor_readiness_score: float
+    cash_score: float
+    concentration_score: float
+    active_score: float
+    life_stage_score: float
+
+
+class MaturingHoldingItem(BaseModel):
+    client_id: str
+    product_id: str
+    market_value: float
+    days_to_mature: int
+
+
+# ── Endpoints ─────────────────────────────────────────────────────────────
+
+
+def _example_response(example) -> dict:
+    """OpenAPI 200 response body with a single real-data example."""
+    return {200: {"content": {"application/json": {"example": example}}}}
+
+
+_MATURING_EXAMPLE = {
+    "client_id": "PB-HK-000007-5",
+    "product_id": "PROD053",
+    "market_value": 3360000.0,
+    "days_to_mature": 17,
+}
+
+_READINESS_EXAMPLE = {
+    "rank": 1,
+    "client_id": "PB-HK-000001-8",
+    "name": "David Kim",
+    "investor_readiness_score": 29.5,
+    "cash_score": 8.0,
+    "concentration_score": 10.0,
+    "active_score": 3.0,
+    "life_stage_score": 8.5,
+}
+
+_SEARCH_SIMILAR_EXAMPLE = {
+    "results": [
+        {
+            "product_id": "PROD044",
+            "name": "China Government Bond",
+            "product_type": "bond",
+            "risk_rating": 1,
+            "expected_return": 3.5,
+            "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing.",
+            "similarity_score": 1.0,
+        }
+    ]
+}
+
+_CANDIDATES_EXAMPLE = {
+    "results_by_client": {
+        "PB-HK-000007-5": [
+            {
+                "product_id": "PROD054",
+                "name": "US Treasury 3.75% 30Jun27",
+                "product_type": "bond",
+                "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing.",
+                "similarity_score": 0.9366,
+            }
+        ]
+    }
+}
+
+_FITNESS_EXAMPLE = {
+    "results": [
+        {
+            "client_id": "PB-HK-000007-5",
+            "product_id": "PROD054",
+            "product_name": "US Treasury 3.75% 30Jun27",
+            "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing.",
+            "fitness_score": 0.75,
+            "component_scores": {
+                "risk_rating_match_score": 2.5,
+                "diversification_score": 0.0,
+                "has_similar_investment_experience_score": 0.0,
+                "better_product_score": 0.0,
+            },
+        }
+    ]
+}
+
+
+@app.get(
+    "/api/v1/clients/holdings/maturing",
+    response_model=list[MaturingHoldingItem],
+    responses=_example_response([_MATURING_EXAMPLE]),
+)
+def get_holdings_maturing(
+    product_types: str | None = Query(
+        default=None,
+        description="Comma-separated list of product types to include (e.g. `bond,bond_fund`). "
+        "Omit to default to `bond` only.",
+        openapi_examples={
+            "Bonds + bond funds": {"value": "bond,bond_fund"},
+        },
+    ),
+    within_days: int = Query(
+        default=14, description="Calendar days to maturity.",
+        openapi_examples={"One year": {"value": 365}},
+    ),
+    as_of_date: str | None = Query(
+        default=None,
+        description="Reference date (ISO 8601). Defaults to system date.",
+        openapi_examples={"Explicit date": {"value": "2026-08-14"}},
+    ),
+) -> list[dict]:
+    """Find clients with bonds or fixed-income products maturing."""
+    pts = [t.strip() for t in product_types.split(",")] if product_types else None
+    return search_holdings_maturing(
+        product_types=pts,
+        within_days=within_days,
+        as_of_date=as_of_date,
+    )
+
+
+@app.get(
+    "/api/v1/clients/readiness",
+    response_model=list[ReadinessItem],
+    responses=_example_response([_READINESS_EXAMPLE]),
+)
+def get_investor_readiness(
+    top_n: int = Query(
+        default=10,
+        description="Max results. 0 = return all.",
+        openapi_examples={"Top 10": {"value": 10}},
+    ),
+) -> list[dict]:
+    """Return clients ranked by investor readiness score."""
+    ranked = search_by_investor_readiness_score(top_n or None)
+    return [
+        {
+            "rank": r["rank"],
+            "client_id": r["client_id"],
+            "name": r["name"],
+            "investor_readiness_score": r["total_score"],
+            "cash_score": r["s_cash"],
+            "concentration_score": r["s_concentration"],
+            "active_score": r["s_active"],
+            "life_stage_score": r["s_lifestage"],
+        }
+        for r in ranked
+    ]
+
+
+@app.post(
+    "/api/v1/products/search-similar",
+    response_model=SimilarProductSearchResult,
+    responses=_example_response(_SEARCH_SIMILAR_EXAMPLE),
+)
+def search_similar_products(body: SimilarProductSearchRequest) -> dict:
+    """Proximity search returning products ranked by similarity."""
+    return search_similar(
+        query=body.query,
+        top_n=body.top_n,
+        risk_rating_hard_filter=body.risk_rating_hard_filter,
+        diversification=body.diversification,
+        max_candidates_per_product_type=body.max_candidates_per_product_type,
+        exclude_product_ids=body.exclude_product_ids,
+    )
+
+
+@app.post(
+    "/api/v1/products/reinvestment-candidates",
+    response_model=CandidatesResult,
+    responses=_example_response(_CANDIDATES_EXAMPLE),
+)
+def get_reinvestment_candidates(body: ReinvestmentCandidatesRequest) -> dict:
+    """Find reinvestment candidates per client."""
+    return search_reinvestment_candidates(
+        client_ids=body.client_ids,
+        source_product_id=body.source_product_id,
+        max_candidates_per_product_type=body.max_candidates_per_product_type,
+        max_candidates_per_client=body.max_candidates_per_client,
+        risk_rating_hard_filter=body.risk_rating_hard_filter,
+        exclude_product_ids=body.exclude_product_ids,
+    )
+
+
+@app.post(
+    "/api/v1/products/fitness-score",
+    response_model=FitnessScoreResult,
+    responses=_example_response(_FITNESS_EXAMPLE),
+)
+def get_product_fitness_score(body: FitnessScoreRequest) -> dict:
+    """Compute product fitness scores for client×product pairs."""
+    return search_product_by_fitness_score(
+        client_ids=body.client_ids,
+        product_ids=body.product_ids,
+        top_n=body.top_n,
+        risk_rating_hard_filter=body.risk_rating_hard_filter,
+        exclude_dimensions=body.exclude_dimensions,
     )
 
 

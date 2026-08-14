@@ -1,62 +1,19 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "PlanBot Data API",
-    "description": "Client and product APIs for investment proposal generation.",
+    "title": "PlanBot Bank API Simulator",
+    "description": "Raw client, holding, and product data — a stand-in for bank-internal systems.",
     "version": "0.1.0"
   },
   "paths": {
-    "/api/v1/clients/search": {
-      "post": {
-        "summary": "Search Clients",
-        "description": "Filter clients by demographic and portfolio criteria.",
-        "operationId": "search_clients_api_v1_clients_search_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ClientSearchRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/ClientResponse"
-                  },
-                  "type": "array",
-                  "title": "Response Search Clients Api V1 Clients Search Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/clients/holdings/maturing": {
+    "/api/v1/clients": {
       "get": {
-        "summary": "Get Holdings Maturing",
-        "description": "Find clients with bonds or fixed-income products maturing.",
-        "operationId": "get_holdings_maturing_api_v1_clients_holdings_maturing_get",
+        "summary": "List Clients",
+        "description": "List raw client rows.\n\n``client_id`` accepts a **comma-separated** list to fetch multiple clients\nin one call.  Example: `?client_id=PB-HK-000007-5,PB-HK-000002-6`",
+        "operationId": "list_clients_api_v1_clients_get",
         "parameters": [
           {
-            "name": "product_types",
+            "name": "client_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -68,99 +25,56 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated product types",
-              "examples": [
-                "bond,bond_fund"
-              ],
-              "title": "Product Types"
+              "description": "Comma-separated list of client IDs to filter by (e.g. `PB-HK-000007-5,PB-HK-000002-6`). Omit to return all clients.",
+              "title": "Client Id"
             },
-            "description": "Comma-separated product types"
+            "description": "Comma-separated list of client IDs to filter by (e.g. `PB-HK-000007-5,PB-HK-000002-6`). Omit to return all clients.",
+            "examples": {
+              "Akira Tanaka (bond holder)": {
+                "value": "PB-HK-000007-5"
+              },
+              "Two clients (comma-separated)": {
+                "value": "PB-HK-000007-5,PB-HK-000002-6"
+              }
+            }
           },
           {
-            "name": "within_days",
+            "name": "offset",
             "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
-              "description": "Calendar days to maturity",
+              "minimum": 0,
+              "description": "Number of rows to skip (0-based).",
               "examples": [
-                365
+                0
               ],
-              "default": 14,
-              "title": "Within Days"
+              "default": 0,
+              "title": "Offset"
             },
-            "description": "Calendar days to maturity"
+            "description": "Number of rows to skip (0-based)."
           },
           {
-            "name": "as_of_date",
+            "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "integer",
+                  "minimum": 1
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "Reference date (ISO 8601). Defaults to system date.",
-              "examples": [
-                "2026-07-24"
-              ],
-              "title": "As Of Date"
-            },
-            "description": "Reference date (ISO 8601). Defaults to system date."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/MaturingHoldingItem"
-                  },
-                  "title": "Response Get Holdings Maturing Api V1 Clients Holdings Maturing Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/clients/readiness": {
-      "get": {
-        "summary": "Get Investor Readiness",
-        "description": "Return clients ranked by investor readiness score.",
-        "operationId": "get_investor_readiness_api_v1_clients_readiness_get",
-        "parameters": [
-          {
-            "name": "top_n",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "description": "Max results. 0 = return all.",
+              "description": "Maximum number of rows to return. Omit for all.",
               "examples": [
                 10
               ],
-              "default": 0,
-              "title": "Top N"
+              "title": "Limit"
             },
-            "description": "Max results. 0 = return all."
+            "description": "Maximum number of rows to return. Omit for all."
           }
         ],
         "responses": {
@@ -171,10 +85,28 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/ReadinessItem"
+                    "$ref": "#/components/schemas/ClientRow"
                   },
-                  "title": "Response Get Investor Readiness Api V1 Clients Readiness Get"
-                }
+                  "title": "Response List Clients Api V1 Clients Get"
+                },
+                "example": [
+                  {
+                    "client_id": "PB-HK-000007-5",
+                    "name": "Akira Tanaka",
+                    "aum": 28000000.0,
+                    "cash_pct": 12.0,
+                    "region": "APAC",
+                    "birthdate": "1980-01-01",
+                    "occupation": "Real Estate Developer",
+                    "risk_rating": 4,
+                    "marital_status": "Single",
+                    "children_info": "2 children",
+                    "liquidity_need": "Low",
+                    "income_stability": "Stable salaried income",
+                    "investment_objective": "Long-term capital growth",
+                    "qualitative_profile": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments."
+                  }
+                ]
               }
             }
           },
@@ -194,7 +126,7 @@
     "/api/v1/clients/{client_id}": {
       "get": {
         "summary": "Get Client",
-        "description": "Return full client profile including nested holdings.",
+        "description": "Return a single raw client row.",
         "operationId": "get_client_api_v1_clients__client_id__get",
         "parameters": [
           {
@@ -203,13 +135,16 @@
             "required": true,
             "schema": {
               "type": "string",
-              "description": "Client identifier",
+              "description": "Client identifier.",
               "title": "Client Id"
             },
-            "description": "Client identifier",
+            "description": "Client identifier.",
             "examples": {
-              "PB-HK-000007-5 (bond holder)": {
+              "Akira Tanaka (bond holder)": {
                 "value": "PB-HK-000007-5"
+              },
+              "Sarah Chen": {
+                "value": "PB-HK-000002-6"
               }
             }
           }
@@ -220,7 +155,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ClientResponse"
+                  "$ref": "#/components/schemas/ClientRow"
+                },
+                "example": {
+                  "client_id": "PB-HK-000007-5",
+                  "name": "Akira Tanaka",
+                  "aum": 28000000.0,
+                  "cash_pct": 12.0,
+                  "region": "APAC",
+                  "birthdate": "1980-01-01",
+                  "occupation": "Real Estate Developer",
+                  "risk_rating": 4,
+                  "marital_status": "Single",
+                  "children_info": "2 children",
+                  "liquidity_need": "Low",
+                  "income_stability": "Stable salaried income",
+                  "investment_objective": "Long-term capital growth",
+                  "qualitative_profile": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments."
                 }
               }
             }
@@ -248,10 +199,270 @@
         }
       }
     },
+    "/api/v1/holdings": {
+      "get": {
+        "summary": "List Holdings",
+        "description": "List raw holding rows.\n\n``client_id`` accepts a **comma-separated** list to fetch holdings for\nmultiple clients in one call.",
+        "operationId": "list_holdings_api_v1_holdings_get",
+        "parameters": [
+          {
+            "name": "client_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of client IDs to filter by (e.g. `PB-HK-000007-5`). Omit to return all holdings.",
+              "title": "Client Id"
+            },
+            "description": "Comma-separated list of client IDs to filter by (e.g. `PB-HK-000007-5`). Omit to return all holdings.",
+            "examples": {
+              "Akira Tanaka (bond holder)": {
+                "value": "PB-HK-000007-5"
+              },
+              "Two clients (comma-separated)": {
+                "value": "PB-HK-000007-5,PB-HK-000002-6"
+              }
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of rows to skip (0-based).",
+              "examples": [
+                0
+              ],
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of rows to skip (0-based)."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of rows to return. Omit for all.",
+              "examples": [
+                20
+              ],
+              "title": "Limit"
+            },
+            "description": "Maximum number of rows to return. Omit for all."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HoldingRow"
+                  },
+                  "title": "Response List Holdings Api V1 Holdings Get"
+                },
+                "example": [
+                  {
+                    "client_id": "PB-HK-000007-5",
+                    "holding_idx": 0,
+                    "holding_id": "ph-6-us1mt-rr-0",
+                    "product_id": "PROD053",
+                    "instrument_name": "US 1-Month Treasury Bill Rate",
+                    "symbol": "US1MT=RR",
+                    "asset_class": "Cash",
+                    "region": "North America",
+                    "currency": "USD",
+                    "quantity": 153494.7465,
+                    "book_cost": 2352941.1765,
+                    "market_value": 3360000.0,
+                    "unrealized_pl": 1007058.8235,
+                    "unrealized_pl_pct": 42.8,
+                    "yield_pct": 15.7,
+                    "risk_bucket": "Low",
+                    "liquidity": "T+2"
+                  }
+                ]
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/products": {
+      "get": {
+        "summary": "List Products",
+        "description": "List raw product rows.\n\n``product_id`` accepts a **comma-separated** list to fetch multiple products\nin one call.  Example: `?product_id=PROD053,PROD054`",
+        "operationId": "list_products_api_v1_products_get",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of product IDs to filter by (e.g. `PROD053,ETF-HYG`). Omit to return the full product catalog.",
+              "title": "Product Id"
+            },
+            "description": "Comma-separated list of product IDs to filter by (e.g. `PROD053,ETF-HYG`). Omit to return the full product catalog.",
+            "examples": {
+              "US Treasury 4.375% 31Aug26": {
+                "value": "PROD053"
+              },
+              "Two products (comma-separated)": {
+                "value": "PROD053,ETF-HYG"
+              }
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of rows to skip (0-based).",
+              "examples": [
+                0
+              ],
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of rows to skip (0-based)."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of rows to return. Omit for all.",
+              "examples": [
+                10
+              ],
+              "title": "Limit"
+            },
+            "description": "Maximum number of rows to return. Omit for all."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductRow"
+                  },
+                  "title": "Response List Products Api V1 Products Get"
+                },
+                "example": [
+                  {
+                    "product_id": "PROD053",
+                    "name": "US Treasury 4.375% 31Aug26",
+                    "ticker": "XHLF",
+                    "trading_currency": "USD",
+                    "risk_rating": 1,
+                    "expected_return": 3.7,
+                    "region": "US",
+                    "sector": "Government",
+                    "remarks": "Bridge row for holdings product_id=PROD053. Group: holdings_treasury_bonds.",
+                    "product_type": "bond",
+                    "vehicle": "Direct",
+                    "type_specific": {
+                      "issuer_name": "U.S. Treasury",
+                      "issuer_sector": "government",
+                      "coupon_type": "fixed",
+                      "coupon_rate": 0.04375,
+                      "coupon_frequency": "semi-annual",
+                      "credit_rating": "AA+",
+                      "maturity": "2026-08-31",
+                      "seniority": "senior",
+                      "callable": false
+                    },
+                    "performance_history": {
+                      "1y": {
+                        "return": 3.65,
+                        "cagr": 3.72,
+                        "max_drawdown": 0.0,
+                        "volatility": 0.2
+                      },
+                      "3y": {
+                        "return": 14.22,
+                        "cagr": 4.53,
+                        "max_drawdown": -0.03,
+                        "volatility": 0.28
+                      }
+                    },
+                    "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing."
+                  }
+                ]
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/products/{product_id}": {
       "get": {
         "summary": "Get Product",
-        "description": "Look up a single product by its ID.",
+        "description": "Return a single raw product row.",
         "operationId": "get_product_api_v1_products__product_id__get",
         "parameters": [
           {
@@ -260,13 +471,16 @@
             "required": true,
             "schema": {
               "type": "string",
-              "description": "Product identifier",
+              "description": "Product identifier.",
               "title": "Product Id"
             },
-            "description": "Product identifier",
+            "description": "Product identifier.",
             "examples": {
-              "PROD053 (US Treasury 4.375%)": {
+              "US Treasury 4.375% 31Aug26": {
                 "value": "PROD053"
+              },
+              "High Yield Corporate Bond ETF": {
+                "value": "ETF-HYG"
               }
             }
           }
@@ -277,7 +491,46 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProductResponse"
+                  "$ref": "#/components/schemas/ProductRow"
+                },
+                "example": {
+                  "product_id": "PROD053",
+                  "name": "US Treasury 4.375% 31Aug26",
+                  "ticker": "XHLF",
+                  "trading_currency": "USD",
+                  "risk_rating": 1,
+                  "expected_return": 3.7,
+                  "region": "US",
+                  "sector": "Government",
+                  "remarks": "Bridge row for holdings product_id=PROD053. Group: holdings_treasury_bonds.",
+                  "product_type": "bond",
+                  "vehicle": "Direct",
+                  "type_specific": {
+                    "issuer_name": "U.S. Treasury",
+                    "issuer_sector": "government",
+                    "coupon_type": "fixed",
+                    "coupon_rate": 0.04375,
+                    "coupon_frequency": "semi-annual",
+                    "credit_rating": "AA+",
+                    "maturity": "2026-08-31",
+                    "seniority": "senior",
+                    "callable": false
+                  },
+                  "performance_history": {
+                    "1y": {
+                      "return": 3.65,
+                      "cagr": 3.72,
+                      "max_drawdown": 0.0,
+                      "volatility": 0.2
+                    },
+                    "3y": {
+                      "return": 14.22,
+                      "cagr": 4.53,
+                      "max_drawdown": -0.03,
+                      "volatility": 0.28
+                    }
+                  },
+                  "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing."
                 }
               }
             }
@@ -304,255 +557,21 @@
           }
         }
       }
-    },
-    "/api/v1/products/search-similar": {
-      "post": {
-        "summary": "Search Similar Products",
-        "description": "Proximity search returning products ranked by similarity.\n\nProducts are scored against the supplied ``query`` attributes using a\nGaussian proximity kernel for numerics and exact-match for categoricals.\nSee ``SimilarProductSearchRequest`` for the scoring formula.",
-        "operationId": "search_similar_products_api_v1_products_search_similar_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SimilarProductSearchRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SimilarProductSearchResult"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/products/reinvestment-candidates": {
-      "post": {
-        "summary": "Get Reinvestment Candidates",
-        "description": "Find reinvestment candidates per client.",
-        "operationId": "get_reinvestment_candidates_api_v1_products_reinvestment_candidates_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReinvestmentCandidatesRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CandidatesResult"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/products/fitness-score": {
-      "post": {
-        "summary": "Get Product Fitness Score",
-        "description": "Compute product fitness scores for client×product pairs.",
-        "operationId": "get_product_fitness_score_api_v1_products_fitness_score_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/FitnessScoreRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FitnessScoreResult"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
     "schemas": {
-      "CandidateResultItem": {
-        "properties": {
-          "product_id": {
-            "type": "string",
-            "title": "Product Id",
-            "example": "PROD054"
-          },
-          "similarity_score": {
-            "type": "number",
-            "title": "Similarity Score",
-            "example": 0.9933
-          },
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name",
-            "example": "US Treasury 3.75% 30Jun27"
-          },
-          "product_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Type",
-            "example": "bond"
-          },
-          "investment_note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Investment Note"
-          }
-        },
-        "type": "object",
-        "required": [
-          "product_id",
-          "similarity_score"
-        ],
-        "title": "CandidateResultItem"
-      },
-      "CandidatesResult": {
-        "properties": {
-          "results_by_client": {
-            "additionalProperties": {
-              "items": {
-                "$ref": "#/components/schemas/CandidateResultItem"
-              },
-              "type": "array"
-            },
-            "type": "object",
-            "title": "Results By Client",
-            "example": {
-              "PB-HK-000007-5": [
-                {
-                  "product_id": "PROD054",
-                  "similarity_score": 0.9933
-                },
-                {
-                  "product_id": "ETF-BIL",
-                  "similarity_score": 0.7725
-                }
-              ]
-            }
-          }
-        },
-        "type": "object",
-        "required": [
-          "results_by_client"
-        ],
-        "title": "CandidatesResult"
-      },
-      "ClientResponse": {
+      "ClientRow": {
         "properties": {
           "client_id": {
             "type": "string",
             "title": "Client Id",
-            "example": "PB-HK-000007-5"
+            "description": "Unique client identifier."
           },
           "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Name",
-            "example": "William Chen"
-          },
-          "age": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Age",
-            "example": 68
-          },
-          "risk_rating": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Risk Rating",
-            "example": 1
+            "description": "Client full name."
           },
           "aum": {
             "anyOf": [
@@ -564,19 +583,7 @@
               }
             ],
             "title": "Aum",
-            "example": 18500000.0
-          },
-          "region": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Region",
-            "example": "HK"
+            "description": "Assets under management (USD)."
           },
           "cash_pct": {
             "anyOf": [
@@ -588,67 +595,108 @@
               }
             ],
             "title": "Cash Pct",
-            "example": 5.0
+            "description": "Reported cash percentage of AUM."
           },
-          "cash_score": {
+          "region": {
             "anyOf": [
               {
-                "type": "number"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Cash Score",
-            "example": 2.3
+            "title": "Region"
           },
-          "concentration_score": {
+          "birthdate": {
             "anyOf": [
               {
-                "type": "number"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Concentration Score",
-            "example": 4.1
+            "title": "Birthdate",
+            "description": "Date of birth (YYYY-MM-DD)."
           },
-          "active_score": {
+          "occupation": {
             "anyOf": [
               {
-                "type": "number"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Active Score",
-            "example": 3.0
+            "title": "Occupation"
           },
-          "life_stage_score": {
+          "risk_rating": {
             "anyOf": [
               {
-                "type": "number"
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Life Stage Score",
-            "example": 8.5
+            "title": "Risk Rating",
+            "description": "Risk tolerance 1 (low) – 5 (high)."
           },
-          "investor_readiness_score": {
+          "marital_status": {
             "anyOf": [
               {
-                "type": "number"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Investor Readiness Score",
-            "example": 8.2
+            "title": "Marital Status"
+          },
+          "children_info": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Children Info"
+          },
+          "liquidity_need": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Liquidity Need"
+          },
+          "income_stability": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Stability"
+          },
+          "investment_objective": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Investment Objective"
           },
           "qualitative_profile": {
             "anyOf": [
@@ -660,336 +708,31 @@
               }
             ],
             "title": "Qualitative Profile",
-            "description": "Free-text RM notes for LLM context on client preferences, behavioural traits, and product suitability cues",
-            "example": "Conservative retiree focused on capital preservation. Has asked about guaranteed income products. Prefers government bonds and investment-grade credit."
+            "description": "Free-text RM notes for suitability analysis."
           }
         },
-        "additionalProperties": true,
         "type": "object",
         "required": [
-          "client_id"
+          "client_id",
+          "name"
         ],
-        "title": "ClientResponse"
-      },
-      "ClientSearchRequest": {
-        "properties": {
-          "risk_rating": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "items": {
-                  "type": "integer"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Risk Rating",
-            "description": "Client risk rating (1-5) or range e.g. [1,3]",
-            "example": [
-              1,
-              3
-            ]
-          },
-          "age": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "items": {
-                  "type": "integer"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Age",
-            "description": "Client age or range e.g. [35,70]",
-            "example": [
-              35,
-              70
-            ]
-          },
-          "product_types_in_holdings": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Types In Holdings",
-            "description": "Filter by product family: 'bond', 'equity', 'cash', or 'balanced'",
-            "example": "bond"
-          },
-          "concentration_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Concentration Score",
-            "description": "0-10 score or range e.g. [6,10]",
-            "example": [
-              6,
-              10
-            ]
-          },
-          "cash_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cash Score",
-            "description": "0-10 score or range e.g. [0,5]",
-            "example": [
-              0,
-              5
-            ]
-          }
-        },
-        "type": "object",
-        "title": "ClientSearchRequest",
-        "description": "Filter clients by demographic and portfolio criteria.\n\nNumeric fields accept a single value (exact match) or a [min, max] list for range matching."
-      },
-      "ComponentScores": {
-        "properties": {
-          "risk_rating_match_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Risk Rating Match Score",
-            "example": 9.0
-          },
-          "concentration_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Concentration Score",
-            "example": 8.5
-          },
-          "has_similar_investment_experience_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Has Similar Investment Experience Score",
-            "example": 10.0
-          },
-          "better_product_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Better Product Score",
-            "example": 6.2
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "ComponentScores"
+        "title": "ClientRow",
+        "description": "Raw client row as stored in the client database."
       },
       "ErrorDetail": {
         "properties": {
           "detail": {
             "type": "string",
             "title": "Detail",
-            "example": "Client not found: PB-HK-999"
+            "description": "Human-readable error message."
           }
         },
         "type": "object",
         "required": [
           "detail"
         ],
-        "title": "ErrorDetail"
-      },
-      "FitnessScoreItem": {
-        "properties": {
-          "client_id": {
-            "type": "string",
-            "title": "Client Id",
-            "example": "PB-HK-000007-5"
-          },
-          "product_id": {
-            "type": "string",
-            "title": "Product Id",
-            "example": "PROD054"
-          },
-          "product_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Name",
-            "example": "US Treasury 3.75% 30Jun27"
-          },
-          "investment_note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Investment Note"
-          },
-          "fitness_score": {
-            "type": "number",
-            "title": "Fitness Score",
-            "example": 8.35
-          },
-          "component_scores": {
-            "$ref": "#/components/schemas/ComponentScores",
-            "example": {
-              "better_product_score": 6.2,
-              "concentration_score": 8.5,
-              "has_similar_investment_experience_score": 10.0,
-              "risk_rating_match_score": 9.0
-            }
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "client_id",
-          "product_id",
-          "fitness_score",
-          "component_scores"
-        ],
-        "title": "FitnessScoreItem"
-      },
-      "FitnessScoreRequest": {
-        "properties": {
-          "client_ids": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "minItems": 1,
-            "title": "Client Ids",
-            "example": [
-              "PB-HK-000007-5"
-            ]
-          },
-          "product_ids": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "minItems": 1,
-            "title": "Product Ids",
-            "example": [
-              "PROD054",
-              "ETF-BIL",
-              "ETF-SHV"
-            ]
-          },
-          "top_n": {
-            "type": "integer",
-            "maximum": 50.0,
-            "minimum": 1.0,
-            "title": "Top N",
-            "default": 10
-          },
-          "risk_rating_hard_filter": {
-            "type": "boolean",
-            "title": "Risk Rating Hard Filter",
-            "default": true
-          },
-          "exclude_dimensions": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Exclude Dimensions",
-            "example": [
-              "concentration_score"
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "client_ids",
-          "product_ids"
-        ],
-        "title": "FitnessScoreRequest",
-        "description": "Compute product fitness scores for client×product pairs."
-      },
-      "FitnessScoreResult": {
-        "properties": {
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/FitnessScoreItem"
-            },
-            "type": "array",
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "title": "FitnessScoreResult"
+        "title": "ErrorDetail",
+        "description": "Standard error body returned on 404."
       },
       "HTTPValidationError": {
         "properties": {
@@ -1004,61 +747,256 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "MaturingHoldingItem": {
+      "HoldingRow": {
         "properties": {
           "client_id": {
             "type": "string",
             "title": "Client Id",
-            "example": "PB-HK-000007-5"
+            "description": "Owner client identifier."
           },
-          "product_id": {
-            "type": "string",
-            "title": "Product Id",
-            "example": "PROD053"
-          },
-          "market_value": {
-            "type": "number",
-            "title": "Market Value",
-            "example": 1750000.0
-          },
-          "days_to_mature": {
+          "holding_idx": {
             "type": "integer",
-            "title": "Days To Mature",
-            "example": 39
-          }
-        },
-        "type": "object",
-        "required": [
-          "client_id",
-          "product_id",
-          "market_value",
-          "days_to_mature"
-        ],
-        "title": "MaturingHoldingItem"
-      },
-      "ProductResponse": {
-        "properties": {
-          "product_id": {
-            "type": "string",
-            "title": "Product Id",
-            "example": "PROD053"
+            "title": "Holding Idx",
+            "description": "Zero-based position index within the client."
           },
-          "name": {
-            "type": "string",
-            "title": "Name",
-            "example": "US Treasury 4.375% 31Aug26"
-          },
-          "risk_rating": {
+          "holding_id": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
+            "title": "Holding Id"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id",
+            "description": "Instrument/product identifier."
+          },
+          "instrument_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument Name"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol"
+          },
+          "asset_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset Class"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "book_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Book Cost"
+          },
+          "market_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Value",
+            "description": "Current market value in the holding currency."
+          },
+          "unrealized_pl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pl"
+          },
+          "unrealized_pl_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pl Pct"
+          },
+          "yield_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Yield Pct"
+          },
+          "risk_bucket": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Bucket"
+          },
+          "esg_score": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Esg Score",
+            "description": "ESG score; null when no coverage."
+          },
+          "liquidity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Liquidity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_id",
+          "holding_idx"
+        ],
+        "title": "HoldingRow",
+        "description": "Raw holding row as stored in the custody/positions database."
+      },
+      "ProductRow": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "title": "Product Id",
+            "description": "Unique product identifier."
+          },
+          "isin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isin",
+            "description": "ISIN; null for products without one."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Product name."
+          },
+          "ticker": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ticker"
+          },
+          "trading_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trading Currency"
+          },
+          "risk_rating": {
+            "type": "integer",
             "title": "Risk Rating",
-            "example": 1
+            "description": "Risk rating 1 (low) – 5 (high)."
           },
           "expected_return": {
             "anyOf": [
@@ -1070,9 +1008,9 @@
               }
             ],
             "title": "Expected Return",
-            "example": 3.7
+            "description": "Expected annual return (%)."
           },
-          "product_type": {
+          "region": {
             "anyOf": [
               {
                 "type": "string"
@@ -1081,8 +1019,83 @@
                 "type": "null"
               }
             ],
+            "title": "Region"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "sector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector"
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks"
+          },
+          "product_type": {
+            "type": "string",
             "title": "Product Type",
-            "example": "bond"
+            "description": "e.g. bond, bond_fund, equity_fund, stock, money_market_fund, balanced_fund."
+          },
+          "vehicle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vehicle",
+            "description": "e.g. Direct, ETF, Mutual Fund."
+          },
+          "type_specific": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type Specific",
+            "description": "Product-type-specific attributes (variable keys)."
+          },
+          "performance_history": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Performance History",
+            "description": "Historical return/risk metrics keyed by period (6m/1y/3y/5y/10y)."
           },
           "investment_note": {
             "anyOf": [
@@ -1094,229 +1107,18 @@
               }
             ],
             "title": "Investment Note",
-            "description": "House view narrative for RM/LLM to consider in investment proposals",
-            "example": "Bond yields are at multi-decade highs, offering a rare opportunity to lock in attractive income."
+            "description": "House view narrative."
           }
         },
         "type": "object",
         "required": [
           "product_id",
-          "name"
-        ],
-        "title": "ProductResponse"
-      },
-      "ReadinessItem": {
-        "properties": {
-          "rank": {
-            "type": "integer",
-            "title": "Rank",
-            "example": 1
-          },
-          "client_id": {
-            "type": "string",
-            "title": "Client Id",
-            "example": "PB-HK-000007-5"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name",
-            "example": "William Chen"
-          },
-          "investor_readiness_score": {
-            "type": "number",
-            "title": "Investor Readiness Score",
-            "example": 8.2
-          },
-          "cash_score": {
-            "type": "number",
-            "title": "Cash Score",
-            "example": 7.0
-          },
-          "concentration_score": {
-            "type": "number",
-            "title": "Concentration Score",
-            "example": 8.5
-          },
-          "active_score": {
-            "type": "number",
-            "title": "Active Score",
-            "example": 9.0
-          },
-          "life_stage_score": {
-            "type": "number",
-            "title": "Life Stage Score",
-            "example": 8.0
-          }
-        },
-        "type": "object",
-        "required": [
-          "rank",
-          "client_id",
           "name",
-          "investor_readiness_score",
-          "cash_score",
-          "concentration_score",
-          "active_score",
-          "life_stage_score"
+          "risk_rating",
+          "product_type"
         ],
-        "title": "ReadinessItem"
-      },
-      "ReinvestmentCandidatesRequest": {
-        "properties": {
-          "client_ids": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "minItems": 1,
-            "title": "Client Ids",
-            "example": [
-              "PB-HK-000007-5"
-            ]
-          },
-          "source_product_id": {
-            "type": "string",
-            "title": "Source Product Id",
-            "description": "Maturing product to find replacements for",
-            "example": "PROD053"
-          },
-          "max_per_product_type": {
-            "type": "integer",
-            "maximum": 10.0,
-            "minimum": 1.0,
-            "title": "Max Per Product Type",
-            "default": 2
-          },
-          "top_n_per_client": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "maximum": 50.0,
-                "minimum": 1.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Top N Per Client"
-          },
-          "risk_rating_hard_filter": {
-            "type": "boolean",
-            "title": "Risk Rating Hard Filter",
-            "default": true
-          },
-          "exclude_product_ids": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Exclude Product Ids"
-          }
-        },
-        "type": "object",
-        "required": [
-          "client_ids",
-          "source_product_id"
-        ],
-        "title": "ReinvestmentCandidatesRequest",
-        "description": "Find reinvestment candidates for a list of clients."
-      },
-      "SimilarProductSearchRequest": {
-        "properties": {
-          "query": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Query",
-            "description": "Product attributes to match against",
-            "example": {
-              "expected_return": 3.7,
-              "product_type": "bond",
-              "risk_rating": 1
-            }
-          },
-          "top_n": {
-            "type": "integer",
-            "maximum": 50.0,
-            "minimum": 1.0,
-            "title": "Top N",
-            "default": 3
-          },
-          "risk_rating_hard_filter": {
-            "type": "boolean",
-            "title": "Risk Rating Hard Filter",
-            "default": true
-          },
-          "diversification": {
-            "type": "boolean",
-            "title": "Diversification",
-            "default": true
-          },
-          "max_per_product_type": {
-            "type": "integer",
-            "maximum": 10.0,
-            "minimum": 1.0,
-            "title": "Max Per Product Type",
-            "default": 2
-          },
-          "exclude_product_ids": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Exclude Product Ids",
-            "example": [
-              "PROD053"
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "query"
-        ],
-        "title": "SimilarProductSearchRequest",
-        "description": "Proximity search returning products ranked by similarity.\n\nEach numeric attribute in ``query`` (e.g. ``risk_rating``, ``expected_return``)\nis compared against every product using a Gaussian kernel:\n\n  similarity = 1.0 − min(|product_value − query_value| ∕ σ,  1.0)\n\nwhere σ is the population standard deviation of that attribute across the\nproduct catalog.  Categorical attributes (``product_type``, ``asset_class``,\n``region``, ``sector``) use exact-match scoring (1.0 match, 0.0 mismatch).\n\nThe final score is a weighted average over all supplied dimensions,\nrenormalised so that omitted dimensions do not penalise the result.\nProducts are returned in descending similarity order."
-      },
-      "SimilarProductSearchResult": {
-        "properties": {
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/SimilarProductSearchItem"
-            },
-            "type": "array",
-            "title": "Results",
-            "example": [
-              {
-                "name": "US Treasury 3.75% 30Jun27",
-                "product_id": "PROD054",
-                "similarity_score": 0.9933
-              },
-              {
-                "name": "SPDR Bloomberg 1-3 Month T-Bill ETF",
-                "product_id": "ETF-BIL",
-                "similarity_score": 0.7725
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "results"
-        ],
-        "title": "SimilarProductSearchResult"
+        "title": "ProductRow",
+        "description": "Raw product row as stored in the product master database."
       },
       "ValidationError": {
         "properties": {
@@ -1357,79 +1159,6 @@
           "type"
         ],
         "title": "ValidationError"
-      },
-      "SimilarProductSearchItem": {
-        "properties": {
-          "product_id": {
-            "type": "string",
-            "title": "Product Id",
-            "example": "PROD054"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name",
-            "example": "US Treasury 3.75% 30Jun27"
-          },
-          "product_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Type",
-            "example": "bond"
-          },
-          "risk_rating": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Risk Rating",
-            "example": 1
-          },
-          "expected_return": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Expected Return",
-            "example": 3.7
-          },
-          "investment_note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Investment Note"
-          },
-          "similarity_score": {
-            "type": "number",
-            "title": "Similarity Score",
-            "example": 0.9933
-          }
-        },
-        "type": "object",
-        "required": [
-          "product_id",
-          "name",
-          "similarity_score"
-        ],
-        "title": "SimilarProductSearchItem"
       }
     }
   }

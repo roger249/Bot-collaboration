@@ -25,27 +25,28 @@
 - Document new dependencies/runtime prerequisites in requirements and setup notes.
 
 # API Contract Sources for Coding
-- OpenAPI source of truth: `docs/prod_spec/tool/openapi.json`
-- Concise endpoint index: `docs/prod_spec/tool/endpoint_index.md`
-- Client API functional notes: `docs/prod_spec/tool/client_tool.md`
-- Product API functional notes: `docs/prod_spec/tool/product_tool.md`
+- OpenAPI source of truth: `docs/specification/data_api/openapi_data.json` (bank data server) and `docs/specification/data_api/openapi_proposal.json` (proposal server)
+- Concise endpoint index: `docs/specification/data_api/endpoint_index.md`
+- Client API functional notes: `docs/specification/data_api/client_api.md`
+- Product API functional notes: `docs/specification/data_api/product_api.md`
 - Runtime integration implementation: `src/integrations`
-- Scorecard source docs: `docs/prod_spec/score_card/investor_readiness_score.md`, `docs/prod_spec/score_card/product_fitness_score.md`
+- Scorecard source docs: `docs/specification/scorecard/investor_readiness_score.md`, `docs/specification/scorecard/product_fitness_score.md`
 - When generating or modifying integration code, follow OpenAPI schema and operation IDs first; treat prose docs as supplementary.
+- Regenerate the OpenAPI specs after endpoint changes with `./.venv/bin/python scripts/export_openapi.py`.
 
 # Database Schema and Test Data
 - Single DuckDB file: `data/planbot/db/planbot.duckdb`
 - Schema documentation (source of truth):
-  - Product catalog: `docs/prod_spec/product_schema/product_catalog_schema.md`
-  - Client & holdings: `docs/prod_spec/product_schema/client_holdings_schema.md`
+  - Product catalog: `docs/specification/schema_product/product_catalog_schema.md`
+  - Client & holdings: `docs/specification/schema_client/client_holdings_schema.md`
 - Seeder scripts:
   - Product catalog: `src/test_data/product_catalog_seed.py`
-  - Client/holdings ETL: `src/planbot/investor_readiness_score.py`
+  - Client/holdings ETL: `src/test_data/client_seed.py`
 - Rule: **Any schema change must be applied to all three layers synchronously:**
   1. DuckDB schema (ALTER TABLE / seeder CREATE TABLE)
   2. Test data (seeder scripts must populate new columns with realistic values)
-  3. API contract (`docs/prod_spec/tool/openapi.json` and downstream API code in `src/integrations`)
-- Documentation (`docs/prod_spec/product_schema/*.md` and `docs/prod_spec/tool/*.md`) must stay aligned with the live DuckDB schema.
+  3. API contract (`docs/specification/data_api/openapi_data.json` via `scripts/export_openapi.py`, and downstream API code in `src/integrations`)
+- Documentation (`docs/specification/schema_product/*.md`, `docs/specification/schema_client/*.md` and `docs/specification/data_api/*.md`) must stay aligned with the live DuckDB schema.
 
 
 # Regression Test

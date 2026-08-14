@@ -51,8 +51,8 @@ _CONFIG_PATH = _ROOT_DIR / "config" / "config_planbot.yaml"
 
 def propose_reinvestment(
     reinvestment_targets: list[dict[str, str]],
-    max_per_product_type: int = 2,
-    top_n_per_client: int = 10,
+    max_candidates_per_product_type: int = 2,
+    max_candidates_per_client: int = 10,
     risk_rating_hard_filter: bool = True,
     response_mode: str = "path",
     include_llm_input: bool = False,
@@ -65,9 +65,9 @@ def propose_reinvestment(
     ----------
     reinvestment_targets : list[dict]
         Each dict must contain ``client_id`` and ``source_product_id``.
-    max_per_product_type : int
+    max_candidates_per_product_type : int
         Diversification cap for candidate selection.
-    top_n_per_client : int
+    max_candidates_per_client : int
         Maximum number of candidate products passed to the LLM.
     risk_rating_hard_filter : bool
         Whether to enforce the hard risk filter in the product API.
@@ -119,8 +119,8 @@ def propose_reinvestment(
                 app_config=app_config,
                 client_id=client_id,
                 source_product_id=source_product_id,
-                max_per_product_type=max_per_product_type,
-                top_n_per_client=top_n_per_client,
+                max_candidates_per_product_type=max_candidates_per_product_type,
+                max_candidates_per_client=max_candidates_per_client,
                 risk_rating_hard_filter=risk_rating_hard_filter,
                 response_mode=response_mode,
                 include_llm_input=include_llm_input,
@@ -154,8 +154,8 @@ def propose_reinvestment_for_maturing_holdings(
     within_days: int = 365,
     as_of_date: str | None = None,
     max_clients: int = 2,
-    max_per_product_type: int = 2,
-    top_n_per_client: int = 10,
+    max_candidates_per_product_type: int = 2,
+    max_candidates_per_client: int = 10,
     risk_rating_hard_filter: bool = True,
     response_mode: str = "path",
     include_llm_input: bool = False,
@@ -176,9 +176,9 @@ def propose_reinvestment_for_maturing_holdings(
         Reference date for maturity calculation (default today).
     max_clients : int
         Safety cap on the number of clients to process (default 2).
-    max_per_product_type : int
+    max_candidates_per_product_type : int
         Passed to :func:`propose_reinvestment`.
-    top_n_per_client : int
+    max_candidates_per_client : int
         Passed to :func:`propose_reinvestment`.
     risk_rating_hard_filter : bool
         Passed to :func:`propose_reinvestment`.
@@ -222,8 +222,8 @@ def propose_reinvestment_for_maturing_holdings(
 
     return propose_reinvestment(
         reinvestment_targets=targets,
-        max_per_product_type=max_per_product_type,
-        top_n_per_client=top_n_per_client,
+        max_candidates_per_product_type=max_candidates_per_product_type,
+        max_candidates_per_client=max_candidates_per_client,
         risk_rating_hard_filter=risk_rating_hard_filter,
         response_mode=response_mode,
         include_llm_input=include_llm_input,
@@ -241,8 +241,8 @@ def _process_one_target(
     app_config: Any,
     client_id: str,
     source_product_id: str,
-    max_per_product_type: int,
-    top_n_per_client: int,
+    max_candidates_per_product_type: int,
+    max_candidates_per_client: int,
     risk_rating_hard_filter: bool,
     response_mode: str,
     include_llm_input: bool,
@@ -276,8 +276,8 @@ def _process_one_target(
 
     cand_result = search_similar_to_product(
         source_product,
-        top_n=top_n_per_client,
-        max_per_product_type=max_per_product_type,
+        top_n=max_candidates_per_client,
+        max_candidates_per_product_type=max_candidates_per_product_type,
         risk_rating_hard_filter=risk_rating_hard_filter,
     )
     candidates_raw = cand_result.get("results", [])

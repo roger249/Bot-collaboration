@@ -461,12 +461,20 @@ def resolve_holdings_to_products(holdings: list[dict]) -> list[dict]:
 
 def format_irs_section(*, total=None, rank=None, cash_drag=None, concentration=None, active_management=None, life_stage=None):
     """Render IRS section. All fields optional — omitted when None. Returns "" when all None."""
-    lines = ["## Investor Readiness Score", ""]
+    lines = [
+        "## Investor Readiness Score",
+        "",
+        "_Measures how urgently a client needs a transaction (higher = more likely to act). "
+        "Each component is scored 0–10: Cash Drag = drag from idle cash (deposits + money-market funds); "
+        "Concentration = over-exposure to a single asset, region, or asset class; "
+        "Active Management = willingness to rebalance (holds non-cash assets); "
+        "Life Stage = proximity to peak financial-needs years._",
+    ]
     if rank is not None: lines.append(f"Rank: {rank}")
     if total is not None: lines.append(f"Total Score: {total}")
     for label, val in [("Cash Drag", cash_drag), ("Concentration", concentration), ("Active Management", active_management), ("Life Stage", life_stage)]:
         if val is not None: lines.append(f"  - {label}: {val}")
-    return "\n".join(lines) if len(lines) > 2 else ""
+    return "\n".join(lines) if len(lines) > 3 else ""
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -500,14 +508,23 @@ def format_pfs_table(
     if not pfs_scores:
         return []
 
+    legend = (
+        "_Product Fitness Scores (0–10) measure how well a product fits a client; higher = better fit, "
+        "used for relative ranking only (not a pass/fail gate). "
+        "Risk Match = risk-rating alignment; "
+        "Diversification = 10 minus the concentration risk the product would add (higher = less concentration risk); "
+        "Experience = client familiarity with the product type/family; "
+        "Better Product = expected-return uplift vs. existing same-type holdings._"
+    )
+
     if include_name:
-        header = "| # | Product ID | Name | Fitness Score | Risk Match | Concentration | Experience | Better Product |"
+        header = "| # | Product ID | Name | Fitness Score | Risk Match | Diversification | Experience | Better Product |"
         sep   = "|---|---|---|---|---|---|---|---|"
     else:
-        header = "| # | Product ID | Fitness Score | Risk Match | Concentration | Experience | Better Product |"
+        header = "| # | Product ID | Fitness Score | Risk Match | Diversification | Experience | Better Product |"
         sep   = "|---|---|---|---|---|---|---|"
 
-    lines = [header, sep]
+    lines = [legend, "", header, sep]
     for i, (pid, comp) in enumerate(pfs_scores.items(), 1):
         row = f"| {i} | {pid} |"
         if include_name:
@@ -515,7 +532,7 @@ def format_pfs_table(
         row += (
             f" {comp.get('fitness_score', ''):.2f} |"
             f" {comp.get('risk_rating_match_score', ''):.1f} |"
-            f" {comp.get('concentration_score', ''):.1f} |"
+            f" {comp.get('diversification_score', ''):.1f} |"
             f" {comp.get('has_similar_investment_experience_score', ''):.1f} |"
             f" {comp.get('better_product_score', ''):.1f} |"
         )
@@ -567,7 +584,7 @@ def compute_pfs_for_products(
         scores[pid] = {
             "fitness_score": r.get("fitness_score", 0),
             "risk_rating_match_score": r.get("component_scores", {}).get("risk_rating_match_score", 0),
-            "concentration_score": r.get("component_scores", {}).get("concentration_score", 0),
+            "diversification_score": r.get("component_scores", {}).get("diversification_score", 0),
             "has_similar_investment_experience_score": r.get("component_scores", {}).get("has_similar_investment_experience_score", 0),
             "better_product_score": r.get("component_scores", {}).get("better_product_score", 0),
         }

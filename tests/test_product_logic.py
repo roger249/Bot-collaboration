@@ -194,7 +194,7 @@ def test_search_reinvestment_candidates(db_ready):
     result = search_reinvestment_candidates(
         client_ids=clients[:2],
         source_product_id=products[0],
-        max_per_product_type=2,
+        max_candidates_per_product_type=2,
     )
     assert "results_by_client" in result
     for cid in clients[:2]:
@@ -288,11 +288,11 @@ def test_pfs_risk_rating_match_score():
                 assert 0 <= cs["risk_rating_match_score"] <= 10
 
 
-# ── AC11: concentration_score post-add ────────────────────────────────────
+# ── AC11: diversification_score post-add ──────────────────────────────────
 
 
-def test_pfs_concentration_score_range(db_ready):
-    """AC11: concentration score is 0-10 after hypothetical add."""
+def test_pfs_diversification_score_range(db_ready):
+    """AC11: diversification score is 0-10 after hypothetical add."""
     import duckdb
     conn = duckdb.connect("data/planbot/db/planbot.duckdb", read_only=True)
     clients = [r[0] for r in conn.execute("SELECT client_id FROM clients LIMIT 2").fetchall()]
@@ -306,8 +306,8 @@ def test_pfs_concentration_score_range(db_ready):
         client_ids=clients, product_ids=products, top_n=50,
     )
     for r in result["results"]:
-        if "concentration_score" in r.get("component_scores", {}):
-            cs = r["component_scores"]["concentration_score"]
+        if "diversification_score" in r.get("component_scores", {}):
+            cs = r["component_scores"]["diversification_score"]
             assert 0 <= cs <= 10
 
 
@@ -397,7 +397,7 @@ def test_search_similar_diversification(db_ready):
     """AC15: diversification=true groups by product_type."""
     result_div = search_similar(
         query={},
-        top_n=20, diversification=True, max_per_product_type=2,
+        top_n=20, diversification=True, max_candidates_per_product_type=2,
     )
     result_flat = search_similar(
         query={},
@@ -410,7 +410,7 @@ def test_search_similar_diversification(db_ready):
         pt = r["product_type"]
         types_count[pt] = types_count.get(pt, 0) + 1
     for pt, cnt in types_count.items():
-        assert cnt <= 2, f"Type {pt} has {cnt} > max_per_product_type"
+        assert cnt <= 2, f"Type {pt} has {cnt} > max_candidates_per_product_type"
 
     # Both should return results
     assert len(result_div["results"]) > 0

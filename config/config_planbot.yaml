@@ -264,7 +264,7 @@ product_fitness_score:
   product_fitness_weights:
 # Weights for the 4 PFS dimensions.  Renormalized when dimensions are excluded.
     risk_rating_match_score: 0.30
-    concentration_score: 0.30
+    diversification_score: 0.30
     has_similar_investment_experience_score: 0.20
     better_product_score: 0.20
   product_fitness_params:

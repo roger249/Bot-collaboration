@@ -5,12 +5,12 @@ The score measures how fit a product is for a particular investor, computed acro
 ### Dimensions
 
 1. **risk_rating_match** — `product.risk_rating <= client.risk_rating`
-2. **concentration** — the product, when fit to the portfolio, will not create concentration issue
-   - It's computed as the concentration by adding the product to the portfolio by an amount concentration_test_position_pct_aum (defined in yaml)
+2. **diversification** — the product, when fit to the portfolio, will not create a concentration issue (higher score = less added concentration risk)
+   - It's computed as the concentration risk by adding the product to the portfolio by an amount concentration_test_position_pct_aum (defined in yaml)
 3. **has_similar_investment_experience**
    - holding of same `product_type`
    - holding of the same `product_family` as the `product_type`
-4. **better_product_than_existing**
+4. **better_product**
    - better return than existing with same `risk_rating`
    - same `risk_rating` but better `expected_return`
 
@@ -20,13 +20,13 @@ The score measures how fit a product is for a particular investor, computed acro
 - API callers may remove dimensions explicitly via `exclude_dimensions`.
 - The final score must be computed from included dimensions only (renormalized weights).
 - The final score is used for relative ranking across candidate products, not as a hard pass/fail score.
-- For concentration, reuse the concentration method configured in `config/config_planbot.yaml` under `investor_readiness_score.score_concentration_risk`, but evaluate it on a hypothetical post-add portfolio:
+- For diversification, reuse the concentration-risk method configured in `config/config_planbot.yaml` under `investor_readiness_score.score_concentration_risk`, but evaluate it on a hypothetical post-add portfolio:
   - `s_single_holding`
   - `s_region_exposure`
   - `s_asset_class_exposure`
   - compute concentration risk as the max of the three interpolated sub-scores.
   - assume the candidate product is added as a test position equal to `concentration_test_position_pct_aum * client.aum`.
-  - convert that concentration risk into a diversification-friendly score by `concentration_score = 10 - hypothetical_concentration_risk_score`.
+  - convert that concentration risk into a diversification-friendly score by `diversification_score = 10 - hypothetical_concentration_risk_score`.
 
 ### Formula
 
@@ -61,7 +61,7 @@ The computing logic depends on the input parameter `risk_rating_hard_filter`.
 
 The above logic may change to yaml table definition later after empirical test.
 
-- **concentration_score**
+- **diversification_score**
   - computed using the same concentration method/pivots in `investor_readiness_score.score_concentration_risk`
   - sub-scores from `s_single_holding`, `s_region_exposure`, `s_asset_class_exposure`
   - add the candidate product as a hypothetical position with notional:
@@ -70,9 +70,9 @@ The above logic may change to yaml table definition later after empirical test.
 
   - recompute the client concentration risk on the hypothetical portfolio after adding that position
   - hypothetical concentration risk score = `max(sub_scores)`
-  - final concentration score:
+  - final diversification score:
 
-    `concentration_score = 10 - hypothetical_concentration_risk_score`
+    `diversification_score = 10 - hypothetical_concentration_risk_score`
 
   - this keeps the score on a 0-10 scale where higher is better diversification and lower is more concentration risk introduced by the candidate
 - **has_similar_investment_experience_score**

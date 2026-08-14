@@ -52,8 +52,8 @@ search_similar filtering rules:
   - if true (default), 
     Diversification selection algorithm:
     - Group the `search_similar` ranked results by `product_type`.
-    - From each group, select the top-*max_per_product_type* products by similarity score.
-    - *max_per_product_type* is an input parameter, default to 2.
+    - From each group, select the top-*max_candidates_per_product_type* products by similarity score.
+    - *max_candidates_per_product_type* is an input parameter, default to 2.
     - The diversification rule is applied per query.
   - false
     - return the list of product ordered by score in descending order
@@ -66,7 +66,7 @@ search_similar filtering rules:
 
 Convenience wrapper: given a product dict (from `search_by_product_id`), builds the similarity query from its attributes and delegates to `search_similar`.  The anchor product is **automatically excluded** from results.
 
-Accepts the same keyword arguments as `search_similar` (`top_n`, `diversification`, `max_per_product_type`, `risk_rating_hard_filter`, `exclude_product_ids`).
+Accepts the same keyword arguments as `search_similar` (`top_n`, `diversification`, `max_candidates_per_product_type`, `risk_rating_hard_filter`, `exclude_product_ids`).
 
 
 ### search_reinvestment_candidates
@@ -88,12 +88,12 @@ The score measures how fit a product is for a particular investor, computed acro
 ### Dimensions
 
 1. **risk_rating_match** — `product.risk_rating <= client.risk_rating`
-2. **concentration** — the product, when fit to the portfolio, will not create concentration issue
-   - It's computed as the concentration by adding the product to the portfolio by an amount concentration_test_position_pct_aum (defined in yaml)
+2. **diversification** — the product, when fit to the portfolio, will not create a concentration issue (higher score = less added concentration risk)
+   - It's computed as the concentration risk by adding the product to the portfolio by an amount concentration_test_position_pct_aum (defined in yaml)
 3. **has_similar_investment_experience**
    - holding of same `product_type`
    - holding of the same `product_family` as the `product_type`
-4. **better_product_than_existing**
+4. **better_product**
    - better return than existing with same `risk_rating`
    - same `risk_rating` but better `expected_return`
 
@@ -103,13 +103,13 @@ The score measures how fit a product is for a particular investor, computed acro
 - API callers may remove dimensions explicitly via `exclude_dimensions`.
 - The final score must be computed from included dimensions only (renormalized weights).
 - The final score is used for relative ranking across candidate products, not as a hard pass/fail score.
-- For concentration, reuse the concentration method configured in `config/config_planbot.yaml` under `investor_readiness_score.score_concentration_risk`, but evaluate it on a hypothetical post-add portfolio:
+- For diversification, reuse the concentration-risk method configured in `config/config_planbot.yaml` under `investor_readiness_score.score_concentration_risk`, but evaluate it on a hypothetical post-add portfolio:
   - `s_single_holding`
   - `s_region_exposure`
   - `s_asset_class_exposure`
   - compute concentration risk as the max of the three interpolated sub-scores.
   - assume the candidate product is added as a test position equal to `concentration_test_position_pct_aum * client.aum`.
-  - convert that concentration risk into a diversification-friendly score by `concentration_score = 10 - hypothetical_concentration_risk_score`.
+  - convert that concentration risk into a diversification-friendly score by `diversification_score = 10 - hypothetical_concentration_risk_score`.
 
 ### Formula
 
@@ -144,7 +144,7 @@ The computing logic depends on the input parameter `risk_rating_hard_filter`.
 
 The above logic may change to yaml table definition later after empirical test.
 
-- **concentration_score**
+- **diversification_score**
   - computed using the same concentration method/pivots in `investor_readiness_score.score_concentration_risk`
   - sub-scores from `s_single_holding`, `s_region_exposure`, `s_asset_class_exposure`
   - add the candidate product as a hypothetical position with notional:
@@ -153,9 +153,9 @@ The above logic may change to yaml table definition later after empirical test.
 
   - recompute the client concentration risk on the hypothetical portfolio after adding that position
   - hypothetical concentration risk score = `max(sub_scores)`
-  - final concentration score:
+  - final diversification score:
 
-    `concentration_score = 10 - hypothetical_concentration_risk_score`
+    `diversification_score = 10 - hypothetical_concentration_risk_score`
 
   - this keeps the score on a 0-10 scale where higher is better diversification and lower is more concentration risk introduced by the candidate
 - **has_similar_investment_experience_score**
@@ -227,7 +227,7 @@ Request:
   "top_n": 3,
   "risk_rating_hard_filter": false,
   "diversification": true,
-  "max_per_product_type": 2,
+  "max_candidates_per_product_type": 2,
   "exclude_product_ids": ["PROD001"]
 }
 ```
@@ -338,19 +338,19 @@ Request:
 {
   "client_ids": ["PB-HK-000001-8", "PB-HK-000002-6"],
   "source_product_id": "ETF-HYG",
-  "max_per_product_type": 2,
-  "top_n_per_client": 10,
+  "max_candidates_per_product_type": 2,
+  "max_candidates_per_client": 10,
   "risk_rating_hard_filter": false,
   "exclude_product_ids": ["ETF-HYG"]
 }
 ```
 
-- All `search_similar` parameters are passed through: `risk_rating_hard_filter`, `exclude_product_ids`, `diversification`, and `max_per_product_type` are forwarded directly with the same names. `top_n_per_client` maps to `top_n`.
+- All `search_similar` parameters are passed through: `risk_rating_hard_filter`, `exclude_product_ids`, `diversification`, and `max_candidates_per_product_type` are forwarded directly with the same names. `max_candidates_per_client` maps to `top_n`.
 - `risk_rating_hard_filter` is optional; if omitted, defaults to `false`.
 - For each client, use the source product attributes as the `search_similar` query.
-- Apply diversification selection per client: group ranked results by `product_type`, pick top-*max_per_product_type* from each group.
-- `max_per_product_type` is optional; if omitted, defaults to 2.
-- `top_n_per_client` is optional; if omitted, return all selected products after diversification grouping.
+- Apply diversification selection per client: group ranked results by `product_type`, pick top-*max_candidates_per_product_type* from each group.
+- `max_candidates_per_product_type` is optional; if omitted, defaults to 2.
+- `max_candidates_per_client` is optional; if omitted, return all selected products after diversification grouping.
 
 Response:
 
@@ -389,7 +389,7 @@ Request:
   "product_ids": ["ETF-HYG", "ETF-BND", "ETF-VOO", "PROD003"],
   "top_n": 10,
   "risk_rating_hard_filter": true,
-  "exclude_dimensions": ["better_product_than_existing"]
+  "exclude_dimensions": ["diversification_score"]
 }
 ```
 
@@ -409,7 +409,7 @@ Response:
       "fitness_score": 8.35,
       "component_scores": {
         "risk_rating_match_score": 9.0,
-        "concentration_score": 8.5,
+        "diversification_score": 8.5,
         "has_similar_investment_experience_score": 10.0,
         "better_product_score": 6.2
       }
@@ -440,7 +440,7 @@ product_fitness_score:
     coupon: 2.0
   product_fitness_weights:
     risk_rating_match_score: 0.30
-    concentration_score: 0.30
+    diversification_score: 0.30
     has_similar_investment_experience_score: 0.20
     better_product_score: 0.20
   product_fitness_params:
@@ -468,14 +468,14 @@ All acceptance criteria except AC1 require a corresponding unit test.
 | AC5 | `risk_rating_hard_filter=true` enforces `product.risk_rating <= query.risk_rating`; `false` includes `risk_rating` in similarity score only | Unit test: compare result counts for both modes |
 | AC6 | `time_to_maturity` and `coupon` are correctly extracted from `type_specific` JSON per the extraction mapping table | Unit test: query bonds/bond funds, verify derived values |
 | AC7 | Products where a numeric dimension cannot be extracted (NULL JSON path) are excluded from that dimension's scoring but not from the result set | Unit test: include a product with NULL coupon, verify it ranks but coupon dimension excluded |
-| AC8 | `search_reinvestment_candidates()` accepts `client_ids` and `source_product_id`, groups by `product_type`, and selects top-*max_per_product_type* per group with *max_per_product_type* defaulting to 2 | Unit test: verify request/response contract and group counts ≤ max_per_product_type per client |
+| AC8 | `search_reinvestment_candidates()` accepts `client_ids` and `source_product_id`, groups by `product_type`, and selects top-*max_candidates_per_product_type* per group with *max_candidates_per_product_type* defaulting to 2 | Unit test: verify request/response contract and group counts ≤ max_candidates_per_product_type per client |
 | AC9 | `product_fitness_score()` when `risk_rating_hard_filter=true` (default), applies hard risk gate (`product.risk_rating > client.risk_rating → score=0`); when `false`, bypasses the gate. Computes all 4 component scores (0-10 scale), and returns `(client_id, product_id, score, component_scores)` | Unit test: verify gate behavior for both modes, verify component score ranges |
 | AC10 | `risk_rating_match_score` uses the explicit closeness formula `10 * (1 - |client.risk_rating - product.risk_rating| / 4)`, clipped to `[0, 10]` after the hard gate passes | Unit test: verify exact-match = 10 and lower-risk products score proportionally lower |
-| AC11 | `concentration_score` in PFS reuses `score_concentration_risk()` pivots on a hypothetical post-add portfolio using `concentration_test_position_pct_aum * client.aum`, then converts to `10 - hypothetical_concentration_risk_score` | Unit test: compare concentration score for diversified vs concentrated candidate additions |
+| AC11 | `diversification_score` in PFS reuses `score_concentration_risk()` pivots on a hypothetical post-add portfolio using `concentration_test_position_pct_aum * client.aum`, then converts to `10 - hypothetical_concentration_risk_score` | Unit test: compare diversification score for diversified vs concentrated candidate additions |
 | AC12 | `better_product_score` uses notional-weighted uplift with `eps` from YAML; scores 0 when no comparable holdings exist (no baseline) | Unit test: client with no matching product_type holdings → 0; client with holdings → computed score |
 | AC13 | Renormalized weights sum to 1 when dimensions are excluded via `exclude_dimensions` | Unit test: call with excluded dimensions, verify weights sum to 1 |
 | AC14 | Ties in PFS ranking break by `expected_return` desc, then `product_id` asc | Unit test: two products with equal fitness score, verify ordering |
-| AC15 | `search_similar()` with `diversification=true` groups results by `product_type` and selects top-*max_per_product_type* per group with *max_per_product_type* defaulting to 2; with `diversification=false` returns a flat list ordered by similarity score desc | Unit test: compare result shapes for both modes, verify group counts ≤ max_per_product_type |
+| AC15 | `search_similar()` with `diversification=true` groups results by `product_type` and selects top-*max_candidates_per_product_type* per group with *max_candidates_per_product_type* defaulting to 2; with `diversification=false` returns a flat list ordered by similarity score desc | Unit test: compare result shapes for both modes, verify group counts ≤ max_candidates_per_product_type |
 
 ## Outstanding
 

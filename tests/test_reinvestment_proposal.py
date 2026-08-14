@@ -494,8 +494,8 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
                 "reinvestment_targets": [
                     {"client_id": "C1", "source_product_id": "P1"},
                 ],
-                "max_per_product_type": 3,
-                "top_n_per_client": 5,
+                "max_candidates_per_product_type": 3,
+                "max_candidates_per_client": 5,
                 "risk_rating_hard_filter": False,
                 "response_mode": "both",
                 "include_llm_input": True,
@@ -506,8 +506,8 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
 
         mock_propose.assert_called_once_with(
             reinvestment_targets=[{"client_id": "C1", "source_product_id": "P1"}],
-            max_per_product_type=3,
-            top_n_per_client=5,
+            max_candidates_per_product_type=3,
+            max_candidates_per_client=5,
             risk_rating_hard_filter=False,
             response_mode="both",
             include_llm_input=True,
@@ -548,8 +548,8 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
             within_days=365,
             as_of_date=None,
             max_clients=2,
-            max_per_product_type=2,
-            top_n_per_client=10,
+            max_candidates_per_product_type=2,
+            max_candidates_per_client=10,
             risk_rating_hard_filter=True,
             response_mode="path",
             include_llm_input=False,

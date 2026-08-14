@@ -1,1 +1,1878 @@
-{"openapi":"3.1.0","info":{"title":"PlanBot Proposal API","description":"Reinvestment proposal generation API.","version":"0.1.0"},"paths":{"/api/v1/product-investor-matcher":{"post":{"summary":"Match Products To Investors Endpoint","description":"Run the full product-investor matcher pipeline.\n\nAccepts product IDs and client selection criteria, returns ranked\nclient×product proposals with buying scores, investment rationale,\nand final proposal markdown.","operationId":"match_products_to_investors_endpoint_api_v1_product_investor_matcher_post","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/ProductInvestorMatcherRequest"}}},"required":true},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ProductInvestorMatcherResponse"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/reinvestment-proposals":{"post":{"summary":"Get Reinvestment Proposals","description":"Generate reinvestment proposals for one or more target pairs.","operationId":"get_reinvestment_proposals_api_v1_reinvestment_proposals_post","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/ProposeReinvestmentRequest"}}},"required":true},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ProposalResponse"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings":{"post":{"summary":"Propose For Maturing Holdings","description":"Discover clients with maturing bond/bond-fund holdings and generate reinvestment proposals.","operationId":"propose_for_maturing_holdings_api_v1_reinvestment_proposals_propose_reinvestment_for_maturing_holdings_post","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/MaturingHoldingsRequest"}}},"required":true},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ProposalResponse"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/product-opportunity-proposal":{"post":{"summary":"Generate Opportunity Proposal","description":"Generate a single product opportunity proposal for one client–product pair.","operationId":"generate_opportunity_proposal_api_v1_product_opportunity_proposal_post","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/OpportunityProposalRequest"}}},"required":true},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/OpportunityProposalResponse"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/product-opportunity-proposal-automatch":{"post":{"summary":"Generate Opportunity Proposal Automatch","description":"Run product-investor matching, then generate one proposal per pair.","operationId":"generate_opportunity_proposal_automatch_api_v1_product_opportunity_proposal_automatch_post","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/AutomatchRequest"}}},"required":true},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AutomatchResponse"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}}},"components":{"schemas":{"AutomatchProposalItem":{"properties":{"client_id":{"type":"string","title":"Client Id"},"product_id":{"type":"string","title":"Product Id"},"output_filename":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Output Filename"},"proposal_markdown":{"type":"string","title":"Proposal Markdown"},"metadata":{"additionalProperties":true,"type":"object","title":"Metadata"}},"type":"object","required":["client_id","product_id","proposal_markdown"],"title":"AutomatchProposalItem"},"AutomatchRequest":{"properties":{"product_source":{"$ref":"#/components/schemas/ProductSource","default":"default_yaml","example":"default_yaml"},"product_ids":{"items":{"type":"string"},"type":"array","title":"Product Ids","default":["bank_recommended"],"example":["bank_recommended"]},"client_selection":{"anyOf":[{"additionalProperties":true,"type":"object"},{"type":"null"}],"title":"Client Selection","example":{"risk_rating":[1,5]}},"market_outlook":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Market Outlook"},"run_matcher":{"type":"boolean","title":"Run Matcher","default":false,"example":true},"max_proposals":{"type":"integer","title":"Max Proposals","default":10,"example":3}},"additionalProperties":true,"type":"object","title":"AutomatchRequest","description":"Batch product opportunity proposal via product-investor matching.\n\nExample payload::\n\n    {\n      \"product_source\": \"default_yaml\",\n      \"product_ids\": [\"bank_recommended\"],\n      \"client_selection\": {\"risk_rating\": [1, 5]},\n      \"run_matcher\": true,\n      \"max_proposals\": 3\n    }\n\nWhen *product_source* is ``default_yaml``, *product_ids* may contain\ngroup names defined in ``config_planbot.yaml`` under ``product_groups``\n(expanded to their member product IDs).  When *product_source* is\n``request_payload``, *product_ids* are always literal product IDs."},"AutomatchResponse":{"properties":{"matcher_run_id":{"type":"string","title":"Matcher Run Id"},"total_clients_matched":{"type":"integer","title":"Total Clients Matched"},"total_proposals_generated":{"type":"integer","title":"Total Proposals Generated"},"proposals":{"items":{"$ref":"#/components/schemas/AutomatchProposalItem"},"type":"array","title":"Proposals"},"errors":{"items":{"additionalProperties":true,"type":"object"},"type":"array","title":"Errors"}},"type":"object","required":["matcher_run_id","total_clients_matched","total_proposals_generated"],"title":"AutomatchResponse"},"HTTPValidationError":{"properties":{"detail":{"items":{"$ref":"#/components/schemas/ValidationError"},"type":"array","title":"Detail"}},"type":"object","title":"HTTPValidationError"},"MatcherErrorDetail":{"properties":{"code":{"type":"string","title":"Code","default":"","example":"NO_ELIGIBLE_CLIENTS"},"message":{"type":"string","title":"Message","default":""}},"type":"object","title":"MatcherErrorDetail"},"MatcherProposal":{"properties":{"client_id":{"type":"string","title":"Client Id","example":"PB-HK-000001-8"},"product_id":{"type":"string","title":"Product Id","example":"ETF-HYG"},"investment_amount":{"type":"string","title":"Investment Amount","default":"","example":"$500,000"},"funding_source":{"type":"string","title":"Funding Source","default":"","example":"Cash reserves"},"buying_score":{"type":"number","title":"Buying Score","default":0,"example":4.5},"rationale":{"type":"string","title":"Rationale","default":"","example":"Strong fit due to income objective"},"proposal_markdown":{"type":"string","title":"Proposal Markdown","default":"","example":"# Client Product Fit Analysis\n..."},"error":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Error"}},"type":"object","required":["client_id","product_id"],"title":"MatcherProposal","description":"A single matched client→product proposal."},"MatcherSummary":{"properties":{"status":{"type":"string","title":"Status","default":"success","example":"success"},"total_clients_retrieved":{"type":"integer","title":"Total Clients Retrieved","default":0},"clients_after_readiness":{"type":"integer","title":"Clients After Readiness","default":0},"top_n_returned":{"type":"integer","title":"Top N Returned","default":0}},"type":"object","title":"MatcherSummary"},"MaturingHoldingsRequest":{"properties":{"within_days":{"type":"integer","minimum":1.0,"title":"Within Days","description":"Look ahead this many days for maturing holdings","default":365},"as_of_date":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"As Of Date","description":"Reference date (ISO 8601). Defaults to today.","example":"2026-07-23"},"max_clients":{"type":"integer","maximum":100.0,"minimum":1.0,"title":"Max Clients","description":"Cap on number of clients to process","default":2},"max_per_product_type":{"type":"integer","maximum":10.0,"minimum":1.0,"title":"Max Per Product Type","description":"Max candidates per product type","default":2},"top_n_per_client":{"type":"integer","maximum":50.0,"minimum":1.0,"title":"Top N Per Client","description":"Max candidate products per client","default":10},"risk_rating_hard_filter":{"type":"boolean","title":"Risk Rating Hard Filter","description":"If True, only return products within client's risk tolerance","default":true},"response_mode":{"type":"string","title":"Response Mode","description":"'path' | 'inline' | 'both' — how to return the proposal","default":"path"},"include_llm_input":{"type":"boolean","title":"Include Llm Input","description":"Include the raw LLM input in the response","default":false},"include_market_outlook":{"type":"boolean","title":"Include Market Outlook","description":"Include market outlook in the proposal","default":true},"include_debug_scores":{"type":"boolean","title":"Include Debug Scores","description":"Include debug scoring details in the response","default":false}},"additionalProperties":true,"type":"object","title":"MaturingHoldingsRequest","description":"Discover clients with maturing bonds and generate proposals."},"OpportunityProposalRequest":{"properties":{"client_id":{"type":"string","title":"Client Id","description":"Client identifier"},"product_id":{"type":"string","title":"Product Id","description":"Primary suggested product ID"},"rationale":{"type":"string","title":"Rationale","description":"Freeform markdown rationale","default":""},"suggested_products_and_rationale":{"type":"string","title":"Suggested Products And Rationale","description":"Matcher per-client analysis in markdown (product recommendations, fitness scores, funding sources, client needs). Populated from product_investor_matcher output.","default":""},"run_matcher":{"type":"boolean","title":"Run Matcher","description":"Run matcher to obtain rationale","default":false},"market_outlook":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Market Outlook"},"alternative_count":{"type":"integer","minimum":0.0,"title":"Alternative Count","description":"Number of alternative products","default":3}},"additionalProperties":true,"type":"object","required":["client_id","product_id"],"title":"OpportunityProposalRequest","description":"Single-shot product opportunity proposal."},"OpportunityProposalResponse":{"properties":{"client_id":{"type":"string","title":"Client Id"},"product_id":{"type":"string","title":"Product Id"},"output_filename":{"type":"string","title":"Output Filename"},"proposal_markdown":{"type":"string","title":"Proposal Markdown"},"metadata":{"additionalProperties":true,"type":"object","title":"Metadata"}},"type":"object","required":["client_id","product_id","output_filename","proposal_markdown"],"title":"OpportunityProposalResponse"},"PerClientResult":{"properties":{"client_id":{"type":"string","title":"Client Id","example":"PB-HK-000007-5"},"source_product_id":{"type":"string","title":"Source Product Id","example":"PROD053"},"candidate_products":{"items":{"additionalProperties":true,"type":"object"},"type":"array","title":"Candidate Products","example":[{"product_id":"PROD054","similarity_score":0.9933}]},"output_path":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Output Path","example":"runs/reinvestment_proposal/reinvestment_proposal_PB-HK-000007-5.md"},"markdown_output":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Markdown Output","example":"# Reinvestment Proposal\n\n## Executive Summary\n..."},"error":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Error","example":"Data service unreachable at http://localhost:8001/api/v1: [Errno 61] Connection refused. Is the data server running?"}},"type":"object","required":["client_id","source_product_id"],"title":"PerClientResult","description":"Result for a single client→product pair."},"ProductInvestorMatcherRequest":{"properties":{"product_source":{"$ref":"#/components/schemas/ProductSource","default":"default_yaml","example":"default_yaml"},"product_ids":{"anyOf":[{"items":{"type":"string"},"type":"array"},{"type":"null"}],"title":"Product Ids","example":["bank_recommended"]},"client_selection":{"anyOf":[{"additionalProperties":true,"type":"object"},{"type":"null"}],"title":"Client Selection","example":{"risk_rating":[3,5]}},"top_n":{"type":"integer","maximum":20.0,"minimum":1.0,"title":"Top N","default":3,"example":3},"market_outlook":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Market Outlook"}},"type":"object","title":"ProductInvestorMatcherRequest","description":"Request payload for the product-investor matcher.\n\nWhen *product_source* is ``default_yaml``, *product_ids* may contain\ngroup names defined in ``config_planbot.yaml`` under ``product_groups``\n(expanded to their member product IDs).  When *product_source* is\n``request_payload``, *product_ids* are always literal product IDs."},"ProductInvestorMatcherResponse":{"properties":{"run_id":{"type":"string","title":"Run Id","example":"run-20260730-120000"},"summary":{"$ref":"#/components/schemas/MatcherSummary"},"product_investor_matching_markdown":{"type":"string","title":"Product Investor Matching Markdown","default":""},"final_proposals":{"items":{"$ref":"#/components/schemas/MatcherProposal"},"type":"array","title":"Final Proposals"},"warnings":{"items":{"type":"string"},"type":"array","title":"Warnings"},"errors":{"items":{"$ref":"#/components/schemas/MatcherErrorDetail"},"type":"array","title":"Errors"}},"type":"object","required":["run_id"],"title":"ProductInvestorMatcherResponse"},"ProductSource":{"type":"string","enum":["default_yaml","request_payload"],"title":"ProductSource","description":"Where the product universe is defined."},"ProposalResponse":{"properties":{"status":{"type":"string","title":"Status","example":"success"},"results_by_client":{"items":{"$ref":"#/components/schemas/PerClientResult"},"type":"array","title":"Results By Client"}},"type":"object","required":["status"],"title":"ProposalResponse","description":"Top-level response from the reinvestment proposal API."},"ProposeReinvestmentRequest":{"properties":{"reinvestment_targets":{"items":{"$ref":"#/components/schemas/ReinvestmentTarget"},"type":"array","minItems":1,"title":"Reinvestment Targets","description":"List of (client_id, source_product_id) pairs to process"},"max_per_product_type":{"type":"integer","maximum":10.0,"minimum":1.0,"title":"Max Per Product Type","description":"Max candidates per product type","default":2},"top_n_per_client":{"type":"integer","maximum":50.0,"minimum":1.0,"title":"Top N Per Client","description":"Max candidate products per client","default":10},"risk_rating_hard_filter":{"type":"boolean","title":"Risk Rating Hard Filter","description":"If True, only return products within client's risk tolerance","default":true},"response_mode":{"type":"string","title":"Response Mode","description":"'path' | 'inline' | 'both' — how to return the proposal","default":"path"},"include_llm_input":{"type":"boolean","title":"Include Llm Input","description":"Include the raw LLM input in the response","default":false},"include_market_outlook":{"type":"boolean","title":"Include Market Outlook","description":"Include market outlook in the proposal","default":true},"include_debug_scores":{"type":"boolean","title":"Include Debug Scores","description":"Include debug scoring details in the response","default":false}},"additionalProperties":true,"type":"object","required":["reinvestment_targets"],"title":"ProposeReinvestmentRequest","description":"Generate reinvestment proposals for one or more target pairs."},"ReinvestmentTarget":{"properties":{"client_id":{"type":"string","title":"Client Id","description":"Client identifier, e.g. 'PB-HK-000007-5'","example":"PB-HK-000007-5"},"source_product_id":{"type":"string","title":"Source Product Id","description":"Maturing product ID, e.g. 'PROD053' (US Treasury 4.375% 31Aug26)","example":"PROD053"}},"type":"object","required":["client_id","source_product_id"],"title":"ReinvestmentTarget","description":"A client→product pair to generate a reinvestment proposal for."},"ValidationError":{"properties":{"loc":{"items":{"anyOf":[{"type":"string"},{"type":"integer"}]},"type":"array","title":"Location"},"msg":{"type":"string","title":"Message"},"type":{"type":"string","title":"Error Type"},"input":{"title":"Input"},"ctx":{"type":"object","title":"Context"}},"type":"object","required":["loc","msg","type"],"title":"ValidationError"}}}}
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PlanBot Proposal API",
+    "description": "Reinvestment proposal generation API.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/product-investor-matcher": {
+      "post": {
+        "summary": "Match Products To Investors Endpoint",
+        "description": "Run the full product-investor matcher pipeline.\n\nAccepts product IDs and client selection criteria, returns ranked\nclient×product proposals with buying scores, investment rationale,\nand final proposal markdown.",
+        "operationId": "match_products_to_investors_endpoint_api_v1_product_investor_matcher_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductInvestorMatcherRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductInvestorMatcherResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reinvestment-proposals": {
+      "post": {
+        "summary": "Generate reinvestment proposals for explicit client×product targets",
+        "description": "Generate one reinvestment proposal per (client_id, source_product_id) pair.\n\n### Request body\n\n| Field | Type | Description |\n|---|---|---|\n| `reinvestment_targets` | array (required) | List of `{client_id, source_product_id}` pairs. Each pair produces one proposal. |\n| Field | Type | Description |\n|---|---|---|\n| `max_candidates_per_product_type` | int (1–10) | Diversification cap on how many candidate products are kept per product type. Default `2`. |\n| `max_candidates_per_client` | int (1–50) | Max candidate products passed to the LLM per client. Default `10`. |\n| `risk_rating_hard_filter` | bool | When `true`, only products with `risk_rating <= client.risk_rating` are considered. Default `true`. |\n| `response_mode` | enum | How the proposal is returned in the response:\n- `path` — return only the output file path.\n- `markdown` — return only the proposal markdown.\n- `both` — return the path **and** the markdown. Default `path`. |\n| `include_llm_input` | bool | Include the assembled LLM prompt in the response. Default `false`. |\n| `include_market_outlook` | bool | Include the market outlook section. Default `true`. |\n| `include_debug_scores` | bool | Include debug scoring details. Default `false`. |\n\n### Example\n\n```json\n{\n  \"reinvestment_targets\": [\n    {\"client_id\": \"PB-HK-000007-5\", \"source_product_id\": \"PROD053\"}\n  ],\n  \"max_candidates_per_product_type\": 2,\n  \"max_candidates_per_client\": 10,\n  \"risk_rating_hard_filter\": true,\n  \"response_mode\": \"both\",\n  \"include_debug_scores\": false\n}\n```",
+        "operationId": "get_reinvestment_proposals_api_v1_reinvestment_proposals_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProposeReinvestmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings": {
+      "post": {
+        "summary": "Discover maturing holdings and generate reinvestment proposals",
+        "description": "Discover clients with maturing bond/bond-fund holdings within a look-ahead window, then generate one reinvestment proposal per client.\n\n### Request body\n\n| Field | Type | Description |\n|---|---|---|\n| `within_days` | int (≥1) | Look ahead this many days for maturing holdings. Default `365`. |\n| `as_of_date` | string (ISO 8601) | Reference date for maturity calculation. Defaults to today. |\n| `max_clients` | int (1–100) | Cap on number of clients to process. Default `2`. |\n| Field | Type | Description |\n|---|---|---|\n| `max_candidates_per_product_type` | int (1–10) | Diversification cap on how many candidate products are kept per product type. Default `2`. |\n| `max_candidates_per_client` | int (1–50) | Max candidate products passed to the LLM per client. Default `10`. |\n| `risk_rating_hard_filter` | bool | When `true`, only products with `risk_rating <= client.risk_rating` are considered. Default `true`. |\n| `response_mode` | enum | How the proposal is returned in the response:\n- `path` — return only the output file path.\n- `markdown` — return only the proposal markdown.\n- `both` — return the path **and** the markdown. Default `path`. |\n| `include_llm_input` | bool | Include the assembled LLM prompt in the response. Default `false`. |\n| `include_market_outlook` | bool | Include the market outlook section. Default `true`. |\n| `include_debug_scores` | bool | Include debug scoring details. Default `false`. |",
+        "operationId": "propose_for_maturing_holdings_api_v1_reinvestment_proposals_propose_reinvestment_for_maturing_holdings_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaturingHoldingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/product-opportunity-proposal": {
+      "post": {
+        "summary": "Generate Opportunity Proposal",
+        "description": "Generate a single product opportunity proposal for one client–product pair.",
+        "operationId": "generate_opportunity_proposal_api_v1_product_opportunity_proposal_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpportunityProposalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpportunityProposalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/product-opportunity-proposal-automatch": {
+      "post": {
+        "summary": "Generate Opportunity Proposal Automatch",
+        "description": "Run product-investor matching, then generate one proposal per pair.",
+        "operationId": "generate_opportunity_proposal_automatch_api_v1_product_opportunity_proposal_automatch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutomatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomatchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portfolio-review": {
+      "post": {
+        "summary": "Generate Portfolio Review",
+        "description": "Generate a portfolio health review for a single client.\n\nTakes only a ``client_id``.  Fetches client profile + holdings,\nproduct catalog, and market outlook from the data service, then\ninvokes the LLM to produce a portfolio health review in markdown.",
+        "operationId": "generate_portfolio_review_api_v1_portfolio_review_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PortfolioReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioReviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/clients/holdings/maturing": {
+      "get": {
+        "summary": "Get Holdings Maturing",
+        "description": "Find clients with bonds or fixed-income products maturing.",
+        "operationId": "get_holdings_maturing_api_v1_clients_holdings_maturing_get",
+        "parameters": [
+          {
+            "name": "product_types",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of product types to include (e.g. `bond,bond_fund`). Omit to default to `bond` only.",
+              "title": "Product Types"
+            },
+            "description": "Comma-separated list of product types to include (e.g. `bond,bond_fund`). Omit to default to `bond` only.",
+            "examples": {
+              "Bonds + bond funds": {
+                "value": "bond,bond_fund"
+              }
+            }
+          },
+          {
+            "name": "within_days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Calendar days to maturity.",
+              "default": 14,
+              "title": "Within Days"
+            },
+            "description": "Calendar days to maturity.",
+            "examples": {
+              "One year": {
+                "value": 365
+              }
+            }
+          },
+          {
+            "name": "as_of_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Reference date (ISO 8601). Defaults to system date.",
+              "title": "As Of Date"
+            },
+            "description": "Reference date (ISO 8601). Defaults to system date.",
+            "examples": {
+              "Explicit date": {
+                "value": "2026-08-14"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MaturingHoldingItem"
+                  },
+                  "title": "Response Get Holdings Maturing Api V1 Clients Holdings Maturing Get"
+                },
+                "example": [
+                  {
+                    "client_id": "PB-HK-000007-5",
+                    "product_id": "PROD053",
+                    "market_value": 3360000.0,
+                    "days_to_mature": 17
+                  }
+                ]
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/clients/readiness": {
+      "get": {
+        "summary": "Get Investor Readiness",
+        "description": "Return clients ranked by investor readiness score.",
+        "operationId": "get_investor_readiness_api_v1_clients_readiness_get",
+        "parameters": [
+          {
+            "name": "top_n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Max results. 0 = return all.",
+              "default": 10,
+              "title": "Top N"
+            },
+            "description": "Max results. 0 = return all.",
+            "examples": {
+              "Top 10": {
+                "value": 10
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReadinessItem"
+                  },
+                  "title": "Response Get Investor Readiness Api V1 Clients Readiness Get"
+                },
+                "example": [
+                  {
+                    "rank": 1,
+                    "client_id": "PB-HK-000001-8",
+                    "name": "David Kim",
+                    "investor_readiness_score": 29.5,
+                    "cash_score": 8.0,
+                    "concentration_score": 10.0,
+                    "active_score": 3.0,
+                    "life_stage_score": 8.5
+                  }
+                ]
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/products/search-similar": {
+      "post": {
+        "summary": "Search Similar Products",
+        "description": "Proximity search returning products ranked by similarity.",
+        "operationId": "search_similar_products_api_v1_products_search_similar_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimilarProductSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimilarProductSearchResult"
+                },
+                "example": {
+                  "results": [
+                    {
+                      "product_id": "PROD044",
+                      "name": "China Government Bond",
+                      "product_type": "bond",
+                      "risk_rating": 1,
+                      "expected_return": 3.5,
+                      "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing.",
+                      "similarity_score": 1.0
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/products/reinvestment-candidates": {
+      "post": {
+        "summary": "Get Reinvestment Candidates",
+        "description": "Find reinvestment candidates per client.",
+        "operationId": "get_reinvestment_candidates_api_v1_products_reinvestment_candidates_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReinvestmentCandidatesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidatesResult"
+                },
+                "example": {
+                  "results_by_client": {
+                    "PB-HK-000007-5": [
+                      {
+                        "product_id": "PROD054",
+                        "name": "US Treasury 3.75% 30Jun27",
+                        "product_type": "bond",
+                        "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing.",
+                        "similarity_score": 0.9366
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/products/fitness-score": {
+      "post": {
+        "summary": "Get Product Fitness Score",
+        "description": "Compute product fitness scores for client×product pairs.",
+        "operationId": "get_product_fitness_score_api_v1_products_fitness_score_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FitnessScoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitnessScoreResult"
+                },
+                "example": {
+                  "results": [
+                    {
+                      "client_id": "PB-HK-000007-5",
+                      "product_id": "PROD054",
+                      "product_name": "US Treasury 3.75% 30Jun27",
+                      "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing.",
+                      "fitness_score": 0.75,
+                      "component_scores": {
+                        "risk_rating_match_score": 2.5,
+                        "diversification_score": 0.0,
+                        "has_similar_investment_experience_score": 0.0,
+                        "better_product_score": 0.0
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AutomatchProposalItem": {
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "title": "Client Id"
+          },
+          "product_id": {
+            "type": "string",
+            "title": "Product Id"
+          },
+          "output_filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Filename"
+          },
+          "proposal_markdown": {
+            "type": "string",
+            "title": "Proposal Markdown"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_id",
+          "product_id",
+          "proposal_markdown"
+        ],
+        "title": "AutomatchProposalItem"
+      },
+      "AutomatchRequest": {
+        "properties": {
+          "product_source": {
+            "$ref": "#/components/schemas/ProductSource",
+            "default": "default_yaml",
+            "example": "default_yaml"
+          },
+          "product_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Product Ids",
+            "default": [
+              "bank_recommended"
+            ],
+            "example": [
+              "bank_recommended"
+            ]
+          },
+          "client_selection": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Selection",
+            "example": {
+              "risk_rating": [
+                1,
+                5
+              ]
+            }
+          },
+          "run_matcher": {
+            "type": "boolean",
+            "title": "Run Matcher",
+            "default": false,
+            "example": true
+          },
+          "max_proposals": {
+            "type": "integer",
+            "title": "Max Proposals",
+            "default": 10,
+            "example": 2
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "AutomatchRequest",
+        "description": "Batch product opportunity proposal via product-investor matching.\n\nExample payload::\n\n    {\n      \"product_source\": \"default_yaml\",\n      \"product_ids\": [\"bank_recommended\"],\n      \"client_selection\": {\"risk_rating\": [1, 5]},\n      \"run_matcher\": true,\n      \"max_proposals\": 2\n    }\n\nWhen *product_source* is ``default_yaml``, *product_ids* may contain\ngroup names defined in ``config_planbot.yaml`` under ``product_groups``\n(expanded to their member product IDs).  When *product_source* is\n``request_payload``, *product_ids* are always literal product IDs."
+      },
+      "AutomatchResponse": {
+        "properties": {
+          "matcher_run_id": {
+            "type": "string",
+            "title": "Matcher Run Id"
+          },
+          "total_clients_matched": {
+            "type": "integer",
+            "title": "Total Clients Matched"
+          },
+          "total_proposals_generated": {
+            "type": "integer",
+            "title": "Total Proposals Generated"
+          },
+          "proposals": {
+            "items": {
+              "$ref": "#/components/schemas/AutomatchProposalItem"
+            },
+            "type": "array",
+            "title": "Proposals"
+          },
+          "errors": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "matcher_run_id",
+          "total_clients_matched",
+          "total_proposals_generated"
+        ],
+        "title": "AutomatchResponse"
+      },
+      "CandidateResultItem": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "title": "Product Id",
+            "example": "PROD054"
+          },
+          "similarity_score": {
+            "type": "number",
+            "title": "Similarity Score",
+            "example": 0.9933
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "product_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Type"
+          },
+          "investment_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Investment Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "similarity_score"
+        ],
+        "title": "CandidateResultItem"
+      },
+      "CandidatesResult": {
+        "properties": {
+          "results_by_client": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/CandidateResultItem"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Results By Client"
+          }
+        },
+        "type": "object",
+        "title": "CandidatesResult"
+      },
+      "ComponentScores": {
+        "properties": {
+          "risk_rating_match_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Rating Match Score"
+          },
+          "diversification_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diversification Score"
+          },
+          "has_similar_investment_experience_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has Similar Investment Experience Score"
+          },
+          "better_product_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Better Product Score"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ComponentScores"
+      },
+      "FitnessScoreItem": {
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "title": "Client Id"
+          },
+          "product_id": {
+            "type": "string",
+            "title": "Product Id"
+          },
+          "product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name"
+          },
+          "investment_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Investment Note"
+          },
+          "fitness_score": {
+            "type": "number",
+            "title": "Fitness Score"
+          },
+          "component_scores": {
+            "$ref": "#/components/schemas/ComponentScores"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "client_id",
+          "product_id",
+          "fitness_score",
+          "component_scores"
+        ],
+        "title": "FitnessScoreItem"
+      },
+      "FitnessScoreRequest": {
+        "properties": {
+          "client_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Client Ids",
+            "example": [
+              "PB-HK-000007-5"
+            ]
+          },
+          "product_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Product Ids",
+            "example": [
+              "PROD054",
+              "ETF-BIL",
+              "ETF-SHV"
+            ]
+          },
+          "top_n": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Top N",
+            "default": 10
+          },
+          "risk_rating_hard_filter": {
+            "type": "boolean",
+            "title": "Risk Rating Hard Filter",
+            "default": true
+          },
+          "exclude_dimensions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exclude Dimensions",
+            "example": [
+              "diversification_score"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_ids",
+          "product_ids"
+        ],
+        "title": "FitnessScoreRequest",
+        "description": "Compute product fitness scores for client×product pairs."
+      },
+      "FitnessScoreResult": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/FitnessScoreItem"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "title": "FitnessScoreResult"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MatcherErrorDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "default": "",
+            "example": "NO_ELIGIBLE_CLIENTS"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "MatcherErrorDetail"
+      },
+      "MatcherProposal": {
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "title": "Client Id",
+            "example": "PB-HK-000001-8"
+          },
+          "product_id": {
+            "type": "string",
+            "title": "Product Id",
+            "example": "ETF-HYG"
+          },
+          "investment_amount": {
+            "type": "string",
+            "title": "Investment Amount",
+            "default": "",
+            "example": "$500,000"
+          },
+          "funding_source": {
+            "type": "string",
+            "title": "Funding Source",
+            "default": "",
+            "example": "Cash reserves"
+          },
+          "buying_score": {
+            "type": "number",
+            "title": "Buying Score",
+            "default": 0,
+            "example": 4.5
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale",
+            "default": "",
+            "example": "Strong fit due to income objective"
+          },
+          "proposal_markdown": {
+            "type": "string",
+            "title": "Proposal Markdown",
+            "default": "",
+            "example": "# Client Product Fit Analysis\n..."
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_id",
+          "product_id"
+        ],
+        "title": "MatcherProposal",
+        "description": "A single matched client→product proposal."
+      },
+      "MatcherSummary": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "success",
+            "example": "success"
+          },
+          "total_clients_retrieved": {
+            "type": "integer",
+            "title": "Total Clients Retrieved",
+            "default": 0
+          },
+          "clients_after_readiness": {
+            "type": "integer",
+            "title": "Clients After Readiness",
+            "default": 0
+          },
+          "top_n_returned": {
+            "type": "integer",
+            "title": "Top N Returned",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "MatcherSummary"
+      },
+      "MaturingHoldingItem": {
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "title": "Client Id"
+          },
+          "product_id": {
+            "type": "string",
+            "title": "Product Id"
+          },
+          "market_value": {
+            "type": "number",
+            "title": "Market Value"
+          },
+          "days_to_mature": {
+            "type": "integer",
+            "title": "Days To Mature"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_id",
+          "product_id",
+          "market_value",
+          "days_to_mature"
+        ],
+        "title": "MaturingHoldingItem"
+      },
+      "MaturingHoldingsRequest": {
+        "properties": {
+          "within_days": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Within Days",
+            "description": "Look ahead this many days for maturing holdings",
+            "default": 365
+          },
+          "as_of_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Date",
+            "description": "Reference date (ISO 8601). Defaults to today.",
+            "example": "2026-07-23"
+          },
+          "max_clients": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Max Clients",
+            "description": "Cap on number of clients to process",
+            "default": 2
+          },
+          "max_candidates_per_product_type": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Max Candidates Per Product Type",
+            "description": "Max candidates per product type",
+            "default": 2
+          },
+          "max_candidates_per_client": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Max Candidates Per Client",
+            "description": "Max candidate products per client",
+            "default": 10
+          },
+          "risk_rating_hard_filter": {
+            "type": "boolean",
+            "title": "Risk Rating Hard Filter",
+            "description": "If True, only return products within client's risk tolerance",
+            "default": true
+          },
+          "response_mode": {
+            "type": "string",
+            "enum": [
+              "path",
+              "markdown",
+              "both"
+            ],
+            "title": "Response Mode",
+            "description": "How the proposal is returned in the response. 'path' = only the output file path. 'markdown' = only the markdown. 'both' = path + markdown.",
+            "default": "path"
+          },
+          "include_llm_input": {
+            "type": "boolean",
+            "title": "Include Llm Input",
+            "description": "Include the raw LLM input in the response",
+            "default": false
+          },
+          "include_market_outlook": {
+            "type": "boolean",
+            "title": "Include Market Outlook",
+            "description": "Include market outlook in the proposal",
+            "default": true
+          },
+          "include_debug_scores": {
+            "type": "boolean",
+            "title": "Include Debug Scores",
+            "description": "Include debug scoring details in the response",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "MaturingHoldingsRequest",
+        "description": "Discover clients with maturing bonds and generate proposals."
+      },
+      "OpportunityProposalRequest": {
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "title": "Client Id",
+            "description": "Client identifier",
+            "example": "PB-HK-000007-5"
+          },
+          "product_id": {
+            "type": "string",
+            "title": "Product Id",
+            "description": "Primary suggested product ID",
+            "example": "PROD054"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale",
+            "description": "Freeform markdown rationale",
+            "default": ""
+          },
+          "suggested_products_and_rationale": {
+            "type": "string",
+            "title": "Suggested Products And Rationale",
+            "description": "Matcher per-client analysis in markdown (product recommendations, fitness scores, funding sources, client needs). Populated from product_investor_matcher output.",
+            "default": ""
+          },
+          "run_matcher": {
+            "type": "boolean",
+            "title": "Run Matcher",
+            "description": "Run matcher to obtain rationale",
+            "default": false
+          },
+          "market_outlook": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Outlook",
+            "example": "Rates remain elevated; favor short-duration high-quality credit over long duration."
+          },
+          "alternative_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Alternative Count",
+            "description": "Number of alternative products",
+            "default": 3
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "client_id",
+          "product_id"
+        ],
+        "title": "OpportunityProposalRequest",
+        "description": "Single-shot product opportunity proposal."
+      },
+      "OpportunityProposalResponse": {
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "title": "Client Id"
+          },
+          "product_id": {
+            "type": "string",
+            "title": "Product Id"
+          },
+          "output_filename": {
+            "type": "string",
+            "title": "Output Filename"
+          },
+          "proposal_markdown": {
+            "type": "string",
+            "title": "Proposal Markdown"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_id",
+          "product_id",
+          "output_filename",
+          "proposal_markdown"
+        ],
+        "title": "OpportunityProposalResponse"
+      },
+      "PerClientResult": {
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "title": "Client Id",
+            "example": "PB-HK-000007-5"
+          },
+          "source_product_id": {
+            "type": "string",
+            "title": "Source Product Id",
+            "example": "PROD053"
+          },
+          "candidate_products": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Candidate Products",
+            "example": [
+              {
+                "product_id": "PROD054",
+                "similarity_score": 0.9933
+              }
+            ]
+          },
+          "output_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Path",
+            "example": "runs/reinvestment_proposal/reinvestment_proposal_PB-HK-000007-5.md"
+          },
+          "markdown_output": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Markdown Output",
+            "example": "# Reinvestment Proposal\n\n## Executive Summary\n..."
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error",
+            "example": "Data service unreachable at http://localhost:8001/api/v1: [Errno 61] Connection refused. Is the data server running?"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_id",
+          "source_product_id"
+        ],
+        "title": "PerClientResult",
+        "description": "Result for a single client→product pair."
+      },
+      "PortfolioReviewRequest": {
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "title": "Client Id",
+            "description": "Client identifier, e.g. 'PB-HK-000001-8'",
+            "example": "PB-HK-000001-8"
+          },
+          "market_outlook": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Outlook",
+            "example": "Rates remain elevated; favor short-duration high-quality credit over long duration."
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_id"
+        ],
+        "title": "PortfolioReviewRequest",
+        "description": "Generate a portfolio health review for a single client."
+      },
+      "PortfolioReviewResponse": {
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "title": "Client Id"
+          },
+          "output_filename": {
+            "type": "string",
+            "title": "Output Filename"
+          },
+          "proposal_markdown": {
+            "type": "string",
+            "title": "Proposal Markdown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_id",
+          "output_filename",
+          "proposal_markdown"
+        ],
+        "title": "PortfolioReviewResponse"
+      },
+      "ProductInvestorMatcherRequest": {
+        "properties": {
+          "product_source": {
+            "$ref": "#/components/schemas/ProductSource",
+            "default": "default_yaml",
+            "example": "default_yaml"
+          },
+          "product_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Ids",
+            "example": [
+              "bank_recommended"
+            ]
+          },
+          "client_selection": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Selection",
+            "example": {
+              "risk_rating": [
+                3,
+                5
+              ]
+            }
+          },
+          "top_n": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Top N",
+            "default": 3,
+            "example": 3
+          },
+          "market_outlook": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Outlook",
+            "example": "Rates remain elevated; favor short-duration high-quality credit over long duration."
+          }
+        },
+        "type": "object",
+        "title": "ProductInvestorMatcherRequest",
+        "description": "Request payload for the product-investor matcher.\n\nWhen *product_source* is ``default_yaml``, *product_ids* may contain\ngroup names defined in ``config_planbot.yaml`` under ``product_groups``\n(expanded to their member product IDs).  When *product_source* is\n``request_payload``, *product_ids* are always literal product IDs."
+      },
+      "ProductInvestorMatcherResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "example": "run-20260730-120000"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/MatcherSummary"
+          },
+          "product_investor_matching_markdown": {
+            "type": "string",
+            "title": "Product Investor Matching Markdown",
+            "default": ""
+          },
+          "final_proposals": {
+            "items": {
+              "$ref": "#/components/schemas/MatcherProposal"
+            },
+            "type": "array",
+            "title": "Final Proposals"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/MatcherErrorDetail"
+            },
+            "type": "array",
+            "title": "Errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id"
+        ],
+        "title": "ProductInvestorMatcherResponse"
+      },
+      "ProductSource": {
+        "type": "string",
+        "enum": [
+          "default_yaml",
+          "request_payload"
+        ],
+        "title": "ProductSource",
+        "description": "Where the product universe is defined."
+      },
+      "ProposalResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "example": "success"
+          },
+          "results_by_client": {
+            "items": {
+              "$ref": "#/components/schemas/PerClientResult"
+            },
+            "type": "array",
+            "title": "Results By Client"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "ProposalResponse",
+        "description": "Top-level response from the reinvestment proposal API."
+      },
+      "ProposeReinvestmentRequest": {
+        "properties": {
+          "reinvestment_targets": {
+            "items": {
+              "$ref": "#/components/schemas/ReinvestmentTarget"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Reinvestment Targets",
+            "description": "List of (client_id, source_product_id) pairs to process. Each pair produces one reinvestment proposal.",
+            "example": [
+              {
+                "client_id": "PB-HK-000007-5",
+                "source_product_id": "PROD053"
+              }
+            ]
+          },
+          "max_candidates_per_product_type": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Max Candidates Per Product Type",
+            "description": "Max candidate products per product type. Diversification cap applied when selecting similar products.",
+            "default": 2
+          },
+          "max_candidates_per_client": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Max Candidates Per Client",
+            "description": "Max candidate products per client. Total number of replacement candidates passed to the LLM.",
+            "default": 10
+          },
+          "risk_rating_hard_filter": {
+            "type": "boolean",
+            "title": "Risk Rating Hard Filter",
+            "description": "If True, only products with risk_rating <= client's risk_rating are considered.",
+            "default": true
+          },
+          "response_mode": {
+            "type": "string",
+            "enum": [
+              "path",
+              "markdown",
+              "both"
+            ],
+            "title": "Response Mode",
+            "description": "How the proposal is returned in the response. 'path' = only the output file path. 'markdown' = only the markdown. 'both' = path + markdown.",
+            "default": "path"
+          },
+          "include_llm_input": {
+            "type": "boolean",
+            "title": "Include Llm Input",
+            "description": "Include the raw LLM input (assembled prompt) in the response.",
+            "default": false
+          },
+          "include_market_outlook": {
+            "type": "boolean",
+            "title": "Include Market Outlook",
+            "description": "Include the market outlook section in the proposal.",
+            "default": true
+          },
+          "include_debug_scores": {
+            "type": "boolean",
+            "title": "Include Debug Scores",
+            "description": "Include debug scoring details (candidate similarity scores) in the response.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "reinvestment_targets"
+        ],
+        "title": "ProposeReinvestmentRequest",
+        "description": "Generate reinvestment proposals for one or more target pairs."
+      },
+      "ReadinessItem": {
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "client_id": {
+            "type": "string",
+            "title": "Client Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "investor_readiness_score": {
+            "type": "number",
+            "title": "Investor Readiness Score"
+          },
+          "cash_score": {
+            "type": "number",
+            "title": "Cash Score"
+          },
+          "concentration_score": {
+            "type": "number",
+            "title": "Concentration Score"
+          },
+          "active_score": {
+            "type": "number",
+            "title": "Active Score"
+          },
+          "life_stage_score": {
+            "type": "number",
+            "title": "Life Stage Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rank",
+          "client_id",
+          "name",
+          "investor_readiness_score",
+          "cash_score",
+          "concentration_score",
+          "active_score",
+          "life_stage_score"
+        ],
+        "title": "ReadinessItem"
+      },
+      "ReinvestmentCandidatesRequest": {
+        "properties": {
+          "client_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Client Ids",
+            "example": [
+              "PB-HK-000007-5"
+            ]
+          },
+          "source_product_id": {
+            "type": "string",
+            "title": "Source Product Id",
+            "description": "Maturing product to find replacements for",
+            "example": "PROD053"
+          },
+          "max_candidates_per_product_type": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Max Candidates Per Product Type",
+            "default": 2
+          },
+          "max_candidates_per_client": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 50.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Candidates Per Client"
+          },
+          "risk_rating_hard_filter": {
+            "type": "boolean",
+            "title": "Risk Rating Hard Filter",
+            "default": true
+          },
+          "exclude_product_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exclude Product Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_ids",
+          "source_product_id"
+        ],
+        "title": "ReinvestmentCandidatesRequest",
+        "description": "Find reinvestment candidates for a list of clients."
+      },
+      "ReinvestmentTarget": {
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "title": "Client Id",
+            "description": "Client identifier, e.g. 'PB-HK-000007-5'",
+            "example": "PB-HK-000007-5"
+          },
+          "source_product_id": {
+            "type": "string",
+            "title": "Source Product Id",
+            "description": "Maturing product ID, e.g. 'PROD053' (US Treasury 4.375% 31Aug26)",
+            "example": "PROD053"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_id",
+          "source_product_id"
+        ],
+        "title": "ReinvestmentTarget",
+        "description": "A client→product pair to generate a reinvestment proposal for."
+      },
+      "SimilarProductSearchRequest": {
+        "properties": {
+          "query": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Query",
+            "description": "Product attributes to match against",
+            "example": {
+              "expected_return": 3.7,
+              "product_type": "bond",
+              "risk_rating": 1
+            }
+          },
+          "top_n": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Top N",
+            "default": 3
+          },
+          "risk_rating_hard_filter": {
+            "type": "boolean",
+            "title": "Risk Rating Hard Filter",
+            "default": true
+          },
+          "diversification": {
+            "type": "boolean",
+            "title": "Diversification",
+            "default": true
+          },
+          "max_candidates_per_product_type": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Max Candidates Per Product Type",
+            "default": 2
+          },
+          "exclude_product_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exclude Product Ids",
+            "example": [
+              "PROD053"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "SimilarProductSearchRequest",
+        "description": "Proximity search returning products ranked by similarity."
+      },
+      "SimilarProductSearchResult": {
+        "properties": {
+          "results": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "title": "SimilarProductSearchResult"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
