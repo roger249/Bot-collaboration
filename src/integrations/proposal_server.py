@@ -470,7 +470,7 @@ class AutomatchRequest(BaseModel):
           "product_ids": ["bank_recommended"],
           "client_selection": {"risk_rating": [1, 5]},
           "run_matcher": true,
-          "max_proposals": 2
+          "max_proposals": 3
         }
 
     When *product_source* is ``default_yaml``, *product_ids* may contain
@@ -478,7 +478,17 @@ class AutomatchRequest(BaseModel):
     (expanded to their member product IDs).  When *product_source* is
     ``request_payload``, *product_ids* are always literal product IDs.
     """
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "product_source": "default_yaml",
+                "product_ids": ["bank_recommended"],
+                "client_selection": {"risk_rating": [1, 5]},
+                "run_matcher": True,
+                "max_proposals": 3,
+            }
+        },
+    )
 
     product_source: ProductSource = Field(
         ProductSource.DEFAULT_YAML,
@@ -493,7 +503,7 @@ class AutomatchRequest(BaseModel):
     )
     run_matcher: bool = Field(False, json_schema_extra={"example": True})
     max_proposals: int = Field(
-        10, json_schema_extra={"example": 2},
+        10, json_schema_extra={"example": 3},
     )
 
 

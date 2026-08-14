@@ -522,7 +522,7 @@ pipeline:
       - id: section_guides
         source: file
         paths:
-          - data/planbot/shared/proposal_section_instructions/*.md
+          - data/planbot/shared/proposal_section_instructions/suggested_portfolio_instruction.md
         prompt_section: references
         required: true
       - id: general_guidelines

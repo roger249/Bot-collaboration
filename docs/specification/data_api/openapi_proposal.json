@@ -660,13 +660,26 @@
             "type": "integer",
             "title": "Max Proposals",
             "default": 10,
-            "example": 2
+            "example": 3
           }
         },
-        "additionalProperties": true,
         "type": "object",
         "title": "AutomatchRequest",
-        "description": "Batch product opportunity proposal via product-investor matching.\n\nExample payload::\n\n    {\n      \"product_source\": \"default_yaml\",\n      \"product_ids\": [\"bank_recommended\"],\n      \"client_selection\": {\"risk_rating\": [1, 5]},\n      \"run_matcher\": true,\n      \"max_proposals\": 2\n    }\n\nWhen *product_source* is ``default_yaml``, *product_ids* may contain\ngroup names defined in ``config_planbot.yaml`` under ``product_groups``\n(expanded to their member product IDs).  When *product_source* is\n``request_payload``, *product_ids* are always literal product IDs."
+        "description": "Batch product opportunity proposal via product-investor matching.\n\nExample payload::\n\n    {\n      \"product_source\": \"default_yaml\",\n      \"product_ids\": [\"bank_recommended\"],\n      \"client_selection\": {\"risk_rating\": [1, 5]},\n      \"run_matcher\": true,\n      \"max_proposals\": 3\n    }\n\nWhen *product_source* is ``default_yaml``, *product_ids* may contain\ngroup names defined in ``config_planbot.yaml`` under ``product_groups``\n(expanded to their member product IDs).  When *product_source* is\n``request_payload``, *product_ids* are always literal product IDs.",
+        "example": {
+          "client_selection": {
+            "risk_rating": [
+              1,
+              5
+            ]
+          },
+          "max_proposals": 3,
+          "product_ids": [
+            "bank_recommended"
+          ],
+          "product_source": "default_yaml",
+          "run_matcher": true
+        }
       },
       "AutomatchResponse": {
         "properties": {

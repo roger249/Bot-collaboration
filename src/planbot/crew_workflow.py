@@ -514,6 +514,21 @@ def run_crew_planbot(
         len(urls),
     )
 
+    # Write the prompt snapshot BEFORE invoking the LLM so it can be inspected
+    # while the (potentially slow) LLM call is still in flight.
+    prompt_snapshot = run_root / "prompt_snapshot.md"
+    write_text(
+        prompt_snapshot,
+        _build_prompt_snapshot_markdown(
+            task_prompt=task_prompt,
+            loaded_sections=loaded_sections,
+            model=cfg.model,
+            temperature=cfg.temperature,
+            root_dir=app_config.root_dir,
+        ),
+    )
+    LOGGER.info("Prompt snapshot written to %s", prompt_snapshot)
+
     if cfg.provider == "mock":
         LOGGER.info("Mock provider: using direct client (CrewAI path skipped for mock)")
         bot_config = BotConfig(
@@ -550,18 +565,6 @@ def run_crew_planbot(
 
     write_text(output_path, output)
     LOGGER.info("Output written to %s", output_path)
-
-    prompt_snapshot = run_root / "prompt_snapshot.md"
-    write_text(
-        prompt_snapshot,
-        _build_prompt_snapshot_markdown(
-            task_prompt=task_prompt,
-            loaded_sections=loaded_sections,
-            model=cfg.model,
-            temperature=cfg.temperature,
-            root_dir=app_config.root_dir,
-        ),
-    )
 
     LOGGER.info(
         "Run complete: total_documents=%s, urls_used=%s, run_root=%s",
