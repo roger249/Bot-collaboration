@@ -1,32 +1,11 @@
-# Dockerization Runbook
+# Dockerization Runbook — Build & Publish
 
-This document defines one standard workflow:
+This document describes how to build and publish the Docker image to GHCR.
+Deployment and API testing instructions live in [README.md](../../README.md).
 
-1. Build and publish an AMD64 image to GHCR.
-2. Deploy that versioned image on AMD64 Linux.
+## Build & Publish
 
-## Linux Prerequisites
-
-Install and verify these on the Linux target host before deployment:
-
-1. Docker Engine (recommended 24+)
-2. Docker Compose plugin (recommended v2+)
-3. Git
-4. Network access to required API endpoints used by the app
-
-Verification commands:
-
-```bash
-docker --version
-docker compose version
-git --version
-```
-
-If your Linux user is not in the docker group, either use `sudo` for Docker commands or add the user to the docker group and re-login.
-
-## Standard Build And Release (Mac Apple Silicon)
-
-This project now uses uv-native dependency management only:
+This project uses uv-native dependency management:
 
 1. [pyproject.toml](../../pyproject.toml)
 2. [uv.lock](../../uv.lock)
@@ -36,50 +15,47 @@ Run from repository root:
 ```bash
 git pull
 export GHCR_TOKEN="your_ghcr_token"
-./docker/release_ghcr.sh
+./docker/release_ghcr.sh                 # amd64, publish (default)
+./docker/release_ghcr.sh arm64           # arm64, publish
+./docker/release_ghcr.sh amd64 local     # amd64, build only (no push)
+./docker/release_ghcr.sh arm64 local     # arm64, build only for local testing
 ```
 
 Configuration is centralized at the top of [docker/release_ghcr.sh](../../docker/release_ghcr.sh). Update these once:
 
 1. `GHCR_OWNER`
 2. `IMAGE_NAME`
-3. `PLATFORMS` — currently `linux/amd64` (single-platform AMD64 build)
-4. `PUBLISH_LATEST`
+3. `PUBLISH_LATEST`
+
+Two positional switches control build behaviour (in order):
+
+1. **Architecture** (default `amd64`): `amd64` → `linux/amd64`, `arm64` → `linux/arm64`.
+2. **Publish mode** (default `publish`): `publish` → build and push to GHCR;
+   `local` → build and load into the local Docker daemon (no push, no GHCR token).
+
+The tag includes the architecture so AMD and ARM images coexist under the same
+date+sha: `vYYYYMMDD-<gitsha>-<arch>` (e.g. `v20260816-abc1234-amd64`).
 
 The script automatically:
 
-1. Prepares/uses buildx builder (cross-compiles to AMD64 from Apple Silicon)
-2. Logs in to GHCR
-3. Builds and pushes AMD64 image
-4. Verifies the pushed image
-5. Prints IMAGE_REPO and IMAGE_TAG for deployment
+1. Resolves the repo root (so it works from any working directory).
+2. Prepares/uses a buildx builder (cross-compiles to the target platform).
+3. Logs in to GHCR (publish mode only).
+4. Builds and pushes (or loads) the image for the target platform.
+5. Verifies the pushed image (publish mode only).
+6. Prints `IMAGE_REPO`, `IMAGE_TAG`, and `PUBLISH_MODE` for deployment.
 
 If needed, verify the pushed image manually:
 
 ```bash
-docker buildx imagetools inspect ghcr.io/<org-or-user>/planbot-proposal-server:vYYYYMMDD-<gitsha>
+docker buildx imagetools inspect ghcr.io/<org-or-user>/planbot-proposal-server:vYYYYMMDD-<gitsha>-<arch>
 ```
 
-## Standard Deploy And Test (Linux AMD64)
+> Note: `--load` only works for the host's native architecture. On Apple Silicon
+> use `arm64 local` for local testing; `amd64` must be published (`amd64 publish`).
 
-Deployment and API testing instructions are maintained in [README.md](../../README.md).
+## Deployment Bundle
 
-## Upgrade Procedure
-
-For upgrade/deploy steps, see [README.md](../../README.md).
-
-## Runtime Data And Config Behavior
-
-Current compose setup in [docker-compose.yml](../../docker-compose.yml):
-
-1. Persists outputs:
-   - `./log` -> `/app/log`
-   - `./runs` -> `/app/runs`
-2. Supports optional override folders:
-   - `./config-override` -> `/app/config-override` (read-only)
-   - `./data-override` -> `/app/data-override` (read-only)
-3. If override folders are empty, container uses image defaults copied from:
-   - `/app/config-default`
-   - `/app/data-default`
-
-This behavior is implemented by [docker/entrypoint.sh](../../docker/entrypoint.sh).
+The image embeds `compose.yaml` under `/app/deploy/`, so clients can deploy
+without source access. Extraction and deployment steps are in
+[README.md](../../README.md).

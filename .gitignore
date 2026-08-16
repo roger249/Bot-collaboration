@@ -9,3 +9,9 @@ runs/
 data/planbot/**/*.pdf
 data/planbot/stock_analysis/news_and_data/**/*
 # data/planbot/shared/client_profile/clients.duckdb
+
+# Runtime overrides are environment-specific; only sample files are tracked.
+config-override/*
+!config-override/*.example
+data-override/*
+!data-override/*.example

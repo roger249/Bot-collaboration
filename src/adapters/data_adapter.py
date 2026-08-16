@@ -47,6 +47,13 @@ def build_data_adapters(config: dict) -> tuple[DataAdapter, DataAdapter]:
 
     ``get_client_product_from_restapi: false`` (default) → DuckDB (self-contained).
     ``true`` → bank REST adapters (Sprint 2).
+
+    The REST base URLs may be overridden per deployment via environment
+    variables (12-factor style).  Each falls back to the YAML value when
+    unset:
+
+      * ``DATA_CLIENT_BASE_URL``  → ``data_source.rest.client_base_url``
+      * ``DATA_PRODUCT_BASE_URL`` → ``data_source.rest.product_base_url``
     """
     from src.adapters.duckdb_adapter import DuckDBDataAdapter
     from src.adapters.rest_adapter import BankRestDataAdapter
@@ -70,8 +77,9 @@ def build_data_adapters(config: dict) -> tuple[DataAdapter, DataAdapter]:
     cache_ttl = rest.get("cache_ttl_seconds", 300)
     cache_maxsize = rest.get("cache_maxsize", 512)
 
-    client_base = rest.get("client_base_url")
-    product_base = rest.get("product_base_url")
+    # Env var wins over YAML; YAML is the fallback default.
+    client_base = os.environ.get("DATA_CLIENT_BASE_URL") or rest.get("client_base_url")
+    product_base = os.environ.get("DATA_PRODUCT_BASE_URL") or rest.get("product_base_url")
     if not client_base or not product_base:
         raise ValueError(
             "data_source.rest requires client_base_url and product_base_url "

@@ -1,0 +1,44 @@
+# Sample override file — DO NOT use directly.
+#
+# NOTE: For most deployments you do NOT need this file.  The data endpoint URLs
+# can be set with environment variables instead (see README section 2.1):
+#
+#     DATA_CLIENT_BASE_URL=https://bank-client-data.example.com
+#     DATA_PRODUCT_BASE_URL=https://bank-client-data.example.com
+#     BANK_API_KEY=your_bank_token
+#
+# Use this override file only when you need to change deeper/structural config
+# (paths, timeouts, cache, matcher, scorecard weights, etc.).
+#
+# To activate, copy this file to the same directory WITHOUT the `.example`
+# suffix and edit it:
+#
+#     cp config-override/config_planbot.yaml.example \
+#        config-override/config_planbot.yaml
+#
+# Files ending in `.example` are ignored by the container's merge step, so this
+# sample is inert as-is.  A real `config_planbot.yaml` is deep-merged onto the
+# image default: you only need to specify the keys you want to change, and
+# every unspecified key is inherited from `config/config_planbot.yaml` in the
+# image.
+
+# ── Choose your data source ─────────────────────────────────────────────
+common:
+  # true  -> read client/product data from the bank's REST data service.
+  # false -> read from the bundled DuckDB test database (self-contained).
+  get_client_product_from_restapi: true
+
+# ── REST data service (only used when the flag above is true) ───────────
+data_source:
+  rest:
+    # Point at the client's own data service here.
+    client_base_url: https://bank-client-data.example.com
+    product_base_url: https://bank-client-data.example.com
+    # API token is read from this environment variable at runtime.
+    auth_token_env: BANK_API_KEY
+    clients_path: /api/v1/clients
+    holdings_path: /api/v1/holdings
+    products_path: /api/v1/products
+    timeout_seconds: 10
+    cache_ttl_seconds: 300
+    cache_maxsize: 512

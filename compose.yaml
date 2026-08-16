@@ -5,9 +5,17 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
+      # Data API simulator (used by the proposal server's REST adapter).
+      - "8001:8001"
     environment:
-      # Required by deepseek/poe providers configured in config/config.yaml.
+      # LLM provider key required by the proposal endpoints (deepseek_tool).
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      # Data service endpoints + auth (overrides config_planbot.yaml).
+      - DATA_CLIENT_BASE_URL=${DATA_CLIENT_BASE_URL:-}
+      - DATA_PRODUCT_BASE_URL=${DATA_PRODUCT_BASE_URL:-}
+      - BANK_API_KEY=${BANK_API_KEY:-}
+      # Set to "0" to run the proposal server only (no bundled data simulator).
+      - START_DATA_SERVER=${START_DATA_SERVER:-true}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
       interval: 30s
