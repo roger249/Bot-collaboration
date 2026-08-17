@@ -13,35 +13,12 @@ PFS-input: {
       - Age
       - Gender
       - Married
-      - Tax Residence
       - Income
+      - Tax Residence
       - Investment goals (TBD)
       - Holdings
     |
     client_db.shape: stored_data
-
-    irs: |md
-      ## Investor Readiness Scorecard
-      - % Cash or equivalents
-      - Concentration Risk
-      - Investment experience
-      - Life stage (Number of potential needs)
-    |
-    irs.shape: step
-    irs.style.fill: linen
-
-    potential_client: |md
-      ## Top-n Selected Clients
-      - Readiness Score
-    |
-    potential_client.shape: document
-
-    client_db -> irs -> potential_client
-  }
-
-  # Row 2 ──────────────────────────────────────────────────────────────
-  Product-flow: {
-    direction: down
 
     product_db: |md
       ## Products Catalog
@@ -68,6 +45,29 @@ PFS-input: {
     product_db -> selected_products
   }
 }
+
+    irs: |md
+      ## Investor Readiness Scorecard
+      - % Cash or equivalents
+      - Concentration Risk
+      - Investment experience
+      - Life stage (Number of potential needs)
+    |
+    irs.shape: step
+    irs.style.fill: linen
+
+    potential_client: |md
+      ## Top-n Selected Clients
+      - Readiness Score
+    |
+    potential_client.shape: document
+
+    client_db -> irs -> potential_client
+  }
+
+  # Row 2 ──────────────────────────────────────────────────────────────
+  Product-flow: {
+    direction: down
 
 # ── Right: Product-Client Matcher ────────────────────────────────────
 pc_matcher: AI-assist product-client matcher {

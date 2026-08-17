@@ -3,12 +3,11 @@ To Do
 
 # Below are to do for a POC grade proposal generator
 
-- Product catalog / Client schema
-- Define Product catalog / Client
 - Move proposal generation to a server side API with JSON output
-- Integrate to SmartWealth product/client catalog
-- Refine the proposal algo to include score card mechanism
 - Refine the proposal-client matching UI
+- FX structured product
+- FX view
+- Slide where AI is delivered
 
 ## Minor improvement
 

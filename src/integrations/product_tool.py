@@ -363,8 +363,14 @@ def search_product_by_fitness_score(
 
     client_adapter, product_adapter = _get_adapters()
     clients = client_adapter.fetch_clients(client_ids)
-    products = product_adapter.fetch_products(product_ids)
     holdings = client_adapter.fetch_holdings(client_ids)
+
+    # Fetch candidate products PLUS the products behind the client's existing
+    # holdings, so holdings can be enriched with product_type for experience
+    # and better-product scoring (holdings' product_id is not in product_ids).
+    holdings_product_ids = {h.get("product_id") for h in holdings if h.get("product_id")}
+    all_product_ids = list(dict.fromkeys([*product_ids, *holdings_product_ids]))
+    products = product_adapter.fetch_products(all_product_ids)
 
     clients_map: dict[str, dict] = {c["client_id"]: c for c in clients}
     products_map: dict[str, dict] = {p["product_id"]: p for p in products}

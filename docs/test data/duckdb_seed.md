@@ -40,7 +40,7 @@ CREATE TABLE products (
 );
 ```
 
-Schema source of truth: `docs/prompts/prod_spec/product_catalog/product_catalog.md`
+Schema source of truth: `docs/specification/schema_product/product_catalog_schema.md`
 
 ## Contents
 
@@ -214,7 +214,9 @@ uv pip install duckdb
 
 ## Related Docs
 
-- Product schema: `docs/prompts/prod_spec/product_catalog/product_catalog.md`
-- Tool spec: `docs/prompts/prod_spec/product_catalog/product_tool.md`
-- Risk rating: `docs/spec/risk_rating.md`
+- Product schema: `docs/specification/schema_product/product_catalog_schema.md`
+- Product API (tool spec): `docs/specification/data_api/product_api.md`
+- Client & holdings schema: `docs/specification/schema_client/client_holdings_schema.md`
+- Product performance metrics: `docs/specification/schema_product/product_performance.md`
+- Derived metrics & ratings: `docs/specification/schema_product/derived_metrics.md`
 - Source data overview: `data/planbot/shared/product_catalog/Overview of product catalog.md`

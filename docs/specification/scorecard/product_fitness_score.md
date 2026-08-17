@@ -1,18 +1,45 @@
 ## Product fitness score
 
-The score measures how fit a product is for a particular investor, computed across the following dimensions.  Without assuming switching out a particular product.
+The score measures how fit a candidate product is for a particular investor, computed across four independent dimensions — without assuming the investor switches out an existing product.
 
-### Dimensions
+### Objective
 
-1. **risk_rating_match** — `product.risk_rating <= client.risk_rating`
-2. **diversification** — the product, when fit to the portfolio, will not create a concentration issue (higher score = less added concentration risk)
-   - It's computed as the concentration risk by adding the product to the portfolio by an amount concentration_test_position_pct_aum (defined in yaml)
-3. **has_similar_investment_experience**
-   - holding of same `product_type`
-   - holding of the same `product_family` as the `product_type`
-4. **better_product**
-   - better return than existing with same `risk_rating`
-   - same `risk_rating` but better `expected_return`
+Rank candidate products for a given client so the LLM can make a final recommendation.  The score is a **relative** ranking signal (higher = better fit), not a pass/fail gate; the hard risk gate is the only eligibility filter.
+
+### Factors in the scorecard
+
+The four sub-scores (each 0-10 before weighting):
+
+| Factor | What it measures | Example product decision |
+|--------|------------------|--------------------------|
+| **risk_rating_match** | Closeness of `product.risk_rating` to `client.risk_rating`. | A conservative client (risk 2) is matched to a low‑risk bond; a risk‑5 product is filtered out by the hard gate for that client. |
+| **diversification** | Whether adding the product worsens portfolio concentration (higher = less added concentration risk). | An equity‑heavy client scores a precious‑metals or bond candidate highly, because adding it reduces concentration; an extra large‑cap equity position scores low. |
+| **has_similar_investment_experience** | Whether the client already holds the same `product_type` or `product_family`. | A client already holding `bond` funds is a natural fit for another bond candidate; a first‑time equity investor gets a lower score for a complex equity product. |
+| **better_product** | Whether the candidate has a higher `expected_return` than the client's existing holdings of the same `product_type`. | If the client holds a 3.0% bond and a candidate bond yields 4.5%, the candidate scores high as a superior replacement; a lower‑yield candidate scores 0. |
+
+The `diversification` score is computed as the concentration risk of a hypothetical portfolio that adds the product at `concentration_test_position_pct_aum * client.aum`.
+
+### Input
+
+The score card consumes three data entities through the data-access layer (DAL):
+
+| Entity | Fields used |
+|--------|-------------|
+| `clients` | `client_id`, `aum`, `risk_rating` |
+| `holdings` | `client_id`, `product_id`, `market_value`, `region`, `asset_class` |
+| `products` | `product_id`, `name`, `product_type`, `risk_rating`, `expected_return`, `region`, `asset_class`, `investment_note` |
+
+The DAL is configured by `data_source` in `config_planbot.yaml` (self-contained DuckDB by default, or the bank REST API via `common.get_client_product_from_restapi: true`).
+
+API input parameters:
+
+| Parameter | Type | Default | Meaning |
+|-----------|------|---------|---------|
+| `client_ids` | list[str] | required | Clients to score (m) |
+| `product_ids` | list[str] | required | Candidate products (n) |
+| `top_n` | int | 10 | Max rows returned (1-50) |
+| `risk_rating_hard_filter` | bool | true | Enforce `product.risk_rating <= client.risk_rating` |
+| `exclude_dimensions` | list[str] | null | Dimensions to drop before renormalizing weights |
 
 ### Scoring behavior
 
@@ -37,17 +64,18 @@ Inputs:
 
 Output rows:
 
-- `(client_id, product_id, score, component_scores)`
+- `(client_id, product_id, fitness_score, component_scores)` — plus `product_name` and `investment_note` for display.
 
 Per pair `(client_id, product_id)`, compute:
 
 **1) Hard risk gate**
 
 The computing logic depends on the input parameter `risk_rating_hard_filter`.
-- default to true
-  - if `product.risk_rating > client.risk_rating`, then score is 0 and row is ranked at bottom.
-- false
-  - above checking is bypassed and score is computed as normal
+- `true` (default)
+  - if `product.risk_rating > client.risk_rating`, the pair is **excluded entirely** (no result row is emitted).
+  - if the product's `risk_rating` is missing, it is treated as `99`, so the pair is excluded whenever the client has a rating.
+- `false`
+  - the gate is bypassed and all pairs are scored normally.
 
 **2) Component scores (0 to 10 scale before weighting)**
 
@@ -58,6 +86,7 @@ The computing logic depends on the input parameter `risk_rating_hard_filter`.
     `risk_rating_match_score = 10 * (1 - |client.risk_rating - product.risk_rating| / 4)`
 
   - clip to `[0, 10]`
+  - if either `risk_rating` is missing, the score is a neutral `5.0`.
 
 The above logic may change to yaml table definition later after empirical test.
 
@@ -94,13 +123,13 @@ The above logic may change to yaml table definition later after empirical test.
   - Example: a `bond_fund` candidate matches "same family" against a client holding `bond`. A `balanced_fund` candidate matches "same family" only against clients holding other `balanced_fund` products.
 - **better_product_score**
   - compare candidate product against each comparable holding in portfolio (same `product_type`)
-  - use notional/position-weighted impact instead of count-based impact
-  - higher score when candidate has better `expected_return` than holdings with same/similar `risk_rating`, weighted by holding notional (or market_value)
-  - suggested weighted uplift:
-    - `weight_h = holding_notional_h / sum(holding_notional over comparable holdings)`
+  - use market-value-weighted impact instead of count-based impact
+  - higher score when candidate has better `expected_return` than the comparable holdings
+  - weighted uplift:
+    - `weight_h = market_value_h / sum(market_value over comparable holdings)`
     - `uplift_h = max((expected_return_candidate - expected_return_h) / max(abs(expected_return_h), eps), 0)`
-    - `better_product_score = better_product_score_scale * min(sum(weight_h * uplift_h) / better_product_score_uplift_cap, 1)`
-  - if no comparable holdings exist, score is 0 (no baseline for comparison — the client has no exposure to this product type)
+    - `better_product_score = better_product_score_scale * min(sum(weight_h * uplift_h) / better_product_score_uplift_cap, 1)`, clipped to `[0, 10]`
+  - if there are no comparable holdings (no same-`product_type` exposure), or the candidate has no `expected_return`, the score is `0` (no baseline for comparison).
 
 **3) Final weighted score**
 
@@ -112,12 +141,79 @@ The above logic may change to yaml table definition later after empirical test.
 
 Ranking:
 
-- rank by descending `fitness_score` per client.
-- ties break by `expected_return` desc, then `product_id` asc.
+- sort the full result set by descending `fitness_score`; ties break by `expected_return` desc, then `product_id` asc.
+- truncate to `top_n` rows.
 
-The score will pass to the LLM along with the selected clients and products to make the final recommendation.  The additional information including
+### Configuration
+
+Weights and parameters live in `config/config_planbot.yaml` under `product_fitness_score`:
+
+```yaml
+product_fitness_score:
+  product_fitness_weights:
+    risk_rating_match_score: 0.30
+    diversification_score: 0.30
+    has_similar_investment_experience_score: 0.20
+    better_product_score: 0.20
+  product_fitness_params:
+    better_product_score_scale: 10
+    better_product_score_uplift_cap: 0.30
+    better_product_score_eps: 0.01
+    concentration_test_position_pct_aum: 0.10  # % of AUM used as hypothetical test position
+    experience_score_same_type: 10.0           # high: same product_type held
+    experience_score_same_family: 6.0          # medium: same product_family held
+    experience_score_none: 0.0                 # low: no match
+```
+
+> `product_fitness_weights` and `product_fitness_params` drive the PFS.  The sibling `search_similar_weights` / `search_similar_sigmas` keys are used by `search_similar`, not by the PFS.
+
+### API
+
+FastAPI endpoint (implemented in `src/integrations/proposal_server.py`, delegating to `search_product_by_fitness_score` in `src/integrations/product_tool.py`):
+
+```
+POST /api/v1/products/fitness-score
+```
+
+Request body (`FitnessScoreRequest`):
+
+```json
+{
+  "client_ids": ["PB-HK-000007-5"],
+  "product_ids": ["PROD054", "ETF-BIL", "ETF-SHV"],
+  "top_n": 10,
+  "risk_rating_hard_filter": true,
+  "exclude_dimensions": ["diversification_score"]
+}
+```
+
+Response — a flat list of `FitnessScoreItem`:
+
+```json
+{
+  "results": [
+    {
+      "client_id": "PB-HK-000007-5",
+      "product_id": "PROD054",
+      "product_name": "China Government Bond",
+      "investment_note": "Individual bonds allow precise maturity-matching…",
+      "fitness_score": 8.25,
+      "component_scores": {
+        "risk_rating_match_score": 10.0,
+        "diversification_score": 8.0,
+        "has_similar_investment_experience_score": 6.0,
+        "better_product_score": 7.5
+      }
+    }
+  ]
+}
+```
+
+### Downstream use
+
+The score passes to the LLM along with the selected clients and products to make the final recommendation, together with
 
 - market outlook
 - product description from the bank
 
-the mechanism will be similar to the current proposal client_product_fit_analysis_task specified in config/config_planbot.yaml
+The mechanism mirrors the current `client_product_fit_analysis_task` in `config/config_planbot.yaml`.
