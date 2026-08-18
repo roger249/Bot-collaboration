@@ -171,21 +171,56 @@ def propose_product_opportunity_automatch(
     """
     app_config = load_config(str(_ROOT_DIR / "config" / "config.yaml"))
 
+    errors: list[dict] = []
+
     # ── 1. Get matching pairs ────────────────────────────────────────
     if run_matcher:
-        from src.integrations.product_investor_matcher import product_investor_matcher
+        try:
+            from src.integrations.product_investor_matcher import product_investor_matcher
 
-        matcher_result = product_investor_matcher(
-            product_ids=product_ids,
-            product_source=product_source,
-            client_selection=client_selection,
-            top_n=max_proposals if max_proposals > 0 else 10,
-            market_outlook=market_outlook,
-        )
+            matcher_result = product_investor_matcher(
+                product_ids=product_ids,
+                product_source=product_source,
+                client_selection=client_selection,
+                top_n=max_proposals if max_proposals > 0 else 10,
+                market_outlook=market_outlook,
+            )
+        except Exception as exc:
+            LOGGER.exception("Matcher invocation failed: %s", exc)
+            return {
+                "matcher_run_id": "",
+                "total_clients_matched": 0,
+                "total_proposals_generated": 0,
+                "proposals": [],
+                "errors": [{"code": "MATCHER_ERROR", "message": str(exc)}],
+            }
+
         matcher_run_id = matcher_result.get("run_id", "")
         pairs = matcher_result.get("final_proposals", [])
+        # Surface any matcher-level errors/warnings in the response.
+        matcher_errors = matcher_result.get("errors", [])
+        if matcher_errors:
+            errors.extend(matcher_errors)
+        if not pairs:
+            return {
+                "matcher_run_id": matcher_run_id,
+                "total_clients_matched": 0,
+                "total_proposals_generated": 0,
+                "proposals": [],
+                "errors": errors,
+            }
     else:
-        matcher_run_id, pairs = _load_latest_matcher_output()
+        try:
+            matcher_run_id, pairs = _load_latest_matcher_output()
+        except Exception as exc:
+            LOGGER.exception("Failed to load latest matcher output: %s", exc)
+            return {
+                "matcher_run_id": "",
+                "total_clients_matched": 0,
+                "total_proposals_generated": 0,
+                "proposals": [],
+                "errors": [{"code": "MATCHER_OUTPUT_LOAD_ERROR", "message": str(exc)}],
+            }
         if not pairs:
             return {
                 "matcher_run_id": matcher_run_id,
@@ -206,7 +241,6 @@ def propose_product_opportunity_automatch(
 
     # ── 2. Fan-out per pair ──────────────────────────────────────────
     proposals: list[dict] = []
-    errors: list[dict] = []
 
     for i, pair in enumerate(pairs):
         if max_proposals > 0 and i >= max_proposals:

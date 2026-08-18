@@ -19,7 +19,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query
 
 from src.integrations.reinvestment_proposal import (
     propose_reinvestment,
@@ -294,7 +294,16 @@ class ProductInvestorMatcherRequest(BaseModel):
         None, json_schema_extra={"example": ["bank_recommended"]},
     )
     client_selection: dict | None = Field(
-        None, json_schema_extra={"example": {"risk_rating": [3, 5]}},
+        None,
+        description=(
+            "Filter criteria passed to the client API `search` endpoint. "
+            "Supported keys: `client_id` (a single ID string or a list of IDs), "
+            "`risk_rating` (int or [min, max]), `age` (int or [min, max]), "
+            "`product_types_in_holdings` (str or list), "
+            "`concentration_score` (float or [min, max]), "
+            "`cash_score` (float or [min, max])."
+        ),
+        json_schema_extra={"example": {"client_id": ["PB-HK-000001-8", "PB-HK-000005-9"]}},
     )
     top_n: int = Field(3, ge=1, le=20, json_schema_extra={"example": 3})
     market_outlook: str | None = Field(
@@ -468,10 +477,15 @@ class AutomatchRequest(BaseModel):
         {
           "product_source": "default_yaml",
           "product_ids": ["bank_recommended"],
-          "client_selection": {"risk_rating": [1, 5]},
+          "client_selection": {"client_id": ["PB-HK-000001-8", "PB-HK-000005-9"]},
           "run_matcher": true,
           "max_proposals": 3
         }
+
+    ``client_selection`` is passed to the client API ``search`` endpoint.
+    Supported keys: ``client_id`` (str or list of str), ``risk_rating``,
+    ``age``, ``product_types_in_holdings``, ``concentration_score``,
+    ``cash_score``.
 
     When *product_source* is ``default_yaml``, *product_ids* may contain
     group names defined in ``config_planbot.yaml`` under ``product_groups``
@@ -483,7 +497,7 @@ class AutomatchRequest(BaseModel):
             "example": {
                 "product_source": "default_yaml",
                 "product_ids": ["bank_recommended"],
-                "client_selection": {"risk_rating": [1, 5]},
+                "client_selection": {"client_id": ["PB-HK-000001-8", "PB-HK-000005-9"]},
                 "run_matcher": True,
                 "max_proposals": 3,
             }
@@ -499,7 +513,16 @@ class AutomatchRequest(BaseModel):
         json_schema_extra={"example": ["bank_recommended"]},
     )
     client_selection: dict | None = Field(
-        None, json_schema_extra={"example": {"risk_rating": [1, 5]}},
+        None,
+        description=(
+            "Filter criteria passed to the client API `search` endpoint. "
+            "Supported keys: `client_id` (a single ID string or a list of IDs), "
+            "`risk_rating` (int or [min, max]), `age` (int or [min, max]), "
+            "`product_types_in_holdings` (str or list), "
+            "`concentration_score` (float or [min, max]), "
+            "`cash_score` (float or [min, max])."
+        ),
+        json_schema_extra={"example": {"client_id": ["PB-HK-000001-8", "PB-HK-000005-9"]}},
     )
     run_matcher: bool = Field(False, json_schema_extra={"example": True})
     max_proposals: int = Field(
@@ -529,15 +552,25 @@ class AutomatchResponse(BaseModel):
 )
 def generate_opportunity_proposal(body: OpportunityProposalRequest) -> dict:
     """Generate a single product opportunity proposal for one client–product pair."""
-    return propose_product_opportunity(
-        client_id=body.client_id,
-        product_id=body.product_id,
-        rationale=body.rationale,
-        suggested_products_and_rationale=body.suggested_products_and_rationale,
-        run_matcher=body.run_matcher,
-        market_outlook=body.market_outlook,
-        alternative_count=body.alternative_count,
-    )
+    try:
+        return propose_product_opportunity(
+            client_id=body.client_id,
+            product_id=body.product_id,
+            rationale=body.rationale,
+            suggested_products_and_rationale=body.suggested_products_and_rationale,
+            run_matcher=body.run_matcher,
+            market_outlook=body.market_outlook,
+            alternative_count=body.alternative_count,
+        )
+    except LookupError as exc:
+        # Client or product not found.
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        LOGGER.exception("Product opportunity proposal failed: %s", exc)
+        raise HTTPException(
+            status_code=502,
+            detail=f"Proposal generation failed: {exc}",
+        ) from exc
 
 
 @app.post(

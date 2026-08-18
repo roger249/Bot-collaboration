@@ -15,7 +15,6 @@ Provide a description of what this report is.
 
 | Client ID (Name) | Buying Score | Suggested Product & Position | Funding Source | Fitness Score | Expected Return – Suggested | Expected Return – Source | Key Rationale |
 |---:|---:|---|---:|---:|---:|---|--|
-| PB-HK-000001-8 (David Kim) | 5 | PROD016 Healthcare Innovation Fund – USD 77,048 (8.1%) | Sell STOCK-TSLA Tesla Inc. – USD 77,048 | 4.20 | 13.8% | 15.98% | Replace single-stock Tesla risk with diversified healthcare innovation exposure; supports controlled drawdown while keeping cash buffer intact. |
 | PB-HK-000002-6 (Sarah Chen) | 4 | ETF-VOO Vanguard S&P 500 ETF – USD 250,000 (7.8%) | Sell STOCK-AMZN Amazon.com Inc. – USD 250,000 | 4.20 | 20.55% | 23.88% | Reduce AMZN single-stock concentration while retaining broad US equity upside; high fitness and high liquidity. |
 
 

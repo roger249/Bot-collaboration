@@ -643,10 +643,11 @@
               }
             ],
             "title": "Client Selection",
+            "description": "Filter criteria passed to the client API `search` endpoint. Supported keys: `client_id` (a single ID string or a list of IDs), `risk_rating` (int or [min, max]), `age` (int or [min, max]), `product_types_in_holdings` (str or list), `concentration_score` (float or [min, max]), `cash_score` (float or [min, max]).",
             "example": {
-              "risk_rating": [
-                1,
-                5
+              "client_id": [
+                "PB-HK-000001-8",
+                "PB-HK-000005-9"
               ]
             }
           },
@@ -665,12 +666,12 @@
         },
         "type": "object",
         "title": "AutomatchRequest",
-        "description": "Batch product opportunity proposal via product-investor matching.\n\nExample payload::\n\n    {\n      \"product_source\": \"default_yaml\",\n      \"product_ids\": [\"bank_recommended\"],\n      \"client_selection\": {\"risk_rating\": [1, 5]},\n      \"run_matcher\": true,\n      \"max_proposals\": 3\n    }\n\nWhen *product_source* is ``default_yaml``, *product_ids* may contain\ngroup names defined in ``config_planbot.yaml`` under ``product_groups``\n(expanded to their member product IDs).  When *product_source* is\n``request_payload``, *product_ids* are always literal product IDs.",
+        "description": "Batch product opportunity proposal via product-investor matching.\n\nExample payload::\n\n    {\n      \"product_source\": \"default_yaml\",\n      \"product_ids\": [\"bank_recommended\"],\n      \"client_selection\": {\"client_id\": [\"PB-HK-000001-8\", \"PB-HK-000005-9\"]},\n      \"run_matcher\": true,\n      \"max_proposals\": 3\n    }\n\n``client_selection`` is passed to the client API ``search`` endpoint.\nSupported keys: ``client_id`` (str or list of str), ``risk_rating``,\n``age``, ``product_types_in_holdings``, ``concentration_score``,\n``cash_score``.\n\nWhen *product_source* is ``default_yaml``, *product_ids* may contain\ngroup names defined in ``config_planbot.yaml`` under ``product_groups``\n(expanded to their member product IDs).  When *product_source* is\n``request_payload``, *product_ids* are always literal product IDs.",
         "example": {
           "client_selection": {
-            "risk_rating": [
-              1,
-              5
+            "client_id": [
+              "PB-HK-000001-8",
+              "PB-HK-000005-9"
             ]
           },
           "max_proposals": 3,
@@ -1450,10 +1451,11 @@
               }
             ],
             "title": "Client Selection",
+            "description": "Filter criteria passed to the client API `search` endpoint. Supported keys: `client_id` (a single ID string or a list of IDs), `risk_rating` (int or [min, max]), `age` (int or [min, max]), `product_types_in_holdings` (str or list), `concentration_score` (float or [min, max]), `cash_score` (float or [min, max]).",
             "example": {
-              "risk_rating": [
-                3,
-                5
+              "client_id": [
+                "PB-HK-000001-8",
+                "PB-HK-000005-9"
               ]
             }
           },

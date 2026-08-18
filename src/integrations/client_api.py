@@ -92,6 +92,7 @@ def search(**criteria: Any) -> list[dict]:
     """Filter clients by demographic and portfolio criteria.
 
     Parameters (all optional except risk_rating):
+        client_id: str or list[str] — exact client identifier(s)
         risk_rating: int or [min, max]
         age: int or [min, max]
         product_types_in_holdings: str or [str] — product_family values
@@ -99,6 +100,14 @@ def search(**criteria: Any) -> list[dict]:
         cash_score: float or [min, max]
     """
     LOGGER.debug("search input: criteria=%s", criteria)
+
+    # Normalize client_id filter: accept a single id or a list of ids.
+    client_id_filter: set[str] | None = None
+    if "client_id" in criteria and criteria["client_id"] is not None:
+        raw = criteria["client_id"]
+        ids = [raw] if isinstance(raw, str) else list(raw)
+        client_id_filter = {str(i).strip() for i in ids if str(i).strip()}
+
     client_adapter, product_adapter = _get_adapters()
     clients = client_adapter.fetch_clients()
     holdings = client_adapter.fetch_holdings()
@@ -108,6 +117,8 @@ def search(**criteria: Any) -> list[dict]:
 
     results = []
     for cid, c in all_clients.items():
+        if client_id_filter is not None and cid not in client_id_filter:
+            continue
         if not _match_range(c.get("risk_rating"), criteria.get("risk_rating")):
             continue
         if "age" in criteria and criteria["age"] is not None:

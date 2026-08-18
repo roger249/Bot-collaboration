@@ -5,8 +5,12 @@ Training data are historical client transaction.  To make those data be invarian
 - Risk free rates
 - Yield spread against risk free rate
 
+For those need more information about the machine learning, I prefer to use learn to rank https://en.wikipedia.org/wiki/Learning_to_rank.   Score card (weighted sum) is same as the linear learning to rank algorithm.
 
-1. Pairwise Logistic Ranking (best first choice)
+https://en.wikipedia.org/wiki/Logistic_regression
+
+
+1. score  (best first choice)
 - Train on judgments like “A should rank above B” for same client.
 - Very data-efficient.
 - Easy to regularize and explain.

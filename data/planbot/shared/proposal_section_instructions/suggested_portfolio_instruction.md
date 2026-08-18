@@ -3,12 +3,12 @@
 instructions: |
   This section shows the impact of the single recommended trade on the
   client's overall portfolio.  Only ONE product is being recommended for
-  purchase and ONE product (the funding source) is being sold.  All other
+  purchase and no more than 2 products (the funding source) are being sold.  All other
   holdings remain unchanged. Please consider the following in product suggestion
 
   - product fitness score
   - market outlook
-  - RM note and client profile
+  - The RM note under client profile
   - investment note in every product under product catalog
 ```
 ---

@@ -6,12 +6,17 @@ product_investor_matching_task:
 
     - Given a list of clients and investable products, generate a product-fit based on each client's financial needs and risk profile.
     - For each client, assign a buying score from 1-5 indicating how likely the client is to buy the recommended investment product.  5 is the most likely to buy, while 1 is the least likely to buy.
-    - **Use the Product Fitness Scores table** at the end of the product catalog section. Prefer products with higher fitness scores for each client. The fitness score is computed from risk-rating match, concentration impact, investment experience, and relative return uplift — treat it as a quantitative starting point for your recommendation, then apply qualitative judgment (client needs, market outlook, RM notes).
     - **Only recommend products that have a fitness score entry** in the per-client Product Fitness Scores tables.  Products listed in the product catalog detail section without a corresponding fitness score row are existing client holdings shown for context only — do not recommend them as the suggested product.
     - Avoid matching product with low Fitness Scores, in particular a concentration score (>9)
     - Only one product recommendation is allowed for each client.
     - For any suggested product, please specify the funding source.  
     - Each product shall suggest to no more than 5 clients to ensure the diversification of the recommendation.
+    - Consider below to ensure the suggested product is suitable for the client, among other factors.
+      - "RM Note" in the client profile
+      - "Investment note" in the product catalog 
+      - Market outlook
+    - Use the Product Fitness Scores table** at the end of the product catalog section. Prefer products with higher fitness scores for each client. The fitness score is computed from risk-rating match, concentration impact, investment experience, and relative return uplift — treat it as a quantitative starting point for your recommendation
+
     - The risk class or asset class of the suggested product should be similar to the funding source.
     - Do not increase holding for any product other than the suggested product.
     - The suggested product shall have more than 0.5% return than existing or better liquidity.  Otherwise a strong justification of switching shall be provided.

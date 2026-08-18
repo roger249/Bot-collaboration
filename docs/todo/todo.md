@@ -8,6 +8,8 @@ To Do
 - FX structured product
 - FX view
 - Slide where AI is delivered
+- Fix the bug in incremental concentration
+- Multiple products switched out
 
 ## Minor improvement
 
