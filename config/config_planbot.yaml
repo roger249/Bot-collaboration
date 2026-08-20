@@ -262,11 +262,16 @@ product_fitness_score:
     time_to_maturity: 730.0   # days (~2 years)
     coupon: 2.0
   product_fitness_weights:
-# Weights for the 4 PFS dimensions.  Renormalized when dimensions are excluded.
-    risk_rating_match_score: 0.30
-    diversification_score: 0.30
-    has_similar_investment_experience_score: 0.20
-    better_product_score: 0.20
+# Weights for the 8 PFS dimensions (4 structured + 4 semantic similarity).
+# Renormalized when dimensions are excluded.
+    risk_rating_match_score: 0.25
+    diversification_score: 0.25
+    has_similar_investment_experience_score: 0.15
+    better_product_score: 0.15
+    similarity_product_note_in_like_products: 0.05
+    similarity_product_note_in_dislike_products: 0.05  # inverted term — higher = not disliked
+    similarity_to_current_holding: 0.05
+    similarity_to_RM_note: 0.05
   product_fitness_params:
     better_product_score_scale: 10
     better_product_score_uplift_cap: 0.30

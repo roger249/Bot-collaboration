@@ -104,7 +104,17 @@
                     "liquidity_need": "Low",
                     "income_stability": "Stable salaried income",
                     "investment_objective": "Long-term capital growth",
-                    "qualitative_profile": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments."
+                    "qualitative_profile": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments.",
+                    "like_products": [
+                      "asian real estate",
+                      "infrastructure",
+                      "structured products",
+                      "alternatives"
+                    ],
+                    "dislike_products": [],
+                    "date_last_traded": "2026-08-18",
+                    "product_name_last_traded": "US 1-Month Treasury Bill Rate",
+                    "position_bought": 3360000.0
                   }
                 ]
               }
@@ -171,7 +181,17 @@
                   "liquidity_need": "Low",
                   "income_stability": "Stable salaried income",
                   "investment_objective": "Long-term capital growth",
-                  "qualitative_profile": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments."
+                  "qualitative_profile": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments.",
+                  "like_products": [
+                    "asian real estate",
+                    "infrastructure",
+                    "structured products",
+                    "alternatives"
+                  ],
+                  "dislike_products": [],
+                  "date_last_traded": "2026-08-18",
+                  "product_name_last_traded": "US 1-Month Treasury Bill Rate",
+                  "position_bought": 3360000.0
                 }
               }
             }
@@ -709,6 +729,73 @@
             ],
             "title": "Qualitative Profile",
             "description": "Free-text RM notes for suitability analysis."
+          },
+          "like_products": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Like Products",
+            "description": "Keywords/products the client has expressed interest in."
+          },
+          "dislike_products": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dislike Products",
+            "description": "Keywords/products the client has rejected or shown aversion to."
+          },
+          "date_last_traded": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Last Traded",
+            "description": "Static date of the client's last trade."
+          },
+          "product_name_last_traded": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name Last Traded",
+            "description": "Display name of the last-traded product."
+          },
+          "position_bought": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position Bought",
+            "description": "Signed monetary amount of the last trade (base currency)."
           }
         },
         "type": "object",

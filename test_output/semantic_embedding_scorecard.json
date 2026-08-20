@@ -1,0 +1,890 @@
+{
+  "criteria": {
+    "clients": 2,
+    "top_k": 10,
+    "bottom_k": 10,
+    "ranking_key": "sum(similarity_product_note_in_like_products, similarity_product_note_in_dislike_products, similarity_to_current_holding, similarity_to_RM_note)"
+  },
+  "meta": {
+    "semantic_embedding_available": true
+  },
+  "warnings": [],
+  "clients": {
+    "PB-HK-000019-0": {
+      "client_id": "PB-HK-000019-0",
+      "total_products_scored": 14,
+      "top": [
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "ETF-SGOV",
+          "product_name": "iShares 0-3 Month Treasury Bond ETF",
+          "investment_note": "Duration-risk positioning looks increasingly attractive as terminal-rate expectations stabilise. Government bonds offer a flight-to-quality hedge against equity drawdowns. Reinvestment yields remain elevated compared to 2024 levels.",
+          "fitness_score": 7.1235,
+          "total_similarity_score": 32.47,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 9.04,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 8.43
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "ETF-SHV",
+          "product_name": "iShares 0–1 Year Treasury Bond ETF",
+          "investment_note": "Duration-risk positioning looks increasingly attractive as terminal-rate expectations stabilise. Government bonds offer a flight-to-quality hedge against equity drawdowns. Reinvestment yields remain elevated compared to 2024 levels.",
+          "fitness_score": 7.1235,
+          "total_similarity_score": 32.47,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 9.04,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 8.43
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "ETF-FZDXX",
+          "product_name": "Fidelity Hereford Street Trust - Fidelity Money Market Fund",
+          "investment_note": "Yields on short-dated government and prime instruments remain attractive (4.0‒5.0% range) as the Fed holds rates steady. Suitable for capital preservation and liquidity parking until the rate-cutting cycle becomes clearer. Monitor for reinvestment risk if cuts materialise.",
+          "fitness_score": 5.904,
+          "total_similarity_score": 31.72,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 8.47,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 8.25
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "ETF-SPAXX",
+          "product_name": "Fidelity Hereford Street Trust - Fidelity Government Money Market Fund",
+          "investment_note": "Yields on short-dated government and prime instruments remain attractive (4.0‒5.0% range) as the Fed holds rates steady. Suitable for capital preservation and liquidity parking until the rate-cutting cycle becomes clearer. Monitor for reinvestment risk if cuts materialise.",
+          "fitness_score": 5.904,
+          "total_similarity_score": 31.72,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 8.47,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 8.25
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "ETF-VMRXX",
+          "product_name": "Vanguard Money Market Reserves - Vanguard Cash Reserves Federal Money Market Fund",
+          "investment_note": "Yields on short-dated government and prime instruments remain attractive (4.0‒5.0% range) as the Fed holds rates steady. Suitable for capital preservation and liquidity parking until the rate-cutting cycle becomes clearer. Monitor for reinvestment risk if cuts materialise.",
+          "fitness_score": 5.904,
+          "total_similarity_score": 31.72,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 8.47,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 8.25
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "us2mt-x",
+          "product_name": "US 2-Month Treasury Bill",
+          "investment_note": "Yields on short-dated government and prime instruments remain attractive (4.0‒5.0% range) as the Fed holds rates steady. Suitable for capital preservation and liquidity parking until the rate-cutting cycle becomes clearer. Monitor for reinvestment risk if cuts materialise.",
+          "fitness_score": 5.586,
+          "total_similarity_score": 31.72,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 8.47,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 8.25
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "us3mt-rr",
+          "product_name": "US 3-Month Treasury Bill Rate",
+          "investment_note": "Yields on short-dated government and prime instruments remain attractive (4.0‒5.0% range) as the Fed holds rates steady. Suitable for capital preservation and liquidity parking until the rate-cutting cycle becomes clearer. Monitor for reinvestment risk if cuts materialise.",
+          "fitness_score": 5.586,
+          "total_similarity_score": 31.72,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 8.47,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 8.25
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "PROD024",
+          "product_name": "Conservative Income Fund",
+          "investment_note": "Conservative multi-asset allocation emphasises income generation and capital preservation. In the current elevated-rate environment, the fixed-income sleeve provides attractive carry while equity exposure captures modest upside. Suitable for risk-averse investors seeking inflation-protected returns.",
+          "fitness_score": 3.983,
+          "total_similarity_score": 29.66,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 6.49,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 8.17,
+            "similarity_to_RM_note": 10.0
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "PROD046",
+          "product_name": "Municipal Bond Fund",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 4.881,
+          "total_similarity_score": 29.62,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.31,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 7.31
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "PROD054",
+          "product_name": "US Treasury 3.75% 30Jun27",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 4.881,
+          "total_similarity_score": 29.62,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.31,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 7.31
+          }
+        }
+      ],
+      "bottom": [
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "ETF-VMRXX",
+          "product_name": "Vanguard Money Market Reserves - Vanguard Cash Reserves Federal Money Market Fund",
+          "investment_note": "Yields on short-dated government and prime instruments remain attractive (4.0‒5.0% range) as the Fed holds rates steady. Suitable for capital preservation and liquidity parking until the rate-cutting cycle becomes clearer. Monitor for reinvestment risk if cuts materialise.",
+          "fitness_score": 5.904,
+          "total_similarity_score": 31.72,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 8.47,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 8.25
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "us2mt-x",
+          "product_name": "US 2-Month Treasury Bill",
+          "investment_note": "Yields on short-dated government and prime instruments remain attractive (4.0‒5.0% range) as the Fed holds rates steady. Suitable for capital preservation and liquidity parking until the rate-cutting cycle becomes clearer. Monitor for reinvestment risk if cuts materialise.",
+          "fitness_score": 5.586,
+          "total_similarity_score": 31.72,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 8.47,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 8.25
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "us3mt-rr",
+          "product_name": "US 3-Month Treasury Bill Rate",
+          "investment_note": "Yields on short-dated government and prime instruments remain attractive (4.0‒5.0% range) as the Fed holds rates steady. Suitable for capital preservation and liquidity parking until the rate-cutting cycle becomes clearer. Monitor for reinvestment risk if cuts materialise.",
+          "fitness_score": 5.586,
+          "total_similarity_score": 31.72,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 8.47,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 8.25
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "PROD024",
+          "product_name": "Conservative Income Fund",
+          "investment_note": "Conservative multi-asset allocation emphasises income generation and capital preservation. In the current elevated-rate environment, the fixed-income sleeve provides attractive carry while equity exposure captures modest upside. Suitable for risk-averse investors seeking inflation-protected returns.",
+          "fitness_score": 3.983,
+          "total_similarity_score": 29.66,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 6.49,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 8.17,
+            "similarity_to_RM_note": 10.0
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "PROD046",
+          "product_name": "Municipal Bond Fund",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 4.881,
+          "total_similarity_score": 29.62,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.31,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 7.31
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "PROD054",
+          "product_name": "US Treasury 3.75% 30Jun27",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 4.881,
+          "total_similarity_score": 29.62,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.31,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 7.31
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "PROD053",
+          "product_name": "US Treasury 4.375% 31Aug26",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 4.881,
+          "total_similarity_score": 29.62,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.31,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 7.31
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "PROD044",
+          "product_name": "China Government Bond",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 4.881,
+          "total_similarity_score": 29.62,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.31,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 7.31
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "PROD050",
+          "product_name": "Short Duration Bond",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 4.881,
+          "total_similarity_score": 29.62,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.31,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 7.31
+          }
+        },
+        {
+          "client_id": "PB-HK-000019-0",
+          "client_like_products": [
+            "APAC stocks",
+            "dividend stocks",
+            "gold"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Conservative retiree with aggressive growth objective — likely a suitability flag. RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names and dividend stocks. Has asked about gold as an inflation hedge.",
+          "product_id": "ETF-BIL",
+          "product_name": "State Street SPDR Bloomberg 1-3 Month T-Bill ETF",
+          "investment_note": "Bond yields are at multi-decade highs, offering a rare opportunity to lock in attractive income. Active duration management can add value as the rate cycle evolves. Suitable for investors seeking income diversification alongside equity exposure.",
+          "fitness_score": 6.932,
+          "total_similarity_score": 28.64,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.31,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 6.33
+          }
+        }
+      ]
+    },
+    "PB-HK-000007-5": {
+      "client_id": "PB-HK-000007-5",
+      "total_products_scored": 94,
+      "top": [
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "ETF-XLRE",
+          "product_name": "State Street Real Estate Select Sector SPDR ETF",
+          "investment_note": "US real estate (REITs) provides income and an inflation hedge, with structural tailwinds from logistics and data centres. Financing costs and office-sector weakness remain risks. Expected return ~10.09%.",
+          "fitness_score": 4.87,
+          "total_similarity_score": 29.4,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 9.76,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 8.54,
+            "similarity_to_RM_note": 6.1
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "PROD045",
+          "product_name": "High Yield Corporate Bond",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 6.8035,
+          "total_similarity_score": 26.07,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.55,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 3.52
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "PROD047",
+          "product_name": "Emerging Market Bond",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 6.1785,
+          "total_similarity_score": 26.07,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.55,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 3.52
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "PROD049",
+          "product_name": "Convertible Bond Fund",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 6.1785,
+          "total_similarity_score": 26.07,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.55,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 3.52
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "PROD011",
+          "product_name": "Green Energy Bond",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 5.5535,
+          "total_similarity_score": 26.07,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.55,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 3.52
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "PROD051",
+          "product_name": "Infrastructure Bond",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 5.5535,
+          "total_similarity_score": 26.07,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.55,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 3.52
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "PROD003",
+          "product_name": "US Corporate Bond Fund",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 5.5535,
+          "total_similarity_score": 26.07,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.55,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 3.52
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "PROD048",
+          "product_name": "Investment Grade Bond",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 5.54,
+          "total_similarity_score": 26.07,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.55,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 3.52
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "PROD007",
+          "product_name": "Asia Pacific Bond Fund",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 5.135,
+          "total_similarity_score": 26.07,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.55,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 3.52
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "PROD052",
+          "product_name": "Floating Rate Bond",
+          "investment_note": "Individual bonds allow precise maturity-matching for liability-driven investing. Hold-to-maturity strategies eliminate mark-to-market volatility. Current yields are attractive for income-focused portfolios. Credit quality and call features should be reviewed.",
+          "fitness_score": 5.135,
+          "total_similarity_score": 26.07,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 7.55,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 10.0,
+            "similarity_to_RM_note": 3.52
+          }
+        }
+      ],
+      "bottom": [
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "ETF-FZDXX",
+          "product_name": "Fidelity Hereford Street Trust - Fidelity Money Market Fund",
+          "investment_note": "Yields on short-dated government and prime instruments remain attractive (4.0‒5.0% range) as the Fed holds rates steady. Suitable for capital preservation and liquidity parking until the rate-cutting cycle becomes clearer. Monitor for reinvestment risk if cuts materialise.",
+          "fitness_score": 1.4685,
+          "total_similarity_score": 16.87,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 5.53,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 5.75,
+            "similarity_to_RM_note": 0.59
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "ETF-SPAXX",
+          "product_name": "Fidelity Hereford Street Trust - Fidelity Government Money Market Fund",
+          "investment_note": "Yields on short-dated government and prime instruments remain attractive (4.0‒5.0% range) as the Fed holds rates steady. Suitable for capital preservation and liquidity parking until the rate-cutting cycle becomes clearer. Monitor for reinvestment risk if cuts materialise.",
+          "fitness_score": 1.4685,
+          "total_similarity_score": 16.87,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 5.53,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 5.75,
+            "similarity_to_RM_note": 0.59
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "ETF-VMRXX",
+          "product_name": "Vanguard Money Market Reserves - Vanguard Cash Reserves Federal Money Market Fund",
+          "investment_note": "Yields on short-dated government and prime instruments remain attractive (4.0‒5.0% range) as the Fed holds rates steady. Suitable for capital preservation and liquidity parking until the rate-cutting cycle becomes clearer. Monitor for reinvestment risk if cuts materialise.",
+          "fitness_score": 1.4685,
+          "total_similarity_score": 16.87,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 5.53,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 5.75,
+            "similarity_to_RM_note": 0.59
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "us2mt-x",
+          "product_name": "US 2-Month Treasury Bill",
+          "investment_note": "Yields on short-dated government and prime instruments remain attractive (4.0‒5.0% range) as the Fed holds rates steady. Suitable for capital preservation and liquidity parking until the rate-cutting cycle becomes clearer. Monitor for reinvestment risk if cuts materialise.",
+          "fitness_score": 1.4685,
+          "total_similarity_score": 16.87,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 5.53,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 5.75,
+            "similarity_to_RM_note": 0.59
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "us3mt-rr",
+          "product_name": "US 3-Month Treasury Bill Rate",
+          "investment_note": "Yields on short-dated government and prime instruments remain attractive (4.0‒5.0% range) as the Fed holds rates steady. Suitable for capital preservation and liquidity parking until the rate-cutting cycle becomes clearer. Monitor for reinvestment risk if cuts materialise.",
+          "fitness_score": 1.4685,
+          "total_similarity_score": 16.87,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 5.53,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 5.75,
+            "similarity_to_RM_note": 0.59
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "ETF-XLY",
+          "product_name": "State Street Consumer Discretionary Select Sector SPDR ETF",
+          "investment_note": "US consumer discretionary is leveraged to consumer health and rate-sensitive big-ticket spending. E-commerce and travel demand remain resilient, but lower-income pressure is a watch item. Expected return ~12.83%.",
+          "fitness_score": 4.2425,
+          "total_similarity_score": 16.85,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 4.39,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 7.46,
+            "similarity_to_RM_note": 0.0
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "ETF-HYG",
+          "product_name": "iShares iBoxx $ High Yield Corporate Bond ETF",
+          "investment_note": "Credit spreads are tight by historical standards but carry remains positive. Suitable for income-oriented investors willing to accept moderate credit risk. Monitor for widening if recession fears re-emerge.",
+          "fitness_score": 3.5665,
+          "total_similarity_score": 15.83,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 3.02,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 6.16,
+            "similarity_to_RM_note": 1.65
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "ETF-USHY",
+          "product_name": "iShares Broad USD High Yield Corporate Bond ETF",
+          "investment_note": "Credit spreads are tight by historical standards but carry remains positive. Suitable for income-oriented investors willing to accept moderate credit risk. Monitor for widening if recession fears re-emerge.",
+          "fitness_score": 3.5665,
+          "total_similarity_score": 15.83,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 3.02,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 6.16,
+            "similarity_to_RM_note": 1.65
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "ETF-SHYG",
+          "product_name": "iShares 0-5 Year High Yield Corporate Bond ETF",
+          "investment_note": "Credit spreads are tight by historical standards but carry remains positive. Suitable for income-oriented investors willing to accept moderate credit risk. Monitor for widening if recession fears re-emerge.",
+          "fitness_score": 2.9415,
+          "total_similarity_score": 15.83,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 3.02,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 6.16,
+            "similarity_to_RM_note": 1.65
+          }
+        },
+        {
+          "client_id": "PB-HK-000007-5",
+          "client_like_products": [
+            "asian real estate",
+            "infrastructure",
+            "structured products",
+            "alternatives"
+          ],
+          "client_dislike_products": [],
+          "client_rm_note": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays. Has expressed interest in using structured products for downside protection while maintaining upside exposure.",
+          "product_id": "ETF-EMB",
+          "product_name": "iShares J.P. Morgan USD Emerging Markets Bond ETF",
+          "investment_note": "EM debt offers attractive nominal yields but elevated currency and political risk. Select exposure to commodity exporters and reform-oriented countries is warranted. Active management recommended given dispersion across issuers.",
+          "fitness_score": 3.4335,
+          "total_similarity_score": 13.17,
+          "component_scores": {
+            "similarity_product_note_in_like_products": 4.14,
+            "similarity_product_note_in_dislike_products": 5.0,
+            "similarity_to_current_holding": 3.29,
+            "similarity_to_RM_note": 0.74
+          }
+        }
+      ]
+    }
+  }
+}

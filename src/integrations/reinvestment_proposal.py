@@ -293,7 +293,7 @@ def _process_one_target(
     item["candidate_products"] = candidate_products
 
     # ── Compute PFS for suggested + alternatives ──────────────
-    pfs_scores = compute_pfs_for_products(
+    pfs_scores, semantic_available = compute_pfs_for_products(
         client_id=client_id,
         suggested_product_id=source_product_id,
         alternative_products=candidate_products,
@@ -328,6 +328,7 @@ def _process_one_target(
             holdings=holdings_products or None,
             alternatives=candidate_products or None,
             pfs_scores=pfs_scores or None,
+            semantic_embedding_available=semantic_available if pfs_scores else None,
         ),
     )
 

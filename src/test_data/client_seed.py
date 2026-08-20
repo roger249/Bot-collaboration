@@ -35,9 +35,23 @@ CREATE TABLE IF NOT EXISTS clients (
     children_info     TEXT,
     liquidity_need    TEXT,
     income_stability  TEXT,
-    investment_objective TEXT
+    investment_objective TEXT,
+    like_products     VARCHAR[],
+    dislike_products  VARCHAR[],
+    date_last_traded  DATE,
+    product_name_last_traded TEXT,
+    position_bought   DOUBLE
 );
 """
+
+# Idempotent migration for pre-existing client tables (semantic-embedding columns).
+DDL_ADD_SEMANTIC_COLUMNS = [
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS like_products VARCHAR[];",
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS dislike_products VARCHAR[];",
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS date_last_traded DATE;",
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS product_name_last_traded TEXT;",
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS position_bought DOUBLE;",
+]
 
 DDL_HOLDINGS = """
 CREATE TABLE IF NOT EXISTS holdings (
@@ -66,6 +80,137 @@ CREATE TABLE IF NOT EXISTS holdings (
 # Known market suffixes in holdings productId values from the source CSV.
 # e.g. 'aapl-o' → base ticker 'AAPL' → product 'STOCK-AAPL'
 _MARKET_SUFFIXES = ["-O", "-K", "-HK", "-RR", "-X"]
+
+# Semantic-embedding seed data: like/dislike keyword lists per client (by name).
+# Populates the ``like_products`` / ``dislike_products`` columns on the client
+# table so the similarity features have realistic input.
+_CLIENT_SEMANTIC_SEED: dict[str, dict[str, list[str]]] = {
+    "David Kim": {
+        "like_products": ["technology", "structured products", "tactical equity"],
+        "dislike_products": ["idle cash"],
+    },
+    "Sarah Chen": {
+        "like_products": ["ESG", "sustainable investing", "APAC equity", "alternatives"],
+        "dislike_products": [],
+    },
+    "James Harrison": {
+        "like_products": ["government bonds", "investment-grade credit", "dividend stocks", "guaranteed income"],
+        "dislike_products": ["market volatility"],
+    },
+    "Michael Sterling": {
+        "like_products": ["tax-efficient structures", "fixed income", "balanced funds"],
+        "dislike_products": [],
+    },
+    "Emma Thompson": {
+        "like_products": ["guaranteed income", "inflation protection"],
+        "dislike_products": ["equity risk"],
+    },
+    "Robert Rodriguez": {
+        "like_products": ["growth", "emerging markets"],
+        "dislike_products": [],
+    },
+    "Akira Tanaka": {
+        "like_products": ["asian real estate", "infrastructure", "structured products", "alternatives"],
+        "dislike_products": [],
+    },
+    "Elena Petrova": {
+        "like_products": ["fixed-income laddering", "inflation-linked bonds"],
+        "dislike_products": [],
+    },
+    "Sophia Rossi": {
+        "like_products": ["healthcare", "biotech", "equity", "alternatives"],
+        "dislike_products": [],
+    },
+    "William Turner": {
+        "like_products": ["balanced strategies", "downside protection", "tax-loss harvesting"],
+        "dislike_products": [],
+    },
+    "Emily Harrison": {
+        "like_products": ["international equity", "EM debt", "diversification"],
+        "dislike_products": [],
+    },
+    "Harrison Holdings Ltd.": {
+        "like_products": ["liquid", "investment-grade", "yield"],
+        "dislike_products": ["illiquid"],
+    },
+    "Harrison Jr. Education Trust": {
+        "like_products": ["ESG", "balanced funds", "growth", "multi-asset"],
+        "dislike_products": [],
+    },
+    "Sarah Wong": {
+        "like_products": ["annuities", "fixed-income ladders", "steady income"],
+        "dislike_products": [],
+    },
+    "Michael Wang": {
+        "like_products": ["dividend stocks", "HK/China stocks", "asian REITs", "income"],
+        "dislike_products": ["FX risk"],
+    },
+    "James Chen": {
+        "like_products": ["equity funds", "downside hedging"],
+        "dislike_products": [],
+    },
+    "Catherine Li": {
+        "like_products": ["technology", "AI", "emerging markets", "private equity"],
+        "dislike_products": [],
+    },
+    "Emily Zhang": {
+        "like_products": ["balanced funds", "multi-asset"],
+        "dislike_products": [],
+    },
+    "Linda Xu": {
+        "like_products": ["APAC stocks", "dividend stocks", "gold"],
+        "dislike_products": [],
+    },
+    "David Wu": {
+        "like_products": ["balanced funds", "income-oriented"],
+        "dislike_products": ["market volatility"],
+    },
+    "Anna Lin": {
+        "like_products": ["real assets", "inflation protection"],
+        "dislike_products": [],
+    },
+    "Victor Ng": {
+        "like_products": ["dividend strategies", "bond ladders", "retirement income", "annuities"],
+        "dislike_products": [],
+    },
+    "Rachel Ho": {
+        "like_products": ["AI", "clean energy", "demographics", "equity"],
+        "dislike_products": [],
+    },
+}
+
+# Static "last trade" date used for seeding the trade-derived columns.
+_SEED_LAST_TRADE_DATE = "2026-08-18"
+
+
+def _seed_semantic_columns(conn: duckdb.DuckDBPyConnection) -> None:
+    """Populate the semantic-embedding client columns with realistic values.
+
+    ``like_products`` / ``dislike_products`` come from ``_CLIENT_SEMANTIC_SEED``;
+    the trade-derived fields (``date_last_traded``, ``product_name_last_traded``,
+    ``position_bought``) are derived from each client's first holding.
+    """
+    for name, seed in _CLIENT_SEMANTIC_SEED.items():
+        conn.execute(
+            "UPDATE clients SET like_products = ?, dislike_products = ? WHERE name = ?",
+            [seed.get("like_products", []), seed.get("dislike_products", []), name],
+        )
+
+    first_holdings = conn.execute(
+        "SELECT client_id, instrument_name, market_value FROM holdings "
+        "WHERE holding_idx = 0 ORDER BY client_id"
+    ).fetchall()
+    for client_id, instrument_name, market_value in first_holdings:
+        conn.execute(
+            "UPDATE clients SET date_last_traded = ?, product_name_last_traded = ?, "
+            "position_bought = ? WHERE client_id = ?",
+            [_SEED_LAST_TRADE_DATE, instrument_name or "", float(market_value or 0.0), client_id],
+        )
+
+    LOGGER.info(
+        "Seeded semantic columns: %d clients with like/dislike, %d with trade fields",
+        len(_CLIENT_SEMANTIC_SEED), len(first_holdings),
+    )
 
 
 def get_client_db_conn(read_only: bool = False) -> duckdb.DuckDBPyConnection:
@@ -105,6 +250,8 @@ def _parse_int(val: str | None) -> int | None:
 def init_client_db(conn: duckdb.DuckDBPyConnection) -> None:
     """Create all client tables and populate from CSV sources."""
     conn.execute(DDL_CLIENTS)
+    for stmt in DDL_ADD_SEMANTIC_COLUMNS:
+        conn.execute(stmt)
     conn.execute(DDL_HOLDINGS)
 
     # Clear existing data for idempotent rebuild
@@ -127,11 +274,16 @@ def init_client_db(conn: duckdb.DuckDBPyConnection) -> None:
                 continue
 
             conn.execute(
-                "INSERT OR REPLACE INTO clients VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                """INSERT OR REPLACE INTO clients
+                   (client_id, name, aum, cash_pct, region, birthdate, occupation, risk_rating,
+                    marital_status, children_info, liquidity_need, income_stability, investment_objective,
+                    like_products, dislike_products, date_last_traded, product_name_last_traded, position_bought)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 [
                     client_id, name, aum, cash_pct, region,
                     None, None, None, None, None,  # birthdate, occupation, risk_rating, marital_status, children_info
                     None, None, None,              # liquidity_need, income_stability, investment_objective
+                    [], [], None, None, None,      # semantic columns — populated by _seed_semantic_columns
                 ],
             )
 
@@ -209,6 +361,9 @@ def init_client_db(conn: duckdb.DuckDBPyConnection) -> None:
 
     # Normalize holdings.product_id to match products.product_id via ticker lookup
     _normalize_holdings_product_ids(conn)
+
+    # Populate semantic-embedding columns (like/dislike + trade-derived fields)
+    _seed_semantic_columns(conn)
 
 
 def _normalize_holdings_product_ids(conn: duckdb.DuckDBPyConnection) -> None:

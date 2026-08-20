@@ -42,6 +42,8 @@
 - Seeder scripts:
   - Product catalog: `src/test_data/product_catalog_seed.py`
   - Client/holdings ETL: `src/test_data/client_seed.py`
+- ⚠️ The live DuckDB may contain **manual edits** not reproducible from seeders.  The product-catalog seeder (`product_catalog_seed.py`) is **destructive** — it `DELETE FROM products` and re-fetches Yahoo market data, overwriting manual edits to `expected_return`/`risk_rating`/`performance_history` and adding spurious ticker rows.  For a column-only change (e.g. `investment_note`), prefer a targeted `UPDATE` over a full re-seed; if a re-seed is unavoidable, snapshot the DB first (`git show HEAD:data/planbot/db/planbot.duckdb`) and restore every column except the intended one afterward.
+- The `embeddings` table is a **derived cache** (never a source of truth) written by `src/planbot/embeddings_store.py`; it is safe to `DELETE FROM embeddings` (it regenerates lazily).  Semantic-embedding config lives in `config/config_screener.yaml` (not `config_planbot.yaml`).
 - Rule: **Any schema change must be applied to all three layers synchronously:**
   1. DuckDB schema (ALTER TABLE / seeder CREATE TABLE)
   2. Test data (seeder scripts must populate new columns with realistic values)

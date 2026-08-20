@@ -10,6 +10,7 @@ product_investor_matching_task:
     - Avoid matching product with low Fitness Scores, in particular a concentration score (>9)
     - Only one product recommendation is allowed for each client.
     - For any suggested product, please specify the funding source.  
+    - No more than 2 products shall be switched out for funding.
     - Each product shall suggest to no more than 5 clients to ensure the diversification of the recommendation.
     - Consider below to ensure the suggested product is suitable for the client, among other factors.
       - "RM Note" in the client profile

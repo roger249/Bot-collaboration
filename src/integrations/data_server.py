@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -74,6 +75,11 @@ class ClientRow(BaseModel):
     income_stability: str | None = None
     investment_objective: str | None = None
     qualitative_profile: str | None = Field(None, description="Free-text RM notes for suitability analysis.")
+    like_products: list[str] | None = Field(None, description="Keywords/products the client has expressed interest in.")
+    dislike_products: list[str] | None = Field(None, description="Keywords/products the client has rejected or shown aversion to.")
+    date_last_traded: date | None = Field(None, description="Static date of the client's last trade.")
+    product_name_last_traded: str | None = Field(None, description="Display name of the last-traded product.")
+    position_bought: float | None = Field(None, description="Signed monetary amount of the last trade (base currency).")
 
 
 class HoldingRow(BaseModel):
@@ -143,6 +149,11 @@ _CLIENT_EXAMPLE = {
     "income_stability": "Stable salaried income",
     "investment_objective": "Long-term capital growth",
     "qualitative_profile": "Self-made real estate developer with entrepreneurial mindset. Comfortable with illiquid and alternative investments.",
+    "like_products": ["asian real estate", "infrastructure", "structured products", "alternatives"],
+    "dislike_products": [],
+    "date_last_traded": "2026-08-18",
+    "product_name_last_traded": "US 1-Month Treasury Bill Rate",
+    "position_bought": 3360000.0,
 }
 
 _HOLDING_EXAMPLE = {

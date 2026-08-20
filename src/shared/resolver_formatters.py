@@ -346,6 +346,7 @@ def format_product_catalog(
     include_holdings_section: bool = True,
     include_alternatives_section: bool = True,
     pfs_scores: dict[str, dict] | None = None,
+    semantic_embedding_available: bool | None = None,
 ) -> str:
     """Unified product catalog for ALL proposal types.
 
@@ -379,6 +380,9 @@ def format_product_catalog(
         concentration_score, has_similar_investment_experience_score,
         better_product_score.  When present, a ## Product Fitness Scores
         table is appended after the alternatives section.
+    semantic_embedding_available : bool | None
+        Forwarded to the PFS table; when False, a degradation remark is
+        rendered noting the similarity columns are neutral.
 
     Returns
     -------
@@ -428,7 +432,10 @@ def format_product_catalog(
         lines.append("")
         lines.append("## Product Fitness Scores")
         lines.append("")
-        lines += format_pfs_table(pfs_scores)
+        lines += format_pfs_table(
+            pfs_scores,
+            semantic_embedding_available=semantic_embedding_available,
+        )
 
     return "\n".join(lines)
 
@@ -486,6 +493,7 @@ def format_pfs_table(
     pfs_scores: dict[str, dict],
     *,
     include_name: bool = False,
+    semantic_embedding_available: bool | None = None,
 ) -> list[str]:
     """Render a PFS component-score table from a product_id → scores dict.
 
@@ -498,12 +506,17 @@ def format_pfs_table(
     include_name : bool
         If True, adds a ``Name`` column after Product ID (used by matcher
         which doesn't hardcode product names in the catalog listing).
+    semantic_embedding_available : bool | None
+        When False, prepends a remark that semantic similarity was not
+        available and the Like / Comfort / Holding Similarity / RM Note
+        columns are neutral.  ``None`` (default) means unknown — no remark.
 
     Returns
     -------
     list[str]
-        Markdown lines — the table header, separator, and one row per
-        product.  Does NOT include the section heading (caller adds it).
+        Markdown lines — the optional degradation remark, the table header,
+        separator, and one row per product.  Does NOT include the section
+        heading (caller adds it).
     """
     if not pfs_scores:
         return []
@@ -514,17 +527,30 @@ def format_pfs_table(
         "Risk Match = risk-rating alignment; "
         "Diversification = 10 minus the concentration risk the product would add (higher = less concentration risk); "
         "Experience = client familiarity with the product type/family; "
-        "Better Product = expected-return uplift vs. existing same-type holdings._"
+        "Better Product = expected-return uplift vs. existing same-type holdings; "
+        "Like = semantic match between the product name and the client's stated likes (higher = matches interest); "
+        "Comfort = inverted match against the client's dislikes (0 = resembles a dislike, 5 = unrelated, 10 = opposite of a dislike, i.e. higher = comfortable); "
+        "Holding Similarity = max similarity to the client's existing holdings (higher = more familiar); "
+        "RM Note Similarity = alignment with the RM's qualitative notes (higher = more aligned)._"
     )
 
     if include_name:
-        header = "| # | Product ID | Name | Fitness Score | Risk Match | Diversification | Experience | Better Product |"
-        sep   = "|---|---|---|---|---|---|---|---|"
+        header = "| # | Product ID | Name | Fitness Score | Risk Match | Diversification | Experience | Better Product | Like | Comfort | Holding Similarity | RM Note Similarity |"
+        sep   = "|---|---|---|---|---|---|---|---|---|---|---|---|"
     else:
-        header = "| # | Product ID | Fitness Score | Risk Match | Diversification | Experience | Better Product |"
-        sep   = "|---|---|---|---|---|---|---|"
+        header = "| # | Product ID | Fitness Score | Risk Match | Diversification | Experience | Better Product | Like | Comfort | Holding Similarity | RM Note Similarity |"
+        sep   = "|---|---|---|---|---|---|---|---|---|---|---|"
 
-    lines = [legend, "", header, sep]
+    lines: list[str] = []
+    if semantic_embedding_available is False:
+        lines.append(
+            "_⚠️ Semantic similarity was not available for this run — the Like, Comfort, "
+            "Holding Similarity, and RM Note Similarity columns are neutral (5.0). "
+            "This recommendation is based on structured factors only._"
+        )
+        lines.append("")
+
+    lines += [legend, "", header, sep]
     for i, (pid, comp) in enumerate(pfs_scores.items(), 1):
         row = f"| {i} | {pid} |"
         if include_name:
@@ -535,6 +561,10 @@ def format_pfs_table(
             f" {comp.get('diversification_score', ''):.1f} |"
             f" {comp.get('has_similar_investment_experience_score', ''):.1f} |"
             f" {comp.get('better_product_score', ''):.1f} |"
+            f" {comp.get('similarity_product_note_in_like_products', ''):.1f} |"
+            f" {comp.get('similarity_product_note_in_dislike_products', ''):.1f} |"
+            f" {comp.get('similarity_to_current_holding', ''):.1f} |"
+            f" {comp.get('similarity_to_RM_note', ''):.1f} |"
         )
         lines.append(row)
     return lines
@@ -549,13 +579,15 @@ def compute_pfs_for_products(
     client_id: str,
     suggested_product_id: str,
     alternative_products: list[dict],
-) -> dict[str, dict]:
+) -> tuple[dict[str, dict], bool]:
     """Compute PFS component scores for suggested + alternative products.
 
     Only the suggested product and its alternatives are scored — holdings
     are not included (they are portfolio context only).
 
-    Returns a dict mapping product_id → component_scores.
+    Returns a tuple ``(scores, semantic_embedding_available)``:
+    ``scores`` maps product_id → component_scores; the bool is False when
+    semantic similarity was unavailable and the similarity columns are neutral.
     """
     import logging
     from src.integrations.product_tool import search_product_by_fitness_score
@@ -566,7 +598,7 @@ def compute_pfs_for_products(
         p["product_id"] for p in alternative_products if p.get("product_id")
     ]
     if not all_pids:
-        return {}
+        return {}, True
 
     try:
         pfs_result = search_product_by_fitness_score(
@@ -576,7 +608,11 @@ def compute_pfs_for_products(
         )
     except Exception:
         LOGGER.warning("PFS computation failed for client %s", client_id, exc_info=True)
-        return {}
+        return {}, True
+
+    semantic_available = bool(
+        pfs_result.get("meta", {}).get("semantic_embedding_available", True)
+    )
 
     scores: dict[str, dict] = {}
     for r in pfs_result.get("results", []):
@@ -587,5 +623,9 @@ def compute_pfs_for_products(
             "diversification_score": r.get("component_scores", {}).get("diversification_score", 0),
             "has_similar_investment_experience_score": r.get("component_scores", {}).get("has_similar_investment_experience_score", 0),
             "better_product_score": r.get("component_scores", {}).get("better_product_score", 0),
+            "similarity_product_note_in_like_products": r.get("component_scores", {}).get("similarity_product_note_in_like_products", 0),
+            "similarity_product_note_in_dislike_products": r.get("component_scores", {}).get("similarity_product_note_in_dislike_products", 0),
+            "similarity_to_current_holding": r.get("component_scores", {}).get("similarity_to_current_holding", 0),
+            "similarity_to_RM_note": r.get("component_scores", {}).get("similarity_to_RM_note", 0),
         }
-    return scores
+    return scores, semantic_available

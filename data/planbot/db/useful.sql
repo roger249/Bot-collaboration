@@ -9,3 +9,4 @@ update planbot.clients set qualitative_profile = 'Experienced executive with str
 
 update planbot.clients set qualitative_profile = 'Experienced executive with strong income stream. Actively manages portfolio; prefers evidence-based decisions. Open to structured products and tactical equity plays. Has expressed concern about inflation eroding idle cash. Two children approaching university age — education funding is a near-term priority.' where client_id = 'PB-HK-000001-8';
 
+DELETE FROM embeddings WHERE model != 'intfloat/e5-base-v2';

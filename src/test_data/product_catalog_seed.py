@@ -685,35 +685,86 @@ def _generate_investment_note(
     if product_type in ("equity_fund", "stock"):
         note_parts: list[str] = []
         if region and region.upper() == "US":
+            # Sector-specific, self-contained notes (no shared boilerplate prefix)
+            # so each US equity product has a distinct, discriminative description.
+            us_sector_notes = {
+                "technology": (
+                    "US technology sector: secular AI adoption, cloud migration, and "
+                    "semiconductor demand underpin multi-year earnings growth, but "
+                    "concentration in a few mega-caps and sensitivity to rate "
+                    "expectations are key risks. Pair with value or small-cap exposure."
+                ),
+                "financial": (
+                    "US financials benefit from elevated net interest margins in a "
+                    "high-rate environment, easing regulatory headwinds, and strong "
+                    "capital return through buybacks and dividends. Credit-cycle "
+                    "normalisation is the main watch item."
+                ),
+                "health": (
+                    "US healthcare offers defensive growth with innovation tailwinds "
+                    "from biotech, GLP-1 therapies, and medical devices. Drug-pricing "
+                    "policy and regulatory risk are key monitors."
+                ),
+                "healthcare": (
+                    "US healthcare offers defensive growth with innovation tailwinds "
+                    "from biotech, GLP-1 therapies, and medical devices. Drug-pricing "
+                    "policy and regulatory risk are key monitors."
+                ),
+                "consumer cyclical": (
+                    "US consumer discretionary is leveraged to consumer health and "
+                    "rate-sensitive big-ticket spending. E-commerce and travel demand "
+                    "remain resilient, but lower-income pressure is a watch item."
+                ),
+                "consumer defensive": (
+                    "US consumer staples provide defensive, recession-resistant "
+                    "earnings with pricing power and reliable dividends. Slower growth "
+                    "and rich defensive valuations are the main trade-offs."
+                ),
+                "communications": (
+                    "US communication services blend secular growth (streaming, cloud, "
+                    "advertising) with defensiveness. Ad-spend cyclicality and "
+                    "regulatory scrutiny of large platforms are key risks."
+                ),
+                "utilities": (
+                    "US utilities offer defensive income and leverage to the "
+                    "electrification and AI data-centre power-demand theme. Rate "
+                    "sensitivity and capex-heavy balance sheets warrant monitoring."
+                ),
+                "real estate": (
+                    "US real estate (REITs) provides income and an inflation hedge, "
+                    "with structural tailwinds from logistics and data centres. "
+                    "Financing costs and office-sector weakness remain risks."
+                ),
+                "energy": (
+                    "US energy benefits from disciplined capital allocation, buybacks, "
+                    "and elevated oil prices. Energy-transition policy and commodity "
+                    "volatility are the main swing factors."
+                ),
+                "industrials": (
+                    "US industrials benefit from reshoring, infrastructure spending, "
+                    "and aerospace/defence demand. Cyclical order-book sensitivity and "
+                    "input-cost inflation are key watch items."
+                ),
+                "natural resources": (
+                    "Natural-resource equities provide inflation protection and "
+                    "exposure to commodity supply constraints. Commodity-price "
+                    "volatility and ESG-related capital flows are considerations."
+                ),
+                "commodities": (
+                    "Commodity exposure hedges inflation and geopolitical supply "
+                    "shocks. Prices are cyclical — position sizing and diversification "
+                    "across metals, energy, and agriculture are recommended."
+                ),
+            }
             note_parts.append(
-                "US equities are supported by resilient earnings and AI-driven "
-                "productivity gains, but valuations are above long-term averages. "
+                us_sector_notes.get(
+                    sector_lower,
+                    "US equities are supported by resilient earnings and AI-driven "
+                    "productivity gains, but valuations are above long-term averages. "
+                    "Broad-based exposure provides growth; sector rotation risk is "
+                    "elevated, so active management or factor tilts may add value.",
+                )
             )
-            if sector_lower in ("technology",):
-                note_parts.append(
-                    "Technology sector benefits from secular AI adoption trends "
-                    "but is sensitive to rate expectations and concentration risk "
-                    "in mega-caps. Consider pairing with value-oriented positions."
-                )
-            elif sector_lower in ("financial",):
-                note_parts.append(
-                    "Financial sector benefits from elevated net interest margins "
-                    "in a high-rate environment. Regulatory headwinds are easing. "
-                    "Capital return through buybacks and dividends supports total "
-                    "return."
-                )
-            elif sector_lower in ("healthcare",):
-                note_parts.append(
-                    "Healthcare offers defensive growth characteristics and "
-                    "innovation tailwinds from biotech and GLP-1 therapies. "
-                    "Policy risk around drug pricing is a key monitor."
-                )
-            else:
-                note_parts.append(
-                    "Broad-based US exposure provides growth exposure. Sector "
-                    "rotation risk is elevated — active management or factor "
-                    "tilts may add value in this environment."
-                )
         elif region and region.upper() == "APAC":
             if "china" in name_lower or "hang seng" in name_lower or "hsi" in name_lower:
                 note_parts.append(

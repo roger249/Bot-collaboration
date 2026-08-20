@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -62,6 +63,10 @@ class DuckDBDataAdapter:
                 for k, v in row.items():
                     if isinstance(v, float):
                         row[k] = round(v, 4)
+                    elif isinstance(v, (datetime, date)):
+                        # Normalize DATE/TIMESTAMP → ISO string so every column
+                        # is JSON-safe (consistent with the TEXT ``birthdate``).
+                        row[k] = v.isoformat()
             return rows
         finally:
             conn.close()

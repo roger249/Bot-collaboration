@@ -236,6 +236,7 @@ def product_investor_matcher(
         len(eligible_client_ids), len(fitness_product_ids), fitness_top_n,
     )
     fitness_results: dict[str, list[dict]] = {}
+    semantic_available_all = True
     try:
         for cid in eligible_client_ids:
             fit = search_product_by_fitness_score(
@@ -245,6 +246,10 @@ def product_investor_matcher(
                 risk_rating_hard_filter=False,  # PFS already handles risk gate
             )
             fitness_results[cid] = fit.get("results", [])
+            semantic_available_all = (
+                semantic_available_all
+                and bool(fit.get("meta", {}).get("semantic_embedding_available", True))
+            )
     except Exception as exc:
         LOGGER.error("Product fitness scoring failed: %s", exc)
         return {
@@ -285,6 +290,7 @@ def product_investor_matcher(
         readiness_map=readiness_map,
         fitness_results=fitness_results,
         market_outlook=market_outlook,
+        semantic_embedding_available=semantic_available_all,
     )
 
     # ── 7. Run product_investor_matching via CrewAI ─────────────────────
@@ -767,6 +773,7 @@ def _build_matcher_api_resolver(
     readiness_map: dict[str, dict],
     fitness_results: dict[str, list[dict]],
     market_outlook: str | None,
+    semantic_embedding_available: bool = True,
 ) -> Callable[[str], ReferenceDocument]:
     """Build an API resolver that returns ReferenceDocuments from pre-fetched data.
 
@@ -824,7 +831,11 @@ def _build_matcher_api_resolver(
                 comp["fitness_score"] = f_item.get("fitness_score", 0)
                 comp["product_name"] = f_item.get("product_name", "")
                 pfs_for_client[pid] = comp
-            lines += format_pfs_table(pfs_for_client, include_name=True)
+            lines += format_pfs_table(
+                pfs_for_client,
+                include_name=True,
+                semantic_embedding_available=semantic_embedding_available,
+            )
             lines.append("")
         return "\n".join(lines)
 

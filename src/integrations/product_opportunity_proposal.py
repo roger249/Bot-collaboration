@@ -338,7 +338,7 @@ def _process_one_pair(
     holdings_products = resolve_holdings_to_products(client_data.get("holdings", []))
 
     # Compute PFS (suggested + alternatives) for the LLM prompt
-    pfs_scores = compute_pfs_for_products(
+    pfs_scores, semantic_available = compute_pfs_for_products(
         client_id=str(client_data.get("client_id", "")),
         suggested_product_id=str(product_data.get("product_id", "")),
         alternative_products=alt_products,
@@ -369,6 +369,7 @@ def _process_one_pair(
             alternatives=alt_products or None,
             include_alternatives_section=(alternative_count > 0) or bool(matcher_alternatives),
             pfs_scores=pfs_scores or None,
+            semantic_embedding_available=semantic_available if pfs_scores else None,
         ),
         market_outlook=market_outlook,
         extra_docs=extra_docs or None,

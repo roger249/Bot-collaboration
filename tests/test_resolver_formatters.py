@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from src.shared.resolver_formatters import format_product_catalog
+from src.shared.resolver_formatters import format_product_catalog, format_pfs_table
 
 
 class TestFormatProductCatalog(unittest.TestCase):
@@ -88,6 +88,41 @@ class TestFormatProductCatalog(unittest.TestCase):
 
         self.assertNotIn("## Alternative Products", output)
         self.assertNotIn("*(none)*", output)
+
+
+class TestFormatPfsTable(unittest.TestCase):
+    def _scores(self):
+        return {
+            "P1": {
+                "fitness_score": 5.0,
+                "risk_rating_match_score": 8.0,
+                "diversification_score": 5.0,
+                "has_similar_investment_experience_score": 6.0,
+                "better_product_score": 4.0,
+                "similarity_product_note_in_like_products": 5.0,
+                "similarity_product_note_in_dislike_products": 5.0,
+                "similarity_to_current_holding": 5.0,
+                "similarity_to_RM_note": 5.0,
+            }
+        }
+
+    def test_renders_similarity_columns(self):
+        lines = format_pfs_table(self._scores())
+        text = "\n".join(lines)
+        self.assertIn("Like", text)
+        self.assertIn("Comfort", text)
+        self.assertIn("Holding Similarity", text)
+        self.assertIn("RM Note Similarity", text)
+
+    def test_degrades_with_remark_when_semantic_unavailable(self):
+        lines = format_pfs_table(self._scores(), semantic_embedding_available=False)
+        text = "\n".join(lines)
+        self.assertIn("Semantic similarity was not available", text)
+
+    def test_no_remark_when_semantic_available(self):
+        lines = format_pfs_table(self._scores(), semantic_embedding_available=True)
+        text = "\n".join(lines)
+        self.assertNotIn("Semantic similarity was not available", text)
 
 
 if __name__ == "__main__":

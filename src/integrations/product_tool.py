@@ -31,6 +31,13 @@ from src.planbot.product_scoring import (
     compute_concentration_risk,
     compute_similarity_score,
 )
+from src.planbot.semantic_embedding import (
+    SIMILARITY_DIMENSIONS,
+    _listify,
+    get_embedder,
+    get_similarity_bounds,
+    similarity_scores_from_embeddings,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -329,6 +336,60 @@ def search_reinvestment_candidates(
 # ── 4. search_product_by_fitness_score ────────────────────────────────────
 
 
+def _build_embedding_caches(
+    clients: list[dict],
+    products_map: dict[str, dict],
+    holdings_by_client: dict[str, list[dict]],
+) -> tuple[dict, dict, dict, dict, dict]:
+    """Pre-compute store-cached embeddings for the similarity dimensions.
+
+    Returns:
+        (prod_name_emb, prod_note_emb, client_like_embs, client_dislike_embs, client_rm_emb)
+    """
+    from src.planbot.embeddings_store import get_embedding_store
+
+    embedder = get_embedder()
+    store = get_embedding_store()
+
+    def embed(entity_type, entity_id, field_name, field_idx, text):
+        if not text:
+            return None
+        return store.get_or_embed(
+            entity_type=entity_type, entity_id=entity_id, field_name=field_name,
+            field_idx=field_idx, text=text, embedder=embedder,
+        )
+
+    prod_name_emb: dict[str, list[float] | None] = {}
+    prod_note_emb: dict[str, list[float] | None] = {}
+    for pid, p in products_map.items():
+        name = str(p.get("name") or "").strip()
+        note = str(p.get("investment_note") or "").strip()
+        if name:
+            prod_name_emb[pid] = embed("product", pid, "name", None, name)
+        if note:
+            prod_note_emb[pid] = embed("product", pid, "investment_note", None, note)
+
+    client_like_embs: dict[str, list[list[float]]] = {}
+    client_dislike_embs: dict[str, list[list[float]]] = {}
+    client_rm_emb: dict[str, list[float] | None] = {}
+    for c in clients:
+        cid = c["client_id"]
+        like = _listify(c.get("like_products"))
+        dislike = _listify(c.get("dislike_products"))
+        rm = str(c.get("qualitative_profile") or "").strip()
+        client_like_embs[cid] = [
+            embed("client", cid, "like_products", i, k) for i, k in enumerate(like)
+        ]
+        client_like_embs[cid] = [e for e in client_like_embs[cid] if e is not None]
+        client_dislike_embs[cid] = [
+            embed("client", cid, "dislike_products", i, k) for i, k in enumerate(dislike)
+        ]
+        client_dislike_embs[cid] = [e for e in client_dislike_embs[cid] if e is not None]
+        client_rm_emb[cid] = embed("client", cid, "RM_note", None, rm) if rm else None
+
+    return prod_name_emb, prod_note_emb, client_like_embs, client_dislike_embs, client_rm_emb
+
+
 def search_product_by_fitness_score(
     client_ids: list[str],
     product_ids: list[str],
@@ -396,6 +457,25 @@ def search_product_by_fitness_score(
     # Pre-compute concentration scores for all clients
     concentration_scores = score_concentration_risk(clients, holdings, conc_config) if conc_config else {}
 
+    # Pre-compute store-cached embeddings for the similarity dimensions.
+    # Guarded so a config/embedding failure degrades to neutral scores instead
+    # of failing the whole PFS call.  The degradation is surfaced as structured
+    # metadata (not a thrown error) so the formatter can annotate the output.
+    semantic_embedding_available = True
+    similarity_bounds = get_similarity_bounds()
+    try:
+        prod_name_emb, prod_note_emb, client_like_embs, client_dislike_embs, client_rm_emb = (
+            _build_embedding_caches(clients, products_map, holdings_by_client)
+        )
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.warning("Similarity embeddings unavailable (%s); using neutral scores", exc)
+        semantic_embedding_available = False
+        prod_name_emb = {}
+        prod_note_emb = {}
+        client_like_embs = {}
+        client_dislike_embs = {}
+        client_rm_emb = {}
+
     # --- Score every pair ---
     results: list[dict] = []
 
@@ -422,6 +502,10 @@ def search_product_by_fitness_score(
                 "diversification_score": "diversification_score" not in exclude,
                 "has_similar_investment_experience_score": "has_similar_investment_experience_score" not in exclude,
                 "better_product_score": "better_product_score" not in exclude,
+                "similarity_product_note_in_like_products": "similarity_product_note_in_like_products" not in exclude,
+                "similarity_product_note_in_dislike_products": "similarity_product_note_in_dislike_products" not in exclude,
+                "similarity_to_current_holding": "similarity_to_current_holding" not in exclude,
+                "similarity_to_RM_note": "similarity_to_RM_note" not in exclude,
             }
             if not any(dims.values()):
                 continue
@@ -496,6 +580,25 @@ def search_product_by_fitness_score(
                 else:
                     comp_scores["better_product_score"] = 0.0
 
+            # 5) semantic similarity dimensions (from cached embeddings)
+            hold_note_embs = [
+                prod_note_emb[h["product_id"]]
+                for h in holdings_cid
+                if h.get("product_id") in prod_note_emb and prod_note_emb.get(h["product_id"]) is not None
+            ]
+            sim_scores = similarity_scores_from_embeddings(
+                prod_name_emb=prod_name_emb.get(pid),
+                prod_note_emb=prod_note_emb.get(pid),
+                like_embs=client_like_embs.get(cid, []),
+                dislike_embs=client_dislike_embs.get(cid, []),
+                hold_note_embs=hold_note_embs,
+                rm_emb=client_rm_emb.get(cid),
+                bounds=similarity_bounds,
+            )
+            for dim in SIMILARITY_DIMENSIONS:
+                if dims[dim]:
+                    comp_scores[dim] = sim_scores[dim]
+
             # --- Final weighted score ---
             included_dims = [k for k, v in dims.items() if v]
             total_w = sum(weights.get(k, 0.0) for k in included_dims)
@@ -506,10 +609,16 @@ def search_product_by_fitness_score(
                     fitness += w * comp_scores.get(k, 0.0)
 
             results.append({
+                # ── client context ──
                 "client_id": cid,
+                "client_like_products": client.get("like_products"),
+                "client_dislike_products": client.get("dislike_products"),
+                "client_rm_note": client.get("qualitative_profile"),
+                # ── product context ──
                 "product_id": pid,
                 "product_name": products_map.get(pid, {}).get("name"),
                 "investment_note": products_map.get(pid, {}).get("investment_note"),
+                # ── score ──
                 "fitness_score": round(fitness, 4),
                 "component_scores": comp_scores,
             })
@@ -542,4 +651,12 @@ def search_product_by_fitness_score(
 
     results = results[:top_n]
 
-    return {"results": results}
+    warnings: list[str] = []
+    if not semantic_embedding_available:
+        warnings.append("semantic_embedding_unavailable")
+
+    return {
+        "results": results,
+        "meta": {"semantic_embedding_available": semantic_embedding_available},
+        "warnings": warnings,
+    }

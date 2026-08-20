@@ -1,6 +1,6 @@
 ## Product fitness score
 
-The score measures how fit a candidate product is for a particular investor, computed across four independent dimensions — without assuming the investor switches out an existing product.
+The score measures how fit a candidate product is for a particular investor, computed across **eight dimensions** — four structured + four semantic-similarity — without assuming the investor switches out an existing product.
 
 ### Objective
 
@@ -8,7 +8,7 @@ Rank candidate products for a given client so the LLM can make a final recommend
 
 ### Factors in the scorecard
 
-The four sub-scores (each 0-10 before weighting):
+The eight sub-scores (each 0-10 before weighting):
 
 | Factor | What it measures | Example product decision |
 |--------|------------------|--------------------------|
@@ -16,6 +16,10 @@ The four sub-scores (each 0-10 before weighting):
 | **diversification** | Whether adding the product worsens portfolio concentration (higher = less added concentration risk). | An equity‑heavy client scores a precious‑metals or bond candidate highly, because adding it reduces concentration; an extra large‑cap equity position scores low. |
 | **has_similar_investment_experience** | Whether the client already holds the same `product_type` or `product_family`. | A client already holding `bond` funds is a natural fit for another bond candidate; a first‑time equity investor gets a lower score for a complex equity product. |
 | **better_product** | Whether the candidate has a higher `expected_return` than the client's existing holdings of the same `product_type`. | If the client holds a 3.0% bond and a candidate bond yields 4.5%, the candidate scores high as a superior replacement; a lower‑yield candidate scores 0. |
+| **similarity_product_name_in_like_products** | Semantic match between `product.name` and the client's `like_products` keywords. | A client who stated interest in "AI" scores an AI-themed fund highly. |
+| **similarity_product_name_in_dislike_products** | Inverted semantic match against the client's `dislike_products` (rendered as `Comfort`). | A client who dislikes "bonds" penalizes bond candidates. |
+| **similarity_to_current_holding** | Semantic similarity to the client's existing holdings (max). | A candidate resembling a well-performing holding scores as familiar territory. |
+| **similarity_to_RM_note** | Semantic match between `product.investment_note` and the RM's `qualitative_profile`. | A candidate aligned with the RM's stated guidance scores highly. |
 
 The `diversification` score is computed as the concentration risk of a hypothetical portfolio that adds the product at `concentration_test_position_pct_aum * client.aum`.
 
@@ -25,7 +29,7 @@ The score card consumes three data entities through the data-access layer (DAL):
 
 | Entity | Fields used |
 |--------|-------------|
-| `clients` | `client_id`, `aum`, `risk_rating` |
+| `clients` | `client_id`, `aum`, `risk_rating`, `like_products`, `dislike_products`, `qualitative_profile` |
 | `holdings` | `client_id`, `product_id`, `market_value`, `region`, `asset_class` |
 | `products` | `product_id`, `name`, `product_type`, `risk_rating`, `expected_return`, `region`, `asset_class`, `investment_note` |
 
@@ -43,8 +47,8 @@ API input parameters:
 
 ### Scoring behavior
 
-- All four PFS dimensions are included by default.
-- API callers may remove dimensions explicitly via `exclude_dimensions`.
+- All eight PFS dimensions are included by default.
+- API callers may remove dimensions explicitly via `exclude_dimensions` (both structured and similarity keys).
 - The final score must be computed from included dimensions only (renormalized weights).
 - The final score is used for relative ranking across candidate products, not as a hard pass/fail score.
 - For diversification, reuse the concentration-risk method configured in `config/config_planbot.yaml` under `investor_readiness_score.score_concentration_risk`, but evaluate it on a hypothetical post-add portfolio:
@@ -151,10 +155,14 @@ Weights and parameters live in `config/config_planbot.yaml` under `product_fitne
 ```yaml
 product_fitness_score:
   product_fitness_weights:
-    risk_rating_match_score: 0.30
-    diversification_score: 0.30
-    has_similar_investment_experience_score: 0.20
-    better_product_score: 0.20
+    risk_rating_match_score: 0.25
+    diversification_score: 0.25
+    has_similar_investment_experience_score: 0.15
+    better_product_score: 0.15
+    similarity_product_name_in_like_products: 0.05
+    similarity_product_name_in_dislike_products: 0.05  # inverted term — higher = not disliked
+    similarity_to_current_holding: 0.05
+    similarity_to_RM_note: 0.05
   product_fitness_params:
     better_product_score_scale: 10
     better_product_score_uplift_cap: 0.30
@@ -166,6 +174,8 @@ product_fitness_score:
 ```
 
 > `product_fitness_weights` and `product_fitness_params` drive the PFS.  The sibling `search_similar_weights` / `search_similar_sigmas` keys are used by `search_similar`, not by the PFS.
+>
+> The four similarity dimensions are computed from cached sentence embeddings (see [`semantic_embedding.md`](semantic_embedding.md)).  Their weights above are illustrative placeholders.
 
 ### API
 
@@ -187,7 +197,7 @@ Request body (`FitnessScoreRequest`):
 }
 ```
 
-Response — a flat list of `FitnessScoreItem`:
+Response — a flat list of `FitnessScoreItem` plus structured degradation metadata:
 
 ```json
 {
@@ -202,12 +212,22 @@ Response — a flat list of `FitnessScoreItem`:
         "risk_rating_match_score": 10.0,
         "diversification_score": 8.0,
         "has_similar_investment_experience_score": 6.0,
-        "better_product_score": 7.5
+        "better_product_score": 7.5,
+        "similarity_product_name_in_like_products": 8.2,
+        "similarity_product_name_in_dislike_products": 5.0,
+        "similarity_to_current_holding": 7.1,
+        "similarity_to_RM_note": 6.4
       }
     }
-  ]
+  ],
+  "meta": {
+    "semantic_embedding_available": true
+  },
+  "warnings": []
 }
 ```
+
+When semantic embeddings are unavailable, `meta.semantic_embedding_available` is `false`, the four similarity component scores are neutral `5.0`, and `warnings` contains `"semantic_embedding_unavailable"`.  There is **no silent hash fallback** — the degradation is surfaced explicitly.
 
 ### Downstream use
 

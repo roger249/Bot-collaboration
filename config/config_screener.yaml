@@ -1,0 +1,53 @@
+# Screener configuration — semantic embedding for PFS.
+#
+# Phase 1: holds embedding model config only.  PFS weights remain in
+# config_planbot.yaml (product_fitness_score) until the Sprint 2 migration
+# moves them here.
+
+embedding:
+  # Named preset (from semantic_model_configs below).  Switching models is a
+  # one-line change here — the preset supplies model + query/passage prefixes
+  # + similarity_bounds together.  Model-specific keys are NOT duplicated here.
+  semantic_model_config: "e5-base"
+  # Deployment / behavior keys (model-independent):
+  device: "auto"                    # cpu | cuda | mps | auto
+  batch_size: 32
+  normalize: true
+  lazy_load: true                   # load singleton on first use, keep resident
+  change_detection:
+    method: content_hash            # sha256 over embedded free-text fields
+    store_hash: true
+  cache:
+    product_ttl_hours: -1           # -1 = keep until investment_note hash changes
+    client_ttl_hours: -1            # -1 = keep until profile free-text hash changes
+  store:
+    path: data/planbot/db/planbot.duckdb   # embeddings table (derived cache)
+    table: embeddings
+
+# Named model presets — pick one via embedding.semantic_model_config.
+# Each carries model + instruction prefixes + similarity_bounds together,
+# so switching is a single name change.  A preset may also override any
+# deployment key (e.g. ``device``) if a specific model needs it.
+semantic_model_configs:
+  minilm:                            # symmetric (no prefixes)
+    model: "sentence-transformers/all-MiniLM-L6-v2"
+    query_prefix: ""
+    passage_prefix: ""
+    similarity_bounds:               # not yet calibrated
+      like:    { floor: 0.0, ceiling: 1.0 }
+      dislike: { floor: 0.0, ceiling: 1.0 }
+      holding: { floor: 0.0, ceiling: 1.0 }
+      rm:      { floor: 0.0, ceiling: 1.0 }
+  e5-base:                           # asymmetric (instruction-conditioned)
+    model: "intfloat/e5-base-v2"
+    query_prefix: "query: "
+    passage_prefix: "passage: "
+    # Empirical cosine bands over the full DuckDB (23 clients × 133 products,
+    # ~37k pairs): floor = p5 (irrelevant), ceiling = p95 (strong match).
+    # `holding` ceiling is capped below the boilerplate 1.0 (p95=0.998) to
+    # avoid a binary 0-or-10 driven by shared note templates.
+    similarity_bounds:
+      like:    { floor: 0.72, ceiling: 0.81 }
+      dislike: { floor: 0.73, ceiling: 0.82 }
+      holding: { floor: 0.79, ceiling: 0.87 }
+      rm:      { floor: 0.77, ceiling: 0.83 }
