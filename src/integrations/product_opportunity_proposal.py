@@ -31,10 +31,11 @@ from src.planbot.input_loader import (
     API_SUGGESTED_PRODUCTS_AND_RATIONALE,
     ReferenceDocument,
 )
-from src.planbot.pipeline_engine import PipelineEngine
+from src.planbot.pipeline_engine import PipelineEngine, get_input_default_sources
 from src.shared.config_loader import load_config
 from src.shared.market_outlook_utils import (
     API_MARKET_OUTLOOK,
+    resolve_market_outlook,
 )
 from src.shared.resolver_formatters import (
     build_proposal_resolver,
@@ -64,6 +65,7 @@ def propose_product_opportunity(
     suggested_products_and_rationale: str = "",
     run_matcher: bool = False,
     market_outlook: str | None = None,
+    market_outlook_source: str | None = None,
     alternative_count: int = 3,
 ) -> dict:
     """Generate a single product opportunity proposal for one client–product pair.
@@ -86,6 +88,9 @@ def propose_product_opportunity(
         and fitness scores.  Default False.
     market_outlook : str | None
         Market narrative for LLM context.
+    market_outlook_source : str | None
+        ``"request"`` or ``"static"``.  ``static`` ignores ``market_outlook``
+        and always uses the static default.
     alternative_count : int
         Number of alternative products to include.  Default 3.
 
@@ -94,6 +99,12 @@ def propose_product_opportunity(
     dict
         Response with client_id, product_id, output_filename, proposal_markdown, metadata.
     """
+    effective_market_outlook = resolve_market_outlook(
+        market_outlook,
+        market_outlook_source,
+        get_input_default_sources(_CONFIG_PATH).get("market_outlook", "request"),
+    )
+
     # ── Optionally run matcher to get rationale + alternatives ──────
     matcher_alternatives: list[str] | None = None
     if run_matcher:
@@ -103,7 +114,7 @@ def propose_product_opportunity(
             product_ids=[product_id],
             product_source="request_payload",
             top_n=10,  # more pairs for better chance of matching this client
-            market_outlook=market_outlook,
+            market_outlook=effective_market_outlook,
         )
         # Find the pair for this specific client
         proposals = matcher_result.get("final_proposals", [])
@@ -129,7 +140,7 @@ def propose_product_opportunity(
         product_id=product_id,
         rationale=rationale,
         suggested_products_and_rationale=suggested_products_and_rationale,
-        market_outlook=market_outlook,
+        market_outlook=effective_market_outlook,
         alternative_count=alternative_count,
         matcher_alternatives=matcher_alternatives,
     )
@@ -141,6 +152,7 @@ def propose_product_opportunity_automatch(
     product_source: str = "request_payload",
     client_selection: dict | None = None,
     market_outlook: str | None = None,
+    market_outlook_source: str | None = None,
     readiness_pool_size: int | None = None,
     run_matcher: bool = False,
     max_proposals: int = 10,
@@ -155,6 +167,9 @@ def propose_product_opportunity_automatch(
         Client filter criteria.  If omitted, all clients.
     market_outlook : str | None
         Market narrative for LLM context.
+    market_outlook_source : str | None
+        ``"request"`` or ``"static"``.  ``static`` ignores ``market_outlook``
+        and always uses the static default.
     readiness_pool_size : int | None
         Top-K clients by readiness.  None = use config default.
     run_matcher : bool
@@ -171,6 +186,12 @@ def propose_product_opportunity_automatch(
     """
     app_config = load_config(str(_ROOT_DIR / "config" / "config.yaml"))
 
+    effective_market_outlook = resolve_market_outlook(
+        market_outlook,
+        market_outlook_source,
+        get_input_default_sources(_CONFIG_PATH).get("market_outlook", "request"),
+    )
+
     errors: list[dict] = []
 
     # ── 1. Get matching pairs ────────────────────────────────────────
@@ -183,7 +204,7 @@ def propose_product_opportunity_automatch(
                 product_source=product_source,
                 client_selection=client_selection,
                 top_n=max_proposals if max_proposals > 0 else 10,
-                market_outlook=market_outlook,
+                market_outlook=effective_market_outlook,
             )
         except Exception as exc:
             LOGGER.exception("Matcher invocation failed: %s", exc)
@@ -257,7 +278,7 @@ def propose_product_opportunity_automatch(
                 product_id=pid,
                 rationale=pair.get("rationale", ""),
                 suggested_products_and_rationale=pair.get("matching_context", ""),
-                market_outlook=market_outlook,
+                market_outlook=effective_market_outlook,
                 alternative_count=0,  # use matcher alternatives
                 matcher_alternatives=pair.get("alternative_product_ids", []),
             )

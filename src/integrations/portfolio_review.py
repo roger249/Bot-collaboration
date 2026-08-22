@@ -17,8 +17,12 @@ from src.planbot.input_loader import (
     API_CLIENT_PROFILE,
     API_PRODUCT_CATALOG,
 )
+from src.planbot.pipeline_engine import get_input_default_sources
 from src.shared.config_loader import load_config
-from src.shared.market_outlook_utils import API_MARKET_OUTLOOK
+from src.shared.market_outlook_utils import (
+    API_MARKET_OUTLOOK,
+    resolve_market_outlook,
+)
 from src.shared.resolver_formatters import (
     build_proposal_resolver,
     format_client_and_holdings,
@@ -41,6 +45,7 @@ def propose_portfolio_review(
     client_id: str,
     *,
     market_outlook: str | None = None,
+    market_outlook_source: str | None = None,
 ) -> dict:
     """Generate a portfolio health review for a single client.
 
@@ -51,6 +56,9 @@ def propose_portfolio_review(
     market_outlook : str | None
         Market narrative for LLM context.  If None, the pipeline
         falls back to static market outlook files.
+    market_outlook_source : str | None
+        ``"request"`` or ``"static"``.  ``static`` ignores ``market_outlook``
+        and always uses the static default.
 
     Returns
     -------
@@ -61,6 +69,12 @@ def propose_portfolio_review(
     if client_profile is None:
         raise LookupError(f"Client not found: {client_id}")
 
+    effective_market_outlook = resolve_market_outlook(
+        market_outlook,
+        market_outlook_source,
+        get_input_default_sources(_CONFIG_PATH).get("market_outlook", "request"),
+    )
+
     # Resolve the client's existing holdings to full product dicts for the
     # catalog reference (the LLM needs product details to review the portfolio).
     holdings_products = resolve_holdings_to_products(client_profile.get("holdings", []))
@@ -70,14 +84,14 @@ def propose_portfolio_review(
         product_content=format_product_catalog(
             holdings=holdings_products or None,
         ),
-        market_outlook=market_outlook,
+        market_outlook=effective_market_outlook,
     )
 
     runtime_reference_overrides: dict[str, list[str]] = {
         "client_profile": [API_CLIENT_PROFILE],
         "product_catalog": [API_PRODUCT_CATALOG],
     }
-    if market_outlook:
+    if effective_market_outlook is not None:
         runtime_reference_overrides["market_outlook"] = [API_MARKET_OUTLOOK]
 
     # ── Invoke CrewAI ───────────────────────────────────────────────

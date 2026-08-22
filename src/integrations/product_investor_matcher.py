@@ -34,10 +34,11 @@ from src.planbot.input_loader import (
     API_PRODUCT_CATALOG,
     ReferenceDocument,
 )
-from src.planbot.pipeline_engine import PipelineEngine
+from src.planbot.pipeline_engine import PipelineEngine, get_input_default_sources
 from src.shared.config_loader import load_config
 from src.shared.market_outlook_utils import (
     API_MARKET_OUTLOOK,
+    resolve_market_outlook,
 )
 from src.shared.resolver_formatters import (
     build_proposal_resolver,
@@ -64,6 +65,7 @@ def product_investor_matcher(
     client_selection: dict | None = None,
     top_n: int = 2,
     market_outlook: str | None = None,
+    market_outlook_source: str | None = None,
 ) -> dict:
     """Run the full product-investor matching pipeline.
 
@@ -85,6 +87,9 @@ def product_investor_matcher(
     market_outlook : str | None
         Market context. When absent, falls back to the market_outlook files
         globbed from config.
+    market_outlook_source : str | None
+        ``"request"`` or ``"static"``.  ``static`` ignores ``market_outlook``
+        and always uses the static default.
 
     Returns
     -------
@@ -96,6 +101,12 @@ def product_investor_matcher(
     run_id = _generate_run_id()
     warnings: list[str] = []
     errors: list[dict] = []
+
+    effective_market_outlook = resolve_market_outlook(
+        market_outlook,
+        market_outlook_source,
+        get_input_default_sources(_CONFIG_PATH).get("market_outlook", "request"),
+    )
 
     LOGGER.info(
         "=== Matcher request %s: product_ids=%s source=%s top_n=%d ===",
@@ -296,7 +307,7 @@ def product_investor_matcher(
         product_universe=product_universe,
         readiness_map=readiness_map,
         fitness_results=fitness_results,
-        market_outlook=market_outlook,
+        market_outlook=effective_market_outlook,
         semantic_embedding_available=semantic_available_all,
         include_by_id=include_by_id,
     )
@@ -311,7 +322,7 @@ def product_investor_matcher(
             "client_profile": [API_CLIENT_PROFILE],
             "product_catalog": [API_PRODUCT_CATALOG],
         }
-        if market_outlook is not None:
+        if effective_market_outlook is not None:
             reference_overrides["market_outlook"] = [API_MARKET_OUTLOOK]
 
         crew_result = run_crew_planbot(

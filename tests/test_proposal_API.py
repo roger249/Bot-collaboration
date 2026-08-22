@@ -57,12 +57,12 @@ def test_reinvestment_proposals_propose_reinvestment_for_maturing_holdings(propo
     assert len(result["results_by_client"]) == 1
 
     item = result["results_by_client"][0]
-    assert "output_path" in item
-    assert "markdown_output" in item
-    assert len(item["markdown_output"]) > 0
+    assert "output_filename" in item
+    assert "proposal_markdown" in item
+    assert len(item["proposal_markdown"]) > 0
 
     for section in ("Executive Summary", "Recommended", "Risk", "Justification"):
-        assert section.lower() in item["markdown_output"].lower()
+        assert section.lower() in item["proposal_markdown"].lower()
 
     prompt_snapshot = _read_latest_prompt_snapshot("reinvestment_proposal", started_at)
     assert "# Prompt Snapshot" in prompt_snapshot
@@ -70,7 +70,7 @@ def test_reinvestment_proposals_propose_reinvestment_for_maturing_holdings(propo
     assert "### product_catalog" in prompt_snapshot
     assert "Wallet Inflow Event" in prompt_snapshot
 
-    print(f"Output: {len(item['markdown_output'])} chars at {item['output_path']}")
+    print(f"Output: {len(item['proposal_markdown'])} chars at {item['output_filename']}")
 
 
 # ---------------------------------------------------------------------------
@@ -137,16 +137,16 @@ def test_multi_client_reinvestment(proposal_server, fake_llm):
 
     for item in result["results_by_client"]:
         cid = item["client_id"]
-        assert "output_path" in item, f"{cid}: missing output_path"
-        assert "markdown_output" in item, f"{cid}: missing markdown_output"
-        assert len(item["markdown_output"]) > 0, f"{cid}: empty output"
+        assert "output_filename" in item, f"{cid}: missing output_filename"
+        assert "proposal_markdown" in item, f"{cid}: missing proposal_markdown"
+        assert len(item["proposal_markdown"]) > 0, f"{cid}: empty output"
 
         for section in ("Executive Summary", "Recommended", "Risk", "Justification"):
-            assert section.lower() in item["markdown_output"].lower(), (
+            assert section.lower() in item["proposal_markdown"].lower(), (
                 f"{cid}: missing section '{section}'"
             )
 
-        print(f"  {cid}: {len(item['markdown_output'])} chars at {item['output_path']}")
+        print(f"  {cid}: {len(item['proposal_markdown'])} chars at {item['output_filename']}")
 
     prompt_snapshot = _read_latest_prompt_snapshot("reinvestment_proposal", started_at)
     assert "### client_profile" in prompt_snapshot
@@ -316,7 +316,12 @@ def test_portfolio_review_mocked(proposal_server, monkeypatch):
     invoking the real LLM or HTTP data service.
     """
 
-    def fake_propose_portfolio_review(client_id: str, *, market_outlook: str | None = None) -> dict:
+    def fake_propose_portfolio_review(
+        client_id: str,
+        *,
+        market_outlook: str | None = None,
+        market_outlook_source: str | None = None,
+    ) -> dict:
         return {
             "client_id": client_id,
             "output_filename": f"runs/portfolio_review/portfolio_review_{client_id}_mocked.md",

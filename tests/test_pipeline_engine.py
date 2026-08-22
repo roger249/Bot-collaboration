@@ -333,6 +333,81 @@ class TestInputResolution(unittest.TestCase):
 
 
 # ============================================================================
+#  Test: `sources` map + `default_source` resolution (market_outlook_source)
+# ============================================================================
+
+
+class TestSourcesResolution(unittest.TestCase):
+    """Tests for the `sources` + `default_source` resolution strategy."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root / "data" / "shared" / "market_outlook").mkdir(parents=True)
+        (self.root / "data" / "shared" / "market_outlook" / "outlook.md").write_text(
+            "# Market Outlook\n\nStatic outlook.\n"
+        )
+        config = {
+            "input_defaults": {
+                "global": {"prompt_section": "references", "required": False},
+            },
+            "pipeline": {
+                "test_proposal": {
+                    "execution": {
+                        "model": "mock",
+                        "output": {"folder": "runs/test", "filename_template": "test.md"},
+                    },
+                    "inputs": [
+                        {
+                            "id": "market_outlook",
+                            "source": "runtime_or_static",
+                            "sources": {
+                                "request": "request.market_outlook_text",
+                                "static": "data/shared/market_outlook/*.md",
+                            },
+                            "default_source": "request",
+                        },
+                    ],
+                    "input_policy": {"missing_data": {"default": "error"}},
+                }
+            },
+        }
+        self.config_path = _write_temp_config(self.root, config)
+        self.app_config = _make_app_config(self.root)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _resolve(self, request_ctx):
+        engine = PipelineEngine(
+            self.app_config,
+            config_path=self.config_path,
+            proposal_id="test_proposal",
+        )
+        engine._load_and_validate()
+        resolved, _ = engine._resolve_inputs(request_ctx)
+        return resolved
+
+    def test_sources_request_value_wins(self):
+        """`request` source uses the request value when provided."""
+        resolved = self._resolve({"market_outlook_text": "Custom RM outlook."})
+        self.assertIn("Custom RM outlook.", resolved["market_outlook"])
+
+    def test_sources_static_ignores_request(self):
+        """`static` source ignores the request value and loads the static glob."""
+        resolved = self._resolve(
+            {"market_outlook_text": "Custom RM outlook.", "market_outlook_source": "static"}
+        )
+        self.assertIn("Static outlook.", resolved["market_outlook"])
+        self.assertNotIn("Custom RM outlook.", resolved["market_outlook"])
+
+    def test_sources_request_falls_back_to_static(self):
+        """`request` source falls back to the static glob when absent."""
+        resolved = self._resolve({"client_id": "C001"})
+        self.assertIn("Static outlook.", resolved["market_outlook"])
+
+
+# ============================================================================
 #  Test: Quality Gates
 # ============================================================================
 

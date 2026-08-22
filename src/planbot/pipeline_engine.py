@@ -93,6 +93,8 @@ class _InputDef:
     prompt_section: str = "references"  # "decision_context" or "references"
     required: bool = False
     source_priority: list[str] = field(default_factory=list)
+    sources: dict[str, str] = field(default_factory=dict)
+    default_source: str = ""
     description: str = ""
     include: dict[str, bool] = field(default_factory=dict)
 
@@ -110,6 +112,27 @@ def get_input_descriptions(config_path: str | Path) -> dict[str, str]:
         for key, value in by_id.items()
         if isinstance(value, dict)
     }
+
+
+def get_input_default_sources(config_path: str | Path) -> dict[str, str]:
+    """Read the ``default_source`` for each input id across all pipelines.
+
+    Used by API wrappers to resolve ``market_outlook_source`` when the request
+    omits it (precedence: request field → yaml ``default_source`` → "request").
+    """
+    raw = yaml.safe_load(Path(config_path).read_text(encoding="utf-8")) or {}
+    pipeline = raw.get("pipeline", {}) or {}
+    result: dict[str, str] = {}
+    for proposal_cfg in pipeline.values():
+        if not isinstance(proposal_cfg, dict):
+            continue
+        for inp in proposal_cfg.get("inputs") or []:
+            if not isinstance(inp, dict):
+                continue
+            default_source = inp.get("default_source")
+            if default_source:
+                result[str(inp.get("id"))] = str(default_source)
+    return result
 
 
 # ── Pipeline Engine ──────────────────────────────────────────────────────
@@ -160,6 +183,7 @@ class PipelineEngine:
         client_selection: dict | None = None,
         product_ids: list[str] | None = None,
         market_outlook_text: str | None = None,
+        market_outlook_source: str | None = None,
         suggested_products_and_rationale: str | None = None,
         runtime_context: dict[str, Any] | None = None,
         api_resolver_factory: Callable[..., Callable[[str], ReferenceDocument]] | None = None,
@@ -205,6 +229,7 @@ class PipelineEngine:
             "client_selection": client_selection,
             "product_ids": product_ids,
             "market_outlook_text": market_outlook_text,
+            "market_outlook_source": market_outlook_source,
             "suggested_products_and_rationale": suggested_products_and_rationale,
         }
         if runtime_context:
@@ -268,6 +293,7 @@ class PipelineEngine:
         client_selection: dict | None = None,
         product_ids: list[str] | None = None,
         market_outlook_text: str | None = None,
+        market_outlook_source: str | None = None,
         suggested_products_and_rationale: str | None = None,
         runtime_context: dict[str, Any] | None = None,
     ) -> PipelinePrep:
@@ -292,6 +318,7 @@ class PipelineEngine:
             "client_selection": client_selection,
             "product_ids": product_ids,
             "market_outlook_text": market_outlook_text,
+            "market_outlook_source": market_outlook_source,
             "suggested_products_and_rationale": suggested_products_and_rationale,
         }
         if runtime_context:
@@ -384,6 +411,10 @@ class PipelineEngine:
             if not isinstance(include, dict):
                 include = {}
 
+            sources = inp.get("sources") or {}
+            if not isinstance(sources, dict):
+                sources = {}
+
             resolved_def = _InputDef(
                 id=input_id,
                 source=source,
@@ -391,6 +422,8 @@ class PipelineEngine:
                 prompt_section=prompt_section,
                 required=required,
                 source_priority=inp.get("source_priority", []),
+                sources={str(k): str(v) for k, v in sources.items()},
+                default_source=str(inp.get("default_source") or ""),
                 description=description or "",
                 include=include,
             )
@@ -490,7 +523,15 @@ class PipelineEngine:
     def _resolve_runtime_or_static(
         self, inp: _InputDef, request_ctx: dict[str, Any]
     ) -> tuple[str, str]:
-        """Walk source_priority chain. First match wins."""
+        """Resolve a ``runtime_or_static`` input.
+
+        Inputs declaring the ``sources`` map are resolved by
+        ``_resolve_sources`` (request/static selection).  Otherwise the legacy
+        ``source_priority`` chain is walked, first match wins.
+        """
+        if inp.sources:
+            return self._resolve_sources(inp, request_ctx)
+
         for source_ref in inp.source_priority:
             # Check if it's a request key like "request.market_outlook_text"
             if source_ref.startswith("request."):
@@ -506,6 +547,48 @@ class PipelineEngine:
                     if content:
                         return content, "resolved"
         return "", "error"
+
+    def _resolve_sources(
+        self, inp: _InputDef, request_ctx: dict[str, Any]
+    ) -> tuple[str, str]:
+        """Resolve an input via the ``sources`` map + ``default_source``.
+
+        Chosen source = request ``market_outlook_source`` (if set) →
+        ``default_source`` → ``"request"``.  ``static`` always loads the static
+        glob; ``request`` uses the request value if present, else falls back to
+        the static glob.
+        """
+        requested = request_ctx.get("market_outlook_source")
+        chosen = str(requested or inp.default_source or "request").strip()
+
+        static_glob = inp.sources.get("static")
+        request_ref = inp.sources.get("request", "")
+
+        if chosen == "static":
+            content = self._load_glob_content(static_glob)
+            return (content, "resolved") if content else ("", "error")
+
+        # request (default): prefer the request value, fall back to static.
+        if request_ref.startswith("request."):
+            key = request_ref[len("request."):]
+            val = request_ctx.get(key)
+            if val and isinstance(val, str) and val.strip():
+                return val, "resolved"
+
+        content = self._load_glob_content(static_glob)
+        return (content, "fallback") if content else ("", "error")
+
+    def _load_glob_content(self, glob_or_paths: str | list[str] | None) -> str:
+        """Load and join the content of one or more file globs, or ``""``."""
+        if not glob_or_paths:
+            return ""
+        patterns = (
+            [glob_or_paths] if isinstance(glob_or_paths, str) else glob_or_paths
+        )
+        docs = load_references(self._root_dir, patterns)
+        return "\n\n".join(
+            doc.content.strip() for doc in docs if doc.content.strip()
+        )
 
     def _resolve_fallback_static(self, inp: _InputDef) -> tuple[str, str]:
         """Fallback to static glob when runtime_or_static chain is exhausted."""

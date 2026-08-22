@@ -296,9 +296,10 @@ pipeline:
         include:
           product_fitness_scores: true
       - id: market_outlook
-        source_priority:
-          - request.market_outlook_text
-          - data/planbot/shared/market_outlook/*.md
+        sources:
+          request: request.market_outlook_text
+          static: data/planbot/shared/market_outlook/*.md
+        default_source: request
 
     input_policy:
       missing_data:
@@ -306,7 +307,6 @@ pipeline:
       per_input:
         client_profile: error
         product_catalog: error
-        market_outlook: fallback_to_static
 
     prompt_packaging:
       decision_context_order:
@@ -379,15 +379,14 @@ pipeline:
         include:
           product_fitness_scores: true
       - id: market_outlook
-        source_priority:
-          - request.market_outlook_text
-          - data/planbot/shared/market_outlook/*.md
+        sources:
+          request: request.market_outlook_text
+          static: data/planbot/shared/market_outlook/*.md
+        default_source: request
 
     input_policy:
       missing_data:
         default: error
-      per_input:
-        market_outlook: fallback_to_static
 
     prompt_packaging:
       decision_context_order:
@@ -463,9 +462,10 @@ pipeline:
           - request.suggested_products_and_rationale
           - data/planbot/product_opportunity/suggested_products/*.md
       - id: market_outlook
-        source_priority:
-          - request.market_outlook_text
-          - data/planbot/shared/market_outlook/*.md
+        sources:
+          request: request.market_outlook_text
+          static: data/planbot/shared/market_outlook/*.md
+        default_source: request
 
     input_policy:
       missing_data:
@@ -474,7 +474,6 @@ pipeline:
         client_profile: error
         product_catalog: error
         suggested_products_and_rationale: fallback_to_static
-        market_outlook: fallback_to_static
 
     prompt_packaging:
       decision_context_order:
@@ -542,9 +541,10 @@ pipeline:
       - id: product_catalog
         required: true
       - id: market_outlook
-        source_priority:
-          - request.market_outlook_text
-          - data/planbot/shared/market_outlook/*.md
+        sources:
+          request: request.market_outlook_text
+          static: data/planbot/shared/market_outlook/*.md
+        default_source: request
 
     input_policy:
       missing_data:
@@ -552,7 +552,6 @@ pipeline:
       per_input:
         client_profile: error
         product_catalog: error
-        market_outlook: fallback_to_static
 
     prompt_packaging:
       decision_context_order:

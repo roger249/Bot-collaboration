@@ -96,6 +96,19 @@ _COMMON_SCORING_PARAMS_DOC = (
 
 ResponseMode = Literal["path", "markdown", "both"]
 
+MarketOutlookSource = Literal["request", "static"]
+
+_MARKET_OUTLOOK_SOURCE_DOC = (
+    "Where the market narrative comes from: `request` (use the request "
+    "`market_outlook`, else fall back to static) or `static` (always use the "
+    "static default). Defaults to the yaml `default_source` (currently `request`)."
+)
+
+_MARKET_OUTLOOK_DOC = (
+    "Free-form market narrative (markdown) injected into the LLM context. "
+    "Ignored when `market_outlook_source` is `static`."
+)
+
 
 class ReinvestmentTarget(BaseModel):
     """A client→product pair to generate a reinvestment proposal for."""
@@ -162,6 +175,12 @@ class ProposeReinvestmentRequest(BaseModel):
         description="Include debug scoring details (candidate similarity "
         "scores) in the response.",
     )
+    market_outlook: str | None = Field(
+        None, description=_MARKET_OUTLOOK_DOC,
+    )
+    market_outlook_source: MarketOutlookSource | None = Field(
+        None, description=_MARKET_OUTLOOK_SOURCE_DOC,
+    )
 
 
 class MaturingHoldingsRequest(BaseModel):
@@ -202,6 +221,12 @@ class MaturingHoldingsRequest(BaseModel):
     include_debug_scores: bool = Field(
         False, description="Include debug scoring details in the response",
     )
+    market_outlook: str | None = Field(
+        None, description=_MARKET_OUTLOOK_DOC,
+    )
+    market_outlook_source: MarketOutlookSource | None = Field(
+        None, description=_MARKET_OUTLOOK_SOURCE_DOC,
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -218,10 +243,10 @@ class PerClientResult(BaseModel):
         default_factory=list,
         json_schema_extra={"example": [{"product_id": "PROD054", "similarity_score": 0.9933}]},
     )
-    output_path: str | None = Field(
+    output_filename: str | None = Field(
         None, json_schema_extra={"example": "runs/reinvestment_proposal/reinvestment_proposal_PB-HK-000007-5.md"},
     )
-    markdown_output: str | None = Field(
+    proposal_markdown: str | None = Field(
         None, json_schema_extra={"example": "# Reinvestment Proposal\n\n## Executive Summary\n..."},
     )
     error: str | None = Field(
@@ -309,6 +334,9 @@ class ProductInvestorMatcherRequest(BaseModel):
     market_outlook: str | None = Field(
         default=None, json_schema_extra={"example": "Rates remain elevated; favor short-duration high-quality credit over long duration."},
     )
+    market_outlook_source: MarketOutlookSource | None = Field(
+        None, description=_MARKET_OUTLOOK_SOURCE_DOC,
+    )
 
 
 class ProductInvestorMatcherResponse(BaseModel):
@@ -344,6 +372,7 @@ def match_products_to_investors_endpoint(
         client_selection=body.client_selection,
         top_n=body.top_n,
         market_outlook=body.market_outlook,
+        market_outlook_source=body.market_outlook_source,
     )
 
 
@@ -393,6 +422,8 @@ def get_reinvestment_proposals(body: ProposeReinvestmentRequest) -> dict:
         include_llm_input=body.include_llm_input,
         include_market_outlook=body.include_market_outlook,
         include_debug_scores=body.include_debug_scores,
+        market_outlook=body.market_outlook,
+        market_outlook_source=body.market_outlook_source,
     )
 
 
@@ -428,6 +459,8 @@ def propose_for_maturing_holdings(body: MaturingHoldingsRequest) -> dict:
         include_llm_input=body.include_llm_input,
         include_market_outlook=body.include_market_outlook,
         include_debug_scores=body.include_debug_scores,
+        market_outlook=body.market_outlook,
+        market_outlook_source=body.market_outlook_source,
     )
 
 
@@ -457,6 +490,9 @@ class OpportunityProposalRequest(BaseModel):
     run_matcher: bool = Field(False, description="Run matcher to obtain rationale")
     market_outlook: str | None = Field(
         default=None, json_schema_extra={"example": "Rates remain elevated; favor short-duration high-quality credit over long duration."},
+    )
+    market_outlook_source: MarketOutlookSource | None = Field(
+        None, description=_MARKET_OUTLOOK_SOURCE_DOC,
     )
     alternative_count: int = Field(3, description="Number of alternative products", ge=0)
 
@@ -525,6 +561,12 @@ class AutomatchRequest(BaseModel):
         json_schema_extra={"example": {"client_id": ["PB-HK-000001-8", "PB-HK-000005-9"]}},
     )
     run_matcher: bool = Field(False, json_schema_extra={"example": True})
+    market_outlook: str | None = Field(
+        None, description=_MARKET_OUTLOOK_DOC,
+    )
+    market_outlook_source: MarketOutlookSource | None = Field(
+        None, description=_MARKET_OUTLOOK_SOURCE_DOC,
+    )
     max_proposals: int = Field(
         10, json_schema_extra={"example": 3},
     )
@@ -560,6 +602,7 @@ def generate_opportunity_proposal(body: OpportunityProposalRequest) -> dict:
             suggested_products_and_rationale=body.suggested_products_and_rationale,
             run_matcher=body.run_matcher,
             market_outlook=body.market_outlook,
+            market_outlook_source=body.market_outlook_source,
             alternative_count=body.alternative_count,
         )
     except LookupError as exc:
@@ -585,6 +628,8 @@ def generate_opportunity_proposal_automatch(body: AutomatchRequest) -> dict:
         client_selection=body.client_selection,
         run_matcher=body.run_matcher,
         max_proposals=body.max_proposals,
+        market_outlook=body.market_outlook,
+        market_outlook_source=body.market_outlook_source,
     )
 
 
@@ -602,6 +647,9 @@ class PortfolioReviewRequest(BaseModel):
     )
     market_outlook: str | None = Field(
         default=None, json_schema_extra={"example": "Rates remain elevated; favor short-duration high-quality credit over long duration."},
+    )
+    market_outlook_source: MarketOutlookSource | None = Field(
+        None, description=_MARKET_OUTLOOK_SOURCE_DOC,
     )
 
 
@@ -625,6 +673,7 @@ def generate_portfolio_review(body: PortfolioReviewRequest) -> dict:
     return propose_portfolio_review(
         client_id=body.client_id,
         market_outlook=body.market_outlook,
+        market_outlook_source=body.market_outlook_source,
     )
 
 

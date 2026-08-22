@@ -165,6 +165,8 @@ generate_reinvestment_proposal(
    include_market_outlook: bool = True,
    include_candidate_explanations: bool = True,
    include_debug_scores: bool = False,
+   market_outlook: str | None = None,
+   market_outlook_source: str | None = None,  # "request" | "static"
 ) -> dict
 ```
 
@@ -181,6 +183,8 @@ generate_reinvestment_proposal(
 - `include_market_outlook`: whether to attach market outlook references.
 - `include_candidate_explanations`: whether to attach scoring and shortlist rationale.
 - `include_debug_scores`: whether to return the intermediate score-card output used during migration testing. Default is `False`.
+- `market_outlook`: free-form market narrative (markdown) for the LLM context.
+- `market_outlook_source`: `"request"` (use `market_outlook`, else static default) or `"static"` (always use the static default). Defaults to the yaml `default_source` (currently `"request"`).
 
 ### Output fields
 
@@ -191,8 +195,8 @@ The Python function should return a dictionary containing at least:
    - `source_product_id`
    - `candidate_products`
    - `llm_input` (optional; included only when `include_llm_input = True`)
-   - `output_path` when `response_mode` is `path` or `both`
-   - `markdown_output` when `response_mode` is `markdown` or `both`
+   - `output_filename` when `response_mode` is `path` or `both`
+   - `proposal_markdown` when `response_mode` is `markdown` or `both`
    - `debug_scores` (optional; included only when `include_debug_scores = True`)
 
 ## FastAPI contract
@@ -234,7 +238,7 @@ Proposed endpoint:
          "candidate_products": [
             {"product_id": "ETF-BND", "fitness_score": 8.35}
          ],
-         "output_path": "runs/reinvestment_proposal/PB-HK-000001-8.md"
+         "output_filename": "runs/reinvestment_proposal/PB-HK-000001-8.md"
       }
    ]
 }
@@ -243,9 +247,9 @@ Proposed endpoint:
 Response mode behavior:
 
 - `candidate_products` is always included in each `results_by_client` item for downstream use.
-- `path`: return `output_path` (plus always-on fields such as `client_id`, `source_product_id`, `candidate_products`).
-- `markdown`: return `markdown_output` (plus always-on fields such as `client_id`, `source_product_id`, `candidate_products`).
-- `both`: return both `output_path` and `markdown_output` (plus always-on fields).
+- `path`: return `output_filename` (plus always-on fields such as `client_id`, `source_product_id`, `candidate_products`).
+- `markdown`: return `proposal_markdown` (plus always-on fields such as `client_id`, `source_product_id`, `candidate_products`).
+- `both`: return both `output_filename` and `proposal_markdown` (plus always-on fields).
 - `include_llm_input`: when `True`, include `llm_input` in each `results_by_client` item; default `False` omits it
 - `include_debug_scores`: when `True`, include `debug_scores` in each `results_by_client` item; default `False` omits it
 

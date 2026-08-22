@@ -102,15 +102,25 @@ def _try_load_pipeline_config(
             inp.get("description") or id_defaults.get("description") or ""
         )
         # File inputs: globs = `paths`.  runtime_or_static inputs: globs = the
-        # static (non-`request.`) entries of `source_priority`.  api inputs:
-        # empty globs (the wrapper injects them via runtime_reference_overrides).
+        # static entry of `sources` (or the static, non-`request.` entries of
+        # the legacy `source_priority`).  api inputs: empty globs (the wrapper
+        # injects them via runtime_reference_overrides).
         globs = [str(p) for p in (inp.get("paths") or [])]
         if not globs:
-            source_priority = inp.get("source_priority") or []
-            globs = [
-                str(g) for g in source_priority
-                if not str(g).startswith("request.")
-            ]
+            sources = inp.get("sources") or {}
+            static_glob = sources.get("static") if isinstance(sources, dict) else None
+            if static_glob:
+                globs = (
+                    [str(static_glob)]
+                    if isinstance(static_glob, str)
+                    else [str(g) for g in static_glob]
+                )
+            else:
+                source_priority = inp.get("source_priority") or []
+                globs = [
+                    str(g) for g in source_priority
+                    if not str(g).startswith("request.")
+                ]
         reference_sections[input_id] = ReferenceSectionConfig(
             purpose=description, globs=globs
         )

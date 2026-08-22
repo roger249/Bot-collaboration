@@ -118,8 +118,8 @@ class TestReinvestmentProposal(unittest.TestCase):
         self.assertEqual(item["source_product_id"], "ETF-HYG")
         self.assertIn("candidate_products", item)
         self.assertTrue(len(item["candidate_products"]) > 0)
-        self.assertIn("output_path", item)
-        self.assertTrue(item["output_path"].endswith(".md"))
+        self.assertIn("output_filename", item)
+        self.assertTrue(item["output_filename"].endswith(".md"))
 
     @patch("src.integrations.reinvestment_proposal.search_by_id")
     def test_missing_client_returns_graceful(self, mock_client):
@@ -162,7 +162,7 @@ class TestReinvestmentProposal(unittest.TestCase):
     @patch("src.integrations.reinvestment_proposal.search_by_product_id")
     @patch("src.integrations.reinvestment_proposal.search_reinvestment_candidates")
     def test_response_mode_path(self, mock_candidates, mock_product, mock_client):
-        """path mode returns output_path, no markdown_output."""
+        """path mode returns output_filename, no proposal_markdown."""
         mock_client.return_value = SAMPLE_CLIENT
         mock_product.side_effect = lambda pid: (
             SAMPLE_PRODUCT if pid == "ETF-HYG" else SAMPLE_CANDIDATE_PRODUCT
@@ -177,14 +177,14 @@ class TestReinvestmentProposal(unittest.TestCase):
         )
 
         item = result["results_by_client"][0]
-        self.assertIn("output_path", item)
-        self.assertNotIn("markdown_output", item)
+        self.assertIn("output_filename", item)
+        self.assertNotIn("proposal_markdown", item)
 
     @patch("src.integrations.reinvestment_proposal.search_by_id")
     @patch("src.integrations.reinvestment_proposal.search_by_product_id")
     @patch("src.integrations.reinvestment_proposal.search_reinvestment_candidates")
     def test_response_mode_markdown(self, mock_candidates, mock_product, mock_client):
-        """markdown mode returns markdown_output, no output_path."""
+        """markdown mode returns proposal_markdown, no output_filename."""
         mock_client.return_value = SAMPLE_CLIENT
         mock_product.side_effect = lambda pid: (
             SAMPLE_PRODUCT if pid == "ETF-HYG" else SAMPLE_CANDIDATE_PRODUCT
@@ -199,14 +199,14 @@ class TestReinvestmentProposal(unittest.TestCase):
         )
 
         item = result["results_by_client"][0]
-        self.assertIn("markdown_output", item)
-        self.assertNotIn("output_path", item)
+        self.assertIn("proposal_markdown", item)
+        self.assertNotIn("output_filename", item)
 
     @patch("src.integrations.reinvestment_proposal.search_by_id")
     @patch("src.integrations.reinvestment_proposal.search_by_product_id")
     @patch("src.integrations.reinvestment_proposal.search_reinvestment_candidates")
     def test_response_mode_both(self, mock_candidates, mock_product, mock_client):
-        """both mode returns output_path and markdown_output."""
+        """both mode returns output_filename and proposal_markdown."""
         mock_client.return_value = SAMPLE_CLIENT
         mock_product.side_effect = lambda pid: (
             SAMPLE_PRODUCT if pid == "ETF-HYG" else SAMPLE_CANDIDATE_PRODUCT
@@ -221,8 +221,8 @@ class TestReinvestmentProposal(unittest.TestCase):
         )
 
         item = result["results_by_client"][0]
-        self.assertIn("output_path", item)
-        self.assertIn("markdown_output", item)
+        self.assertIn("output_filename", item)
+        self.assertIn("proposal_markdown", item)
 
     @patch("src.integrations.reinvestment_proposal.search_by_id")
     @patch("src.integrations.reinvestment_proposal.search_by_product_id")
@@ -463,7 +463,7 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
                     "client_id": "PB-HK-000001-8",
                     "source_product_id": "ETF-HYG",
                     "candidate_products": [],
-                    "output_path": "runs/reinvestment_proposal/test.md",
+                    "output_filename": "runs/reinvestment_proposal/test.md",
                 }
             ],
         }
@@ -513,6 +513,8 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
             include_llm_input=True,
             include_market_outlook=False,
             include_debug_scores=True,
+            market_outlook=None,
+            market_outlook_source=None,
         )
 
     @patch("src.integrations.proposal_server.propose_reinvestment_for_maturing_holdings")
@@ -555,6 +557,8 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
             include_llm_input=False,
             include_market_outlook=True,
             include_debug_scores=False,
+            market_outlook=None,
+            market_outlook_source=None,
         )
 
 

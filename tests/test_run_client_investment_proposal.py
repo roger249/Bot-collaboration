@@ -63,14 +63,14 @@ def test_propose_reinvestment_for_maturing_holdings(monkeypatch, proposal_server
     assert len(result["results_by_client"]) == 1
 
     item = result["results_by_client"][0]
-    assert "output_path" in item
-    assert "markdown_output" in item
-    assert len(item["markdown_output"]) > 0
+    assert "output_filename" in item
+    assert "proposal_markdown" in item
+    assert len(item["proposal_markdown"]) > 0
 
     for section in ("Executive Summary", "Recommended", "Risk", "Justification"):
-        assert section.lower() in item["markdown_output"].lower()
+        assert section.lower() in item["proposal_markdown"].lower()
 
-    print(f"Output: {len(item['markdown_output'])} chars at {item['output_path']}")
+    print(f"Output: {len(item['proposal_markdown'])} chars at {item['output_filename']}")
 
 
 # ---------------------------------------------------------------------------
@@ -136,16 +136,16 @@ def test_multi_client_propose_reinvestment(monkeypatch, proposal_server):
 
     for item in result["results_by_client"]:
         cid = item["client_id"]
-        assert "output_path" in item, f"{cid}: missing output_path"
-        assert "markdown_output" in item, f"{cid}: missing markdown_output"
-        assert len(item["markdown_output"]) > 0, f"{cid}: empty output"
+        assert "output_filename" in item, f"{cid}: missing output_filename"
+        assert "proposal_markdown" in item, f"{cid}: missing proposal_markdown"
+        assert len(item["proposal_markdown"]) > 0, f"{cid}: empty output"
 
         for section in ("Executive Summary", "Recommended", "Risk", "Justification"):
-            assert section.lower() in item["markdown_output"].lower(), (
+            assert section.lower() in item["proposal_markdown"].lower(), (
                 f"{cid}: missing section '{section}'"
             )
 
-        print(f"  {cid}: {len(item['markdown_output'])} chars at {item['output_path']}")
+        print(f"  {cid}: {len(item['proposal_markdown'])} chars at {item['output_filename']}")
 
 
 # ---------------------------------------------------------------------------

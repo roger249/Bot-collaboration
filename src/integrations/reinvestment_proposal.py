@@ -26,9 +26,13 @@ from src.planbot.input_loader import (
     API_PRODUCT_CATALOG,
     ReferenceDocument,
 )
-from src.planbot.pipeline_engine import PipelineEngine
+from src.planbot.pipeline_engine import PipelineEngine, get_input_default_sources
 from src.planbot.workflow import build_llm_input
 from src.shared.config_loader import load_config
+from src.shared.market_outlook_utils import (
+    API_MARKET_OUTLOOK,
+    resolve_market_outlook,
+)
 from src.shared.resolver_formatters import (
     build_proposal_resolver,
     compute_pfs_for_products,
@@ -58,6 +62,8 @@ def propose_reinvestment(
     include_llm_input: bool = False,
     include_market_outlook: bool = True,
     include_debug_scores: bool = False,
+    market_outlook: str | None = None,
+    market_outlook_source: str | None = None,
 ) -> dict:
     """Generate reinvestment proposals for one or more target pairs.
 
@@ -79,6 +85,11 @@ def propose_reinvestment(
         Whether to attach market outlook references.
     include_debug_scores : bool
         Whether to return intermediate score-card output.
+    market_outlook : str | None
+        Free-form market narrative for the LLM context.
+    market_outlook_source : str | None
+        ``"request"`` or ``"static"``.  ``static`` ignores ``market_outlook``
+        and always uses the static default.
 
     Returns
     -------
@@ -126,6 +137,8 @@ def propose_reinvestment(
                 include_llm_input=include_llm_input,
                 include_market_outlook=include_market_outlook,
                 include_debug_scores=include_debug_scores,
+                market_outlook=market_outlook,
+                market_outlook_source=market_outlook_source,
             )
         except Exception as exc:
             LOGGER.error("Error processing %s/%s: %s", client_id, source_product_id, exc)
@@ -161,6 +174,8 @@ def propose_reinvestment_for_maturing_holdings(
     include_llm_input: bool = False,
     include_market_outlook: bool = True,
     include_debug_scores: bool = False,
+    market_outlook: str | None = None,
+    market_outlook_source: str | None = None,
 ) -> dict:
     """Discover maturing bond/bond fund holdings and generate reinvestment proposals.
 
@@ -229,6 +244,8 @@ def propose_reinvestment_for_maturing_holdings(
         include_llm_input=include_llm_input,
         include_market_outlook=include_market_outlook,
         include_debug_scores=include_debug_scores,
+        market_outlook=market_outlook,
+        market_outlook_source=market_outlook_source,
     )
 
 
@@ -248,6 +265,8 @@ def _process_one_target(
     include_llm_input: bool,
     include_market_outlook: bool,
     include_debug_scores: bool,
+    market_outlook: str | None = None,
+    market_outlook_source: str | None = None,
 ) -> dict:
     """Fetch data, build in-memory resolver, invoke CrewAI, return result object."""
 
@@ -255,6 +274,14 @@ def _process_one_target(
         "client_id": client_id,
         "source_product_id": source_product_id,
     }
+
+    # Resolve the effective market outlook per the source selection
+    # (request → yaml default_source → "request").
+    effective_market_outlook = resolve_market_outlook(
+        market_outlook,
+        market_outlook_source,
+        get_input_default_sources(_CONFIG_PATH).get("market_outlook", "request"),
+    )
 
     # Load pipeline config once — exposes input defs including composite
     # `include` flags that drive formatter assembly below.
@@ -344,6 +371,7 @@ def _process_one_target(
             pfs_scores=pfs_scores or None,
             semantic_embedding_available=semantic_available if pfs_scores else None,
         ),
+        market_outlook=effective_market_outlook,
     )
 
     # ── Build runtime reference overrides for the api-backed sections ──
@@ -352,6 +380,8 @@ def _process_one_target(
         "client_profile": [API_CLIENT_PROFILE],
         "product_catalog": [API_PRODUCT_CATALOG],
     }
+    if effective_market_outlook is not None:
+        runtime_overrides["market_outlook"] = [API_MARKET_OUTLOOK]
 
     # ── Build client-scoped output filename ────────────────────────────
     output_override = f"runs/reinvestment_proposal/reinvestment_proposal_{client_id}.md"
@@ -365,14 +395,14 @@ def _process_one_target(
         output_file_override=output_override,
         api_resolver=api_resolver,
     )
-    output_path = str(crew_result.output_path)
-    markdown_output = crew_result.output_path.read_text()
+    output_filename = str(crew_result.output_path)
+    proposal_markdown = crew_result.output_path.read_text()
 
     if response_mode in ("path", "both"):
-        item["output_path"] = output_path
+        item["output_filename"] = output_filename
 
     if response_mode in ("markdown", "both"):
-        item["markdown_output"] = markdown_output
+        item["proposal_markdown"] = proposal_markdown
 
     # 7 ─ llm_input (optional) ──────────────────────────────────────────
     if include_llm_input:

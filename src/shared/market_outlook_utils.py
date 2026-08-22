@@ -31,3 +31,23 @@ def format_market_outlook_section(market_outlook: str | None) -> str:
     heading = "# Market Outlook"
     body = market_outlook.strip() if market_outlook else "(not provided)"
     return f"{heading}\n\n{body}"
+
+
+def resolve_market_outlook(
+    market_outlook: str | None,
+    market_outlook_source: str | None = None,
+    default_source: str = "request",
+) -> str | None:
+    """Return the effective market-outlook string given the source selection.
+
+    Precedence: ``market_outlook_source`` (request) → ``default_source`` (yaml)
+    → ``"request"``.
+
+    - ``"static"`` → always ``None`` (the caller loads the static default glob).
+    - ``"request"`` (or any other value) → return ``market_outlook`` as-is; the
+      caller falls back to the static default when it is ``None``.
+    """
+    chosen = str(market_outlook_source or default_source or "request").strip()
+    if chosen == "static":
+        return None
+    return market_outlook
