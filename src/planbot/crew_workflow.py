@@ -129,6 +129,11 @@ def _build_tool_instance(tool_name: str) -> Any:
 
         return _with_yfinance_tool_input_guidance(YFinanceTool())
 
+    if normalized == "ProductSearch":
+        from src.planbot.product_search_tool import ProductSearchTool
+
+        return ProductSearchTool()
+
     if normalized != "FirecrawlScrapeWebsiteTool":
         raise ValueError(f"Unsupported tool '{normalized}' in agent config.")
 

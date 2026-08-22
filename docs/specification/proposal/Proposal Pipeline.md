@@ -191,162 +191,166 @@ The pipeline should move to one simple proposal configuration model with these t
 
 ### 6.1 Conceptual schema (simplified)
 
+The proposal configuration lives under two top-level keys in
+`config/config_planbot.yaml`: `input_defaults` (shared, once) and `pipeline`
+(one key per proposal type). The pipeline key **is** the proposal id — there is
+no nested `proposal.id`/`proposal.name` object.
+
 ```yaml
-schema_version: 1
-proposal:
-   id: <proposal_id>
-   name: <display_name>
+# ── input_defaults: shared across all proposals (defined once) ──────────────
+input_defaults:
+   global:
+      prompt_section: references
+      required: false
+   by_id:
+      client_profile: { source: api, prompt_section: decision_context }
+      product_catalog: { source: api, prompt_section: decision_context }
+      # ... other known runtime-resolved ids
 
-request_contract:
-   required: [..]
-   optional: [..]
+# ── pipeline: one key per proposal type ─────────────────────────────────────
+pipeline:
+   <proposal_id>:
+      request_contract:
+         required: [..]
+         optional: [..]
 
-execution:
-   model: <model_key>
-   output: { ... }
+      execution:
+         model: <model_key>
+         output:
+            folder: <output_folder>
+            filename_template: <template>
+         logging:
+            level: INFO
 
-inputs: [ ... ]
+      inputs: [ ... ]           # unified sections + references
 
-input_policy:
-   missing_data:
-      default: error
-   per_input: { ... }
+      input_policy:
+         missing_data:
+            default: <skip|error>
+         per_input: { ... }
 
-prompt_packaging:
-   decision_context_order: [ ... ]
-   references_order: [ ... ]
-   llm_payload:
-      task_prompt_from: <input_id>   # input whose resolved content becomes the task prompt
-      include_references: true
+      prompt_packaging:
+         decision_context_order: [ ... ]
+         references_order: [ ... ]
+         llm_payload:
+            include_references: true
 
-quality_gates: { ... }
+      quality_gates:
+         required_sections: [ ... ]
+         fail_on_missing_required_input: true
 ```
 
-When `task_prompt_from` references an input with a file glob, multiple matched files are sorted alphabetically and concatenated with a double newline separator — the same behavior as `load_references` in the current implementation.
-```
+Each `inputs` entry is a mapping with an `id` plus optional `source`, `paths`,
+`prompt_section`, `required`, and `source_priority`; omitted keys fall back to
+`input_defaults.by_id`, then `input_defaults.global`, then the engine default
+(see Section 6.5).
+
+The task prompt (what the model must do) is sourced from `tasks.yaml`
+`description:`, matching CrewAI's native `Task.description`. The `inputs` list
+carries reference material (including `proposal_instructions` format files); it
+does not supply the task prompt.
 
 ### 6.2 Sample YAML: Reinvestment Proposal
 
 ```yaml
-schema_version: 1
-proposal:
-   id: reinvestment
-   name: Reinvestment Proposal
-   description: Recommend reinvestment options for a client with maturing positions
+pipeline:
+   reinvestment:
+      request_contract:
+         required:
+            - client_id
+            - source_product_id
+         optional:
+            - market_outlook_text
 
-request_contract:
-   required:
-      - client_id
-      - source_product_id
-   optional:
-      - market_outlook_text
-      - max_alternatives
-      - response_mode
+      execution:
+         model: deepseek_tool
+         output:
+            folder: runs/reinvestment_proposal
+            filename_template: reinvestment_{client_id}_{date}.md
+         logging:
+            level: INFO
 
-execution:
-   model: deepseek_tool
-   output:
-      folder: runs/reinvestment_proposal
-      filename_template: reinvestment_{client_id}_{date}.md
-   logging:
-      level: INFO
-      trace_input_resolution: true
+      inputs:
+         - id: proposal_instructions
+           source: file
+           paths:
+              - data/planbot/reinvestment_proposal/proposal_instructions/*.md
+           prompt_section: references
+           required: true
 
-inputs:
-   - id: proposal_instructions
-      source: file
-      paths:
-         - data/planbot/reinvestment_proposal/proposal_instructions/*.md
-      prompt_section: references
-      required: true
+         - id: section_guides
+           source: file
+           paths:
+              - data/planbot/shared/proposal_section_instructions/*.md
+           prompt_section: references
+           required: true
 
-   - id: section_guides
-      source: file
-      paths:
-         - data/planbot/shared/proposal_section_instructions/*.md
-      prompt_section: references
-      required: true
+         - id: general_guidelines
+           source: file
+           paths:
+              - data/planbot/shared/common/general_guideline.md
+           prompt_section: references
+           required: true
 
-   - id: general_guidelines
-      source: file
-      paths:
-         - data/planbot/shared/common/general_guideline.md
-      prompt_section: references
-      required: true
+         - id: financial_needs_guidelines
+           source: file
+           paths:
+              - data/planbot/shared/financial_needs/*.md
+           prompt_section: references
+           required: true
 
-   - id: financial_needs_guidelines
-      source: file
-      paths:
-         - data/planbot/shared/financial_needs/*.md
-      prompt_section: references
-      required: true
+         - id: client_profile
+           required: true
+           # source/api + prompt_section/decision_context come from input_defaults.by_id;
+           # composite: always includes holdings table
 
-   - id: client_profile
-      source: api
-      prompt_section: decision_context
-      required: true
-      # composite: always includes holdings table
+         - id: investor_readiness_score
+           # optional — omitted required defaults to false
 
-   - id: investor_readiness_score
-      source: api
-      prompt_section: decision_context
-      required: false
+         - id: wallet_inflow_event
+           required: true
 
-   - id: wallet_inflow_event
-      source: api
-      prompt_section: decision_context
-      required: true
+         - id: product_catalog
+           required: true
+           # composite: always includes suggested product + holdings in catalog + alternatives
 
-   - id: product_catalog
-      source: api
-      prompt_section: decision_context
-      required: true
-      # composite: always includes suggested product + holdings in catalog + alternatives
+         - id: product_fitness_scores
 
-   - id: product_fitness_scores
-      source: api
-      prompt_section: decision_context
-      required: false
+         - id: market_outlook
+           source_priority:
+              - request.market_outlook_text
+              - data/planbot/shared/market_outlook/*.md
 
-   - id: market_outlook
-      source: runtime_or_static
-      source_priority:
-         - request.market_outlook_text
-         - data/planbot/shared/market_outlook/*.md
-      prompt_section: decision_context
-      required: false
+      input_policy:
+         missing_data:
+            default: error
+         per_input:
+            investor_readiness_score: skip
+            market_outlook: fallback_to_static
+            product_fitness_scores: skip
 
-input_policy:
-   missing_data:
-      default: error
-   per_input:
-      investor_readiness_score: skip
-      market_outlook: fallback_to_static
-      product_fitness_scores: skip
+      prompt_packaging:
+         decision_context_order:
+            - client_profile
+            - investor_readiness_score
+            - wallet_inflow_event
+            - product_catalog
+            - product_fitness_scores
+            - market_outlook
+         references_order:
+            - proposal_instructions
+            - section_guides
+            - general_guidelines
+            - financial_needs_guidelines
+         llm_payload:
+            include_references: true
 
-prompt_packaging:
-   decision_context_order:
-      - client_profile
-      - investor_readiness_score
-      - wallet_inflow_event
-      - product_catalog
-      - product_fitness_scores
-      - market_outlook
-   references_order:
-      - proposal_instructions
-      - section_guides
-      - general_guidelines
-      - financial_needs_guidelines
-   llm_payload:
-      task_prompt_from: proposal_instructions
-      include_references: true
-
-quality_gates:
-   required_sections:
-      - client_profile
-      - wallet_inflow_event
-      - product_catalog
-   fail_on_missing_required_input: true
+      quality_gates:
+         required_sections:
+            - client_profile
+            - wallet_inflow_event
+            - product_catalog
+         fail_on_missing_required_input: true
 ```
 
 ### 6.3 Why this model is intuitive
@@ -554,7 +558,6 @@ prompt_packaging:
       - suggested_products_and_rationale
       - market_outlook
    llm_payload:
-      task_prompt_from: proposal_instructions
       include_references: true
 
 quality_gates:
@@ -751,6 +754,13 @@ The following tests serve as the minimal regression gate for the pipeline refact
 - When the matcher pipeline runs
 - Then the run completes with `status: warning` and `NO_ELIGIBLE_CLIENTS` in warnings
 
+**AC-13-07 Legacy YAML sections removed**
+- Given the pipeline migration is complete
+- When `config/config_planbot.yaml` is loaded
+- Then no top-level sections named `reinvestment_proposal`, `product_investor_matching`, `product_opportunity_proposal`, or `portfolio_review` exist
+- And proposal configuration for these types lives exclusively under the top-level `pipeline` block
+- And `stock_analysis_proposal` may remain as a legacy section until it is migrated to the pipeline
+
 ---
 
 ## 14. Resolved design choices captured in this spec
@@ -771,3 +781,37 @@ The following architectural choices are now explicitly embodied in this specific
 ## 16. Cross-Reference
 
 This concept is aligned with the operational proposal metadata in `config/config_planbot.yaml` and uses YAML as the primary contract for proposal behavior. The document is intended to stand on its own as the canonical design reference for the pipeline model and should remain the basis for subsequent implementation planning.
+
+---
+
+## 17. Implementation review — outstanding objectives
+
+The following spec objectives are not yet implemented (beyond the legacy-section removal captured in AC-13-07). These are tracked here for discussion before the next implementation pass.
+
+2. **Quality gates are not enforced at runtime.** Section 6.6 / 5.4 require `fail_on_missing_required_input` to reject a run when a required input is missing. `prepare()` never calls `_check_quality_gates`; only the unused `run()` does.
+
+3. **Stage E–F (compilation/generation + output/diagnostics) is dead code.** Section 5.5 / 5.6. Wrappers only call `prepare()`; `run()` and `_run_pipeline()` (the temp-config-file path) are unreachable.
+
+4. **`portfolio_review` is not migrated.** `portfolio_review.py` still uses `proposal_name="portfolio_review"` with no `PipelineEngine` integration.
+
+5. **Stable error codes never reach API callers.** Section 9.2 / 10 define `{code, message}` errors, but wrappers catch exceptions and emit `str(exc)`, so the structured contract is lost.
+
+6. **Stage F diagnostics are discarded.** `_resolve_inputs` builds a `resolution_log`, but `prepare()` drops it; per-input outcomes are not surfaced to the output.
+
+## 18. Implementation review — overlooked spec issues
+
+The following are internal inconsistencies or gaps in the specification itself, identified during implementation review.
+
+A. **§6.5 "Compact YAML pattern" and §6.5.1 are stale.** They still show the old `schema_version` + `proposal: {id, name}` object form, contradicting the `pipeline:`-keyed §6.1/§6.2.
+
+B. **§6.4.1 "one-to-one `id` ↔ API ↔ formatter" is violated.** `investor_readiness_score`, `wallet_inflow_event`, and `product_fitness_scores` have no standalone formatter or API path — they are baked into the composite `format_client_and_holdings` / `format_product_catalog`. The engine's `_resolve_api` marks them "pending" with no real resolution path.
+
+C. **`decision_context_order` / `references_order` are decorative.** The YAML declares them and `prepare()` returns them, but the wrappers rebuild their own section maps by iterating `pipeline_engine.inputs` with hardcoded id→legacy-section logic. The ordering fields have no effect.
+
+D. **`request_contract.required` is never validated.** Section 5.1 "Stage A: Intake and validation" is unimplemented — `prepare()` does not check that required seed IDs (`client_id`, `source_product_id`, …) are present.
+
+E. **`input_policy.missing_data.default: error` cannot fire for `api` inputs.** API inputs are marked `pending` (not `error`), so a `default: error` policy is meaningless for them; it only guards `file` / `runtime_or_static`.
+
+F. **The `api:/resolved/` single-slash convention is fragile.** The engine stores `api:/resolved/{id}` (Path normalizes `//` → `/`), wrappers send `api://resolved/{id}`, and the merged resolvers do `.replace("//", "/")`. Overloading the `api://` scheme is brittle; a dedicated prefix would be cleaner.
+
+G. **§8 omits `portfolio_review`.** It lists only three proposal types, yet AC-13-07 and the YAML include `portfolio_review`. Inconsistent scope.

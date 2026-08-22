@@ -371,3 +371,79 @@ def test_crawl_uses_default_markdown_generator(monkeypatch):
     # Standard (non-CF) domains must NOT install the CF challenge hook
     assert "after_goto" not in captured.get("hooks", {}), "CF hook should not be set for non-CF domains"
 
+
+# ── ProductSearchTool ──────────────────────────────────────────────────────
+
+
+def test_build_tool_instance_supports_product_search():
+    tool = crew_workflow._build_tool_instance("ProductSearch")
+    assert tool.name == "ProductSearch"
+
+
+def test_product_search_tool_normal_flow(monkeypatch):
+    from src.planbot import product_search_tool
+    import src.integrations.product_tool as product_tool
+
+    captured: dict[str, object] = {}
+
+    def fake_search_similar(query=None, **kwargs):
+        captured["query"] = query
+        captured["kwargs"] = kwargs
+        return {"results": [{"product_id": "PROD001", "name": "Foo", "similarity_score": 0.9}]}
+
+    monkeypatch.setattr(product_tool, "search_similar", fake_search_similar)
+
+    tool = product_search_tool.ProductSearchTool()
+    out = tool._run(product_type="bond_fund", top_n=5, risk_rating_hard_filter=False)
+
+    parsed = json.loads(out)
+    assert parsed["results"][0]["product_id"] == "PROD001"
+    assert captured["query"] == {"product_type": "bond_fund"}
+    assert captured["kwargs"]["top_n"] == 5
+    assert captured["kwargs"]["risk_rating_hard_filter"] is False
+
+
+def test_product_search_tool_by_product_id(monkeypatch):
+    from src.planbot import product_search_tool
+    import src.integrations.product_tool as product_tool
+
+    captured: dict[str, object] = {}
+
+    def fake_search_by_product_id(product_id):
+        captured["product_id"] = product_id
+        return {"product_id": product_id, "name": "Anchor"}
+
+    def fake_search_similar_to_product(product, **kwargs):
+        captured["anchor"] = product
+        captured["kwargs"] = kwargs
+        return {"results": [{"product_id": "PROD002", "similarity_score": 0.8}]}
+
+    monkeypatch.setattr(product_tool, "search_by_product_id", fake_search_by_product_id)
+    monkeypatch.setattr(product_tool, "search_similar_to_product", fake_search_similar_to_product)
+
+    tool = product_search_tool.ProductSearchTool()
+    out = tool._run(product_id="PROD001")
+
+    parsed = json.loads(out)
+    assert parsed["results"][0]["product_id"] == "PROD002"
+    assert captured["anchor"]["product_id"] == "PROD001"
+
+
+def test_product_search_tool_requires_query_or_product_id():
+    from src.planbot import product_search_tool
+
+    tool = product_search_tool.ProductSearchTool()
+    with pytest.raises(ValueError, match="query attribute"):
+        tool._run()
+
+
+def test_product_search_tool_unknown_product_id(monkeypatch):
+    from src.planbot import product_search_tool
+    import src.integrations.product_tool as product_tool
+
+    monkeypatch.setattr(product_tool, "search_by_product_id", lambda product_id: None)
+
+    tool = product_search_tool.ProductSearchTool()
+    with pytest.raises(ValueError, match="Product not found"):
+        tool._run(product_id="MISSING")
+
