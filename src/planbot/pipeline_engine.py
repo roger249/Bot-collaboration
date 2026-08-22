@@ -94,6 +94,7 @@ class _InputDef:
     required: bool = False
     source_priority: list[str] = field(default_factory=list)
     description: str = ""
+    include: dict[str, bool] = field(default_factory=dict)
 
 
 def get_input_descriptions(config_path: str | Path) -> dict[str, str]:
@@ -253,6 +254,11 @@ class PipelineEngine:
             errors=errors,
         )
 
+    def load(self) -> "PipelineEngine":
+        """Load config and merge defaults (populates ``.inputs``) without resolving inputs."""
+        self._load_and_validate()
+        return self
+
     def prepare(
         self,
         *,
@@ -374,6 +380,9 @@ class PipelineEngine:
                 "description",
                 id_defaults.get("description", global_defaults.get("description", "")),
             )
+            include = inp.get("include") or {}
+            if not isinstance(include, dict):
+                include = {}
 
             resolved_def = _InputDef(
                 id=input_id,
@@ -383,6 +392,7 @@ class PipelineEngine:
                 required=required,
                 source_priority=inp.get("source_priority", []),
                 description=description or "",
+                include=include,
             )
             self._inputs.append(resolved_def)
 

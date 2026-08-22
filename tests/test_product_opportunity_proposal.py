@@ -292,8 +292,9 @@ class TestAutomatchPromptAndFields(unittest.TestCase):
                           "prompt must reference the new section when content provided")
 
         # Verify every reference section is present in the markdown
-        for sec in ["proposal_instructions_and_format", "guidelines",
-                     "client_profiles", "market_outlook", "product_catalogs"]:
+        for sec in ["proposal_instructions", "section_guides",
+                     "general_guidelines", "financial_needs_guidelines",
+                     "client_profile", "product_catalog", "market_outlook"]:
             self.assertIn(
                 f"### {sec}", snapshot,
                 f"section '{sec}' must be present in prompt snapshot",

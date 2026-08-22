@@ -6,13 +6,13 @@ portfolio_review_task:
     Generate a complete investment advice proposal using the provided reference materials.
 
     The reference materials are provided at the end of the user prompt as structured JSON with these sections:
-    - clients: client profile and existing holdings
-    - product_catalog: Contains file about the investable assets available for recommendation
-    - The reference materials are provided at the end of the user prompt as structured JSON:
-      - proposal_instruction_and_format: Instructions and format for generating the proposal
-      - client_profiles: list of client profile and existing holdings
-      - product_catalogs: investable assets available for recommendation
-      - guidelines:  A list of the common needs.  Feel free to put up potential needs not in the list.
+    - proposal_instructions: Instructions and format for generating the proposal
+    - section_guides: Detail instructions for specific sections
+    - client_profile: list of client profile and existing holdings
+    - product_catalog: investable assets available for recommendation
+    - general_guidelines: strict guidelines on all tasks
+    - financial_needs_guidelines: a list of the common needs.  Feel free to put up potential needs not in the list.
+    - market_outlook: market outlook and sentiment analysis
     - Observe the guideline ../shared/common/general_guideline.md
 
   expected_output: |

@@ -63,7 +63,7 @@ Given `pipeline.<id>`, the CrewAI definition is derived as:
 
 This makes `id` the single source of truth — no `task` / `crewai_config_folder` / `llm_model` keys appear in `pipeline.*` at all.
 
-> **Note — `overwrite_output_folder`.** Today `product_opportunity_proposal` sets `overwrite_output_folder: true` (the others default `false`). To preserve that behavior, `overwrite_output_folder` is declared per proposal under `execution.output.overwrite` rather than derived. `product_opportunity` keeps `overwrite: true`; the other three omit it (default `false`).
+> **Note — `overwrite_output_folder`.** Today `product_opportunity_proposal` sets `overwrite_output_folder: true` (the others default `false`). To preserve that behavior with minimal repetition, `overwrite_output_folder` defaults to `false` in code (no YAML key), and only `product_opportunity` declares `execution.output.overwrite: true`. This mirrors the `input_defaults` pattern: a single default, overridden only where it differs.
 
 ### 4.2 Id alignment (rename to make derivation work)
 
@@ -98,7 +98,7 @@ pipeline:
       output:
         folder: runs/product_investor_matching
         filename_template: product_investor_matching_{date}.md
-        overwrite: false          # default; omit unless true (product_opportunity)
+        # overwrite defaults to false; only product_opportunity sets true
     inputs: [ ... ]                                  # already present; each input = one section
     input_policy: { ... }
     prompt_packaging: { ... }
@@ -108,6 +108,39 @@ pipeline:
 The top-level `product_investor_matching` / `reinvestment_proposal` / `product_opportunity_proposal` / `portfolio_review` sections are then **deleted**. `stock_analysis_proposal` is a CLI `run-planbot`-only proposal with no `pipeline` entry — out of scope for this refactor (left as-is).
 
 There is **no separate `reference_sections` block**. Each input id is its own LLM-visible section, and the section `purpose` is the input's `description` (from `input_defaults.by_id.<id>.description`). This collapses the old grouped vocabulary (`proposal_instructions_and_format`, `guidelines`, `client_profiles`, `product_catalogs`) to 1:1 input-id sections.
+
+### 4.3.1 Composite inputs — `include` flags
+
+Two inputs are **composite** (their rendered content bundles sub-parts produced by the API resolver/formatter), rather than standalone sections. The sub-parts are controlled by an `include` boolean map so the YAML transparently reflects how the prompt is assembled:
+
+| Composite input | Sub-parts (includeable) |
+| --- | --- |
+| `client_profile` | `investor_readiness_score`, `wallet_inflow_event` |
+| `product_catalog` | `product_fitness_scores` |
+
+```yaml
+inputs:
+  - id: client_profile
+    required: true
+    include:
+      investor_readiness_score: true   # render IRS section inside client_profile
+      wallet_inflow_event: true        # render wallet inflow section inside client_profile
+  - id: product_catalog
+    required: true
+    include:
+      product_fitness_scores: true     # render PFS table inside product_catalog
+```
+
+The sub-part ids (`investor_readiness_score`, `wallet_inflow_event`, `product_fitness_scores`) are **not** standalone inputs — they are removed from `inputs`, `decision_context_order`, `quality_gates.required_sections`, and `input_defaults.by_id`. Their presence is expressed solely by the `include` flag on their parent composite input. Omitted flags default to `false`.
+
+Per-proposal current behavior (encoded verbatim into `include`):
+
+| Proposal | `client_profile.investor_readiness_score` | `client_profile.wallet_inflow_event` | `product_catalog.product_fitness_scores` |
+| --- | --- | --- | --- |
+| `reinvestment` | `true` | `true` | `true` |
+| `product_opportunity` | — (absent) | — (absent) | `true` |
+| `product_investor_matching` | `true` | — (absent) | `true` |
+| `portfolio_review` | — (absent) | — (absent) | — (absent) |
 
 ### 4.4 Single-step delivery (config consolidation + section normalization)
 
@@ -122,7 +155,7 @@ This is **behavior-changing** (the prompt vocabulary changes), so it requires th
 
 | # | Step | Files |
 | --- | --- | --- |
-| 1 | Add CrewAI keys (`task`, `crewai_config_folder`, `llm_model`) + `matcher` to each `pipeline.<id>` section in `config_planbot.yaml`. Dedupe `llm_model` vs `execution.model` (keep one). Add `overwrite_output_folder` → `execution.output.overwrite` (per §4.1). | `config/config_planbot.yaml` |
+| 1 | Add `matcher` (matching only) + `execution.output.overwrite` (product_opportunity only) to `pipeline.<id>`. `task`/`crewai_config_folder`/`output_*`/`llm_model` are **derived** from the id (§4.1), so they are not added. | `config/config_planbot.yaml` |
 | 2 | Teach `load_planbot_config` to read from `pipeline.<id>` (deriving `task` / `crewai_config_folder` / `output_root` / `output_filename` per §4.1), so `run_crew_planbot(proposal_name="<pipeline id>")` works without a top-level section. | `src/planbot/config.py` |
 | 3 | Update the four integrations to source the CrewAI definition from the pipeline config instead of `load_planbot_config`'s top-level lookup. Consolidate on `PipelineEngine.run()` (with an explicit resolver factory) rather than `.prepare()` + a direct `run_crew_planbot` call — removes the dead `_run_pipeline()` temp-config hack. | `reinvestment_proposal.py`, `product_opportunity_proposal.py`, `product_investor_matcher.py`, `portfolio_review.py` |
 | 4 | Repoint `matcher` reads to `pipeline.product_investor_matching.matcher`. | `product_investor_matcher.py:107`, `:758` |

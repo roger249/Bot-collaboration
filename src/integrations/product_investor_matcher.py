@@ -104,10 +104,17 @@ def product_investor_matcher(
 
     # ── 1. Load matcher config ──────────────────────────────────────────
     planbot_config = _load_planbot_config()
-    matcher_cfg = planbot_config.get("product_investor_matching", {}).get("matcher", {})
+    matcher_cfg = (planbot_config.get("pipeline", {}).get("product_investor_matching") or {}).get("matcher", {})
     readiness_pool_size = matcher_cfg.get("readiness_pool_size", 15)
     llm_client_pool_size = matcher_cfg.get("llm_client_pool_size", 5)
     app_config = load_config(str(_ROOT_DIR / "config" / "config.yaml"))
+
+    # Load pipeline config once — exposes input defs including composite
+    # `include` flags that drive formatter assembly below.
+    pipeline_engine = PipelineEngine(
+        app_config, config_path=_CONFIG_PATH, proposal_id="product_investor_matching"
+    ).load()
+    include_by_id = {inp.id: inp.include for inp in pipeline_engine.inputs}
 
     # ── 2. Fetch clients ────────────────────────────────────────────────
     client_criteria = client_selection or {}
@@ -291,68 +298,27 @@ def product_investor_matcher(
         fitness_results=fitness_results,
         market_outlook=market_outlook,
         semantic_embedding_available=semantic_available_all,
+        include_by_id=include_by_id,
     )
 
     # ── 7. Run product_investor_matching via CrewAI ─────────────────────
     try:
         matching_output_path = f"runs/product_investor_matching/product_investor_matching_{run_id}.md"
 
-        # ── Resolve pipeline inputs and merge into api_resolver ────────
-        pipeline_engine = PipelineEngine(
-            app_config, config_path=_CONFIG_PATH, proposal_id="product_investor_matching"
-        )
-        prep = pipeline_engine.prepare(
-            client_selection=client_selection,
-            product_ids=product_ids,
-            market_outlook_text=market_outlook,
-        )
-
-        if prep.file_reference_docs:
-            _orig = api_resolver
-            _dm = {str(d.path): d for d in prep.file_reference_docs}
-
-            def _merged_matcher(path: str) -> ReferenceDocument:
-                _nm = path.replace("//", "/")
-                if _nm in _dm:
-                    return _dm[_nm]
-                return _orig(path)
-
-            api_resolver = _merged_matcher
-
-        _sm: dict[str, list[str]] = {
-            "proposal_instructions_and_format": [],
-            "guidelines": [],
-            "client_profiles": [API_CLIENT_PROFILE],
-            "product_catalogs": [API_PRODUCT_CATALOG],
-            "market_outlook": [],
+        # ── Build runtime reference overrides for api-backed sections ──
+        # File/static sections are loaded by load_planbot_config from pipeline config.
+        reference_overrides: dict[str, list[str]] = {
+            "client_profile": [API_CLIENT_PROFILE],
+            "product_catalog": [API_PRODUCT_CATALOG],
         }
-        for inp in pipeline_engine.inputs:
-            pid = inp.id
-            if pid in ("proposal_instructions", "section_guides"):
-                _sm["proposal_instructions_and_format"].append(f"api://resolved/{pid}")
-            elif pid in ("general_guidelines", "financial_needs_guidelines"):
-                _sm["guidelines"].append(f"api://resolved/{pid}")
-            elif pid == "market_outlook":
-                if prep.resolved_inputs.get("market_outlook"):
-                    _sm["market_outlook"].append(f"api://resolved/{pid}")
-
-        reference_overrides = {k: v for k, v in _sm.items() if v}
         if market_outlook is not None:
             reference_overrides["market_outlook"] = [API_MARKET_OUTLOOK]
-
-        _section_purposes: dict[str, str] = {}
-        for inp in pipeline_engine.inputs:
-            if inp.id == "client_profile" and inp.description:
-                _section_purposes["client_profiles"] = inp.description
-            elif inp.id == "product_catalog" and inp.description:
-                _section_purposes["product_catalogs"] = inp.description
 
         crew_result = run_crew_planbot(
             app_config=app_config,
             config_path=str(_CONFIG_PATH),
             proposal_name="product_investor_matching",
             runtime_reference_overrides=reference_overrides,
-            runtime_section_purposes=_section_purposes,
             output_file_override=matching_output_path,
             api_resolver=api_resolver,
         )
@@ -758,7 +724,7 @@ def _normalize_matching_context_markers(section: str) -> str:
 def _load_matcher_extract_config() -> dict[str, str]:
     """Load extract_patterns from config_planbot.yaml."""
     planbot_config = yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8")) or {}
-    matcher_cfg = planbot_config.get("product_investor_matching", {}).get("matcher", {})
+    matcher_cfg = (planbot_config.get("pipeline", {}).get("product_investor_matching") or {}).get("matcher", {})
     return matcher_cfg.get("extract_patterns", {})
 
 
@@ -774,11 +740,13 @@ def _build_matcher_api_resolver(
     fitness_results: dict[str, list[dict]],
     market_outlook: str | None,
     semantic_embedding_available: bool = True,
+    include_by_id: dict[str, dict] | None = None,
 ) -> Callable[[str], ReferenceDocument]:
     """Build an API resolver that returns ReferenceDocuments from pre-fetched data.
 
     Serves: ``client_profile``, ``holdings``, ``product_catalog`` api:// paths.
     """
+    include_by_id = include_by_id or {}
     # Pre-fetch client data
     clients_data: dict[str, dict] = {}
     for cid in eligible_client_ids:
@@ -795,17 +763,21 @@ def _build_matcher_api_resolver(
 
     def _format_client_profile(cid: str) -> str:
         cp = clients_data.get(cid, {})
-        readiness = readiness_map.get(cid, {})
-        rank_str = f"{eligible_client_ids.index(cid) + 1}/{len(eligible_client_ids)}" if cid in eligible_client_ids else None
-        irs_text = format_irs_section(
-            total=readiness.get("total_score"),
-            rank=rank_str,
-            cash_drag=readiness.get("s_cash"),
-            concentration=readiness.get("s_concentration"),
-            active_management=readiness.get("s_active"),
-            life_stage=readiness.get("s_lifestage"),
-        )
-        return format_client_and_holdings(cp, extra_sections=[irs_text] if irs_text else [])
+        extra: list[str] = []
+        if include_by_id.get("client_profile", {}).get("investor_readiness_score"):
+            readiness = readiness_map.get(cid, {})
+            rank_str = f"{eligible_client_ids.index(cid) + 1}/{len(eligible_client_ids)}" if cid in eligible_client_ids else None
+            irs_text = format_irs_section(
+                total=readiness.get("total_score"),
+                rank=rank_str,
+                cash_drag=readiness.get("s_cash"),
+                concentration=readiness.get("s_concentration"),
+                active_management=readiness.get("s_active"),
+                life_stage=readiness.get("s_lifestage"),
+            )
+            if irs_text:
+                extra.append(irs_text)
+        return format_client_and_holdings(cp, extra_sections=extra)
 
     def _format_product_catalog() -> str:
         products = [products_data[pid] for pid in product_universe if pid in products_data]
@@ -814,6 +786,8 @@ def _build_matcher_api_resolver(
             include_suggested_section=False,
             include_holdings_section=False,
         )
+        if not include_by_id.get("product_catalog", {}).get("product_fitness_scores"):
+            return content
         # Append fitness score summary per client (uses shared format_pfs_table)
         lines = [content, "", "## Product Fitness Scores (per client)", ""]
         for cid in eligible_client_ids:

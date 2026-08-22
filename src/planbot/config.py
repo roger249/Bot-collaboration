@@ -66,6 +66,95 @@ def _resolve_crewai_folder(
     return common_folder
 
 
+def _try_load_pipeline_config(
+    data: dict[str, Any],
+    root_dir: Path,
+    proposal_name: str,
+) -> PlanBotConfig | None:
+    """Build a PlanBotConfig from ``pipeline.<proposal_name>``.
+
+    CrewAI keys (`task`, `crewai_config_folder`, `output_root`,
+    `output_filename`, `llm_model`) are derived from the pipeline id; the
+    only proposal-specific blocks are ``matcher``, ``execution``, ``inputs``,
+    ``input_policy``, ``prompt_packaging``, and ``quality_gates``.
+
+    Returns None when ``proposal_name`` is not a pipeline id (legacy top-level
+    sections are handled by the original path).
+    """
+    pipeline = data.get("pipeline") or {}
+    proposal = pipeline.get(proposal_name)
+    if proposal is None:
+        return None
+
+    execution = proposal.get("execution") or {}
+    output_cfg = execution.get("output") or {}
+
+    # Reference sections: 1:1 input id → section; purpose = description.
+    input_defaults = data.get("input_defaults") or {}
+    by_id = input_defaults.get("by_id") or {}
+    reference_sections: dict[str, ReferenceSectionConfig] = {}
+    for inp in proposal.get("inputs") or []:
+        input_id = inp.get("id")
+        if not input_id:
+            continue
+        id_defaults = by_id.get(input_id) or {}
+        description = str(
+            inp.get("description") or id_defaults.get("description") or ""
+        )
+        # File inputs: globs = `paths`.  runtime_or_static inputs: globs = the
+        # static (non-`request.`) entries of `source_priority`.  api inputs:
+        # empty globs (the wrapper injects them via runtime_reference_overrides).
+        globs = [str(p) for p in (inp.get("paths") or [])]
+        if not globs:
+            source_priority = inp.get("source_priority") or []
+            globs = [
+                str(g) for g in source_priority
+                if not str(g).startswith("request.")
+            ]
+        reference_sections[input_id] = ReferenceSectionConfig(
+            purpose=description, globs=globs
+        )
+
+    # Resolve llm_model → provider/model/temperature via top-level llm_models.
+    model_key = execution.get("model")
+    llm_models = data.get("llm_models") or {}
+    llm_entry = llm_models.get(str(model_key)) if model_key else None
+    if not llm_entry:
+        available = ", ".join(sorted(llm_models.keys())) or "<none>"
+        raise ValueError(
+            f"Unknown model '{model_key}' in pipeline.{proposal_name}.execution.model. "
+            f"Available llm_models: {available}"
+        )
+
+    common_raw = data.get("common") or {}
+    shared_no_web_note_file_raw = common_raw.get("shared_no_web_note_file")
+    shared_no_web_note_file = (
+        _resolve(root_dir, str(shared_no_web_note_file_raw))
+        if shared_no_web_note_file_raw
+        else None
+    )
+    get_client_product_from_restapi = bool(
+        common_raw.get("get_client_product_from_restapi", False)
+    )
+
+    return PlanBotConfig(
+        name=proposal_name,
+        task_name=f"{proposal_name}_task",
+        output_root=_resolve(root_dir, str(output_cfg.get("folder", f"runs/{proposal_name}"))),
+        overwrite_output_folder=bool(output_cfg.get("overwrite", False)),
+        output_filename=str(output_cfg.get("filename_template", f"{proposal_name}.md")),
+        crewai_config_folder=_resolve(root_dir, f"data/planbot/{proposal_name}/crewai"),
+        reference_sections=reference_sections,
+        shared_no_web_note_file=shared_no_web_note_file,
+        provider=str(llm_entry.get("provider", "")).strip(),
+        model=str(llm_entry.get("model", "")).strip(),
+        temperature=float(llm_entry.get("temperature", 0.2)),
+        web_access=True,
+        urls=[],
+        get_client_product_from_restapi=get_client_product_from_restapi,
+    )
+
+
 def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: str = "portfolio_review") -> PlanBotConfig:
     """Load PlanBot config from config_planbot.yaml.
     
@@ -76,6 +165,11 @@ def load_planbot_config(config_path: str | Path, root_dir: Path, proposal_name: 
     """
     path = Path(config_path).resolve()
     data: dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+
+    # Pipeline-id path: derive CrewAI config from pipeline.<proposal_name>.
+    pipeline_config = _try_load_pipeline_config(data, root_dir, proposal_name)
+    if pipeline_config is not None:
+        return pipeline_config
 
     # Pydantic models for full validation of the PlanBot YAML
     class LLMEntry(BaseModel):

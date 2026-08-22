@@ -256,6 +256,13 @@ def _process_one_target(
         "source_product_id": source_product_id,
     }
 
+    # Load pipeline config once — exposes input defs including composite
+    # `include` flags that drive formatter assembly below.
+    pipeline_engine = PipelineEngine(
+        app_config, config_path=_CONFIG_PATH, proposal_id="reinvestment"
+    ).load()
+    include_by_id = {inp.id: inp.include for inp in pipeline_engine.inputs}
+
     # Data is fetched through the adapter-backed functions below.  With
     # ``get_client_product_from_restapi: false`` these hit DuckDB directly; with
     # ``true`` they use the REST adapter → bank simulator.  Enrichment
@@ -292,31 +299,38 @@ def _process_one_target(
 
     item["candidate_products"] = candidate_products
 
-    # ── Compute PFS for suggested + alternatives ──────────────
-    pfs_scores, semantic_available = compute_pfs_for_products(
-        client_id=client_id,
-        suggested_product_id=source_product_id,
-        alternative_products=candidate_products,
-    )
+    # ── Compute PFS (only when product_catalog includes it) ──────
+    cp_include = include_by_id.get("client_profile", {})
+    catalog_include = include_by_id.get("product_catalog", {})
+    pfs_scores = None
+    semantic_available = None
+    if catalog_include.get("product_fitness_scores"):
+        pfs_scores, semantic_available = compute_pfs_for_products(
+            client_id=client_id,
+            suggested_product_id=source_product_id,
+            alternative_products=candidate_products,
+        )
 
-    # ── Build api_resolver with IRS + wallet inflow extras ──────
+    # ── Build api_resolver with composite extras per `include` flags ──
     cp = client_profile
     extra: list[str] = []
-    irs_text = format_irs_section(
-        total=cp.get("investor_readiness_score"),
-        cash_drag=cp.get("cash_score"),
-        concentration=cp.get("concentration_score"),
-        active_management=cp.get("active_score"),
-        life_stage=cp.get("life_stage_score"),
-    )
-    if irs_text:
-        extra.append(irs_text)
-    extra.append(
-        "# Wallet Inflow Event\n\n"
-        "The following product is maturing:\n"
-        f"- Product ID: {source_product_id}\n"
-        f"- Product Name: {source_product.get('name', source_product_id)}"
-    )
+    if cp_include.get("investor_readiness_score"):
+        irs_text = format_irs_section(
+            total=cp.get("investor_readiness_score"),
+            cash_drag=cp.get("cash_score"),
+            concentration=cp.get("concentration_score"),
+            active_management=cp.get("active_score"),
+            life_stage=cp.get("life_stage_score"),
+        )
+        if irs_text:
+            extra.append(irs_text)
+    if cp_include.get("wallet_inflow_event"):
+        extra.append(
+            "# Wallet Inflow Event\n\n"
+            "The following product is maturing:\n"
+            f"- Product ID: {source_product_id}\n"
+            f"- Product Name: {source_product.get('name', source_product_id)}"
+        )
 
     # Resolve holdings to full product dicts for the catalog.
     holdings_products = resolve_holdings_to_products(cp.get("holdings", []))
@@ -332,60 +346,12 @@ def _process_one_target(
         ),
     )
 
-    # ── Pipeline resolve: merge pre-resolved file content into api_resolver ──
-    pipeline_engine = PipelineEngine(
-        app_config, config_path=_CONFIG_PATH, proposal_id="reinvestment"
-    )
-    prep = pipeline_engine.prepare(
-        client_id=client_id,
-        source_product_id=source_product_id,
-    )
-
-    # Merge pre-resolved file docs into the api_resolver
-    if prep.file_reference_docs:
-        _original = api_resolver
-        _doc_map = {str(d.path): d for d in prep.file_reference_docs}
-
-        def _merged_resolver(path: str) -> ReferenceDocument:
-            _normalized = path.replace("//", "/")
-            if _normalized in _doc_map:
-                return _doc_map[_normalized]
-            return _original(path)
-
-        api_resolver = _merged_resolver
-
-    # Build runtime_reference_overrides: map pipeline inputs → legacy sections.
-    # For reinvestment, the legacy sections are:
-    #   proposal_instructions_and_format, guidelines, client_profiles, product_catalogs
-    _section_map: dict[str, list[str]] = {
-        "proposal_instructions_and_format": [],
-        "guidelines": [],
-        "client_profiles": [],
-        "product_catalogs": [],
+    # ── Build runtime reference overrides for the api-backed sections ──
+    # File/static sections are loaded by load_planbot_config from pipeline config.
+    runtime_overrides: dict[str, list[str]] = {
+        "client_profile": [API_CLIENT_PROFILE],
+        "product_catalog": [API_PRODUCT_CATALOG],
     }
-    _section_purposes: dict[str, str] = {}
-    for inp in pipeline_engine.inputs:
-        pid = inp.id
-        if pid in ("proposal_instructions", "section_guides"):
-            _section_map["proposal_instructions_and_format"].append(f"api://resolved/{pid}")
-        elif pid in ("general_guidelines", "financial_needs_guidelines", "market_outlook"):
-            _section_map["guidelines"].append(f"api://resolved/{pid}")
-        elif pid == "client_profile":
-            _section_map["client_profiles"].append(API_CLIENT_PROFILE)
-            if inp.description:
-                _section_purposes["client_profiles"] = inp.description
-        elif pid == "product_catalog":
-            _section_map["product_catalogs"].append(API_PRODUCT_CATALOG)
-            if inp.description:
-                _section_purposes["product_catalogs"] = inp.description
-
-    runtime_overrides = {k: v for k, v in _section_map.items() if v}
-    LOGGER.info(
-        "Pipeline resolved: %d pre-resolved files, %d API inputs. "
-        "Runtime override sections: %s",
-        len(prep.file_reference_docs), len(prep.api_input_ids),
-            list(runtime_overrides.keys()),
-        )
 
     # ── Build client-scoped output filename ────────────────────────────
     output_override = f"runs/reinvestment_proposal/reinvestment_proposal_{client_id}.md"
@@ -394,9 +360,8 @@ def _process_one_target(
     crew_result = run_crew_planbot(
         app_config=app_config,
         config_path=str(_CONFIG_PATH),
-        proposal_name="reinvestment_proposal",
+        proposal_name="reinvestment",
         runtime_reference_overrides=runtime_overrides,
-        runtime_section_purposes=_section_purposes,
         output_file_override=output_override,
         api_resolver=api_resolver,
     )

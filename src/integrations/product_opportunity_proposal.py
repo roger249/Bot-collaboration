@@ -300,6 +300,14 @@ def _process_one_pair(
         "product_id": product_id,
     }
 
+    # Load pipeline config once — exposes input defs including composite
+    # `include` flags that drive formatter assembly below.
+    app_config = load_config(str(_ROOT_DIR / "config" / "config.yaml"))
+    pipeline_engine = PipelineEngine(
+        app_config, config_path=_CONFIG_PATH, proposal_id="product_opportunity"
+    ).load()
+    include_by_id = {inp.id: inp.include for inp in pipeline_engine.inputs}
+
     # Data is fetched through the adapter-backed functions below.  With
     # ``get_client_product_from_restapi: false`` these hit DuckDB directly; with
     # ``true`` they use the REST adapter → bank simulator.  Enrichment and
@@ -337,12 +345,15 @@ def _process_one_pair(
     # Resolve holdings to full product dicts for the catalog
     holdings_products = resolve_holdings_to_products(client_data.get("holdings", []))
 
-    # Compute PFS (suggested + alternatives) for the LLM prompt
-    pfs_scores, semantic_available = compute_pfs_for_products(
-        client_id=str(client_data.get("client_id", "")),
-        suggested_product_id=str(product_data.get("product_id", "")),
-        alternative_products=alt_products,
-    )
+    # Compute PFS (only when product_catalog includes it)
+    pfs_scores = None
+    semantic_available = None
+    if include_by_id.get("product_catalog", {}).get("product_fitness_scores"):
+        pfs_scores, semantic_available = compute_pfs_for_products(
+            client_id=str(client_data.get("client_id", "")),
+            suggested_product_id=str(product_data.get("product_id", "")),
+            alternative_products=alt_products,
+        )
 
     # Build rationale/context document
     rationale_content = ""
@@ -388,82 +399,29 @@ def _process_one_pair(
         for r in pfs_result.get("results", []):
             product_fitness_scores[r["product_id"]] = r["fitness_score"]
 
-    # ── Invoke CrewAI ───────────────────────────────────────────────
-    app_config = load_config(str(_ROOT_DIR / "config" / "config.yaml"))
+    # ── Build runtime reference overrides for api-backed sections ──
+    # File/static sections are loaded by load_planbot_config from pipeline config.
+    runtime_overrides: dict[str, list[str]] = {
+        "client_profile": [API_CLIENT_PROFILE],
+        "product_catalog": [API_PRODUCT_CATALOG],
+    }
+    if market_outlook is not None:
+        runtime_overrides["market_outlook"] = [API_MARKET_OUTLOOK]
+    if suggested_products_and_rationale or rationale:
+        runtime_overrides["suggested_products_and_rationale"] = [
+            API_SUGGESTED_PRODUCTS_AND_RATIONALE
+        ]
+
     output_path = (
         f"runs/product_opportunity_proposal/"
         f"product_opportunity_{datetime.now().strftime('%H%M%S')}_{client_id}.md"
     )
 
-    # ── Resolve pipeline inputs and merge into api_resolver ───────────
-    pipeline_engine = PipelineEngine(
-        app_config, config_path=_CONFIG_PATH, proposal_id="product_opportunity"
-    )
-    prep = pipeline_engine.prepare(
-        client_id=client_id,
-        product_id=product_id,
-        market_outlook_text=market_outlook,
-        suggested_products_and_rationale=suggested_products_and_rationale,
-    )
-
-    # Merge pre-resolved file docs into api_resolver
-    if prep.file_reference_docs:
-        _original_po = api_resolver
-        _doc_map_po = {str(d.path): d for d in prep.file_reference_docs}
-
-        def _merged_resolver_po(path: str) -> ReferenceDocument:
-            _n = path.replace("//", "/")
-            if _n in _doc_map_po:
-                return _doc_map_po[_n]
-            return _original_po(path)
-
-        api_resolver = _merged_resolver_po
-
-    # Build runtime overrides: map pipeline inputs → legacy sections
-        _section_map_po: dict[str, list[str]] = {
-            "proposal_instructions_and_format": [],
-            "guidelines": [],
-            "client_profiles": [],
-            "product_catalogs": [],
-            "market_outlook": [],
-            "suggested_products_and_rationale": [],
-        }
-        _section_purposes_po: dict[str, str] = {}
-        for inp in pipeline_engine.inputs:
-            pid = inp.id
-            if pid in ("proposal_instructions", "section_guides"):
-                _section_map_po["proposal_instructions_and_format"].append(f"api://resolved/{pid}")
-            elif pid in ("general_guidelines", "financial_needs_guidelines"):
-                _section_map_po["guidelines"].append(f"api://resolved/{pid}")
-            elif pid == "market_outlook":
-                if prep.resolved_inputs.get("market_outlook"):
-                    _section_map_po["market_outlook"].append(f"api://resolved/{pid}")
-            elif pid == "suggested_products_and_rationale":
-                if prep.resolved_inputs.get("suggested_products_and_rationale"):
-                    _section_map_po["suggested_products_and_rationale"].append(f"api://resolved/{pid}")
-            elif pid == "client_profile":
-                _section_map_po["client_profiles"].append(API_CLIENT_PROFILE)
-                if inp.description:
-                    _section_purposes_po["client_profiles"] = inp.description
-            elif pid == "product_catalog":
-                _section_map_po["product_catalogs"].append(API_PRODUCT_CATALOG)
-                if inp.description:
-                    _section_purposes_po["product_catalogs"] = inp.description
-
-        overrides = {k: v for k, v in _section_map_po.items() if v}
-        LOGGER.info(
-            "Pipeline resolved: %d pre-resolved files, %d API inputs. "
-            "Runtime override sections: %s",
-            len(prep.file_reference_docs), len(prep.api_input_ids),
-            list(overrides.keys()),
-        )
-
     fit_result = run_crew_planbot(
         app_config=app_config,
         config_path=str(_CONFIG_PATH),
-        proposal_name="product_opportunity_proposal",
-        runtime_reference_overrides=overrides,
-        runtime_section_purposes=_section_purposes_po,
+        proposal_name="product_opportunity",
+        runtime_reference_overrides=runtime_overrides,
         output_file_override=output_path,
         api_resolver=api_resolver,
     )

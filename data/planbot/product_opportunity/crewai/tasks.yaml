@@ -1,4 +1,4 @@
-product_opportunity_proposal_task:
+product_opportunity_task:
 
   agent: investment_advisor_agent
 
@@ -8,11 +8,13 @@ product_opportunity_proposal_task:
     - Do not increase holding for any product other than the suggested product.
     - The YAML blocks under each heading in the reference materials are INSTRUCTIONS to you.  The markdown text outside YAML blocks is EXAMPLE OUTPUT showing the expected format.  Follow the instructions, not the example values.
     - The reference materials are provided at the end of the user prompt as structured JSON:
-      - proposal_instructions_and_format: Instructions and format for generating the proposal
-      - client_profiles: Client profile and existing holdings
+      - proposal_instructions: Instructions and format for generating the proposal
+      - section_guides: Detail instructions for specific sections
+      - client_profile: Client profile and existing holdings
       - suggested_products_and_rationale: Matcher analysis with fitness scores, funding source, client needs, and rationale for the recommended product
-      - product_catalogs: Investable assets available for recommendation (primary + alternative products)
-      - guidelines: Common financial needs and general guidelines.  You may surface additional needs not in the list.
+      - product_catalog: Investable assets available for recommendation (primary + alternative products)
+      - general_guidelines: Strict guidelines on all tasks
+      - financial_needs_guidelines: Common financial needs.  You may surface additional needs not in the list.
     - Observe the guideline ../shared/common/general_guideline.md
     - Output sections MUST follow the exact heading hierarchy defined in proposal_instructions/proposal_format.md: H1 title, H2 major sections, H3 sub-sections.
   

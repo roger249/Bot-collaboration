@@ -24,10 +24,13 @@ product_investor_matching_task:
     - Consider having more than 5% of the portfolio in cash or cash equivalent for liquidity purpose.
     - Uses 5y CAGR to for the future expected return.  For product with much higher 1y, 3y CAGR than 5y CAGR, please provide justification on the sustainability of the return.
     - The reference materials are provided at the end of the user prompt as structured JSON that includes below:
-      - proposal_instruction_and_format: Instructions and format for generating the proposal
-      - client_profiles: list of client profile and existing holdings.  Each client profile includes their Investor Readiness Score with component breakdown — use this to prioritize clients most likely to transact.
-      - product_catalogs: investable assets available for recommendation.  Includes per-client Product Fitness Scores tables at the end — use these as quantitative input for product selection.
-      - guidelines:  A list of the common needs and market outlook.  
+      - proposal_instructions: Instructions and format for generating the proposal
+      - section_guides: Detail instructions for specific sections
+      - client_profile: list of client profile and existing holdings.  Each client profile includes their Investor Readiness Score with component breakdown — use this to prioritize clients most likely to transact.
+      - product_catalog: investable assets available for recommendation.  Includes per-client Product Fitness Scores tables at the end — use these as quantitative input for product selection.
+      - general_guidelines: strict guidelines on all tasks
+      - financial_needs_guidelines: a list of the common needs
+      - market_outlook: market outlook  
     - Observe the guideline ../shared/common/general_guideline.md
 
   expected_output: |

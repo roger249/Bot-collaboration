@@ -66,8 +66,8 @@ def test_reinvestment_proposals_propose_reinvestment_for_maturing_holdings(propo
 
     prompt_snapshot = _read_latest_prompt_snapshot("reinvestment_proposal", started_at)
     assert "# Prompt Snapshot" in prompt_snapshot
-    assert "### client_profiles" in prompt_snapshot
-    assert "### product_catalogs" in prompt_snapshot
+    assert "### client_profile" in prompt_snapshot
+    assert "### product_catalog" in prompt_snapshot
     assert "Wallet Inflow Event" in prompt_snapshot
 
     print(f"Output: {len(item['markdown_output'])} chars at {item['output_path']}")
@@ -149,8 +149,8 @@ def test_multi_client_reinvestment(proposal_server, fake_llm):
         print(f"  {cid}: {len(item['markdown_output'])} chars at {item['output_path']}")
 
     prompt_snapshot = _read_latest_prompt_snapshot("reinvestment_proposal", started_at)
-    assert "### client_profiles" in prompt_snapshot
-    assert "### product_catalogs" in prompt_snapshot
+    assert "### client_profile" in prompt_snapshot
+    assert "### product_catalog" in prompt_snapshot
 
 
 # ---------------------------------------------------------------------------
@@ -182,8 +182,8 @@ def test_product_opportunity_proposal(proposal_server):
 
     prompt_snapshot = _read_latest_prompt_snapshot("product_opportunity_proposal", started_at)
     assert "# Prompt Snapshot" in prompt_snapshot
-    assert "### client_profiles" in prompt_snapshot
-    assert "### product_catalogs" in prompt_snapshot
+    assert "### client_profile" in prompt_snapshot
+    assert "### product_catalog" in prompt_snapshot
     assert "PB-HK-000001-8" in prompt_snapshot
     assert "PROD016" in prompt_snapshot
 
@@ -215,8 +215,8 @@ def test_product_opportunity_proposal_automatch(proposal_server):
 
     matcher_prompt = _read_latest_prompt_snapshot("product_investor_matching", started_at)
     proposal_prompt = _read_latest_prompt_snapshot("product_opportunity_proposal", started_at)
-    assert "### client_profiles" in matcher_prompt
-    assert "### product_catalogs" in matcher_prompt
+    assert "### client_profile" in matcher_prompt
+    assert "### product_catalog" in matcher_prompt
     assert "PB-HK-000001-8" in proposal_prompt
     assert "PROD016" in proposal_prompt
 

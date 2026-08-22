@@ -16,6 +16,9 @@ services:
       - BANK_API_KEY=${BANK_API_KEY:-}
       # Set to "0" to run the proposal server only (no bundled data simulator).
       - START_DATA_SERVER=${START_DATA_SERVER:-true}
+      # Pin the HuggingFace cache so sentence-transformers downloads the
+      # embedding model (e5-base-v2) into the named volume below.
+      - HF_HOME=/app/hf-cache
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
       interval: 30s
@@ -26,6 +29,12 @@ services:
       # Persist logs and generated proposal artifacts.
       - ./log:/app/log
       - ./runs:/app/runs
+      # Lazy-downloaded embedding model weights (e5-base-v2, ~440 MB).
+      # Docker-managed: no host path needed, survives container recreation.
+      - hf-cache:/app/hf-cache
       # Optional overrides; leave empty to use defaults baked in image.
       - ./config-override:/app/config-override:ro
       - ./data-override:/app/data-override:ro
+
+volumes:
+  hf-cache:

@@ -54,115 +54,6 @@ stock_analysis_proposal:
   llm_model: poe_gemini 
   # deepseek_tool (deepseek-v4-flash) ignores CrewAI ReAct stop-sequences and returns Final Answer immediately
 
-reinvestment_proposal:
-  task: reinvestment_proposal_task
-  data_root: data/planbot/reinvestment_proposal
-  crewai_config_folder: data/planbot/reinvestment_proposal/crewai
-  references_root: data/planbot/reinvestment_proposal
-  output_root: runs/reinvestment_proposal
-  output_filename: reinvestment_proposal.md
-  references:
-    proposal_instructions_and_format:
-      - name: proposal_instructions/*.md
-        purpose: Instructions and format for generating the proposal
-      - name: ../shared/proposal_section_instructions/*.md
-        purpose: Detail instructions for specific sections in the proposal
-    guidelines: 
-      - name: ../shared/financial_needs/*.md
-        purpose: Guidelines on financial needs analysis and common financial needs
-      - name: ../shared/common/general_guideline.md
-        purpose: Strict guidelines on all tasks.  No exception allowed
-      - name: ../shared/market_outlook/*.md
-        purpose: Market outlook and sentiment analysis for the recommendation
-    # client_profiles and product_catalogs are retrieved via API at runtime
-    # (see input_defaults.by_id).  No file globs needed here.
-  llm_model: deepseek_tool
-
-product_investor_matching:
-  task: product_investor_matching_task
-  data_root: data/planbot/product_investor_matching
-  crewai_config_folder: data/planbot/product_investor_matching/crewai
-  references_root: data/planbot/product_investor_matching
-  output_root: runs/product_investor_matching
-  output_filename: product_investor_matching.md
-  matcher:
-    readiness_pool_size: 15  # Pool size of top readiness clients to pass into fitness scoring
-    llm_client_pool_size: 5  # Number of clients to pass into the LLM for final recommendation generation
-    extract_patterns:
-      # Regex patterns for _extract_top_pairs() markdown parsing.
-      # Externalized so prompt format changes don't require code edits.
-      client_id_re: "[A-Z]{2}-[A-Z]{2}-\\d{6,7}-\\d"
-      product_id_re: "[A-Za-z]+[-.]?[\\w.-]+"
-      amount_re: "USD\\s+\\$?([\\d,]+(?:\\.\\d+)?)"
-      alternative_product_re: "-\\s+([A-Za-z]+[-.]?[\\w.-]+)\\s"
-  references:
-    proposal_instructions_and_format:
-      - name: proposal_instructions/*.md
-        purpose: Instructions and format for generating the proposal
-      - name: ../shared/proposal_section_instructions/[ref]*.md
-        purpose: Detail instructions for specific sections in the proposal
-    guidelines: 
-      - name: ../shared/financial_needs/*.md
-        purpose: Guidelines on financial needs analysis and common financial needs
-      - name: ../shared/common/general_guideline.md
-        purpose: Strict guidelines on all tasks.  No exception allowed
-      - name: ../shared/market_outlook/*.md
-        purpose: Market outlook and sentiment analysis for the recommendation
-    market_outlook:
-      - name: ../shared/market_outlook/*.md
-        purpose: Market outlook and sentiment analysis for the recommendation
-  llm_model: deepseek_tool
-
-product_opportunity_proposal:
-  task: product_opportunity_proposal_task
-  output_root: runs/product_opportunity_proposal
-  output_filename: product_opportunity_proposal.md
-  overwrite_output_folder: true
-  crewai_config_folder: data/planbot/product_opportunity_proposal/crewai
-  references_root: data/planbot/product_opportunity_proposal
-  references:
-    proposal_instructions_and_format:
-      - name: proposal_instructions/*.md
-        purpose: Instructions and format for generating the proposal
-      - name: ../shared/proposal_section_instructions/*.md
-        purpose: Detail instructions for specific sections in the proposal
-    guidelines: 
-      - name: ../shared/financial_needs/*.md
-        purpose: Guidelines on financial needs analysis and common financial needs
-      - name: ../shared/common/general_guideline.md
-        purpose: Strict guidelines on all tasks.  No exception allowed
-    suggested_products_and_rationale:
-      # Matcher per-client analysis markdown — resolved from product_investor_matcher
-      # output at runtime, but may also be supplied as a file glob by the RM.
-      - name: suggested_products/*.md
-        purpose: Suggested products, fitness scores, funding sources, client needs analysis, and rationale for the recommended product
-    market_outlook:
-      - name: ../shared/market_outlook/*.md
-        purpose: Market outlook and sentiment analysis for the recommendation
-  llm_model: deepseek_tool
-
-portfolio_review:
-  task: portfolio_review_task
-  data_root: data/planbot/portfolio_review
-  crewai_config_folder: data/planbot/portfolio_review/crewai
-  references_root: data/planbot/portfolio_review
-  output_root: runs/portfolio_review
-  output_filename: portfolio_review.md
-  references:
-    proposal_instructions_and_format:
-      - name: proposal_instructions/*.md
-        purpose: Instructions and format for generating the proposal
-      - name: ../shared/proposal_section_instructions/*.md
-        purpose: Detail instructions for specific sections in the proposal
-      - name: ../shared/market_outlook/*.md
-        purpose: Market outlook and sentiment analysis for the recommendation
-    guidelines: 
-      - name: ../shared/financial_needs/*.md
-        purpose: Guidelines on financial needs analysis and common financial needs
-      - name: ../shared/common/general_guideline.md
-        purpose: Strict guidelines on all tasks.  No exception allowed
-  llm_model: deepseek_tool
-
 llm_models:
   deepseek_tool:
     provider: deepseek
@@ -317,26 +208,22 @@ input_defaults:
     prompt_section: references
     required: false
   by_id:
+    proposal_instructions:
+      description: Instructions and format for generating the proposal
+    section_guides:
+      description: Detail instructions for specific sections in the proposal
+    general_guidelines:
+      description: Strict guidelines on all tasks.  No exception allowed
+    financial_needs_guidelines:
+      description: Guidelines on financial needs analysis and common financial needs
     client_profile:
       source: api
       prompt_section: decision_context
       description: Client profile, wallet inflow event, and existing holdings for the target client
-    investor_readiness_score:
-      source: api
-      prompt_section: decision_context
-      description: Investor readiness score breakdown for the client
-    wallet_inflow_event:
-      source: api
-      prompt_section: decision_context
-      description: Maturing product and expected inflow amount for the reinvestment
     product_catalog:
       source: api
       prompt_section: decision_context
       description: Investable products for the recommendation (suggested product, holdings, alternatives, and fitness scores)
-    product_fitness_scores:
-      source: api
-      prompt_section: decision_context
-      description: Product fitness scores across candidate products
     market_outlook:
       source: runtime_or_static
       description: Market outlook and sentiment analysis for the recommendation
@@ -355,6 +242,17 @@ pipeline:
       optional:
         - client_selection
         - market_outlook_text
+
+    matcher:                                        # proposal-specific tuning (matcher only)
+      readiness_pool_size: 15  # Pool size of top readiness clients to pass into fitness scoring
+      llm_client_pool_size: 5  # Number of clients to pass into the LLM for final recommendation generation
+      extract_patterns:
+        # Regex patterns for _extract_top_pairs() markdown parsing.
+        # Externalized so prompt format changes don't require code edits.
+        client_id_re: "[A-Z]{2}-[A-Z]{2}-\\d{6,7}-\\d"
+        product_id_re: "[A-Za-z]+[-.]?[\\w.-]+"
+        amount_re: "USD\\s+\\$?([\\d,]+(?:\\.\\d+)?)"
+        alternative_product_re: "-\\s+([A-Za-z]+[-.]?[\\w.-]+)\\s"
 
     execution:
       model: deepseek_tool
@@ -391,8 +289,12 @@ pipeline:
         required: true
       - id: client_profile
         required: true
+        include:
+          investor_readiness_score: true
       - id: product_catalog
         required: true
+        include:
+          product_fitness_scores: true
       - id: market_outlook
         source_priority:
           - request.market_outlook_text
@@ -417,7 +319,6 @@ pipeline:
         - general_guidelines
         - financial_needs_guidelines
       llm_payload:
-        task_prompt_from: proposal_instructions
         include_references: true
 
     quality_gates:
@@ -447,7 +348,7 @@ pipeline:
       - id: proposal_instructions
         source: file
         paths:
-          - data/planbot/reinvestment_proposal/proposal_instructions/*.md
+          - data/planbot/reinvestment/proposal_instructions/*.md
         prompt_section: references
         required: true
       - id: section_guides
@@ -470,12 +371,13 @@ pipeline:
         required: true
       - id: client_profile
         required: true
-      - id: investor_readiness_score
-      - id: wallet_inflow_event
-        required: true
+        include:
+          investor_readiness_score: true
+          wallet_inflow_event: true
       - id: product_catalog
         required: true
-      - id: product_fitness_scores
+        include:
+          product_fitness_scores: true
       - id: market_outlook
         source_priority:
           - request.market_outlook_text
@@ -485,17 +387,12 @@ pipeline:
       missing_data:
         default: error
       per_input:
-        investor_readiness_score: skip
         market_outlook: fallback_to_static
-        product_fitness_scores: skip
 
     prompt_packaging:
       decision_context_order:
         - client_profile
-        - investor_readiness_score
-        - wallet_inflow_event
         - product_catalog
-        - product_fitness_scores
         - market_outlook
       references_order:
         - proposal_instructions
@@ -503,13 +400,11 @@ pipeline:
         - general_guidelines
         - financial_needs_guidelines
       llm_payload:
-        task_prompt_from: proposal_instructions
         include_references: true
 
     quality_gates:
       required_sections:
         - client_profile
-        - wallet_inflow_event
         - product_catalog
       fail_on_missing_required_input: true
 
@@ -528,6 +423,7 @@ pipeline:
       output:
         folder: runs/product_opportunity_proposal
         filename_template: product_opportunity_{client_id}_{date}.md
+        overwrite: true       # legacy overwrite_output_folder: true
       logging:
         level: INFO
 
@@ -535,7 +431,7 @@ pipeline:
       - id: proposal_instructions
         source: file
         paths:
-          - data/planbot/product_opportunity_proposal/proposal_instructions/*.md
+          - data/planbot/product_opportunity/proposal_instructions/*.md
         prompt_section: references
         required: true
       - id: section_guides
@@ -558,14 +454,14 @@ pipeline:
         required: true
       - id: client_profile
         required: true
-      - id: investor_readiness_score
       - id: product_catalog
         required: true
-      - id: product_fitness_scores
+        include:
+          product_fitness_scores: true
       - id: suggested_products_and_rationale
         source_priority:
           - request.suggested_products_and_rationale
-          - data/planbot/product_opportunity_proposal/suggested_products/*.md
+          - data/planbot/product_opportunity/suggested_products/*.md
       - id: market_outlook
         source_priority:
           - request.market_outlook_text
@@ -583,9 +479,7 @@ pipeline:
     prompt_packaging:
       decision_context_order:
         - client_profile
-        - investor_readiness_score
         - product_catalog
-        - product_fitness_scores
       references_order:
         - proposal_instructions
         - section_guides
@@ -594,7 +488,6 @@ pipeline:
         - suggested_products_and_rationale
         - market_outlook
       llm_payload:
-        task_prompt_from: proposal_instructions
         include_references: true
 
     quality_gates:
@@ -672,7 +565,6 @@ pipeline:
         - general_guidelines
         - financial_needs_guidelines
       llm_payload:
-        task_prompt_from: proposal_instructions
         include_references: true
 
     quality_gates:

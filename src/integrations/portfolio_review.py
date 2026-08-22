@@ -13,12 +13,12 @@ from pathlib import Path
 
 from src.integrations.client_api import search_by_id
 from src.planbot.crew_workflow import run_crew_planbot
-from src.planbot.pipeline_engine import get_input_descriptions
 from src.planbot.input_loader import (
     API_CLIENT_PROFILE,
     API_PRODUCT_CATALOG,
 )
 from src.shared.config_loader import load_config
+from src.shared.market_outlook_utils import API_MARKET_OUTLOOK
 from src.shared.resolver_formatters import (
     build_proposal_resolver,
     format_client_and_holdings,
@@ -73,21 +73,12 @@ def propose_portfolio_review(
         market_outlook=market_outlook,
     )
 
-    client_doc = api_resolver(API_CLIENT_PROFILE)
-    product_doc = api_resolver(API_PRODUCT_CATALOG)
-
     runtime_reference_overrides: dict[str, list[str]] = {
-        "client_profiles": [client_doc.content],
-        "product_catalogs": [product_doc.content],
+        "client_profile": [API_CLIENT_PROFILE],
+        "product_catalog": [API_PRODUCT_CATALOG],
     }
     if market_outlook:
-        runtime_reference_overrides["market_outlook"] = [market_outlook]
-
-    descriptions = get_input_descriptions(_CONFIG_PATH)
-    runtime_section_purposes = {
-        "client_profiles": descriptions.get("client_profile", ""),
-        "product_catalogs": descriptions.get("product_catalog", ""),
-    }
+        runtime_reference_overrides["market_outlook"] = [API_MARKET_OUTLOOK]
 
     # ── Invoke CrewAI ───────────────────────────────────────────────
     date_tag = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -102,7 +93,6 @@ def propose_portfolio_review(
         config_path=str(_CONFIG_PATH),
         proposal_name="portfolio_review",
         runtime_reference_overrides=runtime_reference_overrides,
-        runtime_section_purposes=runtime_section_purposes,
         output_file_override=output_file_override,
         api_resolver=api_resolver,
     )
