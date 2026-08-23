@@ -13,7 +13,7 @@ This POC inverts that responsibility: the LLM performs product matching itself b
 1. Expose `search_similar` as a CrewAI tool so the LLM can query the product catalog directly.
 2. Build a new proposal (`llm_product_matcher`) modeled on `product_investor_matching` that hands the LLM the product-query tool.
 3. Produce a matcher report in the **same format** as the current `product_investor_matching` output, by reusing its format template and task prompt.
-4. Expose a batch API endpoint (like `/api/v1/product-opportunity-proposal-automatch`) that takes `client_id` directly, so **no investor-readiness (IRS) filter** is required.
+4. Expose a single-client API endpoint (`/api/v1/llm-product-matcher`) that takes `client_id` directly, so **no investor-readiness (IRS) filter** is required.
 
 ## 3. Scope
 
@@ -24,7 +24,7 @@ This POC inverts that responsibility: the LLM performs product matching itself b
 - Client profiles + holdings still fed as references (readiness score, RM notes, holdings), but **no PFS tables**.
 - Externalized config (tool params, model, output paths) in YAML.
 - **Output format parity** with the current `product_investor_matching` (reuse `proposal_format.md` + task prompt).
-- A batch API endpoint (`/api/v1/llm-product-matcher`) taking `client_id` directly — **no IRS/readiness filter** (see §6).
+- A single-client API endpoint (`/api/v1/llm-product-matcher`) taking `client_id` directly — **no IRS/readiness filter** (see §6).
 - **Web search** via **SerpApi** (search engine) + **`ScrapeWebsiteTool`** (URL fetch) — see §4.2.
 
 ### Out of scope (POC)
@@ -81,15 +81,16 @@ Configuration (externalized to YAML, per AC5):
 | `serpapi_search_tool` | `config_planbot.yaml` | enabled | Toggle to disable web search. |
 | `scrape_website_tool` | `config_planbot.yaml` | enabled | Toggle for the URL fetcher. |
 
-Registration & attachment:
+Registration & attachment (tool identifier standardized to **`SerpApiGoogleSearchTool`**, matching the CrewAI class name):
 
-- `SerpApiGoogleSearchTool`: add a branch in `_build_tool_instance()` in `src/planbot/crew_workflow.py` (like `ProductSearch`); the `serpapi` package is required (the tool imports `from serpapi import Client`) and must be added to `pyproject.toml`.
-- `ScrapeWebsiteTool`: **already registered** in `_build_tool_instance()` — no code change, only a `tools:` entry.
-- Both are listed under the agent's `tools` field in `data/planbot/llm_product_matcher/crewai/agents.yaml` alongside `ProductSearch`.
+- **Dependency**: the `serpapi` package is required (the tool imports `from serpapi import Client`). Install with `uv add serpapi` (adds `serpapi` to `pyproject.toml` and `uv.lock`). Docker builds are unaffected — they install from the same `pyproject.toml` / `uv.lock` via uv, so no separate Docker step is needed.
+- **`_build_tool_instance()` branch**: key `"SerpApiGoogleSearchTool"` (mirror `ProductSearch`). Because `SerpApiBaseTool.__init__` raises on a missing `SERPAPI_API_KEY` (and prompts interactively on a missing `serpapi` package), the branch must **env-guard + import-guard** so a missing key/package fails fast with a clear error instead of hanging the server (mirror the `Firecrawl` branch's env check and the `Crawl4AI` branch's import check).
+- **`ScrapeWebsiteTool`**: **already registered** in `_build_tool_instance()` — no code change, only a `tools:` entry.
+- **Attachment**: `tools: [ProductSearch, SerpApiGoogleSearchTool, ScrapeWebsiteTool]` under the agent in `data/planbot/llm_product_matcher/crewai/agents.yaml`. (CrewAI's internal display `name` remains its default `"Google Search"`; the config/registration identifier is `SerpApiGoogleSearchTool`.)
 
 ## 5. New proposal definition
 
-Add a `llm_product_matcher` section to `config/config_planbot.yaml` under `pipeline:`, modeled on `product_investor_matching` (the **current** pipeline format, not the legacy top-level `references` block). The CrewAI keys (`task`, `crewai_config_folder`, `output_root`, `output_filename`, `llm_model`) are **derived from the pipeline id** per the config-consolidation rule, so they are not repeated in YAML:
+Add a `llm_product_matcher` section to `config/config_planbot.yaml` under `pipeline:`, modeled on `product_investor_matching` (the **current** pipeline format, not the legacy top-level `references` block). The CrewAI keys (`task`, `crewai_config_folder`, `output_root`, `output_filename`, `llm_model`) are **derived from the pipeline id** by `_try_load_pipeline_config()` in `src/planbot/config.py`, so they are not repeated in YAML:
 
 ```yaml
 pipeline:
@@ -101,7 +102,7 @@ pipeline:
       model: deepseek_tool
       output:
         folder: runs/llm_product_matcher
-        filename_template: llm_product_matcher_{date}.md
+        filename_template: llm_product_matcher_{date}.md   # `{date}` → YYYYMMDD_HHMMSS timestamp (e.g. 20260822_193859)
       logging:
         level: INFO
 
@@ -135,6 +136,7 @@ pipeline:
         include:
           investor_readiness_score: true   # readiness score + RM notes fed as reference (no IRS gate)
       - id: market_outlook
+        source: runtime_or_static   # explicit — drives the `sources`/`default_source` resolution
         sources:
           request: request.market_outlook_text
           static: data/planbot/shared/market_outlook/*.md
@@ -158,6 +160,8 @@ pipeline:
 
 > `client_profile` keeps `investor_readiness_score: true` (the score is shown as reference context) but **no IRS gate** is applied — `client_id` is supplied directly. There is **no `product_catalog` input**: product discovery is done entirely by the LLM through `ProductSearch`, so no pre-rendered product universe (and hence no PFS table) is fed as a reference.
 
+> `filename_template` placeholders are resolved by `_resolve_output_filename()` (`src/planbot/workflow.py`): `{model}` → sanitized model name, and `{date}` → a `YYYYMMDD_HHMMSS` timestamp (e.g. `20260822_193859`). The default template above therefore yields `llm_product_matcher_20260822_193859.md`. (`{date}` support is a small code addition to `_resolve_output_filename()`.)
+
 CrewAI config files (new folder, no shared-file edit to existing matcher):
 
 - `data/planbot/llm_product_matcher/crewai/agents.yaml`
@@ -176,6 +180,8 @@ The output must follow `data/planbot/product_investor_matching/proposal_instruct
 3. **Alternative suggestion** — `####` sub-section under each client.
 4. **References** — per the section-instruction reference.
 
+> **Single client**: with `client_id` (single), the report contains exactly one Executive-Summary row and one per-client detail section — the shared template's "≤10 clients, descending buying score" instructions apply to a single-element set.
+
 Because there is **no PFS** in this POC, the `Fitness Score` column is **decided by the LLM**: it produces its own suitability estimate on a **1–5** scale (mirroring the buying-score scale) **and must provide a justification** for the score in the rationale. The 1–5 scale is intentional for this POC and differs from the current PFS `fitness_score` (0–10) — it is a standalone LLM judgement, not a re-expression of the pre-computed PFS. The section/column structure is preserved by reusing the same `proposal_format.md` + task prompt; the task prompt's PFS-specific guidance is replaced with an instruction for the LLM to derive and justify its own 1–5 fitness score from `search_similar` results, client profile, and market outlook.
 
 The POC is exposed through the endpoint defined in §6 (which invokes `run_crew_planbot(proposal_name="llm_product_matcher", ...)` under the hood).
@@ -184,7 +190,7 @@ The POC is exposed through the endpoint defined in §6 (which invokes `run_crew_
 
 ### 6.1 `POST /api/v1/llm-product-matcher`
 
-Modeled on `/api/v1/product-opportunity-proposal-automatch`, but the client is supplied **directly** (`client_id`), so the investor-readiness (IRS) scorecard gate is **not** applied. The client profile is fetched via the client API and fed to the LLM as references. The product universe is **not an input** — the LLM discovers products itself through `ProductSearch` (which searches the full DuckDB catalog directly), so there is no `product_source` / `product_ids` request field.
+A **single-client** endpoint (modeled on `/api/v1/portfolio-review` and `/api/v1/product-opportunity-proposal`): the client is supplied **directly** (`client_id`), so the investor-readiness (IRS) scorecard gate is **not** applied. The client profile is fetched via the client API and fed to the LLM as references. The product universe is **not an input** — the LLM discovers products itself through `ProductSearch` (which searches the full DuckDB catalog directly), so there is no `product_source` / `product_ids` request field.
 
 Request (`LlmProductMatcherRequest`):
 
@@ -193,28 +199,28 @@ Request (`LlmProductMatcherRequest`):
 | `client_id` | `str` | Yes | Client ID to match, passed directly — **no IRS filter**. |
 | `market_outlook` | `str` | No | Market narrative for LLM context; falls back to file-globbed market outlook. |
 | `market_outlook_source` | enum `request` \| `static` | No | Where the market narrative comes from. Default `request` (via yaml `default_source`). `static` ignores `market_outlook` and always uses the static default. |
-| `top_n` | `int` (1–20) | No | Output limit after descending buying-score sort. Default `3`. |
+| `output_prompt_to_llm` | `bool` | No | When `true`, return the exact `prompt_snapshot.md` content (task prompt + full reference sections) in the response. Default `false`. |
 
 Response (`LlmProductMatcherResponse`):
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `run_id` | `str` | Run identifier. |
-| `summary` | `object` | `status`, `total_clients`, `top_n_returned`. |
+| `client_id` | `str` | Echo of the matched client. |
 | `output_filename` | `str` | File path where the report markdown was persisted (canonical common output — see `proposal_api_common_contract.md`). |
-| `llm_product_matcher_markdown` | `str` | The aggregate report markdown (shared `product_investor_matching` format). Distinct aggregate-level field, mirroring `product_investor_matching_markdown` — **not** the per-proposal `proposal_markdown`. |
+| `proposal_markdown` | `str` | The generated report markdown (shared `product_investor_matching` format). |
+| `prompt_to_llm` | `str` | **Optional** — present only when `output_prompt_to_llm=true`. Exact `prompt_snapshot.md` content (task prompt + reference sections). |
 | `warnings` / `errors` | `list` | Diagnostic lists. |
 
 > `final_proposals` (extracted client×product pairs via `_extract_top_pairs`) is **not returned** in this POC — downstream parsing is out of scope (see §3). It will be added later, at which point each item will carry `client_id`, `product_id`, and the canonical `proposal_markdown` (mirrors `MatcherProposal`).
 
-This response conforms to the common output contract: the aggregate document is a distinct field (`llm_product_matcher_markdown`, mirroring `product_investor_matching_markdown`) alongside the canonical `output_filename`.
+This response follows the single-client proposal standard from `proposal_api_common_contract.md` (`proposal_markdown` + `output_filename`), mirroring `portfolio-review` / `product-opportunity-proposal`.
 
 Flow (single request):
 
 1. Fetch the client profile + holdings by `client_id` (client API `search_by_id`).
 2. Build the reference payload (client profiles, guidelines, market outlook) — **no PFS, no IRS, no product universe**.
-3. Invoke `run_crew_planbot(proposal_name="llm_product_matcher", ...)` with the `ProductSearch`-armed agent (the LLM discovers products via `search_similar`).
-4. Return `output_filename` + the report markdown (`llm_product_matcher_markdown`).
+3. Invoke `run_crew_planbot(proposal_name="llm_product_matcher", ...)` with the agent armed with `ProductSearch` + `SerpApiGoogleSearchTool` + `ScrapeWebsiteTool` (the LLM discovers products via `search_similar` and researches context via web search).
+4. Return `output_filename` + `proposal_markdown` (the shared-format report), plus `prompt_to_llm` when `output_prompt_to_llm=true`.
 
 ## 7. Data flow
 
@@ -224,7 +230,7 @@ client_id (direct input) ──► client API search_by_id ──► client prof
         ▼
 LLM (CrewAI, llm_product_matcher agent)     [no IRS, no PFS]
    ├─ tools: ProductSearch  ──► search_similar ──► DuckDB/adapter product rows
-   ├─ tools: SerpApiSearch  ──► web search ──► ranked URLs
+   ├─ tools: SerpApiGoogleSearchTool  ──► web search ──► ranked URLs
    ├─ tools: ScrapeWebsite  ──► fetch URL content ──► market/product context
    └─ references: client_profiles (RM notes + holdings), guidelines, market outlook
         │
@@ -260,3 +266,28 @@ runs/llm_product_matcher/llm_product_matcher.md   (same format as product_invest
 - **DuckDuckGo (`DuckDuckGoSearchTool`)** — keyless, but requires adding `duckduckgo-search` + `langchain-community` dependencies and uses DDG's unofficial API (rate-limited/flaky).
 
 Decision deferred — not part of the current POC. When picked, register a new branch in `_build_tool_instance()` (Tavily / DuckDuckGo need a branch; `ScrapeWebsiteTool` already has one) and add the tool to `data/planbot/llm_product_matcher/crewai/agents.yaml` `tools`. The recommended shape remains a search engine + `ScrapeWebsiteTool`: the search engine discovers URLs, `ScrapeWebsiteTool` fetches their full content.
+
+### 10.2 SerpApi output formatting (Sprint 2)
+
+`SerpApiGoogleSearchTool._run` returns a `dict` (`results.as_dict()`); CrewAI stringifies it via `str(result)` into a Python dict literal in the Observation. It works as-is (LLMs read dict literals fine), so **no wrapper is required for the POC**. Deferred to Sprint 2:
+
+- If token bloat (SerpApi metadata: `related_searches`, `answer_box`, `knowledge_graph`, `inline_images`, …) measurably hurts, add a thin Markdown wrapper (matches `Crawl4AI`'s prose output), or a JSON wrapper for structured records.
+- Decision deferred until real-world quality/token usage is observed.
+
+### 10.3 Standardized debug output — "prompt sent to LLM" (proposal for all proposals)
+
+Existing state (verified):
+
+| Mechanism | Returns | Actual prompt? | Scope |
+| --- | --- | --- | --- |
+| `include_llm_input` | `build_llm_input()` structured JSON summary | No | reinvestment only |
+| `prompt_snapshot.md` (always written) | task prompt + full reference sections, Markdown | Yes (user-prompt side) | all proposals, but only as a file |
+| `include_debug_scores` | intermediate scorecard | No | reinvestment only |
+
+**Standardized design (agreed for this POC, to be promoted across all proposals):**
+
+1. **Flag name**: `output_prompt_to_llm: bool` (default `false`).
+2. **Response field**: `prompt_to_llm: str` — the **exact `prompt_snapshot.md` content** (task prompt + full reference sections). Good for most diagnostics; no new prompt-building (reuse the already-written snapshot).
+3. **Scope**: user-prompt side only (the `prompt_snapshot.md` scope). The CrewAI system prompt (role/goal/backstory + tool schemas) is **not** captured here.
+4. **Deeper diagnostics** (tool interaction, ReAct loop) are handled by the existing **CrewAI trace** — `log/crewai_trace.log` via the `crewai_trace` logger (`_tee_stdout_to_crewai_trace()` in `src/planbot/crew_workflow.py`). Not part of the API response.
+5. Apply uniformly to all proposal endpoints (deferred consolidation; see §9).
