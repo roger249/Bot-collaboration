@@ -5,7 +5,7 @@ Tests cover:
 - normal flow with valid targets
 - exception/missing data handling
 - response mode behavior
-- optional flags (include_llm_input, include_debug_scores)
+- output_prompt_to_llm flag
 """
 
 from __future__ import annotations
@@ -18,9 +18,7 @@ import pytest
 
 from src.integrations.reinvestment_proposal import (
     propose_reinvestment,
-    _build_debug_scores,
 )
-from src.planbot.workflow import build_llm_input, summarize_holdings
 
 
 SAMPLE_CLIENT = {
@@ -227,31 +225,32 @@ class TestReinvestmentProposal(unittest.TestCase):
     @patch("src.integrations.reinvestment_proposal.search_by_id")
     @patch("src.integrations.reinvestment_proposal.search_by_product_id")
     @patch("src.integrations.reinvestment_proposal.search_reinvestment_candidates")
-    def test_include_llm_input_true(self, mock_candidates, mock_product, mock_client):
-        """include_llm_input=True returns llm_input in output."""
+    def test_output_prompt_to_llm_true(self, mock_candidates, mock_product, mock_client):
+        """output_prompt_to_llm=True returns prompt_to_llm in output."""
         mock_client.return_value = SAMPLE_CLIENT
         mock_product.side_effect = lambda pid: (
             SAMPLE_PRODUCT if pid == "ETF-HYG" else SAMPLE_CANDIDATE_PRODUCT
         )
         mock_candidates.return_value = SAMPLE_CANDIDATES
 
-        result = propose_reinvestment(
-            reinvestment_targets=[
-                {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
-            ],
-            include_llm_input=True,
-        )
+        with patch("src.integrations.reinvestment_proposal.read_prompt_snapshot", return_value="# Prompt Snapshot\n") as mock_read:
+            result = propose_reinvestment(
+                reinvestment_targets=[
+                    {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
+                ],
+                output_prompt_to_llm=True,
+            )
 
         item = result["results_by_client"][0]
-        self.assertIn("llm_input", item)
-        self.assertIn("client_profile", item["llm_input"])
-        self.assertIn("candidate_products", item["llm_input"])
+        self.assertIn("prompt_to_llm", item)
+        self.assertEqual(item["prompt_to_llm"], "# Prompt Snapshot\n")
+        mock_read.assert_called_once()
 
     @patch("src.integrations.reinvestment_proposal.search_by_id")
     @patch("src.integrations.reinvestment_proposal.search_by_product_id")
     @patch("src.integrations.reinvestment_proposal.search_reinvestment_candidates")
-    def test_include_llm_input_false(self, mock_candidates, mock_product, mock_client):
-        """include_llm_input=False omits llm_input from output (default)."""
+    def test_output_prompt_to_llm_false(self, mock_candidates, mock_product, mock_client):
+        """output_prompt_to_llm=False omits prompt_to_llm from output (default)."""
         mock_client.return_value = SAMPLE_CLIENT
         mock_product.side_effect = lambda pid: (
             SAMPLE_PRODUCT if pid == "ETF-HYG" else SAMPLE_CANDIDATE_PRODUCT
@@ -262,55 +261,11 @@ class TestReinvestmentProposal(unittest.TestCase):
             reinvestment_targets=[
                 {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
             ],
-            include_llm_input=False,
+            output_prompt_to_llm=False,
         )
 
         item = result["results_by_client"][0]
-        self.assertNotIn("llm_input", item)
-
-    @patch("src.integrations.reinvestment_proposal.search_by_id")
-    @patch("src.integrations.reinvestment_proposal.search_by_product_id")
-    @patch("src.integrations.reinvestment_proposal.search_reinvestment_candidates")
-    def test_include_debug_scores_true(self, mock_candidates, mock_product, mock_client):
-        """include_debug_scores=True returns debug_scores."""
-        mock_client.return_value = SAMPLE_CLIENT
-        mock_product.side_effect = lambda pid: (
-            SAMPLE_PRODUCT if pid == "ETF-HYG" else SAMPLE_CANDIDATE_PRODUCT
-        )
-        mock_candidates.return_value = SAMPLE_CANDIDATES
-
-        result = propose_reinvestment(
-            reinvestment_targets=[
-                {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
-            ],
-            include_debug_scores=True,
-        )
-
-        item = result["results_by_client"][0]
-        self.assertIn("debug_scores", item)
-        self.assertIn("investor_readiness_score", item["debug_scores"])
-        self.assertIn("product_fitness_scores", item["debug_scores"])
-
-    @patch("src.integrations.reinvestment_proposal.search_by_id")
-    @patch("src.integrations.reinvestment_proposal.search_by_product_id")
-    @patch("src.integrations.reinvestment_proposal.search_reinvestment_candidates")
-    def test_include_debug_scores_false(self, mock_candidates, mock_product, mock_client):
-        """include_debug_scores=False omits debug_scores (default)."""
-        mock_client.return_value = SAMPLE_CLIENT
-        mock_product.side_effect = lambda pid: (
-            SAMPLE_PRODUCT if pid == "ETF-HYG" else SAMPLE_CANDIDATE_PRODUCT
-        )
-        mock_candidates.return_value = SAMPLE_CANDIDATES
-
-        result = propose_reinvestment(
-            reinvestment_targets=[
-                {"client_id": "PB-HK-000001-8", "source_product_id": "ETF-HYG"},
-            ],
-            include_debug_scores=False,
-        )
-
-        item = result["results_by_client"][0]
-        self.assertNotIn("debug_scores", item)
+        self.assertNotIn("prompt_to_llm", item)
 
     @patch("src.integrations.reinvestment_proposal.search_by_id")
     @patch("src.integrations.reinvestment_proposal.search_by_product_id")
@@ -369,74 +324,6 @@ class TestReinvestmentProposal(unittest.TestCase):
                 ],
                 response_mode="invalid",
             )
-
-
-class TestLLMInputBuilder(unittest.TestCase):
-    """Tests for the build_llm_input helper."""
-
-    def test_build_llm_input_structure(self):
-        """llm_input contains all required context blocks."""
-        payload = build_llm_input(
-            client_profile=SAMPLE_CLIENT,
-            source_product=SAMPLE_PRODUCT,
-            candidate_products=[SAMPLE_CANDIDATE_PRODUCT],
-            include_market_outlook=True,
-        )
-
-        self.assertIn("client_profile", payload)
-        self.assertIn("holdings", payload)
-        self.assertIn("source_product", payload)
-        self.assertIn("candidate_products", payload)
-        self.assertIn("output_instructions", payload)
-        self.assertIn("sections", payload["output_instructions"])
-
-    def test_build_llm_input_optional_market_outlook(self):
-        """Market outlook is included when flag is True, omitted when False."""
-        payload_with = build_llm_input(
-            client_profile=SAMPLE_CLIENT,
-            source_product=SAMPLE_PRODUCT,
-            candidate_products=[],
-            include_market_outlook=True,
-        )
-        self.assertIn("market_outlook", payload_with)
-
-        payload_without = build_llm_input(
-            client_profile=SAMPLE_CLIENT,
-            source_product=SAMPLE_PRODUCT,
-            candidate_products=[],
-            include_market_outlook=False,
-        )
-        self.assertNotIn("market_outlook", payload_without)
-
-
-class TestDebugScoresBuilder(unittest.TestCase):
-    """Tests for the _build_debug_scores helper."""
-
-    def test_build_debug_scores_structure(self):
-        """debug_scores contains investor readiness and product fitness data."""
-        scores = _build_debug_scores(
-            client_profile=SAMPLE_CLIENT,
-            candidate_products=[SAMPLE_CANDIDATE_PRODUCT],
-        )
-        self.assertIn("investor_readiness_score", scores)
-        self.assertIn("product_fitness_scores", scores)
-        self.assertEqual(
-            scores["investor_readiness_score"]["client_id"],
-            "PB-HK-000001-8",
-        )
-        self.assertEqual(len(scores["product_fitness_scores"]), 1)
-
-
-class TestHoldingsSummary(unittest.TestCase):
-    """Tests for summarize_holdings helper."""
-
-    def test_summarize_holdings(self):
-        """Holdings are reduced to minimal fields."""
-        summary = summarize_holdings(SAMPLE_CLIENT["holdings"])
-        self.assertEqual(len(summary), 1)
-        self.assertIn("product_id", summary[0])
-        self.assertIn("market_value", summary[0])
-        self.assertNotIn("quantity", summary[0])
 
 
 # ---------------------------------------------------------------------------
@@ -498,9 +385,8 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
                 "max_candidates_per_client": 5,
                 "risk_rating_hard_filter": False,
                 "response_mode": "both",
-                "include_llm_input": True,
                 "include_market_outlook": False,
-                "include_debug_scores": True,
+                "output_prompt_to_llm": True,
             },
         )
 
@@ -510,9 +396,8 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
             max_candidates_per_client=5,
             risk_rating_hard_filter=False,
             response_mode="both",
-            include_llm_input=True,
             include_market_outlook=False,
-            include_debug_scores=True,
+            output_prompt_to_llm=True,
             market_outlook=None,
             market_outlook_source=None,
         )
@@ -527,7 +412,7 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
             json={
                 "within_days": 180,
                 "response_mode": "path",
-                "include_debug_scores": False,
+                "output_prompt_to_llm": False,
             },
         )
 
@@ -554,9 +439,8 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
             max_candidates_per_client=10,
             risk_rating_hard_filter=True,
             response_mode="path",
-            include_llm_input=False,
             include_market_outlook=True,
-            include_debug_scores=False,
+            output_prompt_to_llm=False,
             market_outlook=None,
             market_outlook_source=None,
         )

@@ -134,6 +134,11 @@ def _build_tool_instance(tool_name: str) -> Any:
 
         return ProductSearchTool()
 
+    if normalized == "product_fitness_score_tool":
+        from src.planbot.product_fitness_score_tool import ProductFitnessScoreTool
+
+        return ProductFitnessScoreTool()
+
     if normalized == "SerpApiGoogleSearchTool":
         serpapi_api_key = os.getenv("SERPAPI_API_KEY", "").strip()
         if not serpapi_api_key:

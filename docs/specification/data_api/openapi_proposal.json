@@ -48,7 +48,7 @@
     "/api/v1/reinvestment-proposals": {
       "post": {
         "summary": "Generate reinvestment proposals for explicit client×product targets",
-        "description": "Generate one reinvestment proposal per (client_id, source_product_id) pair.\n\n### Request body\n\n| Field | Type | Description |\n|---|---|---|\n| `reinvestment_targets` | array (required) | List of `{client_id, source_product_id}` pairs. Each pair produces one proposal. |\n| Field | Type | Description |\n|---|---|---|\n| `max_candidates_per_product_type` | int (1–10) | Diversification cap on how many candidate products are kept per product type. Default `2`. |\n| `max_candidates_per_client` | int (1–50) | Max candidate products passed to the LLM per client. Default `10`. |\n| `risk_rating_hard_filter` | bool | When `true`, only products with `risk_rating <= client.risk_rating` are considered. Default `true`. |\n| `response_mode` | enum | How the proposal is returned in the response:\n- `path` — return only the output file path.\n- `markdown` — return only the proposal markdown.\n- `both` — return the path **and** the markdown. Default `path`. |\n| `include_llm_input` | bool | Include the assembled LLM prompt in the response. Default `false`. |\n| `include_market_outlook` | bool | Include the market outlook section. Default `true`. |\n| `include_debug_scores` | bool | Include debug scoring details. Default `false`. |\n\n### Example\n\n```json\n{\n  \"reinvestment_targets\": [\n    {\"client_id\": \"PB-HK-000007-5\", \"source_product_id\": \"PROD053\"}\n  ],\n  \"max_candidates_per_product_type\": 2,\n  \"max_candidates_per_client\": 10,\n  \"risk_rating_hard_filter\": true,\n  \"response_mode\": \"both\",\n  \"include_debug_scores\": false\n}\n```",
+        "description": "Generate one reinvestment proposal per (client_id, source_product_id) pair.\n\n### Request body\n\n| Field | Type | Description |\n|---|---|---|\n| `reinvestment_targets` | array (required) | List of `{client_id, source_product_id}` pairs. Each pair produces one proposal. |\n| Field | Type | Description |\n|---|---|---|\n| `max_candidates_per_product_type` | int (1–10) | Diversification cap on how many candidate products are kept per product type. Default `2`. |\n| `max_candidates_per_client` | int (1–50) | Max candidate products passed to the LLM per client. Default `10`. |\n| `risk_rating_hard_filter` | bool | When `true`, only products with `risk_rating <= client.risk_rating` are considered. Default `true`. |\n| `response_mode` | enum | How the proposal is returned in the response:\n- `path` — return only the output file path.\n- `markdown` — return only the proposal markdown.\n- `both` — return the path **and** the markdown. Default `path`. |\n| `include_market_outlook` | bool | Include the market outlook section. Default `true`. |\n| `output_prompt_to_llm` | bool | Include the exact prompt sent to the LLM (per result item, as `prompt_to_llm`). Default `false`. |\n\n### Example\n\n```json\n{\n  \"reinvestment_targets\": [\n    {\"client_id\": \"PB-HK-000007-5\", \"source_product_id\": \"PROD053\"}\n  ],\n  \"max_candidates_per_product_type\": 2,\n  \"max_candidates_per_client\": 10,\n  \"risk_rating_hard_filter\": true,\n  \"response_mode\": \"both\",\n  \"output_prompt_to_llm\": false\n}\n```",
         "operationId": "get_reinvestment_proposals_api_v1_reinvestment_proposals_post",
         "requestBody": {
           "content": {
@@ -87,7 +87,7 @@
     "/api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings": {
       "post": {
         "summary": "Discover maturing holdings and generate reinvestment proposals",
-        "description": "Discover clients with maturing bond/bond-fund holdings within a look-ahead window, then generate one reinvestment proposal per client.\n\n### Request body\n\n| Field | Type | Description |\n|---|---|---|\n| `within_days` | int (≥1) | Look ahead this many days for maturing holdings. Default `365`. |\n| `as_of_date` | string (ISO 8601) | Reference date for maturity calculation. Defaults to today. |\n| `max_clients` | int (1–100) | Cap on number of clients to process. Default `2`. |\n| Field | Type | Description |\n|---|---|---|\n| `max_candidates_per_product_type` | int (1–10) | Diversification cap on how many candidate products are kept per product type. Default `2`. |\n| `max_candidates_per_client` | int (1–50) | Max candidate products passed to the LLM per client. Default `10`. |\n| `risk_rating_hard_filter` | bool | When `true`, only products with `risk_rating <= client.risk_rating` are considered. Default `true`. |\n| `response_mode` | enum | How the proposal is returned in the response:\n- `path` — return only the output file path.\n- `markdown` — return only the proposal markdown.\n- `both` — return the path **and** the markdown. Default `path`. |\n| `include_llm_input` | bool | Include the assembled LLM prompt in the response. Default `false`. |\n| `include_market_outlook` | bool | Include the market outlook section. Default `true`. |\n| `include_debug_scores` | bool | Include debug scoring details. Default `false`. |",
+        "description": "Discover clients with maturing bond/bond-fund holdings within a look-ahead window, then generate one reinvestment proposal per client.\n\n### Request body\n\n| Field | Type | Description |\n|---|---|---|\n| `within_days` | int (≥1) | Look ahead this many days for maturing holdings. Default `365`. |\n| `as_of_date` | string (ISO 8601) | Reference date for maturity calculation. Defaults to today. |\n| `max_clients` | int (1–100) | Cap on number of clients to process. Default `2`. |\n| Field | Type | Description |\n|---|---|---|\n| `max_candidates_per_product_type` | int (1–10) | Diversification cap on how many candidate products are kept per product type. Default `2`. |\n| `max_candidates_per_client` | int (1–50) | Max candidate products passed to the LLM per client. Default `10`. |\n| `risk_rating_hard_filter` | bool | When `true`, only products with `risk_rating <= client.risk_rating` are considered. Default `true`. |\n| `response_mode` | enum | How the proposal is returned in the response:\n- `path` — return only the output file path.\n- `markdown` — return only the proposal markdown.\n- `both` — return the path **and** the markdown. Default `path`. |\n| `include_market_outlook` | bool | Include the market outlook section. Default `true`. |\n| `output_prompt_to_llm` | bool | Include the exact prompt sent to the LLM (per result item, as `prompt_to_llm`). Default `false`. |",
         "operationId": "propose_for_maturing_holdings_api_v1_reinvestment_proposals_propose_reinvestment_for_maturing_holdings_post",
         "requestBody": {
           "content": {
@@ -243,7 +243,7 @@
     "/api/v1/llm-product-matcher": {
       "post": {
         "summary": "Generate Llm Product Matcher",
-        "description": "Run the LLM product matcher for a single client.\n\nTakes a ``client_id`` directly (no investor-readiness filter).  The LLM\ndiscovers candidate products via the ``ProductSearch`` tool (backed by\n``search_similar``) and researches context via web search, then produces\na report in the ``product_investor_matching`` output format.",
+        "description": "Run the LLM product matcher for a single client.\n\nTakes a ``client_id`` directly (no investor-readiness filter).  The LLM\ndiscovers candidate products via the ``ProductSearchTool`` tool (backed by\n``search_similar``) and researches context via web search, then produces\na report in the ``product_investor_matching`` output format.",
         "operationId": "generate_llm_product_matcher_api_v1_llm_product_matcher_post",
         "requestBody": {
           "content": {
@@ -637,6 +637,17 @@
             "type": "string",
             "title": "Proposal Markdown"
           },
+          "prompt_to_llm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt To Llm"
+          },
           "metadata": {
             "additionalProperties": true,
             "type": "object",
@@ -729,6 +740,12 @@
             "title": "Max Proposals",
             "default": 10,
             "example": 3
+          },
+          "output_prompt_to_llm": {
+            "type": "boolean",
+            "title": "Output Prompt To Llm",
+            "description": "Include the exact prompt sent to the LLM (per proposal, as prompt_to_llm) in the response.",
+            "default": false
           }
         },
         "type": "object",
@@ -1095,7 +1112,7 @@
           "client_id"
         ],
         "title": "LlmProductMatcherRequest",
-        "description": "Run the LLM product matcher for a single client (no IRS, no PFS).\n\nThe LLM discovers candidate products itself via the ``ProductSearch``\ntool and researches context via web search."
+        "description": "Run the LLM product matcher for a single client (no IRS, no PFS).\n\nThe LLM discovers candidate products itself via the ``ProductSearchTool``\ntool and researches context via web search."
       },
       "LlmProductMatcherResponse": {
         "properties": {
@@ -1328,22 +1345,16 @@
             "description": "How the proposal is returned in the response. 'path' = only the output file path. 'markdown' = only the markdown. 'both' = path + markdown.",
             "default": "path"
           },
-          "include_llm_input": {
-            "type": "boolean",
-            "title": "Include Llm Input",
-            "description": "Include the raw LLM input in the response",
-            "default": false
-          },
           "include_market_outlook": {
             "type": "boolean",
             "title": "Include Market Outlook",
             "description": "Include market outlook in the proposal",
             "default": true
           },
-          "include_debug_scores": {
+          "output_prompt_to_llm": {
             "type": "boolean",
-            "title": "Include Debug Scores",
-            "description": "Include debug scoring details in the response",
+            "title": "Output Prompt To Llm",
+            "description": "Include the exact prompt sent to the LLM (per result item, as prompt_to_llm) in the response",
             "default": false
           },
           "market_outlook": {
@@ -1445,6 +1456,12 @@
             "title": "Alternative Count",
             "description": "Number of alternative products",
             "default": 3
+          },
+          "output_prompt_to_llm": {
+            "type": "boolean",
+            "title": "Output Prompt To Llm",
+            "description": "Include the exact prompt sent to the LLM (as prompt_to_llm) in the response.",
+            "default": false
           }
         },
         "additionalProperties": true,
@@ -1473,6 +1490,17 @@
           "proposal_markdown": {
             "type": "string",
             "title": "Proposal Markdown"
+          },
+          "prompt_to_llm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt To Llm"
           },
           "metadata": {
             "additionalProperties": true,
@@ -1539,6 +1567,18 @@
             "title": "Proposal Markdown",
             "example": "# Reinvestment Proposal\n\n## Executive Summary\n..."
           },
+          "prompt_to_llm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt To Llm",
+            "example": "# Prompt Snapshot\n..."
+          },
           "error": {
             "anyOf": [
               {
@@ -1595,6 +1635,12 @@
             ],
             "title": "Market Outlook Source",
             "description": "Where the market narrative comes from: `request` (use the request `market_outlook`, else fall back to static) or `static` (always use the static default). Defaults to the yaml `default_source` (currently `request`)."
+          },
+          "output_prompt_to_llm": {
+            "type": "boolean",
+            "title": "Output Prompt To Llm",
+            "description": "Include the exact prompt sent to the LLM (as prompt_to_llm) in the response.",
+            "default": false
           }
         },
         "type": "object",
@@ -1617,6 +1663,17 @@
           "proposal_markdown": {
             "type": "string",
             "title": "Proposal Markdown"
+          },
+          "prompt_to_llm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt To Llm"
           }
         },
         "type": "object",
@@ -1705,6 +1762,12 @@
             ],
             "title": "Market Outlook Source",
             "description": "Where the market narrative comes from: `request` (use the request `market_outlook`, else fall back to static) or `static` (always use the static default). Defaults to the yaml `default_source` (currently `request`)."
+          },
+          "output_prompt_to_llm": {
+            "type": "boolean",
+            "title": "Output Prompt To Llm",
+            "description": "Include the exact prompt sent to the LLM (as prompt_to_llm) in the response.",
+            "default": false
           }
         },
         "type": "object",
@@ -1732,6 +1795,17 @@
             },
             "type": "array",
             "title": "Final Proposals"
+          },
+          "prompt_to_llm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt To Llm"
           },
           "warnings": {
             "items": {
@@ -1835,22 +1909,16 @@
             "description": "How the proposal is returned in the response. 'path' = only the output file path. 'markdown' = only the markdown. 'both' = path + markdown.",
             "default": "path"
           },
-          "include_llm_input": {
-            "type": "boolean",
-            "title": "Include Llm Input",
-            "description": "Include the raw LLM input (assembled prompt) in the response.",
-            "default": false
-          },
           "include_market_outlook": {
             "type": "boolean",
             "title": "Include Market Outlook",
             "description": "Include the market outlook section in the proposal.",
             "default": true
           },
-          "include_debug_scores": {
+          "output_prompt_to_llm": {
             "type": "boolean",
-            "title": "Include Debug Scores",
-            "description": "Include debug scoring details (candidate similarity scores) in the response.",
+            "title": "Output Prompt To Llm",
+            "description": "Include the exact prompt sent to the LLM (per result item, as prompt_to_llm) in the response.",
             "default": false
           },
           "market_outlook": {

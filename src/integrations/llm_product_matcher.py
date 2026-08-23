@@ -26,6 +26,7 @@ from src.planbot.pipeline_engine import (
     PipelineEngine,
     get_input_default_sources,
 )
+from src.planbot.workflow import read_prompt_snapshot
 from src.shared.config_loader import load_config
 from src.shared.market_outlook_utils import (
     API_MARKET_OUTLOOK,
@@ -163,10 +164,6 @@ def propose_llm_product_matcher(
     }
 
     if output_prompt_to_llm:
-        prompt_to_llm = ""
-        prompt_path = result.prompt_path
-        if prompt_path and Path(prompt_path).exists():
-            prompt_to_llm = Path(prompt_path).read_text(encoding="utf-8")
-        response["prompt_to_llm"] = prompt_to_llm
+        response["prompt_to_llm"] = read_prompt_snapshot(result.prompt_path)
 
     return response

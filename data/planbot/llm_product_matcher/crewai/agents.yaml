@@ -9,6 +9,7 @@ investment_advisor_agent:
     for direct presentation. 
   tools:
     - ProductSearchTool
+    - product_fitness_score_tool
     - SerpApiGoogleSearchTool
     - ScrapeWebsiteTool
   verbose: true

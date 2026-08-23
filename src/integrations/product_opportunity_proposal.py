@@ -32,6 +32,7 @@ from src.planbot.input_loader import (
     ReferenceDocument,
 )
 from src.planbot.pipeline_engine import PipelineEngine, get_input_default_sources
+from src.planbot.workflow import read_prompt_snapshot
 from src.shared.config_loader import load_config
 from src.shared.market_outlook_utils import (
     API_MARKET_OUTLOOK,
@@ -67,6 +68,7 @@ def propose_product_opportunity(
     market_outlook: str | None = None,
     market_outlook_source: str | None = None,
     alternative_count: int = 3,
+    output_prompt_to_llm: bool = False,
 ) -> dict:
     """Generate a single product opportunity proposal for one client–product pair.
 
@@ -93,11 +95,14 @@ def propose_product_opportunity(
         and always uses the static default.
     alternative_count : int
         Number of alternative products to include.  Default 3.
+    output_prompt_to_llm : bool
+        Whether to return the exact prompt sent to the LLM as ``prompt_to_llm``.
 
     Returns
     -------
     dict
-        Response with client_id, product_id, output_filename, proposal_markdown, metadata.
+        Response with client_id, product_id, output_filename, proposal_markdown,
+        prompt_to_llm (optional), metadata.
     """
     effective_market_outlook = resolve_market_outlook(
         market_outlook,
@@ -143,6 +148,7 @@ def propose_product_opportunity(
         market_outlook=effective_market_outlook,
         alternative_count=alternative_count,
         matcher_alternatives=matcher_alternatives,
+        output_prompt_to_llm=output_prompt_to_llm,
     )
 
 
@@ -156,6 +162,7 @@ def propose_product_opportunity_automatch(
     readiness_pool_size: int | None = None,
     run_matcher: bool = False,
     max_proposals: int = 10,
+    output_prompt_to_llm: bool = False,
 ) -> dict:
     """Batch endpoint — runs matching, then generates one proposal per pair.
 
@@ -177,6 +184,9 @@ def propose_product_opportunity_automatch(
         latest _pairs.json from runs/product_investor_matching/.
     max_proposals : int
         Cap on total proposals.  0 or -1 = unlimited.
+    output_prompt_to_llm : bool
+        Whether to return the exact prompt sent to the LLM (per proposal, as
+        ``prompt_to_llm``).
 
     Returns
     -------
@@ -281,6 +291,7 @@ def propose_product_opportunity_automatch(
                 market_outlook=effective_market_outlook,
                 alternative_count=0,  # use matcher alternatives
                 matcher_alternatives=pair.get("alternative_product_ids", []),
+                output_prompt_to_llm=output_prompt_to_llm,
             )
             proposals.append(result)
         except Exception as exc:
@@ -314,6 +325,7 @@ def _process_one_pair(
     market_outlook: str | None = None,
     alternative_count: int = 3,
     matcher_alternatives: list[str] | None = None,
+    output_prompt_to_llm: bool = False,
 ) -> dict:
     """Generate a proposal for a single client×product pair."""
     item: dict[str, Any] = {
@@ -448,7 +460,7 @@ def _process_one_pair(
     )
     proposal_markdown = fit_result.output_path.read_text()
 
-    return {
+    response: dict[str, Any] = {
         "client_id": client_id,
         "product_id": product_id,
         "output_filename": str(fit_result.output_path),
@@ -459,6 +471,11 @@ def _process_one_pair(
             "product_fitness_scores": product_fitness_scores,
         },
     }
+
+    if output_prompt_to_llm:
+        response["prompt_to_llm"] = read_prompt_snapshot(fit_result.prompt_path)
+
+    return response
 
 
 # ---------------------------------------------------------------------------

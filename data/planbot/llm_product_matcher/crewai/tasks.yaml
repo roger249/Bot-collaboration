@@ -6,9 +6,10 @@ llm_product_matcher_task:
 
     - Given a client profile and their existing holdings, discover suitable investable products and generate a product-fit recommendation based on the client's financial needs and risk profile.
     - Use the **ProductSearchTool** tool to discover candidate products. You may anchor on a product_id the client already holds (to find similar products) or query by attributes such as product_type, asset_class, region, risk_rating, expected_return, sector.
+    - Use the **product_fitness_score_tool** tool to compute a quantitative product fitness score for the client against your shortlisted candidate products. Use the fitness scores and component scores as a quantitative starting point for ranking the candidates.
     - Use **SerpApiGoogleSearchTool** and **ScrapeWebsiteTool** to research market/product context, and scenario analysis when the provided market outlook is insufficient.
     - For the client, assign a buying score from 1-5 indicating how likely the client is to buy the recommended investment product.  5 is the most likely to buy, while 1 is the least likely to buy.
-    - Assign a Fitness Score from 1-5 reflecting your own suitability judgement of the recommended product for this client.  **There is no pre-computed fitness score table** — derive the 1-5 fitness score yourself from the ProductSearchTool results, the client profile, and the market outlook, and provide a justification for the score in the rationale.
+    - Assign a Fitness Score from 1-5 reflecting your own suitability judgement of the recommended product for this client.  **There is no pre-computed fitness score table** — derive the 1-5 fitness score yourself from the product_fitness_score_tool results, the ProductSearchTool results, the client profile, and the market outlook, and provide a justification for the score in the rationale.
     - Only one product recommendation is allowed for the client.
     - For the suggested product, please specify the funding source.
     - No more than 2 products shall be switched out for funding.

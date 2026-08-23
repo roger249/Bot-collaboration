@@ -50,7 +50,7 @@ def test_propose_reinvestment_for_maturing_holdings(monkeypatch, proposal_server
             "within_days": 365 * 10,
             "max_clients": 1,
             "response_mode": "both",
-            "include_debug_scores": True,
+            "output_prompt_to_llm": True,
         },
         timeout=600,
     )
@@ -122,7 +122,7 @@ def test_multi_client_propose_reinvestment(monkeypatch, proposal_server):
         json={
             "reinvestment_targets": targets,
             "response_mode": "both",
-            "include_debug_scores": True,
+            "output_prompt_to_llm": True,
         },
         timeout=600,
     )

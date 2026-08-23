@@ -18,6 +18,7 @@ from src.planbot.input_loader import (
     API_PRODUCT_CATALOG,
 )
 from src.planbot.pipeline_engine import get_input_default_sources
+from src.planbot.workflow import read_prompt_snapshot
 from src.shared.config_loader import load_config
 from src.shared.market_outlook_utils import (
     API_MARKET_OUTLOOK,
@@ -46,6 +47,7 @@ def propose_portfolio_review(
     *,
     market_outlook: str | None = None,
     market_outlook_source: str | None = None,
+    output_prompt_to_llm: bool = False,
 ) -> dict:
     """Generate a portfolio health review for a single client.
 
@@ -59,11 +61,14 @@ def propose_portfolio_review(
     market_outlook_source : str | None
         ``"request"`` or ``"static"``.  ``static`` ignores ``market_outlook``
         and always uses the static default.
+    output_prompt_to_llm : bool
+        Whether to return the exact prompt sent to the LLM as ``prompt_to_llm``.
 
     Returns
     -------
     dict
-        Response with client_id, output_filename, proposal_markdown.
+        Response with client_id, output_filename, proposal_markdown,
+        and optionally prompt_to_llm.
     """
     client_profile = search_by_id(client_id)
     if client_profile is None:
@@ -119,8 +124,13 @@ def propose_portfolio_review(
     if output_path and Path(output_path).exists():
         markdown = Path(output_path).read_text(encoding="utf-8")
 
-    return {
+    response: dict = {
         "client_id": client_id,
         "output_filename": output_path,
         "proposal_markdown": markdown,
     }
+
+    if output_prompt_to_llm:
+        response["prompt_to_llm"] = read_prompt_snapshot(result.prompt_path)
+
+    return response

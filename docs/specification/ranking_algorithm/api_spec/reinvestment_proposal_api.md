@@ -161,10 +161,8 @@ generate_reinvestment_proposal(
    max_candidates_per_client: int = 10,
    risk_rating_hard_filter: bool = True,
    response_mode: str = "path",  # one of: path, markdown, both
-   include_llm_input: bool = False,
    include_market_outlook: bool = True,
-   include_candidate_explanations: bool = True,
-   include_debug_scores: bool = False,
+   output_prompt_to_llm: bool = False,
    market_outlook: str | None = None,
    market_outlook_source: str | None = None,  # "request" | "static"
 ) -> dict
@@ -179,10 +177,8 @@ generate_reinvestment_proposal(
 - `max_candidates_per_client`: maximum number of candidate products passed to the LLM.
 - `risk_rating_hard_filter`: boolean, whether to enforce the hard risk filter in the product API. Default is `True`.
 - `response_mode`: one of `path`, `markdown`, `both`. Default is `path`.
-- `include_llm_input`: whether to include the assembled LLM input block in API output. Default is `False` (not included).
-- `include_market_outlook`: whether to attach market outlook references.
-- `include_candidate_explanations`: whether to attach scoring and shortlist rationale.
-- `include_debug_scores`: whether to return the intermediate score-card output used during migration testing. Default is `False`.
+- `include_market_outlook`: whether to render the market outlook section in the proposal.
+- `output_prompt_to_llm`: whether to return the exact prompt sent to the LLM (as `prompt_to_llm`, per result item). Default is `False`.
 - `market_outlook`: free-form market narrative (markdown) for the LLM context.
 - `market_outlook_source`: `"request"` (use `market_outlook`, else static default) or `"static"` (always use the static default). Defaults to the yaml `default_source` (currently `"request"`).
 
@@ -194,10 +190,9 @@ The Python function should return a dictionary containing at least:
    - `client_id`
    - `source_product_id`
    - `candidate_products`
-   - `llm_input` (optional; included only when `include_llm_input = True`)
    - `output_filename` when `response_mode` is `path` or `both`
    - `proposal_markdown` when `response_mode` is `markdown` or `both`
-   - `debug_scores` (optional; included only when `include_debug_scores = True`)
+   - `prompt_to_llm` (optional; included only when `output_prompt_to_llm = True`)
 
 ## FastAPI contract
 
@@ -219,10 +214,8 @@ Proposed endpoint:
    "max_candidates_per_client": 10,
    "risk_rating_hard_filter": true,
    "response_mode": "path",
-   "include_llm_input": false,
-   "include_debug_scores": false,
    "include_market_outlook": true,
-   "include_candidate_explanations": true
+   "output_prompt_to_llm": false
 }
 ```
 
@@ -250,8 +243,7 @@ Response mode behavior:
 - `path`: return `output_filename` (plus always-on fields such as `client_id`, `source_product_id`, `candidate_products`).
 - `markdown`: return `proposal_markdown` (plus always-on fields such as `client_id`, `source_product_id`, `candidate_products`).
 - `both`: return both `output_filename` and `proposal_markdown` (plus always-on fields).
-- `include_llm_input`: when `True`, include `llm_input` in each `results_by_client` item; default `False` omits it
-- `include_debug_scores`: when `True`, include `debug_scores` in each `results_by_client` item; default `False` omits it
+- `output_prompt_to_llm`: when `True`, include `prompt_to_llm` in each `results_by_client` item; default `False` omits it. Independent of `response_mode`.
 
 ## Data retrieval contract
 
@@ -350,12 +342,12 @@ Implemented `POST /api/v1/reinvestment-proposals` in `src/integrations/server.py
 | AC1 | Reinvestment proposal generation can run from a Python function without reading client/product static files | Unit test with mocked APIs |
 | AC2 | The Python function retrieves client and product data only through the APIs | Code review and integration test |
 | AC3 | Candidate selection uses `search_reinvestment_candidates` and honors `max_candidates_per_product_type` | Unit test with known candidate pool |
-| AC4 | The `llm_input` payload includes client, holdings, source product, candidates, and market outlook blocks | Snapshot test of assembled payload |
+| AC4 | The prompt snapshot includes client, holdings, source product, candidates, and market outlook blocks | Snapshot test of the assembled prompt |
 | AC5 | The same Python function is callable through a FastAPI endpoint | HTTP integration test |
 | AC6 | Output remains compatible with the current reinvestment proposal structure | Validate required section headers (in expected order), ensure each required section is non-empty, and check critical anchors (recommended product ID and risk disclosure presence) |
 | AC7 | Missing API data is handled gracefully and logged per client | Failure-path unit test |
 | AC8 | The refactor does not require the LLM prompt to read static client/product files | Prompt assembly test |
-| AC9 | Optional debug score-card output is returned when `include_debug_scores = True` and contains the client/product filtering information used during migration testing | Unit test with mocked client/product filters |
+| AC9 | The exact prompt sent to the LLM is returned per result item when `output_prompt_to_llm = True` (as `prompt_to_llm`) | Unit test with a mocked prompt snapshot |
 
 ## Outstanding
 
@@ -367,16 +359,14 @@ Items intentionally deferred from this spec. Tracked here for follow-up.
 
 ## Debug output
 
-During migration testing, the service should be able to return debug score-card output used to filter out products or clients.
+For diagnostics, the service can return the exact prompt sent to the LLM. Set
+`output_prompt_to_llm = True` to include `prompt_to_llm` (the full
+`prompt_snapshot.md` content: task prompt + reference sections) in each
+`results_by_client` item.
 
-The debug payload should be optional and must not alter the normal markdown output.
-
-Required debug data:
-
-- investor readiness score for the client
-- product fitness scores for shortlisted candidates
-- per-component scores for each score card
-- any gating reason that caused a product or client to be excluded
+The debug payload should be optional and must not alter the normal markdown
+output. It is independent of `response_mode`. Deeper diagnostics (tool
+interaction, ReAct loop) are captured separately in `log/crewai_trace.log`.
 
 ## Recommendation
 

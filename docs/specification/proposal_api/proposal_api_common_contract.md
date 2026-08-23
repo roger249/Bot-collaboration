@@ -98,9 +98,8 @@ the two reinvestment endpoints only:
 | `max_candidates_per_client` | int (1–50) | `10` | Max candidates passed to the LLM per client. |
 | `risk_rating_hard_filter` | bool | `true` | Only products with `risk_rating <= client.risk_rating`. |
 | `response_mode` | enum | `path` | `path` / `markdown` / `both`. |
-| `include_llm_input` | bool | `false` | Include assembled LLM prompt in response. |
-| `include_market_outlook` | bool | `true` | Include market outlook section. |
-| `include_debug_scores` | bool | `false` | Include debug scoring details. |
+| `include_market_outlook` | bool | `true` | Render the market outlook section in the proposal. |
+| `output_prompt_to_llm` | bool | `false` | Include the exact prompt sent to the LLM (as `prompt_to_llm`, per result item). |
 
 ---
 

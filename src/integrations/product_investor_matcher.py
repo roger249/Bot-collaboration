@@ -35,6 +35,7 @@ from src.planbot.input_loader import (
     ReferenceDocument,
 )
 from src.planbot.pipeline_engine import PipelineEngine, get_input_default_sources
+from src.planbot.workflow import read_prompt_snapshot
 from src.shared.config_loader import load_config
 from src.shared.market_outlook_utils import (
     API_MARKET_OUTLOOK,
@@ -66,6 +67,7 @@ def product_investor_matcher(
     top_n: int = 2,
     market_outlook: str | None = None,
     market_outlook_source: str | None = None,
+    output_prompt_to_llm: bool = False,
 ) -> dict:
     """Run the full product-investor matching pipeline.
 
@@ -90,13 +92,16 @@ def product_investor_matcher(
     market_outlook_source : str | None
         ``"request"`` or ``"static"``.  ``static`` ignores ``market_outlook``
         and always uses the static default.
+    output_prompt_to_llm : bool
+        Whether to return the exact prompt sent to the LLM as ``prompt_to_llm``
+        (attached to the aggregate response — the matcher is one CrewAI call).
 
     Returns
     -------
     dict
         Response with ``run_id``, ``summary``,
         ``product_investor_matching_markdown``, ``final_proposals``,
-        ``warnings``, ``errors``.
+        ``prompt_to_llm`` (optional), ``warnings``, ``errors``.
     """
     run_id = _generate_run_id()
     warnings: list[str] = []
@@ -334,6 +339,7 @@ def product_investor_matcher(
             api_resolver=api_resolver,
         )
         matching_markdown = crew_result.output_path.read_text()
+        matching_prompt = read_prompt_snapshot(crew_result.prompt_path)
     except Exception as exc:
         LOGGER.error("product_investor_matching CrewAI failed: %s", exc)
         return {
@@ -371,7 +377,7 @@ def product_investor_matcher(
         for p in top_pairs
     ]
 
-    return {
+    response: dict[str, Any] = {
         "run_id": run_id,
         "summary": {
             "status": "success",
@@ -384,6 +390,11 @@ def product_investor_matcher(
         "warnings": warnings,
         "errors": errors,
     }
+
+    if output_prompt_to_llm:
+        response["prompt_to_llm"] = matching_prompt
+
+    return response
 
 
 # ---------------------------------------------------------------------------

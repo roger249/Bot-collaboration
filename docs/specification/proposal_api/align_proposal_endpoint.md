@@ -99,9 +99,8 @@ The reinvestment endpoints share a set of scoring/response knobs.  These are can
 | `max_candidates_per_client` | int (1–50) | Max candidate products passed to the LLM per client. Default `10`. |
 | `risk_rating_hard_filter` | bool | Only products with `risk_rating <= client.risk_rating` are considered. Default `true`. |
 | `response_mode` | enum (`path` \| `markdown` \| `both`) | How the proposal is returned. Default `path`. |
-| `include_llm_input` | bool | Include the assembled LLM prompt in the response. Default `false`. |
-| `include_market_outlook` | bool | Include the market outlook section. Default `true`. |
-| `include_debug_scores` | bool | Include debug scoring details. Default `false`. |
+| `include_market_outlook` | bool | Render the market outlook section in the proposal. Default `true`. |
+| `output_prompt_to_llm` | bool | Include the exact prompt sent to the LLM (as `prompt_to_llm`, per result item). Default `false`. |
 
 # Common output
 

@@ -27,7 +27,7 @@ from src.planbot.input_loader import (
     ReferenceDocument,
 )
 from src.planbot.pipeline_engine import PipelineEngine, get_input_default_sources
-from src.planbot.workflow import build_llm_input
+from src.planbot.workflow import read_prompt_snapshot
 from src.shared.config_loader import load_config
 from src.shared.market_outlook_utils import (
     API_MARKET_OUTLOOK,
@@ -59,9 +59,8 @@ def propose_reinvestment(
     max_candidates_per_client: int = 10,
     risk_rating_hard_filter: bool = True,
     response_mode: str = "path",
-    include_llm_input: bool = False,
     include_market_outlook: bool = True,
-    include_debug_scores: bool = False,
+    output_prompt_to_llm: bool = False,
     market_outlook: str | None = None,
     market_outlook_source: str | None = None,
 ) -> dict:
@@ -79,12 +78,11 @@ def propose_reinvestment(
         Whether to enforce the hard risk filter in the product API.
     response_mode : str
         One of ``path``, ``markdown``, ``both``.
-    include_llm_input : bool
-        Whether to include the assembled LLM input block in API output.
     include_market_outlook : bool
-        Whether to attach market outlook references.
-    include_debug_scores : bool
-        Whether to return intermediate score-card output.
+        Whether to render the market-outlook section in the proposal.
+    output_prompt_to_llm : bool
+        Whether to return the exact prompt sent to the LLM (per item, as
+        ``prompt_to_llm``).  Independent of ``response_mode``.
     market_outlook : str | None
         Free-form market narrative for the LLM context.
     market_outlook_source : str | None
@@ -134,9 +132,8 @@ def propose_reinvestment(
                 max_candidates_per_client=max_candidates_per_client,
                 risk_rating_hard_filter=risk_rating_hard_filter,
                 response_mode=response_mode,
-                include_llm_input=include_llm_input,
                 include_market_outlook=include_market_outlook,
-                include_debug_scores=include_debug_scores,
+                output_prompt_to_llm=output_prompt_to_llm,
                 market_outlook=market_outlook,
                 market_outlook_source=market_outlook_source,
             )
@@ -171,9 +168,8 @@ def propose_reinvestment_for_maturing_holdings(
     max_candidates_per_client: int = 10,
     risk_rating_hard_filter: bool = True,
     response_mode: str = "path",
-    include_llm_input: bool = False,
     include_market_outlook: bool = True,
-    include_debug_scores: bool = False,
+    output_prompt_to_llm: bool = False,
     market_outlook: str | None = None,
     market_outlook_source: str | None = None,
 ) -> dict:
@@ -199,11 +195,9 @@ def propose_reinvestment_for_maturing_holdings(
         Passed to :func:`propose_reinvestment`.
     response_mode : str
         Passed to :func:`propose_reinvestment`.
-    include_llm_input : bool
-        Passed to :func:`propose_reinvestment`.
     include_market_outlook : bool
         Passed to :func:`propose_reinvestment`.
-    include_debug_scores : bool
+    output_prompt_to_llm : bool
         Passed to :func:`propose_reinvestment`.
 
     Returns
@@ -241,9 +235,8 @@ def propose_reinvestment_for_maturing_holdings(
         max_candidates_per_client=max_candidates_per_client,
         risk_rating_hard_filter=risk_rating_hard_filter,
         response_mode=response_mode,
-        include_llm_input=include_llm_input,
         include_market_outlook=include_market_outlook,
-        include_debug_scores=include_debug_scores,
+        output_prompt_to_llm=output_prompt_to_llm,
         market_outlook=market_outlook,
         market_outlook_source=market_outlook_source,
     )
@@ -262,9 +255,8 @@ def _process_one_target(
     max_candidates_per_client: int,
     risk_rating_hard_filter: bool,
     response_mode: str,
-    include_llm_input: bool,
     include_market_outlook: bool,
-    include_debug_scores: bool,
+    output_prompt_to_llm: bool,
     market_outlook: str | None = None,
     market_outlook_source: str | None = None,
 ) -> dict:
@@ -371,7 +363,7 @@ def _process_one_target(
             pfs_scores=pfs_scores or None,
             semantic_embedding_available=semantic_available if pfs_scores else None,
         ),
-        market_outlook=effective_market_outlook,
+        market_outlook=effective_market_outlook if include_market_outlook else None,
     )
 
     # ── Build runtime reference overrides for the api-backed sections ──
@@ -380,7 +372,7 @@ def _process_one_target(
         "client_profile": [API_CLIENT_PROFILE],
         "product_catalog": [API_PRODUCT_CATALOG],
     }
-    if effective_market_outlook is not None:
+    if include_market_outlook and effective_market_outlook is not None:
         runtime_overrides["market_outlook"] = [API_MARKET_OUTLOOK]
 
     # ── Build client-scoped output filename ────────────────────────────
@@ -404,55 +396,11 @@ def _process_one_target(
     if response_mode in ("markdown", "both"):
         item["proposal_markdown"] = proposal_markdown
 
-    # 7 ─ llm_input (optional) ──────────────────────────────────────────
-    if include_llm_input:
-        item["llm_input"] = build_llm_input(
-            client_profile=client_profile,
-            source_product=source_product,
-            candidate_products=candidate_products,
-            include_market_outlook=include_market_outlook,
-        )
-
-    # 8 ─ Debug scores (optional) ───────────────────────────────────────
-    if include_debug_scores:
-        item["debug_scores"] = _build_debug_scores(
-            client_profile=client_profile,
-            candidate_products=candidate_products,
-        )
+    # ── prompt_to_llm (optional, independent of response_mode) ──────
+    if output_prompt_to_llm:
+        item["prompt_to_llm"] = read_prompt_snapshot(crew_result.prompt_path)
 
     return item
-
-
-# ---------------------------------------------------------------------------
-# debug_scores builder
-# ---------------------------------------------------------------------------
-
-
-def _build_debug_scores(
-    client_profile: dict,
-    candidate_products: list[dict],
-) -> dict:
-    """Build debug score-card output for migration testing."""
-    return {
-        "investor_readiness_score": {
-            "client_id": client_profile.get("client_id"),
-            "total_score": client_profile.get("investor_readiness_score"),
-            "component_scores": {
-                "cash_score": client_profile.get("cash_score"),
-                "concentration_score": client_profile.get("concentration_score"),
-                "active_score": client_profile.get("active_score"),
-                "life_stage_score": client_profile.get("life_stage_score"),
-            },
-        },
-        "product_fitness_scores": [
-            {
-                "client_id": client_profile.get("client_id"),
-                "product_id": c.get("product_id"),
-                "fitness_score": c.get("similarity_score"),
-            }
-            for c in candidate_products
-        ],
-    }
 
 
 # ---------------------------------------------------------------------------

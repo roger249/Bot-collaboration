@@ -203,132 +203,14 @@ def _resolve_output_filename(output_filename: str, model: str) -> str:
     return str(path)
 
 
-# ---------------------------------------------------------------------------
-# Shared llm_input builder (usable by all proposal types)
-# ---------------------------------------------------------------------------
+def read_prompt_snapshot(prompt_path: Path | None) -> str:
+    """Return the ``prompt_snapshot.md`` content, or ``""`` when missing.
 
-
-def build_llm_input(
-    client_profile: dict,
-    source_product: dict,
-    candidate_products: list[dict],
-    include_market_outlook: bool,
-) -> dict:
-    """Assemble the structured ``llm_input`` payload sent alongside the proposal.
-
-    Different proposal types pass different data blocks but the assembly
-    pattern is the same.
+    ``run_crew_planbot`` always writes the prompt snapshot and returns its path
+    as ``PlanBotResult.prompt_path``.  Proposals echo it back to the API caller
+    (as ``prompt_to_llm``) when the caller sets ``output_prompt_to_llm``.
     """
-    payload: dict[str, Any] = {
-        "client_profile": {
-            "client_id": client_profile.get("client_id"),
-            "name": client_profile.get("name"),
-            "risk_rating": client_profile.get("risk_rating"),
-            "age": client_profile.get("age"),
-            "aum": client_profile.get("aum"),
-            "cash_score": client_profile.get("cash_score"),
-            "concentration_score": client_profile.get("concentration_score"),
-            "investor_readiness_score": client_profile.get("investor_readiness_score"),
-        },
-        "holdings": summarize_holdings(client_profile.get("holdings", [])),
-        "source_product": {
-            "product_id": source_product.get("product_id"),
-            "name": source_product.get("name"),
-            "product_type": source_product.get("product_type"),
-            "risk_rating": source_product.get("risk_rating"),
-            "expected_return": source_product.get("expected_return"),
-            "region": source_product.get("region"),
-        },
-        "candidate_products": candidate_products,
-        "output_instructions": {
-            "sections": [
-                "executive summary",
-                "recommended product",
-                "risk characteristics",
-                "detailed justification",
-                "portfolio tables",
-                "scenario analysis",
-                "risk disclosures",
-            ],
-            "tone": "professional advisory",
-            "format": "markdown",
-        },
-    }
-
-    if include_market_outlook:
-        payload["market_outlook"] = {"note": "market outlook not yet configured"}
-
-    return payload
-
-
-def summarize_holdings(holdings: list[dict]) -> list[dict]:
-    """Create a minimal holdings summary for the llm_input."""
-    return [
-        {
-            "product_id": h.get("product_id"),
-            "instrument_name": h.get("instrument_name"),
-            "asset_class": h.get("asset_class"),
-            "market_value": h.get("market_value"),
-            "yield_pct": h.get("yield_pct"),
-            "risk_bucket": h.get("risk_bucket"),
-        }
-        for h in holdings
-    ]
-
-
-# ---------------------------------------------------------------------------
-# Matcher LLM input builder — in-memory, no temp files
-# ---------------------------------------------------------------------------
-
-
-def build_matcher_llm_payload(
-    client_profile: dict,
-    product: dict,
-    readiness_score: dict | None = None,
-    fitness_score: dict | None = None,
-    market_outlook: str | None = None,
-) -> dict:
-    """Assemble the LLM input package for a single client×product pair.
-
-    Follows the same in-memory pattern as ``build_llm_input`` used by the
-    reinvestment proposal flow.  No temp files — all data comes from API
-    responses or scorecard outputs.
-
-    Args:
-        client_profile: Full client profile dict from client API.
-        product: Product detail dict from product API.
-        readiness_score: Readiness score dict (client_id, total_score, components).
-        fitness_score: Fitness score dict (client_id, product_id, fitness_score, component_scores).
-        market_outlook: Optional market narrative from request payload.
-
-    Returns:
-        A dict ready to be serialised as JSON and passed to the LLM prompt
-        via the ``{references}`` template variable.
-    """
-    payload: dict[str, Any] = {
-        "client": {
-            "client_id": client_profile.get("client_id"),
-            "name": client_profile.get("name"),
-            "risk_rating": client_profile.get("risk_rating"),
-            "aum": client_profile.get("aum"),
-            "qualitative_profile": client_profile.get("qualitative_profile", ""),
-        },
-        "product": {
-            "product_id": product.get("product_id"),
-            "name": product.get("name"),
-            "product_type": product.get("product_type"),
-            "risk_rating": product.get("risk_rating"),
-            "expected_return": product.get("expected_return"),
-            "investment_note": product.get("investment_note", ""),
-        },
-        "scorecard": {
-            "investor_readiness": readiness_score,
-            "product_fitness": fitness_score,
-        },
-    }
-
-    if market_outlook:
-        payload["market_outlook"] = market_outlook
-
-    return payload
+    if prompt_path and Path(prompt_path).exists():
+        return Path(prompt_path).read_text(encoding="utf-8")
+    return ""
 

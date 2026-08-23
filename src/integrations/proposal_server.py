@@ -82,12 +82,10 @@ _COMMON_SCORING_PARAMS_DOC = (
     "| `risk_rating_hard_filter` | bool | When `true`, only products with "
     "`risk_rating <= client.risk_rating` are considered. Default `true`. |\n"
     "| `response_mode` | enum | " + _RESPONSE_MODE_DOC + " Default `path`. |\n"
-    "| `include_llm_input` | bool | Include the assembled LLM prompt in the "
-    "response. Default `false`. |\n"
     "| `include_market_outlook` | bool | Include the market outlook section. "
     "Default `true`. |\n"
-    "| `include_debug_scores` | bool | Include debug scoring details. Default "
-    "`false`. |"
+    "| `output_prompt_to_llm` | bool | Include the exact prompt sent to the LLM "
+    "(per result item, as `prompt_to_llm`). Default `false`. |"
 )
 
 
@@ -163,18 +161,14 @@ class ProposeReinvestmentRequest(BaseModel):
         "'path' = only the output file path. 'markdown' = only the markdown. "
         "'both' = path + markdown.",
     )
-    include_llm_input: bool = Field(
-        False,
-        description="Include the raw LLM input (assembled prompt) in the response.",
-    )
     include_market_outlook: bool = Field(
         True,
         description="Include the market outlook section in the proposal.",
     )
-    include_debug_scores: bool = Field(
+    output_prompt_to_llm: bool = Field(
         False,
-        description="Include debug scoring details (candidate similarity "
-        "scores) in the response.",
+        description="Include the exact prompt sent to the LLM (per result item, "
+        "as prompt_to_llm) in the response.",
     )
     market_outlook: str | None = Field(
         None, description=_MARKET_OUTLOOK_DOC,
@@ -213,14 +207,11 @@ class MaturingHoldingsRequest(BaseModel):
         "'path' = only the output file path. 'markdown' = only the markdown. "
         "'both' = path + markdown.",
     )
-    include_llm_input: bool = Field(
-        False, description="Include the raw LLM input in the response",
-    )
     include_market_outlook: bool = Field(
         True, description="Include market outlook in the proposal",
     )
-    include_debug_scores: bool = Field(
-        False, description="Include debug scoring details in the response",
+    output_prompt_to_llm: bool = Field(
+        False, description="Include the exact prompt sent to the LLM (per result item, as prompt_to_llm) in the response",
     )
     market_outlook: str | None = Field(
         None, description=_MARKET_OUTLOOK_DOC,
@@ -249,6 +240,9 @@ class PerClientResult(BaseModel):
     )
     proposal_markdown: str | None = Field(
         None, json_schema_extra={"example": "# Reinvestment Proposal\n\n## Executive Summary\n..."},
+    )
+    prompt_to_llm: str | None = Field(
+        None, json_schema_extra={"example": "# Prompt Snapshot\n..."},
     )
     error: str | None = Field(
         None, json_schema_extra={"example": "Data service unreachable at http://localhost:8001/api/v1: [Errno 61] Connection refused. Is the data server running?"},
@@ -338,6 +332,9 @@ class ProductInvestorMatcherRequest(BaseModel):
     market_outlook_source: MarketOutlookSource | None = Field(
         None, description=_MARKET_OUTLOOK_SOURCE_DOC,
     )
+    output_prompt_to_llm: bool = Field(
+        False, description="Include the exact prompt sent to the LLM (as prompt_to_llm) in the response.",
+    )
 
 
 class ProductInvestorMatcherResponse(BaseModel):
@@ -345,6 +342,7 @@ class ProductInvestorMatcherResponse(BaseModel):
     summary: MatcherSummary = Field(default_factory=MatcherSummary)
     product_investor_matching_markdown: str = Field("")
     final_proposals: list[MatcherProposal] = Field(default_factory=list)
+    prompt_to_llm: str | None = None
     warnings: list[str] = Field(default_factory=list)
     errors: list[MatcherErrorDetail] = Field(default_factory=list)
 
@@ -374,6 +372,7 @@ def match_products_to_investors_endpoint(
         top_n=body.top_n,
         market_outlook=body.market_outlook,
         market_outlook_source=body.market_outlook_source,
+        output_prompt_to_llm=body.output_prompt_to_llm,
     )
 
 
@@ -407,7 +406,7 @@ def match_products_to_investors_endpoint(
         "  \"max_candidates_per_client\": 10,\n"
         "  \"risk_rating_hard_filter\": true,\n"
         "  \"response_mode\": \"both\",\n"
-        "  \"include_debug_scores\": false\n"
+        "  \"output_prompt_to_llm\": false\n"
         "}\n"
         "```"
     ),
@@ -420,9 +419,8 @@ def get_reinvestment_proposals(body: ProposeReinvestmentRequest) -> dict:
         max_candidates_per_client=body.max_candidates_per_client,
         risk_rating_hard_filter=body.risk_rating_hard_filter,
         response_mode=body.response_mode,
-        include_llm_input=body.include_llm_input,
         include_market_outlook=body.include_market_outlook,
-        include_debug_scores=body.include_debug_scores,
+        output_prompt_to_llm=body.output_prompt_to_llm,
         market_outlook=body.market_outlook,
         market_outlook_source=body.market_outlook_source,
     )
@@ -457,9 +455,8 @@ def propose_for_maturing_holdings(body: MaturingHoldingsRequest) -> dict:
         max_candidates_per_client=body.max_candidates_per_client,
         risk_rating_hard_filter=body.risk_rating_hard_filter,
         response_mode=body.response_mode,
-        include_llm_input=body.include_llm_input,
         include_market_outlook=body.include_market_outlook,
-        include_debug_scores=body.include_debug_scores,
+        output_prompt_to_llm=body.output_prompt_to_llm,
         market_outlook=body.market_outlook,
         market_outlook_source=body.market_outlook_source,
     )
@@ -496,6 +493,9 @@ class OpportunityProposalRequest(BaseModel):
         None, description=_MARKET_OUTLOOK_SOURCE_DOC,
     )
     alternative_count: int = Field(3, description="Number of alternative products", ge=0)
+    output_prompt_to_llm: bool = Field(
+        False, description="Include the exact prompt sent to the LLM (as prompt_to_llm) in the response.",
+    )
 
 
 class OpportunityProposalResponse(BaseModel):
@@ -503,6 +503,7 @@ class OpportunityProposalResponse(BaseModel):
     product_id: str
     output_filename: str
     proposal_markdown: str
+    prompt_to_llm: str | None = None
     metadata: dict = Field(default_factory=dict)
 
 
@@ -571,6 +572,9 @@ class AutomatchRequest(BaseModel):
     max_proposals: int = Field(
         10, json_schema_extra={"example": 3},
     )
+    output_prompt_to_llm: bool = Field(
+        False, description="Include the exact prompt sent to the LLM (per proposal, as prompt_to_llm) in the response.",
+    )
 
 
 class AutomatchProposalItem(BaseModel):
@@ -578,6 +582,7 @@ class AutomatchProposalItem(BaseModel):
     product_id: str
     output_filename: str | None = None
     proposal_markdown: str
+    prompt_to_llm: str | None = None
     metadata: dict = Field(default_factory=dict)
 
 
@@ -605,6 +610,7 @@ def generate_opportunity_proposal(body: OpportunityProposalRequest) -> dict:
             market_outlook=body.market_outlook,
             market_outlook_source=body.market_outlook_source,
             alternative_count=body.alternative_count,
+            output_prompt_to_llm=body.output_prompt_to_llm,
         )
     except LookupError as exc:
         # Client or product not found.
@@ -631,6 +637,7 @@ def generate_opportunity_proposal_automatch(body: AutomatchRequest) -> dict:
         max_proposals=body.max_proposals,
         market_outlook=body.market_outlook,
         market_outlook_source=body.market_outlook_source,
+        output_prompt_to_llm=body.output_prompt_to_llm,
     )
 
 
@@ -652,12 +659,16 @@ class PortfolioReviewRequest(BaseModel):
     market_outlook_source: MarketOutlookSource | None = Field(
         None, description=_MARKET_OUTLOOK_SOURCE_DOC,
     )
+    output_prompt_to_llm: bool = Field(
+        False, description="Include the exact prompt sent to the LLM (as prompt_to_llm) in the response.",
+    )
 
 
 class PortfolioReviewResponse(BaseModel):
     client_id: str
     output_filename: str
     proposal_markdown: str
+    prompt_to_llm: str | None = None
 
 
 @app.post(
@@ -675,6 +686,7 @@ def generate_portfolio_review(body: PortfolioReviewRequest) -> dict:
         client_id=body.client_id,
         market_outlook=body.market_outlook,
         market_outlook_source=body.market_outlook_source,
+        output_prompt_to_llm=body.output_prompt_to_llm,
     )
 
 

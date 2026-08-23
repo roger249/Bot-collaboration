@@ -466,3 +466,52 @@ def test_resolve_output_filename_date_substitution():
     assert resolved.endswith("-deepseek.md")
     assert re.search(r"llm_product_matcher_\d{8}_\d{6}-deepseek\.md$", resolved)
 
+
+# ── ProductFitnessScoreTool ────────────────────────────────────────────────
+
+
+def test_build_tool_instance_supports_product_fitness_score():
+    tool = crew_workflow._build_tool_instance("product_fitness_score_tool")
+    assert tool.name == "product_fitness_score_tool"
+
+
+def test_product_fitness_score_tool_normal_flow(monkeypatch):
+    from src.planbot import product_fitness_score_tool
+    import src.integrations.product_tool as product_tool
+
+    captured: dict[str, object] = {}
+
+    def fake_search(client_ids=None, product_ids=None, **kwargs):
+        captured["client_ids"] = client_ids
+        captured["product_ids"] = product_ids
+        captured["kwargs"] = kwargs
+        return {"results": [{"client_id": "C1", "product_id": "P1", "fitness_score": 8.5}], "meta": {}}
+
+    monkeypatch.setattr(product_tool, "search_product_by_fitness_score", fake_search)
+
+    tool = product_fitness_score_tool.ProductFitnessScoreTool()
+    out = tool._run(client_id="C1", product_ids=["P1", "P2"], top_n=3, risk_rating_hard_filter=False)
+
+    parsed = json.loads(out)
+    assert parsed["results"][0]["product_id"] == "P1"
+    assert captured["client_ids"] == ["C1"]
+    assert captured["product_ids"] == ["P1", "P2"]
+    assert captured["kwargs"]["top_n"] == 3
+    assert captured["kwargs"]["risk_rating_hard_filter"] is False
+
+
+def test_product_fitness_score_tool_requires_client_id():
+    from src.planbot import product_fitness_score_tool
+
+    tool = product_fitness_score_tool.ProductFitnessScoreTool()
+    with pytest.raises(ValueError, match="client_id"):
+        tool._run(client_id="", product_ids=["P1"])
+
+
+def test_product_fitness_score_tool_requires_product_ids():
+    from src.planbot import product_fitness_score_tool
+
+    tool = product_fitness_score_tool.ProductFitnessScoreTool()
+    with pytest.raises(ValueError, match="product_id"):
+        tool._run(client_id="C1", product_ids=[])
+
