@@ -1,7 +1,7 @@
 # General
 - Don't start any new implementation for a specification until authorization from user.
 - If outstanding issues found in reviewing a specification, add a section at the end of the spec and number those issues for further discuss with users.
-- If a design is agreed by user for the outstanding issues, put the design in the corresponding section in the specification, and remove the issue from the list of outstanding issues.
+- If a design is agreed by user for the outstanding issues, fold the design into the corresponding section in the specification, and remove the issue from the list of outstanding issues.
 
 # Standard
 - Parameters (output filename, ai provider, prompts) shall be externalized to a yaml configuration

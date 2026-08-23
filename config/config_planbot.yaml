@@ -236,13 +236,6 @@ pipeline:
 
   # ── Product Investor Matching ───────────────────────────────────
   product_investor_matching:
-    request_contract:
-      required:
-        - product_ids
-      optional:
-        - client_selection
-        - market_outlook_text
-
     matcher:                                        # proposal-specific tuning (matcher only)
       readiness_pool_size: 15  # Pool size of top readiness clients to pass into fitness scoring
       llm_client_pool_size: 5  # Number of clients to pass into the LLM for final recommendation generation
@@ -309,15 +302,6 @@ pipeline:
         product_catalog: error
 
     prompt_packaging:
-      decision_context_order:
-        - client_profile
-        - product_catalog
-        - market_outlook
-      references_order:
-        - proposal_instructions
-        - section_guides
-        - general_guidelines
-        - financial_needs_guidelines
       llm_payload:
         include_references: true
 
@@ -329,13 +313,6 @@ pipeline:
 
   # ── Reinvestment Proposal ──────────────────────────────────────────
   reinvestment:
-    request_contract:
-      required:
-        - client_id
-        - source_product_id
-      optional:
-        - market_outlook_text
-
     execution:
       model: deepseek_tool
       output:
@@ -389,15 +366,6 @@ pipeline:
         default: error
 
     prompt_packaging:
-      decision_context_order:
-        - client_profile
-        - product_catalog
-        - market_outlook
-      references_order:
-        - proposal_instructions
-        - section_guides
-        - general_guidelines
-        - financial_needs_guidelines
       llm_payload:
         include_references: true
 
@@ -409,14 +377,6 @@ pipeline:
 
   # ── Product Opportunity Proposal ──────────────────────────────────
   product_opportunity:
-    request_contract:
-      required:
-        - client_id
-        - product_id
-      optional:
-        - suggested_products_and_rationale
-        - market_outlook_text
-
     execution:
       model: deepseek_tool
       output:
@@ -476,16 +436,6 @@ pipeline:
         suggested_products_and_rationale: fallback_to_static
 
     prompt_packaging:
-      decision_context_order:
-        - client_profile
-        - product_catalog
-      references_order:
-        - proposal_instructions
-        - section_guides
-        - general_guidelines
-        - financial_needs_guidelines
-        - suggested_products_and_rationale
-        - market_outlook
       llm_payload:
         include_references: true
 
@@ -497,12 +447,6 @@ pipeline:
 
   # ── Portfolio Review ──────────────────────────────────────────────
   portfolio_review:
-    request_contract:
-      required:
-        - client_id
-      optional:
-        - market_outlook_text
-
     execution:
       model: deepseek_tool
       output:
@@ -554,15 +498,6 @@ pipeline:
         product_catalog: error
 
     prompt_packaging:
-      decision_context_order:
-        - client_profile
-        - product_catalog
-        - market_outlook
-      references_order:
-        - proposal_instructions
-        - section_guides
-        - general_guidelines
-        - financial_needs_guidelines
       llm_payload:
         include_references: true
 

@@ -22,10 +22,10 @@ The two trees **overlap in intent** (both list reference files / model / output)
 
 Each integration (`reinvestment_proposal.py`, `product_opportunity_proposal.py`, `product_investor_matcher.py`, `portfolio_review.py`) uses a hybrid:
 
-1. `PipelineEngine(proposal_id=…).prepare()` → resolves file/static inputs (`proposal_instructions`, `section_guides`, `guidelines`, `market_outlook`).
-2. `run_crew_planbot(proposal_name="<top-level key>", …)` → `load_planbot_config()` reads the **top-level** section for the CrewAI definition.
+1. `PipelineEngine(proposal_id=…).load()` → reads the `pipeline.*` section for input definitions (`.inputs`, `.execution`) and resolves file/static inputs.
+2. `run_crew_planbot(proposal_name="<pipeline id>", …)` → `load_planbot_config()` derives the CrewAI definition from the pipeline id.
 
-Note: `PipelineEngine` *also* has a `run()`/`_run_pipeline()` path that synthesizes a temp config (`temp/pipeline_<id>.yaml`) and calls `run_crew_planbot(proposal_name="pipeline_<id>")` — but the integrations **bypass** this in favour of `.prepare()` + a direct `run_crew_planbot` call (they need fine control over `api_resolver` merging and `output_file_override`).
+> Note — historical: the engine once had a `run()`/`prepare()`/`_run_pipeline()` path that synthesized a temp config (`temp/pipeline_<id>.yaml`) and called `run_crew_planbot` itself. That path was dead code (the integrations always drove `run_crew_planbot` directly for fine control over `api_resolver` merging and `output_file_override`) and has since been **removed**. The engine today only loads config + resolves inputs; generation is driven by the wrappers.
 
 ### 2.3 Dead config (CLI-only)
 
@@ -157,7 +157,7 @@ This is **behavior-changing** (the prompt vocabulary changes), so it requires th
 | --- | --- | --- |
 | 1 | Add `matcher` (matching only) + `execution.output.overwrite` (product_opportunity only) to `pipeline.<id>`. `task`/`crewai_config_folder`/`output_*`/`llm_model` are **derived** from the id (§4.1), so they are not added. | `config/config_planbot.yaml` |
 | 2 | Teach `load_planbot_config` to read from `pipeline.<id>` (deriving `task` / `crewai_config_folder` / `output_root` / `output_filename` per §4.1), so `run_crew_planbot(proposal_name="<pipeline id>")` works without a top-level section. | `src/planbot/config.py` |
-| 3 | Update the four integrations to source the CrewAI definition from the pipeline config instead of `load_planbot_config`'s top-level lookup. Consolidate on `PipelineEngine.run()` (with an explicit resolver factory) rather than `.prepare()` + a direct `run_crew_planbot` call — removes the dead `_run_pipeline()` temp-config hack. | `reinvestment_proposal.py`, `product_opportunity_proposal.py`, `product_investor_matcher.py`, `portfolio_review.py` |
+| 3 | Update the four integrations to source the CrewAI definition from the pipeline config instead of `load_planbot_config`'s top-level lookup. Keep the wrappers driving `run_crew_planbot` directly via `.load()` + `.inputs`/`.execution` (the engine no longer has a `run()`/`_run_pipeline()` path). | `reinvestment_proposal.py`, `product_opportunity_proposal.py`, `product_investor_matcher.py`, `portfolio_review.py` |
 | 4 | Repoint `matcher` reads to `pipeline.product_investor_matching.matcher`. | `product_investor_matcher.py:107`, `:758` |
 | 5 | Rewrite `tasks.yaml` `description:` to name input ids instead of the old grouped section names (`proposal_instructions_and_format` → `proposal_instructions`/`section_guides`, `guidelines` → the three guideline inputs, `client_profiles` → `client_profile`, `product_catalogs` → `product_catalog`). | `data/planbot/<id>/crewai/tasks.yaml` |
 | 6 | Delete top-level `product_investor_matching` / `reinvestment_proposal` / `product_opportunity_proposal` / `portfolio_review` sections. | `config/config_planbot.yaml` |

@@ -1,85 +1,34 @@
 """
 Proposal Pipeline Engine — configuration-driven proposal prompt assembly.
 
-Reads proposal YAML configuration and input_defaults, resolves all inputs
-(file globs, API calls, runtime_or_static fallback chains), builds the
-``api_resolver`` and ``reference_sections`` config, and invokes
-``run_crew_planbot`` with the compiled payload.
+Reads proposal YAML configuration and input_defaults and resolves all inputs
+(file globs, API calls, runtime_or_static fallback chains) into per-input
+content.  The live API wrappers use ``load()`` + ``.inputs``; the resolution
+helpers are exercised by the unit tests.
 
 Architecture:
     PipelineEngine
-        ├── _load_pipeline_config()     → reads proposal YAML + input_defaults
+        ├── _load_and_validate()         → loads proposal YAML + merges defaults
         ├── _resolve_inputs()            → resolves each input per its source
-        ├── _run_pipeline()              → builds resolver + calls run_crew_planbot
-        └── run()                        → public entry point
+        └── load()                       → public entry point (used by wrappers)
 """
 
 from __future__ import annotations
 
-import json
 import logging
-import os
-from collections.abc import Callable
-from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-from src.planbot.crew_workflow import run_crew_planbot
-from src.planbot.input_loader import (
-    API_CLIENT_PROFILE,
-    API_PRODUCT_CATALOG,
-    API_SUGGESTED_PRODUCTS_AND_RATIONALE,
-    ReferenceDocument,
-    load_references,
-    read_text,
-)
+from src.planbot.input_loader import load_references
 from src.shared.config_loader import AppConfig
-from src.shared.market_outlook_utils import (
-    API_MARKET_OUTLOOK,
-    format_market_outlook_section,
-)
-from src.shared.resolver_formatters import build_api_resolver
 
 LOGGER = logging.getLogger(__name__)
 
 _ROOT_DIR = Path(__file__).resolve().parents[2]
 _DEFAULT_CONFIG_PATH = _ROOT_DIR / "config" / "config_planbot.yaml"
-
-# ── Public data types ────────────────────────────────────────────────────
-
-
-@dataclass
-class PipelineResult:
-    """Result of a pipeline run."""
-    status: str  # "success", "partial_error", "error"
-    output_path: str  # path to generated markdown
-    diagnostics: dict = field(default_factory=dict)
-    errors: list[dict] = field(default_factory=list)
-
-
-@dataclass
-class PipelinePrep:
-    """Prepared pipeline context for wrapper consumption.
-
-    The wrapper uses this to build its api_resolver and invoke
-    ``run_crew_planbot`` with the correct runtime overrides.
-    """
-    resolved_inputs: dict[str, str]
-    """All resolved non-API input content.  API inputs are empty strings."""
-    api_input_ids: list[str]
-    """Input IDs that need runtime API resolution by the wrapper."""
-    file_reference_docs: list[ReferenceDocument]
-    """Pre-resolved file-glob content as ReferenceDocuments."""
-    decision_context_order: list[str]
-    """Ordered list of decision_context input IDs."""
-    references_order: list[str]
-    """Ordered list of references input IDs."""
-    execution: dict
-    """Execution settings from YAML."""
-
 
 # ── Internal data types ──────────────────────────────────────────────────
 
@@ -174,182 +123,10 @@ class PipelineEngine:
 
     # ── Public API ──────────────────────────────────────────────────
 
-    def run(
-        self,
-        *,
-        client_id: str | None = None,
-        source_product_id: str | None = None,
-        product_id: str | None = None,
-        client_selection: dict | None = None,
-        product_ids: list[str] | None = None,
-        market_outlook_text: str | None = None,
-        market_outlook_source: str | None = None,
-        suggested_products_and_rationale: str | None = None,
-        runtime_context: dict[str, Any] | None = None,
-        api_resolver_factory: Callable[..., Callable[[str], ReferenceDocument]] | None = None,
-        output_file_override: str | Path | None = None,
-    ) -> PipelineResult:
-        """Run the proposal pipeline.
-
-        Parameters
-        ----------
-        client_id, source_product_id, product_id, etc. :
-            Seed identifiers passed through to the proposal resolver factory.
-        runtime_context : dict | None
-            Arbitrary runtime context passed to the resolver factory.
-        api_resolver_factory : callable | None
-            Factory that builds the ``api_resolver`` from resolved inputs.
-            When None, a default resolver is built from the resolved
-            ``decision_context`` inputs.  Must accept keyword arguments
-            matching the runtime seed identifiers plus ``resolved``
-            (a dict of input_id → resolved string content).
-        output_file_override : str | Path | None
-            Override output path.
-        """
-        diagnostics: dict[str, Any] = {}
-        errors: list[dict] = []
-
-        # ── Stage A: Load and validate ───────────────────────────
-        try:
-            self._load_and_validate()
-        except Exception as exc:
-            LOGGER.error("Pipeline config validation failed: %s", exc)
-            return PipelineResult(
-                status="error",
-                output_path="",
-                diagnostics={"stage": "A"},
-                errors=[{"code": "CONFIG_VALIDATION_ERROR", "message": str(exc)}],
-            )
-
-        # ── Stage B: Build runtime request context ───────────────
-        request_ctx: dict[str, Any] = {
-            "client_id": client_id,
-            "source_product_id": source_product_id,
-            "product_id": product_id,
-            "client_selection": client_selection,
-            "product_ids": product_ids,
-            "market_outlook_text": market_outlook_text,
-            "market_outlook_source": market_outlook_source,
-            "suggested_products_and_rationale": suggested_products_and_rationale,
-        }
-        if runtime_context:
-            request_ctx.update(runtime_context)
-
-        # ── Stage C: Resolve inputs ──────────────────────────────
-        resolved, resolution_log = self._resolve_inputs(request_ctx)
-        diagnostics["resolution"] = resolution_log
-
-        # ── Stage D: Quality gate check ──────────────────────────
-        quality_errors = self._check_quality_gates(resolved)
-        if quality_errors:
-            return PipelineResult(
-                status="error",
-                output_path="",
-                diagnostics=diagnostics,
-                errors=quality_errors,
-            )
-
-        # ── Stage E: Build resolver + invoke CrewAI ──────────────
-        try:
-            if api_resolver_factory is not None:
-                api_resolver = api_resolver_factory(
-                    **(request_ctx | {"resolved": resolved}),
-                )
-            else:
-                api_resolver = self._build_default_resolver(resolved)
-
-            output_path = self._run_pipeline(
-                resolved=resolved,
-                api_resolver=api_resolver,
-                output_file_override=output_file_override,
-            )
-        except Exception as exc:
-            LOGGER.error("Pipeline generation failed: %s", exc)
-            return PipelineResult(
-                status="error",
-                output_path="",
-                diagnostics=diagnostics,
-                errors=[{"code": "GENERATION_ERROR", "message": str(exc)}],
-            )
-
-        return PipelineResult(
-            status="success",
-            output_path=output_path,
-            diagnostics=diagnostics,
-            errors=errors,
-        )
-
     def load(self) -> "PipelineEngine":
         """Load config and merge defaults (populates ``.inputs``) without resolving inputs."""
         self._load_and_validate()
         return self
-
-    def prepare(
-        self,
-        *,
-        client_id: str | None = None,
-        source_product_id: str | None = None,
-        product_id: str | None = None,
-        client_selection: dict | None = None,
-        product_ids: list[str] | None = None,
-        market_outlook_text: str | None = None,
-        market_outlook_source: str | None = None,
-        suggested_products_and_rationale: str | None = None,
-        runtime_context: dict[str, Any] | None = None,
-    ) -> PipelinePrep:
-        """Resolve non-API inputs and return a PipelinePrep for wrapper use.
-
-        The wrapper is responsible for fetching API data and building the
-        ``api_resolver``.  This method handles everything else—file globs,
-        ``runtime_or_static`` chains, fallback policies, and quality gates
-        for non-API inputs.
-
-        Returns
-        -------
-        PipelinePrep
-            Resolved inputs, file content, packaging metadata.
-        """
-        self._load_and_validate()
-
-        request_ctx: dict[str, Any] = {
-            "client_id": client_id,
-            "source_product_id": source_product_id,
-            "product_id": product_id,
-            "client_selection": client_selection,
-            "product_ids": product_ids,
-            "market_outlook_text": market_outlook_text,
-            "market_outlook_source": market_outlook_source,
-            "suggested_products_and_rationale": suggested_products_and_rationale,
-        }
-        if runtime_context:
-            request_ctx.update(runtime_context)
-
-        resolved, resolution_log = self._resolve_inputs(request_ctx)
-
-        # Build file ReferenceDocuments from resolved file/runtime_or_static content
-        file_docs: list[ReferenceDocument] = []
-        api_ids: list[str] = []
-        for inp in self._inputs:
-            if inp.source == "file" or inp.source == "runtime_or_static":
-                content = resolved.get(inp.id, "")
-                if content.strip():
-                    file_docs.append(ReferenceDocument(
-                        path=Path(f"api:/resolved/{inp.id}"),
-                        content=content,
-                        source_type="markdown",
-                    ))
-            elif inp.source == "api":
-                api_ids.append(inp.id)
-
-        packaging = self._prompt_packaging
-        return PipelinePrep(
-            resolved_inputs=resolved,
-            api_input_ids=api_ids,
-            file_reference_docs=file_docs,
-            decision_context_order=packaging.get("decision_context_order", []),
-            references_order=packaging.get("references_order", []),
-            execution=self._execution,
-        )
 
     # ── Stage A: Load and validate ─────────────────────────────────
 
@@ -641,135 +418,6 @@ class PipelineEngine:
                 })
 
         return errors
-
-    # ── Stage E: Resolver + CrewAI ─────────────────────────────────
-
-    def _build_default_resolver(
-        self, resolved: dict[str, str]
-    ) -> Callable[[str], ReferenceDocument]:
-        """Build a basic api_resolver from resolved decision_context inputs."""
-        docs: dict[str, ReferenceDocument] = {}
-
-        # Map known input IDs to api:// paths
-        id_to_api = {
-            "client_profile": API_CLIENT_PROFILE,
-            "product_catalog": API_PRODUCT_CATALOG,
-            "suggested_products_and_rationale": API_SUGGESTED_PRODUCTS_AND_RATIONALE,
-            "market_outlook": API_MARKET_OUTLOOK,
-        }
-
-        for inp in self._inputs:
-            if inp.prompt_section != "decision_context":
-                continue
-            api_path = id_to_api.get(inp.id, f"api://{inp.id}")
-            content = resolved.get(inp.id, "")
-            docs[api_path] = ReferenceDocument(
-                path=Path(api_path),
-                content=content or "",
-                source_type="markdown",
-            )
-
-        return build_api_resolver(docs)
-
-    def _run_pipeline(
-        self,
-        resolved: dict[str, str],
-        api_resolver: Callable[[str], ReferenceDocument],
-        output_file_override: str | Path | None = None,
-    ) -> str:
-        """Build reference sections config and invoke run_crew_planbot."""
-        packaging = self._prompt_packaging
-        decision_order = packaging.get("decision_context_order", [])
-        references_order = packaging.get("references_order", [])
-
-        # Build reference_sections for run_crew_planbot
-        reference_sections: dict[str, dict] = {}
-
-        # Decision context section — all API inputs
-        api_globs: list[str] = []
-        for input_id in decision_order:
-            api_path = f"api://{input_id}"
-            api_globs.append(api_path)
-
-        if api_globs:
-            reference_sections["decision_context"] = {
-                "purpose": "Runtime context data for proposal generation",
-                "globs": api_globs,
-            }
-
-        # References section — all file inputs
-        ref_globs: list[str] = []
-        for inp in self._inputs:
-            if inp.prompt_section != "references":
-                continue
-            if inp.paths:
-                ref_globs.extend(inp.paths)
-
-        if ref_globs:
-            reference_sections["references"] = {
-                "purpose": "Reference documents for proposal generation",
-                "globs": ref_globs,
-            }
-
-        # Build runtime_reference_overrides
-        runtime_overrides: dict[str, list[str]] = {}
-        if api_globs:
-            runtime_overrides["decision_context"] = api_globs
-
-        # Build a temporary PlanBotConfig-like structure for run_crew_planbot.
-        # We patch the config loading by temporarily writing a minimal config.
-        exec_cfg = self._execution
-
-        temp_config = deepcopy(yaml.safe_load(self._config_path.read_text(encoding="utf-8")) or {})
-
-        # Override the proposal section with pipeline-driven settings
-        proposal_name = f"pipeline_{self._proposal_id}"
-        output_folder = exec_cfg.get("output", {}).get("folder", f"runs/{self._proposal_id}")
-        output_filename = exec_cfg.get("output", {}).get(
-            "filename_template", f"{self._proposal_id}.md"
-        )
-        model_key = exec_cfg.get("model", "deepseek_tool")
-
-        # Build a temporary proposal entry
-        temp_config[proposal_name] = {
-            "task": f"{self._proposal_id}_task",
-            "output_root": output_folder,
-            "output_filename": output_filename,
-            "overwrite_output_folder": True,
-            "crewai_config_folder": f"data/planbot/{self._proposal_id}/crewai",
-            "references": {
-                "decision_context": [
-                    {"name": g, "purpose": "Runtime data"}
-                    for g in api_globs
-                ],
-                "references": [
-                    {"name": g, "purpose": "Reference document"}
-                    for g in ref_globs
-                ],
-            },
-            "llm_model": model_key,
-            "references_root": f"data/planbot/{self._proposal_id}",
-        }
-
-        # Write the patched config to a temp file
-        temp_config_path = self._root_dir / "temp" / f"pipeline_{self._proposal_id}.yaml"
-        temp_config_path.parent.mkdir(parents=True, exist_ok=True)
-        temp_config_path.write_text(yaml.dump(temp_config), encoding="utf-8")
-
-        try:
-            result = run_crew_planbot(
-                app_config=self._app_config,
-                config_path=str(temp_config_path),
-                proposal_name=proposal_name,
-                runtime_reference_overrides=runtime_overrides,
-                output_file_override=output_file_override,
-                api_resolver=api_resolver,
-            )
-            return str(result.output_path)
-        finally:
-            # Clean up temp config
-            if temp_config_path.exists():
-                temp_config_path.unlink()
 
     # ── Integration helpers ────────────────────────────────────────
 

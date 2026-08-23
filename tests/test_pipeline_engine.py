@@ -29,7 +29,7 @@ _SRC = Path(__file__).resolve().parents[2] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from src.planbot.pipeline_engine import PipelineEngine, PipelineResult, _InputDef
+from src.planbot.pipeline_engine import PipelineEngine, _InputDef
 from src.shared.config_loader import AppConfig, load_config
 
 # ---------------------------------------------------------------------------
@@ -131,10 +131,6 @@ _MINIMAL_PIPELINE = {
     },
     "pipeline": {
         "test_proposal": {
-            "request_contract": {
-                "required": ["client_id"],
-                "optional": [],
-            },
             "execution": {
                 "model": "mock",
                 "output": {
@@ -157,8 +153,6 @@ _MINIMAL_PIPELINE = {
                 "per_input": {},
             },
             "prompt_packaging": {
-                "decision_context_order": ["client_profile"],
-                "references_order": ["proposal_instructions"],
                 "llm_payload": {
                     "task_prompt_from": "proposal_instructions",
                     "include_references": True,
@@ -217,6 +211,11 @@ class TestPipelineConfigLoading(unittest.TestCase):
         self.assertEqual(cp.source, "api")
 
 
+# ============================================================================
+#  Test: Input resolution
+# ============================================================================
+
+
 class TestInputResolution(unittest.TestCase):
     """Tests for input resolution strategies."""
 
@@ -242,7 +241,6 @@ class TestInputResolution(unittest.TestCase):
             },
             "pipeline": {
                 "test_proposal": {
-                    "request_contract": {"required": ["client_id"], "optional": []},
                     "execution": {
                         "model": "mock",
                         "output": {"folder": "runs/test", "filename_template": "test.md"},
@@ -269,8 +267,6 @@ class TestInputResolution(unittest.TestCase):
                         "per_input": {"market_outlook": "fallback_to_static"},
                     },
                     "prompt_packaging": {
-                        "decision_context_order": ["client_profile"],
-                        "references_order": ["proposal_instructions"],
                         "llm_payload": {},
                     },
                     "quality_gates": {},
@@ -450,13 +446,12 @@ class TestQualityGates(unittest.TestCase):
             },
             "pipeline": {
                 "test_proposal": {
-                    "request_contract": {"required": ["client_id"], "optional": []},
                     "execution": {"model": "mock", "output": {"folder": "runs/t", "filename_template": "t.md"}},
                     "inputs": [
                         {"id": "my_file", "source": "file", "paths": ["nonexistent/*.md"], "required": True},
                     ],
                     "input_policy": {"missing_data": {"default": "error"}},
-                    "prompt_packaging": {"decision_context_order": [], "references_order": ["my_file"], "llm_payload": {}},
+                    "prompt_packaging": {"llm_payload": {}},
                     "quality_gates": {"required_sections": ["my_file"], "fail_on_missing_required_input": True},
                 }
             },
@@ -502,7 +497,6 @@ class TestErrorCodePropagation(unittest.TestCase):
             },
             "pipeline": {
                 "test_proposal": {
-                    "request_contract": {"required": ["client_id"], "optional": []},
                     "execution": {
                         "model": "mock",
                         "output": {"folder": "runs/test", "filename_template": "t.md"},
@@ -516,14 +510,8 @@ class TestErrorCodePropagation(unittest.TestCase):
                         },
                         {"id": "client_profile", "required": True},
                     ],
-                    "input_policy": {
-                        "missing_data": {"default": "error"},
-                    },
-                    "prompt_packaging": {
-                        "decision_context_order": ["client_profile"],
-                        "references_order": ["proposal_instructions"],
-                        "llm_payload": {},
-                    },
+                    "input_policy": {"missing_data": {"default": "error"}},
+                    "prompt_packaging": {"llm_payload": {}},
                     "quality_gates": {},
                 }
             },
@@ -589,7 +577,6 @@ class TestAcceptanceCriteria(unittest.TestCase):
             },
             "pipeline": {
                 "reinvestment": {
-                    "request_contract": {"required": ["client_id", "source_product_id"], "optional": ["market_outlook_text"]},
                     "execution": {"model": "mock", "output": {"folder": "runs/reinvestment", "filename_template": "r_{client_id}.md"}},
                     "inputs": [
                         {"id": "proposal_instructions", "source": "file", "paths": ["data/planbot/reinvestment_proposal/proposal_instructions/*.md"], "required": True},
@@ -604,11 +591,10 @@ class TestAcceptanceCriteria(unittest.TestCase):
                         {"id": "market_outlook", "source_priority": ["request.market_outlook_text", "data/planbot/shared/market_outlook/*.md"]},
                     ],
                     "input_policy": {"missing_data": {"default": "error"}, "per_input": {"investor_readiness_score": "skip", "market_outlook": "fallback_to_static", "product_fitness_scores": "skip"}},
-                    "prompt_packaging": {"decision_context_order": ["client_profile", "investor_readiness_score", "wallet_inflow_event", "product_catalog", "product_fitness_scores", "market_outlook"], "references_order": ["proposal_instructions", "section_guides", "general_guidelines", "financial_needs_guidelines"], "llm_payload": {"task_prompt_from": "proposal_instructions", "include_references": True}},
+                    "prompt_packaging": {"llm_payload": {"task_prompt_from": "proposal_instructions", "include_references": True}},
                     "quality_gates": {"required_sections": ["client_profile", "wallet_inflow_event", "product_catalog"], "fail_on_missing_required_input": True},
                 },
                 "product_opportunity": {
-                    "request_contract": {"required": ["client_id", "product_id"], "optional": ["suggested_products_and_rationale", "market_outlook_text"]},
                     "execution": {"model": "mock", "output": {"folder": "runs/product_opportunity", "filename_template": "po_{client_id}.md"}},
                     "inputs": [
                         {"id": "proposal_instructions", "source": "file", "paths": ["data/planbot/product_opportunity_proposal/proposal_instructions/*.md"], "required": True},
@@ -623,7 +609,7 @@ class TestAcceptanceCriteria(unittest.TestCase):
                         {"id": "market_outlook", "source_priority": ["request.market_outlook_text", "data/planbot/shared/market_outlook/*.md"]},
                     ],
                     "input_policy": {"missing_data": {"default": "skip"}, "per_input": {"client_profile": "error", "product_catalog": "error", "suggested_products_and_rationale": "fallback_to_static", "market_outlook": "fallback_to_static"}},
-                    "prompt_packaging": {"decision_context_order": ["client_profile", "investor_readiness_score", "product_catalog", "product_fitness_scores"], "references_order": ["proposal_instructions", "section_guides", "general_guidelines", "financial_needs_guidelines", "suggested_products_and_rationale", "market_outlook"], "llm_payload": {"task_prompt_from": "proposal_instructions", "include_references": True}},
+                    "prompt_packaging": {"llm_payload": {"task_prompt_from": "proposal_instructions", "include_references": True}},
                     "quality_gates": {"required_sections": ["client_profile", "product_catalog"], "fail_on_missing_required_input": True},
                 },
             },
@@ -687,7 +673,6 @@ class TestAcceptanceCriteria(unittest.TestCase):
             },
             "pipeline": {
                 "reinvestment": {
-                    "request_contract": {"required": ["client_id", "source_product_id"], "optional": []},
                     "execution": {"model": "mock", "output": {"folder": "runs/re", "filename_template": "r.md"}},
                     "inputs": [
                         {"id": "proposal_instructions", "source": "file", "paths": ["nonexistent/*.md"], "required": True},
@@ -696,7 +681,7 @@ class TestAcceptanceCriteria(unittest.TestCase):
                         {"id": "product_catalog", "required": True},
                     ],
                     "input_policy": {"missing_data": {"default": "error"}},
-                    "prompt_packaging": {"decision_context_order": ["client_profile"], "references_order": ["proposal_instructions"], "llm_payload": {}},
+                    "prompt_packaging": {"llm_payload": {}},
                     "quality_gates": {},
                 }
             },
@@ -817,14 +802,13 @@ class TestPipelineIntegration(unittest.TestCase):
             },
             "pipeline": {
                 "proposal_mock": {
-                    "request_contract": {"required": ["client_id"], "optional": []},
                     "execution": {"model": "mock", "output": {"folder": "runs/mock_test", "filename_template": "mock.md"}},
                     "inputs": [
                         {"id": "proposal_instructions", "source": "file", "paths": ["data/test/proposal/instructions/*.md"], "required": True},
                         {"id": "client_profile", "required": True},
                     ],
                     "input_policy": {"missing_data": {"default": "error"}},
-                    "prompt_packaging": {"decision_context_order": ["client_profile"], "references_order": ["proposal_instructions"], "llm_payload": {"task_prompt_from": "proposal_instructions", "include_references": True}},
+                    "prompt_packaging": {"llm_payload": {"task_prompt_from": "proposal_instructions", "include_references": True}},
                     "quality_gates": {},
                 }
             },

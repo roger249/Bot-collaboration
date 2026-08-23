@@ -182,7 +182,7 @@ Produces:
 
 The pipeline should move to one simple proposal configuration model with these top-level blocks:
 
-1. proposal identity and request contract
+1. proposal identity
 2. execution settings
 3. unified inputs (sections + references)
 4. input policy
@@ -210,10 +210,6 @@ input_defaults:
 # ── pipeline: one key per proposal type ─────────────────────────────────────
 pipeline:
    <proposal_id>:
-      request_contract:
-         required: [..]
-         optional: [..]
-
       execution:
          model: <model_key>
          output:
@@ -230,8 +226,6 @@ pipeline:
          per_input: { ... }
 
       prompt_packaging:
-         decision_context_order: [ ... ]
-         references_order: [ ... ]
          llm_payload:
             include_references: true
 
@@ -255,13 +249,6 @@ does not supply the task prompt.
 ```yaml
 pipeline:
    reinvestment:
-      request_contract:
-         required:
-            - client_id
-            - source_product_id
-         optional:
-            - market_outlook_text
-
       execution:
          model: deepseek_tool
          output:
@@ -301,54 +288,35 @@ pipeline:
 
          - id: client_profile
            required: true
-           # source/api + prompt_section/decision_context come from input_defaults.by_id;
-           # composite: always includes holdings table
-
-         - id: investor_readiness_score
-           # optional — omitted required defaults to false
-
-         - id: wallet_inflow_event
-           required: true
+           # source/api + prompt_section/decision_context come from input_defaults.by_id
+           include:
+              investor_readiness_score: true
+              wallet_inflow_event: true
 
          - id: product_catalog
            required: true
-           # composite: always includes suggested product + holdings in catalog + alternatives
-
-         - id: product_fitness_scores
+           include:
+              product_fitness_scores: true
 
          - id: market_outlook
-           source_priority:
-              - request.market_outlook_text
-              - data/planbot/shared/market_outlook/*.md
+           sources:
+              request: request.market_outlook_text
+              static: data/planbot/shared/market_outlook/*.md
+           default_source: request
 
       input_policy:
          missing_data:
             default: error
          per_input:
-            investor_readiness_score: skip
             market_outlook: fallback_to_static
-            product_fitness_scores: skip
 
       prompt_packaging:
-         decision_context_order:
-            - client_profile
-            - investor_readiness_score
-            - wallet_inflow_event
-            - product_catalog
-            - product_fitness_scores
-            - market_outlook
-         references_order:
-            - proposal_instructions
-            - section_guides
-            - general_guidelines
-            - financial_needs_guidelines
          llm_payload:
             include_references: true
 
       quality_gates:
          required_sections:
             - client_profile
-            - wallet_inflow_event
             - product_catalog
          fail_on_missing_required_input: true
 ```
@@ -370,15 +338,40 @@ For Sprint 1, runtime data retrieval and enrichment should be fixed in shared co
 2. Proposal YAML should not carry provider/method boilerplate when there is only one supported source path.
 3. Re-externalize source/enrichment only when genuine multi-source variation is needed.
 
-### 6.4.1 Sprint 1 mapping assumption
+### 6.4.1 Composite inputs — `include` flags
 
-For Sprint 1, API selection and formatter selection are both driven by `id`.
+For Sprint 1, API selection and formatter selection are both driven by `id`, but
+**not one-to-one**: two inputs are **composite** — their rendered content bundles
+sub-parts produced by the API resolver/formatter, rather than standalone
+sections. The sub-parts are controlled by an `include` boolean map:
 
-1. Each runtime-resolved `id` maps to one shared API retrieval path.
-2. Each `id` also maps to one shared formatter in code.
-3. The current model assumes a one-to-one mapping between `id`, API path, and formatter.
-4. Proposal YAML selects which inputs are needed, but does not choose among multiple APIs or multiple formatters for the same `id`.
-5. If future requirements need multiple APIs or render styles for one logical input, the schema can be extended later.
+| Composite input | Sub-parts (includeable) |
+| --- | --- |
+| `client_profile` | `investor_readiness_score`, `wallet_inflow_event` |
+| `product_catalog` | `product_fitness_scores` |
+
+```yaml
+- id: client_profile
+  required: true
+  include:
+    investor_readiness_score: true   # render IRS section inside client_profile
+    wallet_inflow_event: true        # render wallet inflow section inside client_profile
+- id: product_catalog
+  required: true
+  include:
+    product_fitness_scores: true     # render PFS table inside product_catalog
+```
+
+The sub-part ids (`investor_readiness_score`, `wallet_inflow_event`,
+`product_fitness_scores`) are **not** standalone inputs — they are removed from
+`inputs`, `input_defaults.by_id`, and `quality_gates.required_sections`. Their
+presence is expressed solely by the `include` flag on the parent composite
+input; omitted flags default to `false`.
+
+This replaces the earlier one-to-one `id` ↔ API ↔ formatter assumption. The
+composite formatters (`format_client_and_holdings`, `format_product_catalog`)
+own the sub-part rendering; the engine does not resolve the sub-part ids
+independently.
 
 ### 6.5 Defaults and shorthand to reduce boilerplate
 
@@ -405,8 +398,6 @@ Recommended precedence order:
 Compact YAML pattern:
 
 ```yaml
-schema_version: 1
-
 input_defaults:
    global:
       prompt_section: references
@@ -415,42 +406,45 @@ input_defaults:
       client_profile:
          source: api
          prompt_section: decision_context
-         # composite: always includes holdings
-      investor_readiness_score:
-         source: api
-         prompt_section: decision_context
-      wallet_inflow_event:
-         source: api
-         prompt_section: decision_context
+         # composite: sub-parts via `include` (investor_readiness_score, wallet_inflow_event)
       product_catalog:
          source: api
          prompt_section: decision_context
-         # composite: always includes suggested + holdings in catalog + alternatives
-      product_fitness_scores:
-         source: api
-         prompt_section: decision_context
+         # composite: sub-parts via `include` (product_fitness_scores)
       market_outlook:
          source: runtime_or_static
 
-input_policy:
-   missing_data:
-      default: skip
-   per_input:
-      client_profile: error
-      product_catalog: error
+pipeline:
+   <proposal_id>:
+      execution:
+         model: <model_key>
+         output:
+            folder: <output_folder>
+            filename_template: <template>
 
-inputs:
-   - id: proposal_instructions
-      paths:
-         - data/planbot/reinvestment_proposal/proposal_instructions/*.md
+      input_policy:
+         missing_data:
+            default: skip
+         per_input:
+            client_profile: error
+            product_catalog: error
 
-   - id: client_profile
-      required: true
+      inputs:
+         - id: proposal_instructions
+            paths:
+               - data/planbot/reinvestment_proposal/proposal_instructions/*.md
 
-   - id: market_outlook
-      source_priority:
-         - request.market_outlook_text
-         - data/planbot/shared/market_outlook/*.md
+         - id: client_profile
+            required: true
+            include:
+               investor_readiness_score: true
+               wallet_inflow_event: true
+
+         - id: market_outlook
+            sources:
+               request: request.market_outlook_text
+               static: data/planbot/shared/market_outlook/*.md
+            default_source: request
 ```
 
 This keeps configuration intuitive while avoiding repetitive fields on most input rows.
@@ -460,111 +454,82 @@ This keeps configuration intuitive while avoiding repetitive fields on most inpu
 The following example intentionally omits keys when defaults already provide the desired behavior.
 
 ```yaml
-schema_version: 1
-
-# shared defaults, defined once for all proposal configurations
 input_defaults:
    global:
       prompt_section: references
       required: false
    by_id:
-      client_profile: { source: api, prompt_section: decision_context, note: "composite: includes holdings" }
-      investor_readiness_score: { source: api, prompt_section: decision_context }
-      product_catalog: { source: api, prompt_section: decision_context, note: "composite: includes suggested + holdings + alternatives" }
-      product_fitness_scores: { source: api, prompt_section: decision_context }
+      client_profile: { source: api, prompt_section: decision_context }
+      product_catalog: { source: api, prompt_section: decision_context }
       suggested_products_and_rationale: { source: runtime_or_static, prompt_section: references }
       market_outlook: { source: runtime_or_static, prompt_section: references }
 
-proposal:
-   id: product_opportunity_proposal
-   name: Product Opportunity Proposal
+pipeline:
+   product_opportunity:
+      execution:
+         model: deepseek_tool
+         output:
+            folder: runs/product_opportunity_proposal
+            filename_template: product_opportunity_{client_id}_{date}.md
+            overwrite: true
 
-request_contract:
-   required:
-      - client_id
-      - product_id
-   optional:
-      - suggested_products_and_rationale
-      - market_outlook_text
-      - alternative_count
+      input_policy:
+         missing_data:
+            default: skip
+         per_input:
+            client_profile: error
+            product_catalog: error
+            suggested_products_and_rationale: fallback_to_static
 
-execution:
-   model: deepseek_tool
-   output:
-      folder: runs/product_opportunity_proposal
-      filename_template: product_opportunity_{client_id}_{date}.md
+      inputs:
+         - id: proposal_instructions
+            required: true
+            paths:
+               - data/planbot/product_opportunity_proposal/proposal_instructions/*.md
 
-input_policy:
-   missing_data:
-      default: skip
-   per_input:
-      client_profile: error
-      product_catalog: error
-      suggested_products_and_rationale: fallback_to_static
-      market_outlook: fallback_to_static
+         - id: section_guides
+            required: true
+            paths:
+               - data/planbot/shared/proposal_section_instructions/*.md
 
-inputs:
-   - id: proposal_instructions
-      required: true
-      paths:
-         - data/planbot/product_opportunity_proposal/proposal_instructions/*.md
+         - id: general_guidelines
+            required: true
+            paths:
+               - data/planbot/shared/common/general_guideline.md
 
-   - id: section_guides
-      required: true
-      paths:
-         - data/planbot/shared/proposal_section_instructions/*.md
+         - id: financial_needs_guidelines
+            required: true
+            paths:
+               - data/planbot/shared/financial_needs/*.md
 
-   - id: general_guidelines
-      required: true
-      paths:
-         - data/planbot/shared/common/general_guideline.md
+         - id: client_profile
+            required: true
 
-   - id: financial_needs_guidelines
-      required: true
-      paths:
-         - data/planbot/shared/financial_needs/*.md
+         - id: product_catalog
+            required: true
+            include:
+               product_fitness_scores: true
 
-   - id: client_profile
-      required: true
+         - id: suggested_products_and_rationale
+            source_priority:
+               - request.suggested_products_and_rationale
+               - data/planbot/product_opportunity_proposal/suggested_products/*.md
 
-   - id: investor_readiness_score
+         - id: market_outlook
+            sources:
+               request: request.market_outlook_text
+               static: data/planbot/shared/market_outlook/*.md
+            default_source: request
 
-   - id: product_catalog
-      required: true
+      prompt_packaging:
+         llm_payload:
+            include_references: true
 
-   - id: product_fitness_scores
-
-   - id: suggested_products_and_rationale
-      source_priority:
-         - request.suggested_products_and_rationale
-         - data/planbot/product_opportunity_proposal/suggested_products/*.md
-
-   - id: market_outlook
-      source_priority:
-         - request.market_outlook_text
-         - data/planbot/shared/market_outlook/*.md
-
-prompt_packaging:
-   decision_context_order:
-      - client_profile
-      - investor_readiness_score
-      - product_catalog
-      - product_fitness_scores
-   references_order:
-      - proposal_instructions
-      - section_guides
-      - general_guidelines
-      - financial_needs_guidelines
-      - suggested_products_and_rationale
-      - market_outlook
-   llm_payload:
-      include_references: true
-
-quality_gates:
-   required_sections:
-      - client_profile
-      - product_catalog
-   fail_on_missing_required_input: true
+      quality_gates:
+         required_sections:
+            - client_profile
+            - product_catalog
+         fail_on_missing_required_input: true
 ```
 
 Notes on omitted keys:
@@ -572,8 +537,7 @@ Notes on omitted keys:
 1. Most runtime business inputs omit `source` because `input_defaults.by_id` already maps them to `api`.
 2. Decision-critical inputs omit `prompt_section` because `input_defaults.by_id` already maps them to `decision_context`.
 3. Optional inputs omit `required` because the global default is `false`.
-4. `suggested_products_and_rationale` and `market_outlook` only specify `source_priority` because their `source` and `prompt_section` are already defaulted.
-5. `client_profile` and `product_catalog` are composite IDs — each is backed by a single API call that returns multiple logical sub-parts.
+4. `client_profile` and `product_catalog` are composite IDs — their sub-parts (`investor_readiness_score`, `wallet_inflow_event`, `product_fitness_scores`) are controlled by `include` flags, not standalone inputs.
 
 ### 6.6 Quality gate semantics
 
@@ -692,21 +656,8 @@ What should be preserved:
 
 ---
 
-## 12. Non-Goals (This Draft)
 
-This document does not define:
-
-1. code-level class diagrams
-2. detailed sprint task breakdown
-3. exact method signatures
-4. specific refactor sequencing by file
-5. migration adapters for legacy YAML schema
-
-Those should be defined in a separate implementation plan after concept approval.
-
----
-
-## 13. Conceptual Success Criteria
+## 12. Conceptual Success Criteria
 
 The concept is successful when:
 
@@ -715,7 +666,7 @@ The concept is successful when:
 3. Runtime and static references coexist under explicit policies.
 4. New proposal onboarding requires configuration and content authoring, not custom orchestration logic.
 
-### 13.1 Acceptance criteria — proposal generation tests
+### 12.1 Acceptance criteria — proposal generation tests
 
 The following tests serve as the minimal regression gate for the pipeline refactor. Each proposal type has one normal-flow and one exception-flow test, matching the project convention of two tests per component.
 
@@ -763,7 +714,7 @@ The following tests serve as the minimal regression gate for the pipeline refact
 
 ---
 
-## 14. Resolved design choices captured in this spec
+## 13. Resolved design choices captured in this spec
 
 The following architectural choices are now explicitly embodied in this specification and do not require further debate before implementation:
 
@@ -772,46 +723,22 @@ The following architectural choices are now explicitly embodied in this specific
 3. Shared runtime logic owns retrieval and formatting. Proposal YAML selects which inputs matter, while shared resolvers and `format_*` helpers handle the common rendering path for logical data types.
 4. The matcher is treated as a first-class proposal variant within the same schema model, with differences expressed by configuration rather than hardcoded wrapper behavior.
 5. The implementation path should preserve current output shape while introducing a cleaner configuration contract and a clear migration boundary for legacy wrapper logic.
-
-## 15. Open issues for discussion before implementation
-
-*All issues resolved. Section retained for future items.*
+6. Required-field validation lives at the API boundary, not in the pipeline engine: missing or unknown `client_id` / `product_id` are rejected by the Pydantic request models (HTTP 422) plus the wrappers' `LookupError` checks. The engine's `request_contract` block was removed as inert, and `_check_quality_gates` / `run()` remain dead code.
+7. Missing-data enforcement for `api` inputs is, by design, a wrapper/API-layer concern rather than an engine `input_policy` concern. `api` inputs (`client_profile`, `product_catalog`) are resolved by the wrapper's resolver factory (which raises `LookupError` when a client/product is absent); the engine marks them `pending`, so `input_policy.missing_data` intentionally only guards `file` / `runtime_or_static` inputs.
 
 
-## 16. Cross-Reference
+## 14. Cross-Reference
 
 This concept is aligned with the operational proposal metadata in `config/config_planbot.yaml` and uses YAML as the primary contract for proposal behavior. The document is intended to stand on its own as the canonical design reference for the pipeline model and should remain the basis for subsequent implementation planning.
 
 ---
 
-## 17. Implementation review — outstanding objectives
+## 15. Implementation review — outstanding issues
 
-The following spec objectives are not yet implemented (beyond the legacy-section removal captured in AC-13-07). These are tracked here for discussion before the next implementation pass.
+The following items are tracked here for discussion before the next implementation pass (beyond the legacy-section removal captured in AC-13-07).
 
-2. **Quality gates are not enforced at runtime.** Section 6.6 / 5.4 require `fail_on_missing_required_input` to reject a run when a required input is missing. `prepare()` never calls `_check_quality_gates`; only the unused `run()` does.
+1. **`portfolio_review` is not fully onboarded.** Two facets of the same gap: (a) `portfolio_review.py` still uses `proposal_name="portfolio_review"` with no `PipelineEngine` integration; (b) §8 "Proposal Types in Scope" omits `portfolio_review` (lists only reinvestment, product opportunity, and matcher), contradicting AC-13-07 and the YAML.
 
-3. **Stage E–F (compilation/generation + output/diagnostics) is dead code.** Section 5.5 / 5.6. Wrappers only call `prepare()`; `run()` and `_run_pipeline()` (the temp-config-file path) are unreachable.
+2. **Stable error codes never reach API callers.** Section 9.2 / 10 define `{code, message}` errors, but wrappers catch exceptions and emit `str(exc)`, so the structured contract is lost.
 
-4. **`portfolio_review` is not migrated.** `portfolio_review.py` still uses `proposal_name="portfolio_review"` with no `PipelineEngine` integration.
-
-5. **Stable error codes never reach API callers.** Section 9.2 / 10 define `{code, message}` errors, but wrappers catch exceptions and emit `str(exc)`, so the structured contract is lost.
-
-6. **Stage F diagnostics are discarded.** `_resolve_inputs` builds a `resolution_log`, but `prepare()` drops it; per-input outcomes are not surfaced to the output.
-
-## 18. Implementation review — overlooked spec issues
-
-The following are internal inconsistencies or gaps in the specification itself, identified during implementation review.
-
-A. **§6.5 "Compact YAML pattern" and §6.5.1 are stale.** They still show the old `schema_version` + `proposal: {id, name}` object form, contradicting the `pipeline:`-keyed §6.1/§6.2.
-
-B. **§6.4.1 "one-to-one `id` ↔ API ↔ formatter" is violated.** `investor_readiness_score`, `wallet_inflow_event`, and `product_fitness_scores` have no standalone formatter or API path — they are baked into the composite `format_client_and_holdings` / `format_product_catalog`. The engine's `_resolve_api` marks them "pending" with no real resolution path.
-
-C. **`decision_context_order` / `references_order` are decorative.** The YAML declares them and `prepare()` returns them, but the wrappers rebuild their own section maps by iterating `pipeline_engine.inputs` with hardcoded id→legacy-section logic. The ordering fields have no effect.
-
-D. **`request_contract.required` is never validated.** Section 5.1 "Stage A: Intake and validation" is unimplemented — `prepare()` does not check that required seed IDs (`client_id`, `source_product_id`, …) are present.
-
-E. **`input_policy.missing_data.default: error` cannot fire for `api` inputs.** API inputs are marked `pending` (not `error`), so a `default: error` policy is meaningless for them; it only guards `file` / `runtime_or_static`.
-
-F. **The `api:/resolved/` single-slash convention is fragile.** The engine stores `api:/resolved/{id}` (Path normalizes `//` → `/`), wrappers send `api://resolved/{id}`, and the merged resolvers do `.replace("//", "/")`. Overloading the `api://` scheme is brittle; a dedicated prefix would be cleaner.
-
-G. **§8 omits `portfolio_review`.** It lists only three proposal types, yet AC-13-07 and the YAML include `portfolio_review`. Inconsistent scope.
+3. **Stage F diagnostics are discarded (needs work).** `_resolve_inputs` builds a `resolution_log`, but the wrappers (which call `.load()`, not `prepare()`) never surface per-input outcomes to the output. This is the remaining Stage F gap.
