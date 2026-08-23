@@ -311,6 +311,67 @@ pipeline:
         - product_catalog
       fail_on_missing_required_input: true
 
+  # ── LLM Product Matcher (POC) ─────────────────────────────────────
+  llm_product_matcher:
+    execution:
+      model: deepseek_tool
+      output:
+        folder: runs/llm_product_matcher
+        filename_template: llm_product_matcher_{date}.md
+      logging:
+        level: INFO
+
+    inputs:
+      - id: proposal_instructions
+        source: file
+        paths:
+          - data/planbot/llm_product_matcher/proposal_instructions/*.md
+        prompt_section: references
+        required: true
+      - id: section_guides
+        source: file
+        paths:
+          - data/planbot/shared/proposal_section_instructions/*.md
+        prompt_section: references
+        required: true
+      - id: general_guidelines
+        source: file
+        paths:
+          - data/planbot/shared/common/general_guideline.md
+        prompt_section: references
+        required: true
+      - id: financial_needs_guidelines
+        source: file
+        paths:
+          - data/planbot/shared/financial_needs/*.md
+        prompt_section: references
+        required: true
+      - id: client_profile
+        required: true
+        include:
+          investor_readiness_score: true   # readiness score + RM notes fed as reference (no IRS gate)
+      - id: market_outlook
+        source: runtime_or_static   # explicit — drives the `sources`/`default_source` resolution
+        sources:
+          request: request.market_outlook_text
+          static: data/planbot/shared/market_outlook/*.md
+        default_source: request
+
+    input_policy:
+      missing_data:
+        default: skip
+      per_input:
+        client_profile: error
+
+    prompt_packaging:
+      llm_payload:
+        include_references: true
+
+    quality_gates:
+      required_sections:
+        - client_profile
+      fail_on_missing_required_input: true
+
   # ── Reinvestment Proposal ──────────────────────────────────────────
   reinvestment:
     execution:

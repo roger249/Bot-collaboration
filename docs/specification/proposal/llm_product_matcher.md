@@ -61,7 +61,7 @@ search_similar(
             #               expected_return, investment_note, similarity_score}, ...]}
 ```
 
-- **Registration**: add a `ProductSearch` branch to `_build_tool_instance()` in `src/planbot/crew_workflow.py`.
+- **Registration**: add a `ProductSearchTool` branch to `_build_tool_instance()` in `src/planbot/crew_workflow.py`.
 - **Attachment**: list it under the agent's `tools` field in `data/planbot/llm_product_matcher/crewai/agents.yaml`.
 
 ### 4.2 Web search tools (SerpApi + `ScrapeWebsiteTool`)
@@ -84,9 +84,9 @@ Configuration (externalized to YAML, per AC5):
 Registration & attachment (tool identifier standardized to **`SerpApiGoogleSearchTool`**, matching the CrewAI class name):
 
 - **Dependency**: the `serpapi` package is required (the tool imports `from serpapi import Client`). Install with `uv add serpapi` (adds `serpapi` to `pyproject.toml` and `uv.lock`). Docker builds are unaffected — they install from the same `pyproject.toml` / `uv.lock` via uv, so no separate Docker step is needed.
-- **`_build_tool_instance()` branch**: key `"SerpApiGoogleSearchTool"` (mirror `ProductSearch`). Because `SerpApiBaseTool.__init__` raises on a missing `SERPAPI_API_KEY` (and prompts interactively on a missing `serpapi` package), the branch must **env-guard + import-guard** so a missing key/package fails fast with a clear error instead of hanging the server (mirror the `Firecrawl` branch's env check and the `Crawl4AI` branch's import check).
+- **`_build_tool_instance()` branch**: key `"SerpApiGoogleSearchTool"` (mirror `ProductSearchTool`). Because `SerpApiBaseTool.__init__` raises on a missing `SERPAPI_API_KEY` (and prompts interactively on a missing `serpapi` package), the branch must **env-guard + import-guard** so a missing key/package fails fast with a clear error instead of hanging the server (mirror the `Firecrawl` branch's env check and the `Crawl4AI` branch's import check).
 - **`ScrapeWebsiteTool`**: **already registered** in `_build_tool_instance()` — no code change, only a `tools:` entry.
-- **Attachment**: `tools: [ProductSearch, SerpApiGoogleSearchTool, ScrapeWebsiteTool]` under the agent in `data/planbot/llm_product_matcher/crewai/agents.yaml`. (CrewAI's internal display `name` remains its default `"Google Search"`; the config/registration identifier is `SerpApiGoogleSearchTool`.)
+- **Attachment**: `tools: [ProductSearchTool, SerpApiGoogleSearchTool, ScrapeWebsiteTool]` under the agent in `data/planbot/llm_product_matcher/crewai/agents.yaml`. (CrewAI's internal display `name` remains its default `"Google Search"`; the config/registration identifier is `SerpApiGoogleSearchTool`.)
 
 ## 5. New proposal definition
 
@@ -166,7 +166,7 @@ CrewAI config files (new folder, no shared-file edit to existing matcher):
 
 - `data/planbot/llm_product_matcher/crewai/agents.yaml`
   - role/goal/backstory adapted from `investment_advisor_agent`
-  - `tools: [ProductSearch]`
+  - `tools: [ProductSearchTool]`
 - `data/planbot/llm_product_matcher/crewai/tasks.yaml`
   - `description`: instruct the LLM to use the product tool to discover candidates; **reuse the current `product_investor_matching` task prompt verbatim, minus the PFS-specific guidance** (e.g. "Only recommend products that have a fitness score entry", "Use the Product Fitness Scores table").
   - `expected_output`: reference `proposal_instructions/proposal_format.md`, same as the current matcher.
@@ -219,7 +219,7 @@ Flow (single request):
 
 1. Fetch the client profile + holdings by `client_id` (client API `search_by_id`).
 2. Build the reference payload (client profiles, guidelines, market outlook) — **no PFS, no IRS, no product universe**.
-3. Invoke `run_crew_planbot(proposal_name="llm_product_matcher", ...)` with the agent armed with `ProductSearch` + `SerpApiGoogleSearchTool` + `ScrapeWebsiteTool` (the LLM discovers products via `search_similar` and researches context via web search).
+3. Invoke `run_crew_planbot(proposal_name="llm_product_matcher", ...)` with the agent armed with `ProductSearchTool` + `SerpApiGoogleSearchTool` + `ScrapeWebsiteTool` (the LLM discovers products via `search_similar` and researches context via web search).
 4. Return `output_filename` + `proposal_markdown` (the shared-format report), plus `prompt_to_llm` when `output_prompt_to_llm=true`.
 
 ## 7. Data flow
@@ -229,7 +229,7 @@ client_id (direct input) ──► client API search_by_id ──► client prof
         │
         ▼
 LLM (CrewAI, llm_product_matcher agent)     [no IRS, no PFS]
-   ├─ tools: ProductSearch  ──► search_similar ──► DuckDB/adapter product rows
+   ├─ tools: ProductSearchTool  ──► search_similar ──► DuckDB/adapter product rows
    ├─ tools: SerpApiGoogleSearchTool  ──► web search ──► ranked URLs
    ├─ tools: ScrapeWebsite  ──► fetch URL content ──► market/product context
    └─ references: client_profiles (RM notes + holdings), guidelines, market outlook

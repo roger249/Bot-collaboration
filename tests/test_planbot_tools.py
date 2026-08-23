@@ -376,8 +376,8 @@ def test_crawl_uses_default_markdown_generator(monkeypatch):
 
 
 def test_build_tool_instance_supports_product_search():
-    tool = crew_workflow._build_tool_instance("ProductSearch")
-    assert tool.name == "ProductSearch"
+    tool = crew_workflow._build_tool_instance("ProductSearchTool")
+    assert tool.name == "ProductSearchTool"
 
 
 def test_product_search_tool_normal_flow(monkeypatch):
@@ -446,4 +446,23 @@ def test_product_search_tool_unknown_product_id(monkeypatch):
     tool = product_search_tool.ProductSearchTool()
     with pytest.raises(ValueError, match="Product not found"):
         tool._run(product_id="MISSING")
+
+
+def test_build_tool_instance_requires_serpapi_api_key(monkeypatch):
+    monkeypatch.delenv("SERPAPI_API_KEY", raising=False)
+
+    with pytest.raises(ValueError, match="SERPAPI_API_KEY"):
+        crew_workflow._build_tool_instance("SerpApiGoogleSearchTool")
+
+
+def test_resolve_output_filename_date_substitution():
+    import re
+
+    from src.planbot.workflow import _resolve_output_filename
+
+    resolved = _resolve_output_filename("llm_product_matcher_{date}.md", "deepseek")
+    assert not resolved.endswith("_{date}.md")
+    # Date is substituted as YYYYMMDD_HHMMSS; model token is appended (no {model}).
+    assert resolved.endswith("-deepseek.md")
+    assert re.search(r"llm_product_matcher_\d{8}_\d{6}-deepseek\.md$", resolved)
 

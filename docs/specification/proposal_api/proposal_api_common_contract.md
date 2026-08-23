@@ -18,6 +18,7 @@
 | `POST /api/v1/product-opportunity-proposal` | Single product-opportunity proposal (one pair) |
 | `POST /api/v1/product-opportunity-proposal-automatch` | Batch product-opportunity via matching |
 | `POST /api/v1/portfolio-review` | Portfolio health review (one client) |
+| `POST /api/v1/llm-product-matcher` | LLM-driven product matching for one client (no IRS/PFS) |
 
 ---
 
@@ -202,6 +203,27 @@ Output:
   "proposal_markdown": "..."
 }
 ```
+
+### 7. llm-product-matcher
+
+Input: `client_id`, `market_outlook`, `market_outlook_source`,
+`output_prompt_to_llm` (default `false`).
+
+Output:
+
+```json
+{
+  "client_id": "...",
+  "output_filename": "...",
+  "proposal_markdown": "...",
+  "prompt_to_llm": "# Prompt Snapshot\n..."
+}
+```
+
+> `prompt_to_llm` is present only when `output_prompt_to_llm=true`.  The LLM
+discovers products itself via the `ProductSearchTool` tool and web research, so there
+is no `product_source` / `product_ids` input, and no investor-readiness (IRS)
+filter is applied.
 
 ---
 

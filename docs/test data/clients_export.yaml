@@ -1,0 +1,3650 @@
+- client_id: PB-HK-000001-8
+  name: David Kim
+  aum: 950000.0
+  cash_pct: 45.0
+  region: North America
+  birthdate: '1984-01-01'
+  occupation: Managing Director of a KPMG
+  risk_rating: 4
+  marital_status: Married
+  children_info: One child born 2012
+  liquidity_need: Medium (12 months emergency buffer required)
+  income_stability: Stable salaried income
+  investment_objective: Long-term capital growth with controlled drawdown
+  qualitative_profile: Experienced executive with strong income stream. Actively manages portfolio; prefers
+    evidence-based decisions. Open to structured products and tactical equity plays. Has expressed concern
+    about inflation eroding idle cash. Two children approaching university age — education funding is
+    a near-term priority.
+  like_products:
+  - technology
+  - structured products
+  - tactical equity
+  dislike_products:
+  - idle cash
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: US 3-Month Treasury Bill Rate
+  position_bought: 427500.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-8-us3mt-rr-0
+    product_id: us3mt-rr
+    instrument_name: US 3-Month Treasury Bill Rate
+    symbol: US3MT=RR
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 5420.311905667554
+    book_cost: 134730.53892215568
+    market_value: 427500.0
+    unrealized_pl: 292769.4610778443
+    unrealized_pl_pct: 217.3
+    yield_pct: 71.5
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-8-mu-o-1
+    product_id: STOCK-MU
+    instrument_name: Micron Technology Inc.
+    symbol: MU.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 103.82379019008201
+    book_cost: 32746.41034690909
+    market_value: 36905.204460966546
+    unrealized_pl: 4158.794114057455
+    unrealized_pl_pct: 12.7
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '48'
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-8-nvda-o-2
+    product_id: STOCK-NVDA
+    instrument_name: NVIDIA Corporation
+    symbol: NVDA.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 332.72866158557144
+    book_cost: 62818.5843549209
+    market_value: 56976.45600991326
+    unrealized_pl: -5842.128345007644
+    unrealized_pl_pct: -9.3
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '72'
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-8-tsla-o-3
+    product_id: STOCK-TSLA
+    instrument_name: Tesla Inc.
+    symbol: TSLA.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 207.0562671222487
+    book_cost: 90751.1278667373
+    market_value: 77047.70755885997
+    unrealized_pl: -13703.420307877328
+    unrealized_pl_pct: -15.1
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '46'
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-8-googl-o-4
+    product_id: STOCK-GOOGL
+    instrument_name: Alphabet Inc. Class A
+    symbol: GOOGL.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 345.7174964680574
+    book_cost: 108877.75684731691
+    market_value: 97118.95910780669
+    unrealized_pl: -11758.79773951022
+    unrealized_pl_pct: -10.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '73'
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-8-wmt-o-5
+    product_id: STOCK-WMT
+    instrument_name: Walmart Inc.
+    symbol: WMT.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 959.1603425826927
+    book_cost: 107909.95456422964
+    market_value: 117190.2106567534
+    unrealized_pl: 9280.256092523763
+    unrealized_pl_pct: 8.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '46'
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-8-lly-6
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 153.02281182352297
+    book_cost: 164977.71899723573
+    market_value: 137261.4622057001
+    unrealized_pl: -27716.25679153562
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '88'
+    liquidity: T+2
+- client_id: PB-HK-000002-6
+  name: Sarah Chen
+  aum: 3200000.0
+  cash_pct: 22.5
+  region: APAC
+  birthdate: '1967-01-01'
+  occupation: Legal Partner
+  risk_rating: 5
+  marital_status: Divorced
+  children_info: 0 children
+  liquidity_need: Low (5-year horizon)
+  income_stability: High but variable
+  investment_objective: Regular income
+  qualitative_profile: High-earning legal professional with high risk appetite. Comfortable with concentrated
+    equity positions and alternative investments. Frequently travels to China for business — receptive
+    to APAC equity themes. Recently expressed interest in ESG and sustainable investing trends. No immediate
+    liquidity needs.
+  like_products:
+  - ESG
+  - sustainable investing
+  - APAC equity
+  - alternatives
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: Vanguard Treasury Money Market Fund
+  position_bought: 720000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-2-vmrxx-o-0
+    product_id: ETF-VMRXX
+    instrument_name: Vanguard Treasury Money Market Fund
+    symbol: VMRXX.O
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 720000.0
+    book_cost: 720000.0
+    market_value: 720000.0
+    unrealized_pl: 0.0
+    unrealized_pl_pct: 0.0
+    yield_pct: 22.0
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-2-lly-1
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 249.56344156036346
+    book_cost: 269060.5854322669
+    market_value: 223858.40707964601
+    unrealized_pl: -45202.17835262086
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '47'
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-2-wmt-o-2
+    product_id: STOCK-WMT
+    instrument_name: Walmart Inc.
+    symbol: WMT.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 2945.8929738076854
+    book_cost: 331426.52259652206
+    market_value: 359929.203539823
+    unrealized_pl: 28502.680943300948
+    unrealized_pl_pct: 8.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '41'
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-2-googl-o-3
+    product_id: STOCK-GOOGL
+    instrument_name: Alphabet Inc. Class A
+    symbol: GOOGL.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 1765.6272248326925
+    book_cost: 556053.8116591928
+    market_value: 496000.0
+    unrealized_pl: -60053.81165919278
+    unrealized_pl_pct: -10.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '93'
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-2-nvda-o-4
+    product_id: STOCK-NVDA
+    instrument_name: NVIDIA Corporation
+    symbol: NVDA.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 3691.139899907597
+    book_cost: 696880.701720151
+    market_value: 632070.7964601769
+    unrealized_pl: -64809.90525997407
+    unrealized_pl_pct: -9.3
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '41'
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-2-amzn-o-5
+    product_id: STOCK-AMZN
+    instrument_name: Amazon.com Inc.
+    symbol: AMZN.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 3701.173715526424
+    book_cost: 838582.5250222204
+    market_value: 768141.592920354
+    unrealized_pl: -70440.93210186646
+    unrealized_pl_pct: -8.4
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '79'
+    liquidity: T+2
+- client_id: PB-HK-000003-4
+  name: James Harrison
+  aum: 12500000.0
+  cash_pct: 5.2
+  region: North America
+  birthdate: '1959-01-01'
+  occupation: Retired
+  risk_rating: 2
+  marital_status: Married
+  children_info: 2 children
+  liquidity_need: Medium (12 months buffer)
+  income_stability: Stable pension
+  investment_objective: Regular income
+  qualitative_profile: Conservative retiree focused on capital preservation and steady income. Relies
+    on portfolio distributions to supplement pension. Anxious about market downturns and outliving savings.
+    Prefers government bonds, investment-grade credit, and dividend-paying blue chips. Has asked about
+    guaranteed income products.
+  like_products:
+  - government bonds
+  - investment-grade credit
+  - dividend stocks
+  - guaranteed income
+  dislike_products:
+  - market volatility
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: iShares Short Treasury Bond ETF
+  position_bought: 650000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-1-shv-o-0
+    product_id: ETF-SHV
+    instrument_name: iShares Short Treasury Bond ETF
+    symbol: SHV.O
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 5891.950688905004
+    book_cost: 645481.6285998015
+    market_value: 650000.0
+    unrealized_pl: 4518.37140019855
+    unrealized_pl_pct: 0.7
+    yield_pct: 4.0
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-1-lly-1
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 421.7976481844548
+    book_cost: 454750.5894488653
+    market_value: 378352.49042145594
+    unrealized_pl: -76398.0990274094
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '86'
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-1-wmt-o-2
+    product_id: STOCK-WMT
+    instrument_name: Walmart Inc.
+    symbol: WMT.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 5016.623297452599
+    book_cost: 564393.217755763
+    market_value: 612931.0344827586
+    unrealized_pl: 48537.81672699563
+    unrealized_pl_pct: 8.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '89'
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-1-us3yt-rr-3
+    product_id: us3yt-rr
+    instrument_name: US 3-Year Treasury Yield
+    symbol: US3YT=RR
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 13315.154415460507
+    book_cost: 453698.9178501399
+    market_value: 847509.5785440613
+    unrealized_pl: 393810.6606939214
+    unrealized_pl_pct: 86.8
+    yield_pct: 29.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-1-amzn-o-4
+    product_id: STOCK-AMZN
+    instrument_name: Amazon.com Inc.
+    symbol: AMZN.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 5213.877433773558
+    book_cost: 1181318.911141227
+    market_value: 1082088.122605364
+    unrealized_pl: -99230.78853586293
+    unrealized_pl_pct: -8.4
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '91'
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-1-nvda-o-5
+    product_id: STOCK-NVDA
+    instrument_name: NVIDIA Corporation
+    symbol: NVDA.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 7689.013470372965
+    book_cost: 1451672.1793458285
+    market_value: 1316666.6666666665
+    unrealized_pl: -135005.51267916197
+    unrealized_pl_pct: -9.3
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '74'
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-1-googl-o-6
+    product_id: STOCK-GOOGL
+    instrument_name: Alphabet Inc. Class A
+    symbol: GOOGL.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 5522.0176944609475
+    book_cost: 1739064.1375874097
+    market_value: 1551245.2107279694
+    unrealized_pl: -187818.92685944028
+    unrealized_pl_pct: -10.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '45'
+    liquidity: T+2
+  - holding_idx: 7
+    holding_id: ph-1-us5yt-rr-7
+    product_id: us5yt-rr
+    instrument_name: US 5-Year Treasury Yield
+    symbol: US5YT=RR
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 20604.86621425259
+    book_cost: 680832.540903268
+    market_value: 1785823.754789272
+    unrealized_pl: 1104991.213886004
+    unrealized_pl_pct: 162.3
+    yield_pct: 53.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 8
+    holding_id: ph-1-shy-o-8
+    product_id: ETF-SHY
+    instrument_name: iShares 1-3 Year Treasury Bond ETF
+    symbol: SHY.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 24573.124529926718
+    book_cost: 2024451.201253081
+    market_value: 2020402.2988505748
+    unrealized_pl: -4048.90240250621
+    unrealized_pl_pct: -0.2
+    yield_pct: 3.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 9
+    holding_id: ph-1-tsla-o-9
+    product_id: STOCK-TSLA
+    instrument_name: Tesla Inc.
+    symbol: TSLA.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 6059.984528531556
+    book_cost: 2656043.395655921
+    market_value: 2254980.842911877
+    unrealized_pl: -401062.552744044
+    unrealized_pl_pct: -15.1
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '48'
+    liquidity: T+2
+- client_id: PB-HK-000004-2
+  name: Michael Sterling
+  aum: 45000000.0
+  cash_pct: 3.1
+  region: Europe
+  birthdate: '1989-01-01'
+  occupation: Legal Partner
+  risk_rating: 1
+  marital_status: Divorced
+  children_info: 3 children
+  liquidity_need: Low
+  income_stability: Stable pension
+  investment_objective: Aggressive growth
+  qualitative_profile: Wealthy legal partner with complex estate-planning needs. Conservative risk profile
+    despite stated aggressive growth objective — suggests risk tolerance mismatch that RM should probe.
+    Interested in tax-efficient structures and multi-generational wealth transfer. Large cash position
+    indicates opportunity for deployment into suitable fixed-income or balanced products.
+  like_products:
+  - tax-efficient structures
+  - fixed income
+  - balanced funds
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: Fidelity Money Market Fund
+  position_bought: 1395000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-3-fzdxx-o-0
+    product_id: ETF-FZDXX
+    instrument_name: Fidelity Money Market Fund
+    symbol: FZDXX.O
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 1395000.0
+    book_cost: 425564.36851738865
+    market_value: 1395000.0
+    unrealized_pl: 969435.6314826114
+    unrealized_pl_pct: 227.8
+    yield_pct: 74.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-3-lly-1
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 3253.315427228471
+    book_cost: 3507480.6949806954
+    market_value: 2918223.9382239385
+    unrealized_pl: -589256.7567567569
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '63'
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-3-us7yt-rr-2
+    product_id: us7yt-rr
+    instrument_name: US 7-Year Treasury Yield
+    symbol: US7YT=RR
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 156885.63027734467
+    book_cost: 1378903.0085655309
+    market_value: 4657934.362934363
+    unrealized_pl: 3279031.354368832
+    unrealized_pl_pct: 237.8
+    yield_pct: 78.1
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-3-googl-o-3
+    product_id: STOCK-GOOGL
+    instrument_name: Alphabet Inc. Class A
+    symbol: GOOGL.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 22773.90284652139
+    book_cost: 7172247.519781153
+    market_value: 6397644.787644789
+    unrealized_pl: -774602.7321363641
+    unrealized_pl_pct: -10.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '65'
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-3-aapl-o-4
+    product_id: STOCK-AAPL
+    instrument_name: Apple Inc.
+    symbol: AAPL.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 32177.449532821436
+    book_cost: 8712371.747703655
+    market_value: 8137355.212355212
+    unrealized_pl: -575016.5353484424
+    unrealized_pl_pct: -6.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '46'
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-3-wmt-o-5
+    product_id: STOCK-WMT
+    instrument_name: Walmart Inc.
+    symbol: WMT.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 80840.2818551779
+    book_cost: 9094903.901533736
+    market_value: 9877065.637065638
+    unrealized_pl: 782161.7355319019
+    unrealized_pl_pct: 8.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '65'
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-3-amzn-o-6
+    product_id: STOCK-AMZN
+    instrument_name: Amazon.com Inc.
+    symbol: AMZN.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 55973.67284271014
+    book_cost: 12682069.936436748
+    market_value: 11616776.061776062
+    unrealized_pl: -1065293.8746606857
+    unrealized_pl_pct: -8.4
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '47'
+    liquidity: T+2
+- client_id: PB-HK-000005-9
+  name: Emma Thompson
+  aum: 3100000.0
+  cash_pct: 32.0
+  region: Europe
+  birthdate: '1956-01-01'
+  occupation: Retired
+  risk_rating: 1
+  marital_status: Single
+  children_info: 1 children
+  liquidity_need: Medium (12 months buffer)
+  income_stability: Stable pension
+  investment_objective: Capital preservation
+  qualitative_profile: Risk-averse retiree prioritising safety over returns. 32% cash allocation reflects
+    deep caution. RM notes she responds well to guaranteed-income narratives and inflation-protection
+    messaging. Has mentioned wanting to leave an orderly financial legacy for her children.
+  like_products:
+  - guaranteed income
+  - inflation protection
+  dislike_products:
+  - equity risk
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: Fidelity Government Cash Reserves
+  position_bought: 992000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-4-spaxx-o-0
+    product_id: ETF-SPAXX
+    instrument_name: Fidelity Government Cash Reserves
+    symbol: SPAXX.O
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 992000.0
+    book_cost: 707056.3079116179
+    market_value: 992000.0
+    unrealized_pl: 284943.6920883821
+    unrealized_pl_pct: 40.3
+    yield_pct: 14.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-4-lly-1
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 121.8717752368735
+    book_cost: 131393.00767725427
+    market_value: 109318.98238747554
+    unrealized_pl: -22074.02528977873
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '79'
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-4-us5yt-rr-2
+    product_id: us5yt-rr
+    instrument_name: US 5-Year Treasury Yield
+    symbol: US5YT=RR
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 1999.0801196792747
+    book_cost: 66054.24093503726
+    market_value: 173260.27397260274
+    unrealized_pl: 107206.03303756547
+    unrealized_pl_pct: 162.3
+    yield_pct: 53.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-4-amzn-o-3
+    product_id: STOCK-AMZN
+    instrument_name: Amazon.com Inc.
+    symbol: AMZN.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 1142.9197530968966
+    book_cost: 258953.67418966148
+    market_value: 237201.56555772992
+    unrealized_pl: -21752.108631931565
+    unrealized_pl_pct: -8.4
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '68'
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-4-aapl-o-4
+    product_id: STOCK-AAPL
+    instrument_name: Apple Inc.
+    symbol: AAPL.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 1190.8057145116736
+    book_cost: 322422.7592535943
+    market_value: 301142.8571428571
+    unrealized_pl: -21279.902110737225
+    unrealized_pl_pct: -6.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '69'
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-4-wmt-o-5
+    product_id: STOCK-WMT
+    instrument_name: Walmart Inc.
+    symbol: WMT.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 2988.0843732851886
+    book_cost: 336173.24928912
+    market_value: 365084.14872798434
+    unrealized_pl: 28910.89943886432
+    unrealized_pl_pct: 8.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '46'
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-4-googl-o-6
+    product_id: STOCK-GOOGL
+    instrument_name: Alphabet Inc. Class A
+    symbol: GOOGL.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 1527.215720892466
+    book_cost: 480970.2245662685
+    market_value: 429025.4403131115
+    unrealized_pl: -51944.78425315698
+    unrealized_pl_pct: -10.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '73'
+    liquidity: T+2
+  - holding_idx: 7
+    holding_id: ph-4-jnj-7
+    product_id: STOCK-JNJ
+    instrument_name: Johnson & Johnson
+    symbol: JNJ
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 2060.553134501917
+    book_cost: 424971.32060192997
+    market_value: 492966.7318982387
+    unrealized_pl: 67995.41129630874
+    unrealized_pl_pct: 16.0
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '74'
+    liquidity: T+2
+- client_id: PB-HK-000006-7
+  name: Robert Rodriguez
+  aum: 4050000.0
+  cash_pct: 12.0
+  region: LatAm
+  birthdate: '1990-01-01'
+  occupation: Legal Partner
+  risk_rating: 1
+  marital_status: Married
+  children_info: 0 children
+  liquidity_need: Low (5-year horizon)
+  income_stability: Stable salaried income
+  investment_objective: Aggressive growth
+  qualitative_profile: LatAm-based legal partner. Conservative risk rating but stated aggressive growth
+    objective — potential suitability gap to explore. Limited engagement history; may benefit from proactive
+    RM outreach on portfolio review. Currency risk from EM exposure is a consideration.
+  like_products:
+  - growth
+  - emerging markets
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: iShares 0-3 Month Treasury Bond ETF
+  position_bought: 486000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-5-sgov-k-0
+    product_id: ETF-SGOV
+    instrument_name: iShares 0-3 Month Treasury Bond ETF
+    symbol: SGOV.K
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 4830.05366726297
+    book_cost: 482142.85714285716
+    market_value: 486000.0
+    unrealized_pl: 3857.1428571428405
+    unrealized_pl_pct: 0.8
+    yield_pct: 4.0
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-5-wmt-o-1
+    product_id: STOCK-WMT
+    instrument_name: Walmart Inc.
+    symbol: WMT.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 1211.6801188662375
+    book_cost: 136319.59201019973
+    market_value: 148043.0769230769
+    unrealized_pl: 11723.484912877175
+    unrealized_pl_pct: 8.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '77'
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-5-us3yt-rr-2
+    product_id: us3yt-rr
+    instrument_name: US 3-Year Treasury Yield
+    symbol: US3YT=RR
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 3661.1275605776787
+    book_cost: 124748.80579805635
+    market_value: 233030.76923076925
+    unrealized_pl: 108281.9634327129
+    unrealized_pl_pct: 86.8
+    yield_pct: 29.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-5-msft-o-3
+    product_id: STOCK-MSFT
+    instrument_name: Microsoft Corporation
+    symbol: MSFT.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 868.9741277658319
+    book_cost: 409817.605075337
+    market_value: 318018.4615384615
+    unrealized_pl: -91799.14353687549
+    unrealized_pl_pct: -22.4
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '74'
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-5-lly-4
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 449.28222279392844
+    book_cost: 484382.39644970413
+    market_value: 403006.1538461538
+    unrealized_pl: -81376.24260355032
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '40'
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-5-tsla-o-5
+    product_id: STOCK-TSLA
+    instrument_name: Tesla Inc.
+    symbol: TSLA.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 1311.4236278354415
+    book_cost: 574786.6268007611
+    market_value: 487993.8461538462
+    unrealized_pl: -86792.7806469149
+    unrealized_pl_pct: -15.1
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '70'
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-5-googl-o-6
+    product_id: STOCK-GOOGL
+    instrument_name: Alphabet Inc. Class A
+    symbol: GOOGL.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 2039.6608944238162
+    book_cost: 642355.9848223525
+    market_value: 572981.5384615385
+    unrealized_pl: -69374.44636081404
+    unrealized_pl_pct: -10.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '50'
+    liquidity: T+2
+  - holding_idx: 7
+    holding_id: ph-5-jnj-7
+    product_id: STOCK-JNJ
+    instrument_name: Johnson & Johnson
+    symbol: JNJ
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 2750.2475788715547
+    book_cost: 567214.8541114059
+    market_value: 657969.2307692308
+    unrealized_pl: 90754.37665782485
+    unrealized_pl_pct: 16.0
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '90'
+    liquidity: T+2
+  - holding_idx: 8
+    holding_id: ph-5-nvda-o-8
+    product_id: STOCK-NVDA
+    instrument_name: NVIDIA Corporation
+    symbol: NVDA.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 4338.68794135087
+    book_cost: 819136.6296327707
+    market_value: 742956.923076923
+    unrealized_pl: -76179.70655584766
+    unrealized_pl_pct: -9.3
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '41'
+    liquidity: T+2
+- client_id: PB-HK-000007-5
+  name: Akira Tanaka
+  aum: 28000000.0
+  cash_pct: 12.0
+  region: APAC
+  birthdate: '1980-01-01'
+  occupation: Real Estate Developer
+  risk_rating: 4
+  marital_status: Single
+  children_info: 2 children
+  liquidity_need: Low
+  income_stability: Stable salaried income
+  investment_objective: Long-term capital growth
+  qualitative_profile: Self-made real estate developer with entrepreneurial mindset. Comfortable with
+    illiquid and alternative investments. Interested in Asian real estate themes and infrastructure plays.
+    Has expressed interest in using structured products for downside protection while maintaining upside
+    exposure.
+  like_products:
+  - asian real estate
+  - infrastructure
+  - structured products
+  - alternatives
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: US 1-Month Treasury Bill Rate
+  position_bought: 3360000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-6-us1mt-rr-0
+    product_id: PROD053
+    instrument_name: US 1-Month Treasury Bill Rate
+    symbol: US1MT=RR
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 153494.74645957057
+    book_cost: 2352941.1764705884
+    market_value: 3360000.0
+    unrealized_pl: 1007058.8235294116
+    unrealized_pl_pct: 42.8
+    yield_pct: 15.7
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-6-mu-o-1
+    product_id: STOCK-MU
+    instrument_name: Micron Technology Inc.
+    symbol: MU.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 2366.557800118279
+    book_cost: 746421.1496273677
+    market_value: 841216.6356300435
+    unrealized_pl: 94795.48600267572
+    unrealized_pl_pct: 12.7
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '46'
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-6-tsla-o-2
+    product_id: STOCK-TSLA
+    instrument_name: Tesla Inc.
+    symbol: TSLA.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 3534.860447628327
+    book_cost: 1549301.438359219
+    market_value: 1315356.921166977
+    unrealized_pl: -233944.5171922422
+    unrealized_pl_pct: -15.1
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '45'
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-6-nvda-o-3
+    product_id: STOCK-NVDA
+    instrument_name: NVIDIA Corporation
+    symbol: NVDA.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 10450.228957626201
+    book_cost: 1972984.7923968146
+    market_value: 1789497.2067039108
+    unrealized_pl: -183487.58569290373
+    unrealized_pl_pct: -9.3
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '61'
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-6-msft-o-4
+    product_id: STOCK-MSFT
+    instrument_name: Microsoft Corporation
+    symbol: MSFT.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 6185.308883899894
+    book_cost: 2917058.6240217066
+    market_value: 2263637.4922408443
+    unrealized_pl: -653421.1317808623
+    unrealized_pl_pct: -22.4
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '94'
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-6-lly-5
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 3052.1491391056607
+    book_cost: 3290598.2905982905
+    market_value: 2737777.7777777775
+    unrealized_pl: -552820.512820513
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '56'
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-6-wmt-o-6
+    product_id: STOCK-WMT
+    instrument_name: Walmart Inc.
+    symbol: WMT.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 26288.41106003201
+    book_cost: 2957567.2774536936
+    market_value: 3211918.063314711
+    unrealized_pl: 254350.78586101765
+    unrealized_pl_pct: 8.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '53'
+    liquidity: T+2
+  - holding_idx: 7
+    holding_id: ph-6-jnj-7
+    product_id: STOCK-JNJ
+    instrument_name: Johnson & Johnson
+    symbol: JNJ
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 15407.3664472983
+    book_cost: 3177636.507630729
+    market_value: 3686058.3488516454
+    unrealized_pl: 508421.84122091625
+    unrealized_pl_pct: 16.0
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '51'
+    liquidity: T+2
+  - holding_idx: 8
+    holding_id: ph-6-aapl-o-8
+    product_id: STOCK-AAPL
+    instrument_name: Apple Inc.
+    symbol: AAPL.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 16450.625308982475
+    book_cost: 4454174.126754367
+    market_value: 4160198.634388578
+    unrealized_pl: -293975.49236578867
+    unrealized_pl_pct: -6.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '77'
+    liquidity: T+2
+  - holding_idx: 9
+    holding_id: ph-6-amzn-o-9
+    product_id: STOCK-AMZN
+    instrument_name: Amazon.com Inc.
+    symbol: AMZN.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 22329.858918403737
+    book_cost: 5059321.964984183
+    market_value: 4634338.919925512
+    unrealized_pl: -424983.0450586714
+    unrealized_pl_pct: -8.4
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '78'
+    liquidity: T+2
+- client_id: PB-HK-000008-3
+  name: Elena Petrova
+  aum: 4200000.0
+  cash_pct: 2.0
+  region: Europe
+  birthdate: '1951-01-01'
+  occupation: Retired
+  risk_rating: 1
+  marital_status: Single
+  children_info: 0 children
+  liquidity_need: High (immediate access)
+  income_stability: Stable pension
+  investment_objective: Balanced growth and income
+  qualitative_profile: Conservative European retiree with very low cash allocation — fully invested. Disciplined,
+    long-term orientation. Receptive to fixed-income laddering strategies and inflation-linked bonds.
+    Has enquired about sustainable withdrawal rates in retirement.
+  like_products:
+  - fixed-income laddering
+  - inflation-linked bonds
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: US 2-Month Treasury Bill
+  position_bought: 84000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-7-us2mt-x-0
+    product_id: us2mt-x
+    instrument_name: US 2-Month Treasury Bill
+    symbol: US2MT=X
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 1083.8709677419354
+    book_cost: 29681.978798586573
+    market_value: 84000.0
+    unrealized_pl: 54318.02120141343
+    unrealized_pl_pct: 183.0
+    yield_pct: 60.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-7-mu-o-1
+    product_id: STOCK-MU
+    instrument_name: Micron Technology Inc.
+    symbol: MU.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 1099.0580837244079
+    book_cost: 346647.0154753132
+    market_value: 390671.18644067796
+    unrealized_pl: 44024.170965364785
+    unrealized_pl_pct: 12.7
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '47'
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-7-us3yt-rr-2
+    product_id: us3yt-rr
+    instrument_name: US 3-Year Treasury Yield
+    symbol: US3YT=RR
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 9535.515997177361
+    book_cost: 324911.9878053207
+    market_value: 606935.593220339
+    unrealized_pl: 282023.60541501833
+    unrealized_pl_pct: 86.8
+    yield_pct: 29.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-7-aapl-o-3
+    product_id: STOCK-AAPL
+    instrument_name: Apple Inc.
+    symbol: AAPL.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 3255.170232116731
+    book_cost: 881370.4496788009
+    market_value: 823200.0
+    unrealized_pl: -58170.449678800884
+    unrealized_pl_pct: -6.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '93'
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-7-amzn-o-4
+    product_id: STOCK-AMZN
+    instrument_name: Amazon.com Inc.
+    symbol: AMZN.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 5008.501526354732
+    book_cost: 1134786.4702834727
+    market_value: 1039464.4067796611
+    unrealized_pl: -95322.0635038116
+    unrealized_pl_pct: -8.4
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '92'
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-7-lly-5
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 1399.9206394195342
+    book_cost: 1509289.4393741854
+    market_value: 1255728.8135593222
+    unrealized_pl: -253560.62581486325
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '72'
+    liquidity: T+2
+- client_id: PB-HK-000009-1
+  name: Sophia Rossi
+  aum: 18500000.0
+  cash_pct: 6.5
+  region: Europe
+  birthdate: '1974-01-01'
+  occupation: Surgeon
+  risk_rating: 5
+  marital_status: Single
+  children_info: 1 children
+  liquidity_need: High (immediate access)
+  income_stability: Variable business income
+  investment_objective: Aggressive growth
+  qualitative_profile: High-income surgeon with aggressive risk appetite. Young enough for a long investment
+    horizon. Interested in healthcare and biotech sector plays. Comfortable with high equity allocation
+    and alternatives. No dependents — flexible on liquidity and time horizon.
+  like_products:
+  - healthcare
+  - biotech
+  - equity
+  - alternatives
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: US 4-Month Treasury Bill
+  position_bought: 1202500.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-9-us4mt-x-0
+    product_id: PROD054
+    instrument_name: US 4-Month Treasury Bill
+    symbol: US4MT=X
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 17704.652532391046
+    book_cost: 409710.3918228279
+    market_value: 1202500.0
+    unrealized_pl: 792789.608177172
+    unrealized_pl_pct: 193.5
+    yield_pct: 63.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-9-aapl-o-1
+    product_id: STOCK-AAPL
+    instrument_name: Apple Inc.
+    symbol: AAPL.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 3753.225765963812
+    book_cost: 1016224.0513432425
+    market_value: 949153.2639545884
+    unrealized_pl: -67070.78738865408
+    unrealized_pl_pct: -6.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '82'
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-9-mu-o-2
+    product_id: STOCK-MU
+    instrument_name: Micron Technology Inc.
+    symbol: MU.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 4097.393008571621
+    book_cost: 1292333.0246910988
+    market_value: 1456459.3188268684
+    unrealized_pl: 164126.2941357696
+    unrealized_pl_pct: 12.7
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '49'
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-9-tsla-o-3
+    product_id: STOCK-TSLA
+    instrument_name: Tesla Inc.
+    symbol: TSLA.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 5277.378661415035
+    book_cost: 2313033.42014034
+    market_value: 1963765.3736991487
+    unrealized_pl: -349268.04644119134
+    unrealized_pl_pct: -15.1
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '69'
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-9-msft-o-4
+    product_id: STOCK-MSFT
+    instrument_name: Microsoft Corporation
+    symbol: MSFT.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 6752.11473227704
+    book_cost: 3184370.3976435936
+    market_value: 2471071.4285714286
+    unrealized_pl: -713298.969072165
+    unrealized_pl_pct: -22.4
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '65'
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-9-meta-o-5
+    product_id: STOCK-META
+    instrument_name: Meta Platforms Inc.
+    symbol: META.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 5439.561462986647
+    book_cost: 3533069.375378065
+    market_value: 2978377.4834437086
+    unrealized_pl: -554691.8919343562
+    unrealized_pl_pct: -15.7
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '71'
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-9-amzn-o-6
+    product_id: STOCK-AMZN
+    instrument_name: Amazon.com Inc.
+    symbol: AMZN.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 16795.23724735467
+    book_cost: 3805331.373707411
+    market_value: 3485683.5383159886
+    unrealized_pl: -319647.83539142227
+    unrealized_pl_pct: -8.4
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '81'
+    liquidity: T+2
+  - holding_idx: 7
+    holding_id: ph-9-jnj-7
+    product_id: STOCK-JNJ
+    instrument_name: Johnson & Johnson
+    symbol: JNJ
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 16690.309284351566
+    book_cost: 3442232.407920921
+    market_value: 3992989.5931882686
+    unrealized_pl: 550757.1852673474
+    unrealized_pl_pct: 16.0
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '44'
+    liquidity: T+2
+- client_id: PB-HK-000010-9
+  name: William Turner
+  aum: 2100000.0
+  cash_pct: 10.0
+  region: North America
+  birthdate: '1987-01-01'
+  occupation: CFO
+  risk_rating: 2
+  marital_status: Single
+  children_info: 0 children
+  liquidity_need: High (immediate access)
+  income_stability: High but variable
+  investment_objective: Balanced growth and income
+  qualitative_profile: CFO with moderate risk tolerance. Values transparency and analytical rigour in
+    investment proposals. Interested in balanced strategies with downside protection. Has asked about
+    tax-loss harvesting and efficient portfolio rebalancing.
+  like_products:
+  - balanced strategies
+  - downside protection
+  - tax-loss harvesting
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: Fidelity Government Cash Reserves
+  position_bought: 210000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-10-spaxx-o-0
+    product_id: ETF-SPAXX
+    instrument_name: Fidelity Government Cash Reserves
+    symbol: SPAXX.O
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 210000.0
+    book_cost: 149679.2587312901
+    market_value: 210000.0
+    unrealized_pl: 60320.74126870991
+    unrealized_pl_pct: 40.3
+    yield_pct: 14.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-10-srln-k-1
+    product_id: ETF-SRLN
+    instrument_name: State Street Blackstone Senior Loan ETF
+    symbol: SRLN.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 5782.953710728631
+    book_cost: 236024.51970949405
+    market_value: 232012.10287443266
+    unrealized_pl: -4012.416835061391
+    unrealized_pl_pct: -1.7
+    yield_pct: 7.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-10-vcit-o-2
+    product_id: ETF-VCIT
+    instrument_name: Vanguard Intermediate-Term Corporate Bond Index Fund ETF Shares
+    symbol: VCIT.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 2983.4743964104596
+    book_cost: 247897.4014687151
+    market_value: 244674.7352496218
+    unrealized_pl: -3222.666219093313
+    unrealized_pl_pct: -1.3
+    yield_pct: 4.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-10-agg-3
+    product_id: ETF-AGG
+    instrument_name: iShares Core U.S. Aggregate Bond ETF
+    symbol: AGG
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 2611.236607050339
+    book_cost: 259151.42761813785
+    market_value: 257337.3676248109
+    unrealized_pl: -1814.059993326955
+    unrealized_pl_pct: -0.7
+    yield_pct: 3.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-10-govt-k-4
+    product_id: ETF-GOVT
+    instrument_name: iShares U.S. Treasury Bond ETF
+    symbol: GOVT.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 11857.707509881424
+    book_cost: 271356.783919598
+    market_value: 270000.0
+    unrealized_pl: -1356.783919597976
+    unrealized_pl_pct: -0.5
+    yield_pct: 3.5
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-10-googl-o-5
+    product_id: STOCK-GOOGL
+    instrument_name: Alphabet Inc. Class A
+    symbol: GOOGL.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 1006.2033047671547
+    book_cost: 316886.3591650102
+    market_value: 282662.6323751891
+    unrealized_pl: -34223.726789821114
+    unrealized_pl_pct: -10.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '85'
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-10-ushy-k-6
+    product_id: ETF-USHY
+    instrument_name: iShares Broad USD High Yield Corporate Bond ETF
+    symbol: USHY.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 8080.034603293522
+    book_cost: 298912.2112858079
+    market_value: 295325.2647503782
+    unrealized_pl: -3586.9465354296844
+    unrealized_pl_pct: -1.2
+    yield_pct: 6.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 7
+    holding_id: ph-10-hyg-7
+    product_id: ETF-HYG
+    instrument_name: iShares iBoxx $ High Yield Corporate Bond ETF
+    symbol: HYG
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 3902.5329083320744
+    book_cost: 311728.6408153515
+    market_value: 307987.8971255673
+    unrealized_pl: -3740.743689784198
+    unrealized_pl_pct: -1.2
+    yield_pct: 5.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+- client_id: PB-HK-000011-7
+  name: Emily Harrison
+  aum: 5000000.0
+  cash_pct: 15.0
+  region: North America
+  birthdate: '1990-01-01'
+  occupation: Managing Director
+  risk_rating: 3
+  marital_status: Single
+  children_info: 2 children
+  liquidity_need: Low (5-year horizon)
+  income_stability: Variable business income
+  investment_objective: Long-term capital growth
+  qualitative_profile: Senior executive at a multinational; moderate risk. Busy schedule — prefers consolidated
+    portfolio reviews and clear, concise recommendations. Interested in diversification beyond US equities.
+    Has asked about international equity and EM debt exposure.
+  like_products:
+  - international equity
+  - EM debt
+  - diversification
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: iShares 0-3 Month Treasury Bond ETF
+  position_bought: 750000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-11-sgov-k-0
+    product_id: ETF-SGOV
+    instrument_name: iShares 0-3 Month Treasury Bond ETF
+    symbol: SGOV.K
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 7453.786523553965
+    book_cost: 744047.619047619
+    market_value: 750000.0
+    unrealized_pl: 5952.380952380947
+    unrealized_pl_pct: 0.8
+    yield_pct: 4.0
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-11-bnd-o-1
+    product_id: ETF-BND
+    instrument_name: Vanguard Total Bond Market Index Fund
+    symbol: BND.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 6102.743628995583
+    book_cost: 448864.7753680756
+    market_value: 446171.5867158671
+    unrealized_pl: -2693.1886522084824
+    unrealized_pl_pct: -0.6
+    yield_pct: 3.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-11-wmt-o-2
+    product_id: STOCK-WMT
+    instrument_name: Walmart Inc.
+    symbol: WMT.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 3850.7096480360774
+    book_cost: 433222.56426984153
+    market_value: 470479.70479704795
+    unrealized_pl: 37257.140527206415
+    unrealized_pl_pct: 8.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '74'
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-11-googl-o-3
+    product_id: STOCK-GOOGL
+    instrument_name: Alphabet Inc. Class A
+    symbol: GOOGL.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 1761.312198769147
+    book_cost: 554694.8686975659
+    market_value: 494787.8228782288
+    unrealized_pl: -59907.04581933707
+    unrealized_pl_pct: -10.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '53'
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-11-ief-o-4
+    product_id: ETF-IEF
+    instrument_name: iShares 7-10 Year Treasury Bond ETF
+    symbol: IEF.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 5487.852214392743
+    book_cost: 523810.23305692186
+    market_value: 519095.9409594096
+    unrealized_pl: -4714.292097512283
+    unrealized_pl_pct: -0.9
+    yield_pct: 3.7
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-11-tlt-o-5
+    product_id: ETF-TLT
+    instrument_name: iShares 20+ Year Treasury Bond ETF
+    symbol: TLT.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 6310.580176989784
+    book_cost: 545039.1765703012
+    market_value: 543404.0590405903
+    unrealized_pl: -1635.1175297108712
+    unrealized_pl_pct: -0.3
+    yield_pct: 4.3
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-11-ushy-k-6
+    product_id: ETF-USHY
+    instrument_name: iShares Broad USD High Yield Corporate Bond ETF
+    symbol: USHY.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 15532.48090620441
+    book_cost: 574607.4667224404
+    market_value: 567712.1771217712
+    unrealized_pl: -6895.28960066929
+    unrealized_pl_pct: -1.2
+    yield_pct: 6.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 7
+    holding_id: ph-11-nvda-o-7
+    product_id: STOCK-NVDA
+    instrument_name: NVIDIA Corporation
+    symbol: NVDA.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 3457.2547021896285
+    book_cost: 652723.5889778964
+    market_value: 592020.295202952
+    unrealized_pl: -60703.29377494438
+    unrealized_pl_pct: -9.3
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '85'
+    liquidity: T+2
+  - holding_idx: 8
+    holding_id: ph-11-agg-8
+    product_id: ETF-AGG
+    instrument_name: iShares Core U.S. Aggregate Bond ETF
+    symbol: AGG
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 6253.966649255533
+    book_cost: 620673.1251602547
+    market_value: 616328.4132841328
+    unrealized_pl: -4344.711876121815
+    unrealized_pl_pct: -0.7
+    yield_pct: 3.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+- client_id: PB-HK-000012-5
+  name: Harrison Holdings Ltd.
+  aum: 50000000.0
+  cash_pct: 3.5
+  region: APAC
+  birthdate: N/A
+  occupation: Corporate Entity
+  risk_rating: 3
+  marital_status: ''
+  children_info: ''
+  liquidity_need: Low
+  income_stability: Corporate Revenue
+  investment_objective: Long-term capital growth
+  qualitative_profile: Corporate treasury entity seeking yield enhancement on excess working capital.
+    Moderate risk. Prefers liquid, investment-grade instruments. Primary objective is capital preservation
+    with modest return uplift over bank deposits. Regulatory constraints may apply.
+  like_products:
+  - liquid
+  - investment-grade
+  - yield
+  dislike_products:
+  - illiquid
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: US 1-Month Treasury Bill Rate
+  position_bought: 1750000.0000000002
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-12-us1mt-rr-0
+    product_id: PROD053
+    instrument_name: US 1-Month Treasury Bill Rate
+    symbol: US1MT=RR
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 79945.18044769301
+    book_cost: 1225490.1960784316
+    market_value: 1750000.0000000002
+    unrealized_pl: 524509.8039215687
+    unrealized_pl_pct: 42.8
+    yield_pct: 15.7
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-12-emb-o-1
+    product_id: ETF-EMB
+    instrument_name: iShares J.P. Morgan USD Emerging Markets Bond ETF
+    symbol: EMB.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 47113.39674254352
+    book_cost: 4497669.110886739
+    market_value: 4403218.059558117
+    unrealized_pl: -94451.0513286218
+    unrealized_pl_pct: -2.1
+    yield_pct: 4.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-12-spib-k-2
+    product_id: ETF-SPIB
+    instrument_name: State Street SPDR Portfolio Intermediate Term Corporate Bond ETF
+    symbol: SPIB.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 139420.1598332242
+    book_cost: 4680132.381498353
+    market_value: 4642691.322446366
+    unrealized_pl: -37441.059051986784
+    unrealized_pl_pct: -0.8
+    yield_pct: 4.4
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-12-lqd-3
+    product_id: ETF-LQD
+    instrument_name: iShares iBoxx $ Investment Grade Corporate Bond ETF
+    symbol: LQD
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 45255.51154370239
+    book_cost: 4951485.380663909
+    market_value: 4882164.585334614
+    unrealized_pl: -69320.7953292951
+    unrealized_pl_pct: -1.4
+    yield_pct: 4.4
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-12-vgit-4
+    product_id: ETF-VGIT
+    instrument_name: Vanguard Intermediate-Term Treasury Index Fund ETF Shares
+    symbol: VGIT
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 196683.48111454927
+    book_cost: 2077743.5489747925
+    market_value: 5121637.848222863
+    unrealized_pl: 3043894.2992480705
+    unrealized_pl_pct: 146.5
+    yield_pct: 48.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-12-tlt-o-5
+    product_id: ETF-TLT
+    instrument_name: iShares 20+ Year Treasury Bond ETF
+    symbol: TLT.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 62258.86785635944
+    book_cost: 5377242.839630001
+    market_value: 5361111.111111111
+    unrealized_pl: -16131.728518890217
+    unrealized_pl_pct: -0.3
+    yield_pct: 4.3
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-12-ushy-k-6
+    product_id: ETF-USHY
+    instrument_name: iShares Broad USD High Yield Corporate Bond ETF
+    symbol: USHY.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 153230.7626265215
+    book_cost: 5668607.665991255
+    market_value: 5600584.37399936
+    unrealized_pl: -68023.29199189506
+    unrealized_pl_pct: -1.2
+    yield_pct: 6.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 7
+    holding_id: ph-12-meta-o-7
+    product_id: STOCK-META
+    instrument_name: Meta Platforms Inc.
+    symbol: META.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 10665.992688913337
+    book_cost: 6927707.754315075
+    market_value: 5840057.636887608
+    unrealized_pl: -1087650.1174274674
+    unrealized_pl_pct: -15.7
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '68'
+    liquidity: T+2
+  - holding_idx: 8
+    holding_id: ph-12-wmt-o-8
+    product_id: STOCK-WMT
+    instrument_name: Walmart Inc.
+    symbol: WMT.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 49758.805858371714
+    book_cost: 5598094.7511748215
+    market_value: 6079530.899775856
+    unrealized_pl: 481436.14860103466
+    unrealized_pl_pct: 8.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '56'
+    liquidity: T+2
+  - holding_idx: 9
+    holding_id: ph-12-brka-9
+    product_id: brka
+    instrument_name: Berkshire Hathaway Inc. Class A
+    symbol: BRKa
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 8.868777772160147
+    book_cost: 6596037.748083618
+    market_value: 6319004.162664105
+    unrealized_pl: -277033.58541951235
+    unrealized_pl_pct: -4.2
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '40'
+    liquidity: T+2
+- client_id: PB-HK-000013-3
+  name: Harrison Jr. Education Trust
+  aum: 2000000.0
+  cash_pct: 25.0
+  region: Europe
+  birthdate: N/A
+  occupation: Corporate Entity
+  risk_rating: 4
+  marital_status: ''
+  children_info: ''
+  liquidity_need: Low (5-year horizon)
+  income_stability: Corporate Revenue
+  investment_objective: Capital preservation
+  qualitative_profile: Education trust with a defined 10-15 year horizon. Moderate-to-aggressive risk
+    appropriate given long duration. Quarterly liquidity not required. Trustees open to balanced and growth-oriented
+    multi-asset strategies. ESG-compliant investments preferred per trust mandate.
+  like_products:
+  - ESG
+  - balanced funds
+  - growth
+  - multi-asset
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: US 2-Month Treasury Bill
+  position_bought: 500000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-13-us2mt-x-0
+    product_id: us2mt-x
+    instrument_name: US 2-Month Treasury Bill
+    symbol: US2MT=X
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 6451.612903225807
+    book_cost: 176678.44522968197
+    market_value: 500000.0
+    unrealized_pl: 323321.55477031803
+    unrealized_pl_pct: 183.0
+    yield_pct: 60.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-13-usig-o-1
+    product_id: ETF-USIG
+    instrument_name: iShares Broad USD Investment Grade Corporate Bond ETF
+    symbol: USIG.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 5327.0888532298395
+    book_cost: 273625.99974122935
+    market_value: 270616.1137440758
+    unrealized_pl: -3009.8859971535276
+    unrealized_pl_pct: -1.1
+    yield_pct: 4.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-13-vcit-o-2
+    product_id: ETF-VCIT
+    instrument_name: Vanguard Intermediate-Term Corporate Bond Index Fund ETF Shares
+    symbol: VCIT.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 3478.942285965589
+    book_cost: 289065.9137507983
+    market_value: 285308.05687203794
+    unrealized_pl: -3757.856878760387
+    unrealized_pl_pct: -1.3
+    yield_pct: 4.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-13-lqd-3
+    product_id: ETF-LQD
+    instrument_name: iShares iBoxx $ Investment Grade Corporate Bond ETF
+    symbol: LQD
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 2780.8676307007786
+    book_cost: 304259.63488843816
+    market_value: 300000.0
+    unrealized_pl: -4259.634888438159
+    unrealized_pl_pct: -1.4
+    yield_pct: 4.4
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-13-agg-4
+    product_id: ETF-AGG
+    instrument_name: iShares Core U.S. Aggregate Bond ETF
+    symbol: AGG
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 3193.221137777393
+    book_cost: 316910.31533530925
+    market_value: 314691.94312796206
+    unrealized_pl: -2218.372207347187
+    unrealized_pl_pct: -0.7
+    yield_pct: 3.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-13-tlt-o-5
+    product_id: ETF-TLT
+    instrument_name: iShares 20+ Year Treasury Bond ETF
+    symbol: TLT.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 3825.15255203721
+    book_cost: 330375.0112897936
+    market_value: 329383.8862559242
+    unrealized_pl: -991.1250338694081
+    unrealized_pl_pct: -0.3
+    yield_pct: 4.3
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+- client_id: PB-HK-000014-1
+  name: Sarah Wong
+  aum: 42000000.0
+  cash_pct: 8.0
+  region: APAC
+  birthdate: '1973-01-01'
+  occupation: Entrepreneur
+  risk_rating: 1
+  marital_status: Divorced
+  children_info: 2 children
+  liquidity_need: Low (5-year horizon)
+  income_stability: Stable salaried income
+  investment_objective: Regular income
+  qualitative_profile: Entrepreneur who recently sold a business; large liquidity event. Conservative
+    risk profile despite significant wealth. Seeking steady income stream to replace business cash flow.
+    Open to discussing annuities and fixed-income ladders. Major life transition — RM should focus on
+    holistic planning.
+  like_products:
+  - annuities
+  - fixed-income ladders
+  - steady income
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: Vanguard Treasury Money Market Fund
+  position_bought: 3360000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-zw-1-vmrxx-o-0
+    product_id: ETF-VMRXX
+    instrument_name: Vanguard Treasury Money Market Fund
+    symbol: VMRXX.O
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 3360000.0
+    book_cost: 3360000.0
+    market_value: 3360000.0
+    unrealized_pl: 0.0
+    unrealized_pl_pct: 0.0
+    yield_pct: 22.0
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-zw-1-cost-o-1
+    product_id: STOCK-COST
+    instrument_name: Costco Wholesale Corporation
+    symbol: COST.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 6559.4855305466235
+    book_cost: 5597560.975609755
+    market_value: 6426000.0
+    unrealized_pl: 828439.0243902449
+    unrealized_pl_pct: 14.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '40'
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-zw-1-bnd-o-2
+    product_id: ETF-BND
+    instrument_name: Vanguard Total Bond Market Index Fund
+    symbol: BND.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 96799.3434550677
+    book_cost: 7119718.309859155
+    market_value: 7077000.0
+    unrealized_pl: -42718.309859154746
+    unrealized_pl_pct: -0.6
+    yield_pct: 3.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-zw-1-vcit-o-3
+    product_id: ETF-VCIT
+    instrument_name: Vanguard Intermediate-Term Corporate Bond Index Fund ETF Shares
+    symbol: VCIT.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 94232.41068162418
+    book_cost: 7829787.234042553
+    market_value: 7728000.0
+    unrealized_pl: -101787.23404255323
+    unrealized_pl_pct: -1.3
+    yield_pct: 4.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-zw-1-hd-4
+    product_id: STOCK-HD
+    instrument_name: The Home Depot Inc.
+    symbol: HD
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 25512.28572298511
+    book_cost: 8764644.351464435
+    market_value: 8379000.0
+    unrealized_pl: -385644.35146443546
+    unrealized_pl_pct: -4.4
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '68'
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-zw-1-pypl-o-5
+    product_id: STOCK-PYPL
+    instrument_name: PayPal Holdings Inc.
+    symbol: PYPL.O
+    asset_class: Alternatives
+    region: North America
+    currency: USD
+    quantity: 199778.7610619469
+    book_cost: 11576923.076923076
+    market_value: 9030000.0
+    unrealized_pl: -2546923.076923076
+    unrealized_pl_pct: -22.0
+    yield_pct: null
+    risk_bucket: High
+    esg_score: null
+    liquidity: T+2
+- client_id: PB-HK-000015-8
+  name: Michael Wang
+  aum: 28500000.0
+  cash_pct: 10.5
+  region: APAC
+  birthdate: '1955-01-01'
+  occupation: Retired
+  risk_rating: 2
+  marital_status: Married
+  children_info: 0 children
+  liquidity_need: Low (5-year horizon)
+  income_stability: Dividend/Rental income
+  investment_objective: Capital preservation
+  qualitative_profile: Retired APAC investor with moderate risk. Comfortable with regional equity and
+    bond exposure. Has expressed interest in dividend-yielding HK/China stocks and Asian REITs for income.
+    Prefers SGD/HKD-denominated instruments to minimise FX risk.
+  like_products:
+  - dividend stocks
+  - HK/China stocks
+  - asian REITs
+  - income
+  dislike_products:
+  - FX risk
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: Fidelity Money Market Fund
+  position_bought: 2992500.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-zw-2-fzdxx-o-0
+    product_id: ETF-FZDXX
+    instrument_name: Fidelity Money Market Fund
+    symbol: FZDXX.O
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 2992500.0
+    book_cost: 912904.2098840757
+    market_value: 2992500.0
+    unrealized_pl: 2079595.7901159243
+    unrealized_pl_pct: 227.8
+    yield_pct: 74.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-zw-2-usig-o-1
+    product_id: ETF-USIG
+    instrument_name: iShares Broad USD Investment Grade Corporate Bond ETF
+    symbol: USIG.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 66818.2295239753
+    book_cost: 3432119.3729200657
+    market_value: 3394366.059817945
+    unrealized_pl: -37753.31310212053
+    unrealized_pl_pct: -1.1
+    yield_pct: 4.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-zw-2-lly-2
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 4166.242626411112
+    book_cost: 4491730.3315994805
+    market_value: 3737119.6358907674
+    unrealized_pl: -754610.695708713
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '77'
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-zw-2-spib-k-3
+    product_id: ETF-SPIB
+    instrument_name: State Street SPDR Portfolio Intermediate Term Corporate Bond ETF
+    symbol: SPIB.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 122518.71507398167
+    book_cost: 4112775.4152858765
+    market_value: 4079873.2119635893
+    unrealized_pl: -32902.20332228718
+    unrealized_pl_pct: -0.8
+    yield_pct: 4.4
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-zw-2-ief-o-4
+    product_id: ETF-IEF
+    instrument_name: iShares 7-10 Year Treasury Bond ETF
+    symbol: IEF.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 46755.75418158802
+    book_cost: 4462791.915273876
+    market_value: 4422626.788036411
+    unrealized_pl: -40165.12723746523
+    unrealized_pl_pct: -0.9
+    yield_pct: 3.7
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-zw-2-mu-o-5
+    product_id: STOCK-MU
+    instrument_name: Micron Technology Inc.
+    symbol: MU.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 13406.235199767156
+    book_cost: 4228376.543131528
+    market_value: 4765380.364109233
+    unrealized_pl: 537003.8209777046
+    unrealized_pl_pct: 12.7
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '51'
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-zw-2-ushy-k-6
+    product_id: ETF-USHY
+    instrument_name: iShares Broad USD High Yield Corporate Bond ETF
+    symbol: USHY.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 139757.4265439687
+    book_cost: 5170176.052815845
+    market_value: 5108133.940182055
+    unrealized_pl: -62042.11263378989
+    unrealized_pl_pct: -1.2
+    yield_pct: 6.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+- client_id: PB-HK-000016-6
+  name: James Chen
+  aum: 38000000.0
+  cash_pct: 5.5
+  region: APAC
+  birthdate: '1953-01-01'
+  occupation: Retired
+  risk_rating: 2
+  marital_status: Married
+  children_info: 0 children
+  liquidity_need: Medium (12 months buffer)
+  income_stability: Stable pension
+  investment_objective: Aggressive growth
+  qualitative_profile: Retired investor with stated aggressive growth objective but moderate risk rating.
+    Possible risk mismatch similar to PB-HK-000004-2. RM should clarify true risk tolerance. Interested
+    in equity funds with downside hedging features.
+  like_products:
+  - equity funds
+  - downside hedging
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: Fidelity Government Cash Reserves
+  position_bought: 2090000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-zw-3-spaxx-o-0
+    product_id: ETF-SPAXX
+    instrument_name: Fidelity Government Cash Reserves
+    symbol: SPAXX.O
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 2090000.0
+    book_cost: 1489665.0035637917
+    market_value: 2090000.0
+    unrealized_pl: 600334.9964362083
+    unrealized_pl_pct: 40.3
+    yield_pct: 14.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-zw-3-srln-k-1
+    product_id: ETF-SRLN
+    instrument_name: State Street Blackstone Senior Loan ETF
+    symbol: SRLN.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 98211.59961511973
+    book_cost: 4008392.0412600236
+    market_value: 3940249.3765586033
+    unrealized_pl: -68142.66470142035
+    unrealized_pl_pct: -1.7
+    yield_pct: 7.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-zw-3-vcit-o-2
+    product_id: ETF-VCIT
+    instrument_name: Vanguard Intermediate-Term Corporate Bond Index Fund ETF Shares
+    symbol: VCIT.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 52881.75731868961
+    book_cost: 4393954.323916651
+    market_value: 4336832.917705735
+    unrealized_pl: -57121.40621091612
+    unrealized_pl_pct: -1.3
+    yield_pct: 4.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-zw-3-lly-3
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 5276.9414256999635
+    book_cost: 5689202.474582774
+    market_value: 4733416.458852868
+    unrealized_pl: -955786.015729906
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '93'
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-zw-3-emb-o-4
+    product_id: ETF-EMB
+    instrument_name: iShares J.P. Morgan USD Emerging Markets Bond ETF
+    symbol: EMB.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 54889.792424566665
+    book_cost: 5240040.858018386
+    market_value: 5130000.0
+    unrealized_pl: -110040.85801838618
+    unrealized_pl_pct: -2.1
+    yield_pct: 4.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-zw-3-tlt-o-5
+    product_id: ETF-TLT
+    instrument_name: iShares 20+ Year Treasury Bond ETF
+    symbol: TLT.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 64180.50796826307
+    book_cost: 5543213.1806892
+    market_value: 5526583.541147132
+    unrealized_pl: -16629.639542067423
+    unrealized_pl_pct: -0.3
+    yield_pct: 4.3
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-zw-3-mu-o-6
+    product_id: STOCK-MU
+    instrument_name: Micron Technology Inc.
+    symbol: MU.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 16663.385703860535
+    book_cost: 5255693.950571664
+    market_value: 5923167.082294265
+    unrealized_pl: 667473.1317226011
+    unrealized_pl_pct: 12.7
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '50'
+    liquidity: T+2
+  - holding_idx: 7
+    holding_id: ph-zw-3-eur-usd-7
+    product_id: eur-usd
+    instrument_name: Euro / US Dollar
+    symbol: EUR/USD
+    asset_class: Alternatives
+    region: APAC
+    currency: USD
+    quantity: 5495435.324731649
+    book_cost: 6435591.266233602
+    market_value: 6319750.623441396
+    unrealized_pl: -115840.64279220533
+    unrealized_pl_pct: -1.8
+    yield_pct: null
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+0
+- client_id: PB-HK-000017-4
+  name: Catherine Li
+  aum: 16200000.0
+  cash_pct: 18.0
+  region: APAC
+  birthdate: '1990-01-01'
+  occupation: CFO
+  risk_rating: 5
+  marital_status: Married
+  children_info: 3 children
+  liquidity_need: Low
+  income_stability: Stable pension
+  investment_objective: Balanced growth and income
+  qualitative_profile: High-income CFO with aggressive risk appetite. Active in portfolio decisions; enjoys
+    discussing macro themes and sector rotation. Interested in tech, AI, and emerging-market growth stories.
+    Comfortable with currency exposure. Has enquired about private equity fund access.
+  like_products:
+  - technology
+  - AI
+  - emerging markets
+  - private equity
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: iShares 0-3 Month Treasury Bond ETF
+  position_bought: 2916000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-zw-4-sgov-k-0
+    product_id: ETF-SGOV
+    instrument_name: iShares 0-3 Month Treasury Bond ETF
+    symbol: SGOV.K
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 28980.322003577818
+    book_cost: 2892857.1428571427
+    market_value: 2916000.0
+    unrealized_pl: 23142.857142857276
+    unrealized_pl_pct: 0.8
+    yield_pct: 4.0
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-zw-4-bnd-o-1
+    product_id: ETF-BND
+    instrument_name: Vanguard Total Bond Market Index Fund
+    symbol: BND.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 16809.859968204746
+    book_cost: 1236387.1853877758
+    market_value: 1228968.862275449
+    unrealized_pl: -7418.323112326674
+    unrealized_pl_pct: -0.6
+    yield_pct: 3.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-zw-4-lly-2
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 1507.5401037390102
+    book_cost: 1625316.6743436204
+    market_value: 1352263.4730538921
+    unrealized_pl: -273053.2012897283
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '54'
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-zw-4-pltr-o-3
+    product_id: STOCK-PLTR
+    instrument_name: Palantir Technologies Inc.
+    symbol: PLTR.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 9999.71593814269
+    book_cost: 1678678.1386033394
+    market_value: 1475558.0838323354
+    unrealized_pl: -203120.054771004
+    unrealized_pl_pct: -12.1
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '93'
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-zw-4-ief-o-4
+    product_id: ETF-IEF
+    instrument_name: iShares 7-10 Year Treasury Bond ETF
+    symbol: IEF.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 16902.978059105386
+    book_cost: 1613373.0520794939
+    market_value: 1598852.6946107785
+    unrealized_pl: -14520.357468715403
+    unrealized_pl_pct: -0.9
+    yield_pct: 3.7
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-zw-4-brka-5
+    product_id: brka
+    instrument_name: Berkshire Hathaway Inc. Class A
+    symbol: BRKa
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 2.417048849669083
+    book_cost: 1797648.544247622
+    market_value: 1722147.3053892218
+    unrealized_pl: -75501.23885840015
+    unrealized_pl_pct: -4.2
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '45'
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-zw-4-agg-6
+    product_id: ETF-AGG
+    instrument_name: iShares Core U.S. Aggregate Bond ETF
+    symbol: AGG
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 18725.945369534904
+    book_cost: 1858451.073683449
+    market_value: 1845441.9161676648
+    unrealized_pl: -13009.15751578426
+    unrealized_pl_pct: -0.7
+    yield_pct: 3.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 7
+    holding_id: ph-zw-4-lqd-7
+    product_id: ETF-LQD
+    instrument_name: iShares iBoxx $ Investment Grade Corporate Bond ETF
+    symbol: LQD
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 18249.31893720901
+    book_cost: 1996690.1896005152
+    market_value: 1968736.5269461079
+    unrealized_pl: -27953.662654407322
+    unrealized_pl_pct: -1.4
+    yield_pct: 4.4
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 8
+    holding_id: ph-zw-4-jpm-8
+    product_id: STOCK-JPM
+    instrument_name: JPMorgan Chase & Co.
+    symbol: JPM
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 7172.842137161595
+    book_cost: 2324479.041916168
+    market_value: 2092031.137724551
+    unrealized_pl: -232447.90419161692
+    unrealized_pl_pct: -10.0
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '59'
+    liquidity: T+2
+- client_id: PB-HK-000018-2
+  name: Emily Zhang
+  aum: 4200000.0
+  cash_pct: 22.0
+  region: APAC
+  birthdate: '1986-01-01'
+  occupation: Entrepreneur
+  risk_rating: 3
+  marital_status: Married
+  children_info: 2 children
+  liquidity_need: Low (5-year horizon)
+  income_stability: Variable business income
+  investment_objective: Capital preservation
+  qualitative_profile: Entrepreneur with moderate risk. Stated capital preservation objective but engages
+    with growth narratives — RM should explore whether objective is current. Interested in balanced funds
+    and multi-asset solutions. Cash position suggests room for deployment.
+  like_products:
+  - balanced funds
+  - multi-asset
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: US 1-Month Treasury Bill Rate
+  position_bought: 924000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-zw-5-us1mt-rr-0
+    product_id: PROD053
+    instrument_name: US 1-Month Treasury Bill Rate
+    symbol: US1MT=RR
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 42211.05527638191
+    book_cost: 647058.8235294118
+    market_value: 924000.0
+    unrealized_pl: 276941.1764705882
+    unrealized_pl_pct: 42.8
+    yield_pct: 15.7
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-zw-5-lly-1
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 289.8550724637681
+    book_cost: 312500.0
+    market_value: 260000.0
+    unrealized_pl: -52500.0
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '70'
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-zw-5-spib-k-2
+    product_id: ETF-SPIB
+    instrument_name: State Street SPDR Portfolio Intermediate Term Corporate Bond ETF
+    symbol: SPIB.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 8588.58858858859
+    book_cost: 288306.4516129032
+    market_value: 286000.0
+    unrealized_pl: -2306.4516129032127
+    unrealized_pl_pct: -0.8
+    yield_pct: 4.4
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-zw-5-ushy-k-3
+    product_id: ETF-USHY
+    instrument_name: iShares Broad USD High Yield Corporate Bond ETF
+    symbol: USHY.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 8536.251709986322
+    book_cost: 315789.4736842105
+    market_value: 312000.0
+    unrealized_pl: -3789.473684210505
+    unrealized_pl_pct: -1.2
+    yield_pct: 6.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-zw-5-emb-o-4
+    product_id: ETF-EMB
+    instrument_name: iShares J.P. Morgan USD Emerging Markets Bond ETF
+    symbol: EMB.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 3616.520436550396
+    book_cost: 345250.25536261493
+    market_value: 338000.0
+    unrealized_pl: -7250.255362614931
+    unrealized_pl_pct: -2.1
+    yield_pct: 4.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-zw-5-2018-hk-5
+    product_id: 2018-hk
+    instrument_name: AAC Technologies Holdings Inc.
+    symbol: 2018.HK
+    asset_class: Alternatives
+    region: APAC
+    currency: HKD
+    quantity: 82901.63934426231
+    book_cost: 430260.0472813239
+    market_value: 364000.0
+    unrealized_pl: -66260.04728132387
+    unrealized_pl_pct: -15.4
+    yield_pct: null
+    risk_bucket: High
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-zw-5-v-6
+    product_id: STOCK-V
+    instrument_name: Visa Inc.
+    symbol: V
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 1276.4703957058227
+    book_cost: 441176.4705882353
+    market_value: 390000.0
+    unrealized_pl: -51176.4705882353
+    unrealized_pl_pct: -11.6
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '74'
+    liquidity: T+2
+  - holding_idx: 7
+    holding_id: ph-zw-5-tsla-o-7
+    product_id: STOCK-TSLA
+    instrument_name: Tesla Inc.
+    symbol: TSLA.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 1117.948993577168
+    book_cost: 489988.2214369847
+    market_value: 416000.0
+    unrealized_pl: -73988.22143698472
+    unrealized_pl_pct: -15.1
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '68'
+    liquidity: T+2
+  - holding_idx: 8
+    holding_id: ph-zw-5-bkln-k-8
+    product_id: ETF-BKLN
+    instrument_name: Invesco Senior Loan ETF
+    symbol: BKLN.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 21582.03125
+    book_cost: 446464.64646464644
+    market_value: 442000.0
+    unrealized_pl: -4464.646464646445
+    unrealized_pl_pct: -1.0
+    yield_pct: 7.0
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 9
+    holding_id: ph-zw-5-1810-hk-9
+    product_id: 1810-hk
+    instrument_name: Xiaomi Corporation
+    symbol: 1810.HK
+    asset_class: Equities
+    region: APAC
+    currency: HKD
+    quantity: 112655.9405940594
+    book_cost: 583541.1471321696
+    market_value: 468000.0
+    unrealized_pl: -115541.14713216957
+    unrealized_pl_pct: -19.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '93'
+    liquidity: T+2
+- client_id: PB-HK-000019-0
+  name: Linda Xu
+  aum: 19800000.0
+  cash_pct: 12.0
+  region: APAC
+  birthdate: '1960-01-01'
+  occupation: Retired
+  risk_rating: 1
+  marital_status: Married
+  children_info: 0 children
+  liquidity_need: Low
+  income_stability: Stable pension
+  investment_objective: Aggressive growth
+  qualitative_profile: Conservative retiree with aggressive growth objective — likely a suitability flag.
+    RM should reconfirm risk tolerance and investment objective alignment. Prefers familiar APAC names
+    and dividend stocks. Has asked about gold as an inflation hedge.
+  like_products:
+  - APAC stocks
+  - dividend stocks
+  - gold
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: US 2-Month Treasury Bill
+  position_bought: 2376000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-zw-6-us2mt-x-0
+    product_id: us2mt-x
+    instrument_name: US 2-Month Treasury Bill
+    symbol: US2MT=X
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 30658.064516129034
+    book_cost: 839575.9717314488
+    market_value: 2376000.0
+    unrealized_pl: 1536424.0282685512
+    unrealized_pl_pct: 183.0
+    yield_pct: 60.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-zw-6-usig-o-1
+    product_id: ETF-USIG
+    instrument_name: iShares Broad USD Investment Grade Corporate Bond ETF
+    symbol: USIG.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 57196.005995229156
+    book_cost: 2937873.7154273414
+    market_value: 2905557.104557641
+    unrealized_pl: -32316.610869700555
+    unrealized_pl_pct: -1.1
+    yield_pct: 4.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-zw-6-vcit-o-2
+    product_id: ETF-VCIT
+    instrument_name: Vanguard Intermediate-Term Corporate Bond Index Fund ETF Shares
+    symbol: VCIT.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 38960.840778915015
+    book_cost: 3237262.970900527
+    market_value: 3195178.5522788204
+    unrealized_pl: -42084.418621706776
+    unrealized_pl_pct: -1.3
+    yield_pct: 4.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-zw-6-mu-o-3
+    product_id: STOCK-MU
+    instrument_name: Micron Technology Inc.
+    symbol: MU.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 9803.634726832837
+    book_cost: 3092102.9281277726
+    market_value: 3484800.0
+    unrealized_pl: 392697.07187222736
+    unrealized_pl_pct: 12.7
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '47'
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-zw-6-lly-4
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 4207.8277009154735
+    book_cost: 4536564.240049494
+    market_value: 3774421.4477211796
+    unrealized_pl: -762142.7923283149
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '86'
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-zw-6-tlt-o-5
+    product_id: ETF-TLT
+    instrument_name: iShares 20+ Year Treasury Bond ETF
+    symbol: TLT.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 47195.945830244564
+    book_cost: 4076271.7105740816
+    market_value: 4064042.895442359
+    unrealized_pl: -12228.815131722484
+    unrealized_pl_pct: -0.3
+    yield_pct: 4.3
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+- client_id: PB-HK-000020-8
+  name: David Wu
+  aum: 3100000.0
+  cash_pct: 28.0
+  region: APAC
+  birthdate: '1956-01-01'
+  occupation: Retired
+  risk_rating: 2
+  marital_status: Married
+  children_info: 0 children
+  liquidity_need: Low (5-year horizon)
+  income_stability: Stable pension
+  investment_objective: Aggressive growth
+  qualitative_profile: Retired with moderate risk but aggressive growth objective — another risk mismatch
+    to probe. High cash position (28%) suggests indecision or market anxiety. RM should focus on education
+    around balanced and income-oriented strategies.
+  like_products:
+  - balanced funds
+  - income-oriented
+  dislike_products:
+  - market volatility
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: US 3-Month Treasury Bill Rate
+  position_bought: 868000.0000000001
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-zw-7-us3mt-rr-0
+    product_id: us3mt-rr
+    instrument_name: US 3-Month Treasury Bill Rate
+    symbol: US3MT=RR
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 11005.45200963611
+    book_cost: 273558.1468641664
+    market_value: 868000.0000000001
+    unrealized_pl: 594441.8531358337
+    unrealized_pl_pct: 217.3
+    yield_pct: 71.5
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-zw-7-srln-k-1
+    product_id: ETF-SRLN
+    instrument_name: State Street Blackstone Senior Loan ETF
+    symbol: SRLN.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 7427.268899335371
+    book_cost: 303135.32883147005
+    market_value: 297982.02824133507
+    unrealized_pl: -5153.3005901349825
+    unrealized_pl_pct: -1.7
+    yield_pct: 7.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-zw-7-ushy-k-2
+    product_id: ETF-USHY
+    instrument_name: iShares Broad USD High Yield Corporate Bond ETF
+    symbol: USHY.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 8962.769273455568
+    book_cost: 331568.0333449403
+    market_value: 327589.216944801
+    unrealized_pl: -3978.8164001393015
+    unrealized_pl_pct: -1.2
+    yield_pct: 6.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-zw-7-ief-o-3
+    product_id: ETF-IEF
+    instrument_name: iShares 7-10 Year Treasury Bond ETF
+    symbol: IEF.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 3776.2597066102867
+    book_cost: 360440.3689689879
+    market_value: 357196.405648267
+    unrealized_pl: -3243.9633207208826
+    unrealized_pl_pct: -0.9
+    yield_pct: 3.7
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-zw-7-ma-4
+    product_id: ETF-MA
+    instrument_name: Mastercard Incorporated
+    symbol: MA
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 772.4485159295716
+    book_cost: 434123.0015170965
+    market_value: 386803.594351733
+    unrealized_pl: -47319.40716536349
+    unrealized_pl_pct: -10.9
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '51'
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-zw-7-lqd-5
+    product_id: ETF-LQD
+    instrument_name: iShares iBoxx $ Investment Grade Corporate Bond ETF
+    symbol: LQD
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 3859.944225576557
+    book_cost: 422323.3093866115
+    market_value: 416410.78305519896
+    unrealized_pl: -5912.526331412548
+    unrealized_pl_pct: -1.4
+    yield_pct: 4.4
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-zw-7-usig-o-6
+    product_id: ETF-USIG
+    instrument_name: iShares Broad USD Investment Grade Corporate Bond ETF
+    symbol: USIG.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 8779.881333831989
+    book_cost: 450978.73787529324
+    market_value: 446017.971758665
+    unrealized_pl: -4960.766116628249
+    unrealized_pl_pct: -1.1
+    yield_pct: 4.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+- client_id: PB-HK-000021-6
+  name: Anna Lin
+  aum: 51200000.0
+  cash_pct: 4.2
+  region: APAC
+  birthdate: '1953-01-01'
+  occupation: Retired
+  risk_rating: 1
+  marital_status: Single
+  children_info: 2 children
+  liquidity_need: High (immediate access)
+  income_stability: Stable pension
+  investment_objective: Aggressive growth
+  qualitative_profile: Conservative retiree with stated aggressive growth objective — clear suitability
+    disconnect. Very large portfolio. RM should prioritise a comprehensive portfolio review and risk-profiling
+    refresh. Has expressed interest in real assets and inflation protection.
+  like_products:
+  - real assets
+  - inflation protection
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: US 4-Month Treasury Bill
+  position_bought: 2150400.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-zw-8-us4mt-x-0
+    product_id: PROD054
+    instrument_name: US 4-Month Treasury Bill
+    symbol: US4MT=X
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 31660.77738515901
+    book_cost: 732674.6166950596
+    market_value: 2150400.0
+    unrealized_pl: 1417725.3833049405
+    unrealized_pl_pct: 193.5
+    yield_pct: 63.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-zw-8-lly-1
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 6022.3125485922665
+    book_cost: 6492805.716451038
+    market_value: 5402014.356087263
+    unrealized_pl: -1090791.360363775
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '63'
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-zw-8-bnd-o-2
+    product_id: ETF-BND
+    instrument_name: Vanguard Total Bond Market Index Fund
+    symbol: BND.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 81206.92302220508
+    book_cost: 5972875.394520536
+    market_value: 5937038.142153413
+    unrealized_pl: -35837.25236712303
+    unrealized_pl_pct: -0.6
+    yield_pct: 3.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-zw-8-tlt-o-3
+    product_id: ETF-TLT
+    instrument_name: iShares 20+ Year Treasury Bond ETF
+    symbol: TLT.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 75160.39865543564
+    book_cost: 6491536.537833063
+    market_value: 6472061.928219563
+    unrealized_pl: -19474.609613499604
+    unrealized_pl_pct: -0.3
+    yield_pct: 4.3
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-zw-8-emb-o-4
+    product_id: ETF-EMB
+    instrument_name: iShares J.P. Morgan USD Emerging Markets Bond ETF
+    symbol: EMB.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 74974.1677111675
+    book_cost: 7157390.923683058
+    market_value: 7007085.714285714
+    unrealized_pl: -150305.20939734392
+    unrealized_pl_pct: -2.1
+    yield_pct: 4.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-zw-8-usig-o-5
+    product_id: ETF-USIG
+    instrument_name: iShares Broad USD Investment Grade Corporate Bond ETF
+    symbol: USIG.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 148466.72244787138
+    book_cost: 7625995.4503052225
+    market_value: 7542109.500351865
+    unrealized_pl: -83885.94995335769
+    unrealized_pl_pct: -1.1
+    yield_pct: 4.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-zw-8-srln-k-6
+    product_id: ETF-SRLN
+    instrument_name: State Street Blackstone Senior Loan ETF
+    symbol: SRLN.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 201324.35908320078
+    book_cost: 8216819.21303969
+    market_value: 8077133.286418015
+    unrealized_pl: -139685.92662167456
+    unrealized_pl_pct: -1.7
+    yield_pct: 7.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 7
+    holding_id: ph-zw-8-mu-o-7
+    product_id: STOCK-MU
+    instrument_name: Micron Technology Inc.
+    symbol: MU.O
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 24228.20309594375
+    book_cost: 7641665.547900768
+    market_value: 8612157.072484165
+    unrealized_pl: 970491.5245833974
+    unrealized_pl_pct: 12.7
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '45'
+    liquidity: T+2
+- client_id: PB-HK-000022-4
+  name: Victor Ng
+  aum: 12400000.0
+  cash_pct: 14.0
+  region: APAC
+  birthdate: '1987-01-01'
+  occupation: Managing Director
+  risk_rating: 3
+  marital_status: Divorced
+  children_info: 1 children
+  liquidity_need: Low
+  income_stability: Variable business income
+  investment_objective: Regular income
+  qualitative_profile: Senior executive with moderate risk. Seeks regular income to supplement salary
+    in preparation for upcoming retirement (3-5 year horizon). Interested in dividend strategies, bond
+    ladders, and retirement-income planning. Open to annuity discussions.
+  like_products:
+  - dividend strategies
+  - bond ladders
+  - retirement income
+  - annuities
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: Fidelity Money Market Fund
+  position_bought: 1736000.0000000002
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-wl-1-fzdxx-o-0
+    product_id: ETF-FZDXX
+    instrument_name: Fidelity Money Market Fund
+    symbol: FZDXX.O
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 1736000.0000000002
+    book_cost: 529591.2141549726
+    market_value: 1736000.0000000002
+    unrealized_pl: 1206408.7858450278
+    unrealized_pl_pct: 227.8
+    yield_pct: 74.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-wl-1-us7yt-rr-1
+    product_id: us7yt-rr
+    instrument_name: US 7-Year Treasury Yield
+    symbol: US7YT=RR
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 49306.97730677499
+    book_cost: 433370.08769631427
+    market_value: 1463924.1562381496
+    unrealized_pl: 1030554.0685418353
+    unrealized_pl_pct: 237.8
+    yield_pct: 78.1
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-wl-1-spib-k-2
+    product_id: ETF-SPIB
+    instrument_name: State Street SPDR Portfolio Intermediate Term Corporate Bond ETF
+    symbol: SPIB.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 47726.36117346014
+    book_cost: 1602104.6643913535
+    market_value: 1589287.8270762227
+    unrealized_pl: -12816.837315130746
+    unrealized_pl_pct: -0.8
+    yield_pct: 4.4
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-wl-1-lly-3
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 1911.540131454065
+    book_cost: 2060879.204223914
+    market_value: 1714651.4979142963
+    unrealized_pl: -346227.70630961773
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '57'
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-wl-1-govt-k-4
+    product_id: ETF-GOVT
+    instrument_name: iShares U.S. Treasury Bond ETF
+    symbol: GOVT.K
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 80808.74698078042
+    book_cost: 1849261.476133035
+    market_value: 1840015.16875237
+    unrealized_pl: -9246.307380665094
+    unrealized_pl_pct: -0.5
+    yield_pct: 3.5
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-wl-1-emb-o-5
+    product_id: ETF-EMB
+    instrument_name: iShares J.P. Morgan USD Emerging Markets Bond ETF
+    symbol: EMB.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 21029.090943616986
+    book_cost: 2007537.1190913622
+    market_value: 1965378.8395904435
+    unrealized_pl: -42158.279500918696
+    unrealized_pl_pct: -2.1
+    yield_pct: 4.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-wl-1-edv-6
+    product_id: ETF-EDV
+    instrument_name: Vanguard Extended Duration Treasury Index Fund ETF Shares
+    symbol: EDV
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 32314.41283506209
+    book_cost: 2094932.375178875
+    market_value: 2090742.5104285171
+    unrealized_pl: -4189.86475035781
+    unrealized_pl_pct: -0.2
+    yield_pct: 4.7
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+- client_id: PB-HK-000023-2
+  name: Rachel Ho
+  aum: 2800000.0
+  cash_pct: 20.0
+  region: APAC
+  birthdate: '1979-01-01'
+  occupation: CFO
+  risk_rating: 4
+  marital_status: Divorced
+  children_info: 0 children
+  liquidity_need: Low (5-year horizon)
+  income_stability: Dividend/Rental income
+  investment_objective: Long-term capital growth
+  qualitative_profile: CFO with moderate-to-aggressive risk. Early career, long investment horizon. Interested
+    in thematic investing (AI, clean energy, demographic shifts). Comfortable with higher equity allocation.
+    Has asked about leveraging dollar-cost averaging into current market.
+  like_products:
+  - AI
+  - clean energy
+  - demographics
+  - equity
+  dislike_products: []
+  date_last_traded: '2026-08-18'
+  product_name_last_traded: Fidelity Government Cash Reserves
+  position_bought: 560000.0
+  holdings:
+  - holding_idx: 0
+    holding_id: ph-wl-2-spaxx-o-0
+    product_id: ETF-SPAXX
+    instrument_name: Fidelity Government Cash Reserves
+    symbol: SPAXX.O
+    asset_class: Cash
+    region: North America
+    currency: USD
+    quantity: 560000.0
+    book_cost: 399144.6899501069
+    market_value: 560000.0
+    unrealized_pl: 160855.3100498931
+    unrealized_pl_pct: 40.3
+    yield_pct: 14.9
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 1
+    holding_id: ph-wl-2-vcit-o-1
+    product_id: ETF-VCIT
+    instrument_name: Vanguard Intermediate-Term Corporate Bond Index Fund ETF Shares
+    symbol: VCIT.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 3106.168053960043
+    book_cost: 258092.03860715617
+    market_value: 254736.84210526315
+    unrealized_pl: -3355.1965018930205
+    unrealized_pl_pct: -1.3
+    yield_pct: 4.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 2
+    holding_id: ph-wl-2-shy-o-2
+    product_id: ETF-SHY
+    instrument_name: iShares 1-3 Year Treasury Bond ETF
+    symbol: SHY.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 3362.8220392869794
+    book_cost: 277045.31870759063
+    market_value: 276491.22807017545
+    unrealized_pl: -554.0906374151818
+    unrealized_pl_pct: -0.2
+    yield_pct: 3.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 3
+    holding_id: ph-wl-2-lly-3
+    product_id: STOCK-LLY
+    instrument_name: Eli Lilly and Company
+    symbol: LLY
+    asset_class: Equities
+    region: North America
+    currency: USD
+    quantity: 332.4923233390053
+    book_cost: 358468.2860998651
+    market_value: 298245.61403508775
+    unrealized_pl: -60222.67206477735
+    unrealized_pl_pct: -16.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '41'
+    liquidity: T+2
+  - holding_idx: 4
+    holding_id: ph-wl-2-agg-4
+    product_id: ETF-AGG
+    instrument_name: iShares Core U.S. Aggregate Bond ETF
+    symbol: AGG
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 3247.082699137494
+    book_cost: 322255.7905337362
+    market_value: 320000.0
+    unrealized_pl: -2255.7905337361735
+    unrealized_pl_pct: -0.7
+    yield_pct: 3.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 5
+    holding_id: ph-wl-2-usig-o-5
+    product_id: ETF-USIG
+    instrument_name: iShares Broad USD Investment Grade Corporate Bond ETF
+    symbol: USIG.O
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 6727.448542616385
+    book_cost: 345555.49642559385
+    market_value: 341754.3859649123
+    unrealized_pl: -3801.1104606815497
+    unrealized_pl_pct: -1.1
+    yield_pct: 4.6
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+  - holding_idx: 6
+    holding_id: ph-wl-2-1810-hk-6
+    product_id: 1810-hk
+    instrument_name: Xiaomi Corporation
+    symbol: 1810.HK
+    asset_class: Equities
+    region: APAC
+    currency: HKD
+    quantity: 87503.03977766198
+    book_cost: 453252.83283020515
+    market_value: 363508.77192982455
+    unrealized_pl: -89744.0609003806
+    unrealized_pl_pct: -19.8
+    yield_pct: null
+    risk_bucket: Medium
+    esg_score: '73'
+    liquidity: T+2
+  - holding_idx: 7
+    holding_id: ph-wl-2-hyg-7
+    product_id: ETF-HYG
+    instrument_name: iShares iBoxx $ High Yield Corporate Bond ETF
+    symbol: HYG
+    asset_class: Fixed Income
+    region: North America
+    currency: USD
+    quantity: 4881.692320004268
+    book_cost: 389942.4675047944
+    market_value: 385263.15789473685
+    unrealized_pl: -4679.309610057564
+    unrealized_pl_pct: -1.2
+    yield_pct: 5.8
+    risk_bucket: Low
+    esg_score: null
+    liquidity: T+2
+

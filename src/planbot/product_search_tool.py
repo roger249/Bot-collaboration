@@ -110,7 +110,7 @@ def _build_query_dict(inputs: ProductSearchInput) -> dict[str, Any]:
 
 
 class ProductSearchTool(BaseTool):
-    name: str = "ProductSearch"
+    name: str = "ProductSearchTool"
     description: str = (
         "Search the investable product catalog for products similar to given "
         "attributes, ranked by similarity score. "

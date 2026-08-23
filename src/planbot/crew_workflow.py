@@ -129,10 +129,27 @@ def _build_tool_instance(tool_name: str) -> Any:
 
         return _with_yfinance_tool_input_guidance(YFinanceTool())
 
-    if normalized == "ProductSearch":
+    if normalized == "ProductSearchTool":
         from src.planbot.product_search_tool import ProductSearchTool
 
         return ProductSearchTool()
+
+    if normalized == "SerpApiGoogleSearchTool":
+        serpapi_api_key = os.getenv("SERPAPI_API_KEY", "").strip()
+        if not serpapi_api_key:
+            raise ValueError(
+                "SERPAPI_API_KEY is required when using SerpApiGoogleSearchTool. "
+                "Set it in your environment or .env file."
+            )
+
+        try:
+            from crewai_tools import SerpApiGoogleSearchTool
+        except ImportError as exc:
+            raise RuntimeError(
+                "SerpApi tool dependency is missing. Install it with: uv add serpapi"
+            ) from exc
+
+        return SerpApiGoogleSearchTool()
 
     if normalized != "FirecrawlScrapeWebsiteTool":
         raise ValueError(f"Unsupported tool '{normalized}' in agent config.")

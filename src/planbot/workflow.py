@@ -14,6 +14,24 @@ LOGGER = logging.getLogger(__name__)
 OUTPUT_START_MARKER = "---** Output of suggestion as below **---"
 
 
+def _render_doc_path(doc: ReferenceDocument, root_dir: Path) -> str:
+    """Render a ReferenceDocument's path, preserving the ``api://`` scheme.
+
+    ``ReferenceDocument.path`` is a ``pathlib.Path``, which collapses the
+    double slash in ``api://client_profile`` to ``api:/client_profile``.  The
+    API-path constants used for routing keep the ``api://`` scheme, so restore
+    it here so the rendered path matches what the caller passed in.
+    """
+    raw = (
+        str(doc.path.relative_to(root_dir)).replace("\\", "/")
+        if doc.path.is_relative_to(root_dir)
+        else str(doc.path)
+    )
+    if raw.startswith("api:/") and not raw.startswith("api://"):
+        raw = "api://" + raw[len("api:/"):]
+    return raw
+
+
 @dataclass
 class PlanBotResult:
     run_root: Path
@@ -53,9 +71,7 @@ def _build_reference_payload(
         return {
             "index": index,
             "name": doc.path.name,
-            "path": str(doc.path.relative_to(root_dir)).replace("\\", "/")
-            if doc.path.is_relative_to(root_dir)
-            else str(doc.path),
+            "path": _render_doc_path(doc, root_dir),
             "source_type": doc.source_type,
             "title": doc.path.stem,
             "content": doc.content.strip(),
@@ -148,11 +164,7 @@ def _build_prompt_snapshot_markdown(
                 lines.append("---")
                 lines.append("")
                 continue
-            doc_path = (
-                str(doc.path.relative_to(root_dir)).replace("\\", "/")
-                if doc.path.is_relative_to(root_dir)
-                else str(doc.path)
-            )
+            doc_path = _render_doc_path(doc, root_dir)
             lines.append(f"#### {doc.path.name}")
             lines.append(f"- **Source:** `{doc_path}`")
             lines.append(f"- **Type:** {doc.source_type}")
@@ -172,6 +184,13 @@ def _sanitize_for_filename(value: str) -> str:
 
 
 def _resolve_output_filename(output_filename: str, model: str) -> str:
+    if "{date}" in output_filename:
+        from datetime import datetime
+
+        output_filename = output_filename.replace(
+            "{date}", datetime.now().strftime("%Y%m%d_%H%M%S")
+        )
+
     model_token = _sanitize_for_filename(model)
     if "{model}" in output_filename:
         return output_filename.replace("{model}", model_token)

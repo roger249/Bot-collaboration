@@ -31,6 +31,7 @@ from src.integrations.product_opportunity_proposal import (
     propose_product_opportunity_automatch,
 )
 from src.integrations.portfolio_review import propose_portfolio_review
+from src.integrations.llm_product_matcher import propose_llm_product_matcher
 from src.integrations.client_api import (
     search_by_investor_readiness_score,
     search_holdings_maturing,
@@ -675,6 +676,71 @@ def generate_portfolio_review(body: PortfolioReviewRequest) -> dict:
         market_outlook=body.market_outlook,
         market_outlook_source=body.market_outlook_source,
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LLM Product Matcher endpoint (POC)
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class LlmProductMatcherRequest(BaseModel):
+    """Run the LLM product matcher for a single client (no IRS, no PFS).
+
+    The LLM discovers candidate products itself via the ``ProductSearchTool``
+    tool and researches context via web search.
+    """
+
+    client_id: str = Field(
+        ..., description="Client identifier, e.g. 'PB-HK-000001-8'",
+        json_schema_extra={"example": "PB-HK-000001-8"},
+    )
+    market_outlook: str | None = Field(
+        default=None, json_schema_extra={"example": "Rates remain elevated; favor short-duration high-quality credit over long duration."},
+    )
+    market_outlook_source: MarketOutlookSource | None = Field(
+        None, description=_MARKET_OUTLOOK_SOURCE_DOC,
+    )
+    output_prompt_to_llm: bool = Field(
+        False,
+        description="Include the exact prompt sent to the LLM (prompt_snapshot.md content) in the response.",
+    )
+
+
+class LlmProductMatcherResponse(BaseModel):
+    client_id: str
+    output_filename: str
+    proposal_markdown: str
+    prompt_to_llm: str | None = None
+
+
+@app.post(
+    "/api/v1/llm-product-matcher",
+    response_model=LlmProductMatcherResponse,
+)
+def generate_llm_product_matcher(body: LlmProductMatcherRequest) -> dict:
+    """Run the LLM product matcher for a single client.
+
+    Takes a ``client_id`` directly (no investor-readiness filter).  The LLM
+    discovers candidate products via the ``ProductSearchTool`` tool (backed by
+    ``search_similar``) and researches context via web search, then produces
+    a report in the ``product_investor_matching`` output format.
+    """
+    try:
+        return propose_llm_product_matcher(
+            client_id=body.client_id,
+            market_outlook=body.market_outlook,
+            market_outlook_source=body.market_outlook_source,
+            output_prompt_to_llm=body.output_prompt_to_llm,
+        )
+    except LookupError as exc:
+        # Client not found.
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        LOGGER.exception("LLM product matcher failed: %s", exc)
+        raise HTTPException(
+            status_code=502,
+            detail=f"Proposal generation failed: {exc}",
+        ) from exc
 
 
 # ═══════════════════════════════════════════════════════════════════════════

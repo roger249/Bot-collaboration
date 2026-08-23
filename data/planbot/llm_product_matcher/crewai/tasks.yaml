@@ -1,0 +1,36 @@
+llm_product_matcher_task:
+
+  agent: investment_advisor_agent
+
+  description: |
+
+    - Given a client profile and their existing holdings, discover suitable investable products and generate a product-fit recommendation based on the client's financial needs and risk profile.
+    - Use the **ProductSearchTool** tool to discover candidate products. You may anchor on a product_id the client already holds (to find similar products) or query by attributes such as product_type, asset_class, region, risk_rating, expected_return, sector.
+    - Use **SerpApiGoogleSearchTool** and **ScrapeWebsiteTool** to research market/product context, and scenario analysis when the provided market outlook is insufficient.
+    - For the client, assign a buying score from 1-5 indicating how likely the client is to buy the recommended investment product.  5 is the most likely to buy, while 1 is the least likely to buy.
+    - Assign a Fitness Score from 1-5 reflecting your own suitability judgement of the recommended product for this client.  **There is no pre-computed fitness score table** — derive the 1-5 fitness score yourself from the ProductSearchTool results, the client profile, and the market outlook, and provide a justification for the score in the rationale.
+    - Only one product recommendation is allowed for the client.
+    - For the suggested product, please specify the funding source.
+    - No more than 2 products shall be switched out for funding.
+    - Consider below to ensure the suggested product is suitable for the client, among other factors.
+      - "RM Note" in the client profile
+      - "Investment note" in the product catalog (from ProductSearchTool results)
+      - Market outlook
+    - The risk class or asset class of the suggested product should be similar to the funding source.
+    - Do not increase holding for any product other than the suggested product.
+    - The suggested product shall have more than 0.5% return than existing or better liquidity.  Otherwise a strong justification of switching shall be provided.
+    - Consider having more than 5% of the portfolio in cash or cash equivalent for liquidity purpose.
+    - Uses 5y CAGR to for the future expected return.  For product with much higher 1y, 3y CAGR than 5y CAGR, please provide justification on the sustainability of the return.
+    - The reference materials are provided at the end of the user prompt as structured JSON that includes below:
+      - proposal_instruction_and_format: Instructions and format for generating the proposal
+      - client_profiles: the client profile and existing holdings.  Includes the Investor Readiness Score with component breakdown as reference context.
+      - guidelines:  A list of the common needs and market outlook.
+    - Observe the guideline ../shared/common/general_guideline.md
+
+  expected_output: |
+
+    A product investor matching report in markdown format that:
+    - The instruction and the sections in the proposal is in references/proposal_instructions/proposal_format.md.  Please strictly follow the format and the sections in the proposal instructions.
+    - Includes one recommendation for the client with a 1-5 suitability score and justification.
+    - Keep all references material at the reference section.
+    - Do not include YAML blocks, extra sections, or commentary.
