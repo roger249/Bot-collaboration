@@ -15,10 +15,10 @@ Run from repository root:
 ```bash
 git pull
 export GHCR_TOKEN="your_ghcr_token"
-./docker/release_ghcr.sh                 # amd64, publish (default)
-./docker/release_ghcr.sh arm64           # arm64, publish
-./docker/release_ghcr.sh amd64 local     # amd64, build only (no push)
-./docker/release_ghcr.sh arm64 local     # arm64, build only for local testing
+./docker/release_ghcr.sh                 # amd64, local (build only)
+./docker/release_ghcr.sh arm64           # arm64, local (build only)
+./docker/release_ghcr.sh amd64 publish   # amd64, build and push to GHCR
+./docker/release_ghcr.sh arm64 publish   # arm64, build and push to GHCR
 ```
 
 Configuration is centralized at the top of [docker/release_ghcr.sh](../../docker/release_ghcr.sh). Update these once:
@@ -30,8 +30,8 @@ Configuration is centralized at the top of [docker/release_ghcr.sh](../../docker
 Two positional switches control build behaviour (in order):
 
 1. **Architecture** (default `amd64`): `amd64` → `linux/amd64`, `arm64` → `linux/arm64`.
-2. **Publish mode** (default `publish`): `publish` → build and push to GHCR;
-   `local` → build and load into the local Docker daemon (no push, no GHCR token).
+2. **Publish mode** (default `local`): `local` → build and load into the local
+   Docker daemon (no push, no GHCR token); `publish` → build and push to GHCR.
 
 The tag includes the architecture so AMD and ARM images coexist under the same
 date+sha: `vYYYYMMDD-<gitsha>-<arch>` (e.g. `v20260816-abc1234-amd64`).
@@ -73,6 +73,7 @@ docker run -d \
   -p 8000:8000 \
   -p 8001:8001 \
   -e DEEPSEEK_API_KEY="${DEEPSEEK_API_KEY:-}" \
+  -e SERPAPI_API_KEY="${SERPAPI_API_KEY:-}" \
   -e START_DATA_SERVER=true \
   -e HF_HOME=/app/hf-cache \
   -v "$(pwd)/log:/app/log" \

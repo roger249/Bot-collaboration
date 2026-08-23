@@ -10,6 +10,8 @@ services:
     environment:
       # LLM provider key required by the proposal endpoints (deepseek_tool).
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      # Web search key (SerpApi) — required only by /api/v1/llm-product-matcher.
+      - SERPAPI_API_KEY=${SERPAPI_API_KEY:-}
       # Data service endpoints + auth (overrides config_planbot.yaml).
       - DATA_CLIENT_BASE_URL=${DATA_CLIENT_BASE_URL:-}
       - DATA_PRODUCT_BASE_URL=${DATA_PRODUCT_BASE_URL:-}

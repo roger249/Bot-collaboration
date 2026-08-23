@@ -70,6 +70,7 @@ the **same directory as `compose.yaml`** (the project directory) — that is whe
 | Env var | Overrides | YAML fallback |
 |---------|-----------|---------------|
 | `DEEPSEEK_API_KEY` | LLM provider key (named by `providers.deepseek.api_key_env`) | *(none — required)* |
+| `SERPAPI_API_KEY` | Web search key for the SerpApi tool | *(none — required only for `/api/v1/llm-product-matcher` web search)* |
 | `DATA_CLIENT_BASE_URL` | `data_source.rest.client_base_url` | `http://localhost:8001` |
 | `DATA_PRODUCT_BASE_URL` | `data_source.rest.product_base_url` | `http://localhost:8001` |
 | `BANK_API_KEY` | REST bearer token (named by `auth_token_env`) | *(none)* |
@@ -83,6 +84,9 @@ IMAGE_TAG=<tag>
 
 # LLM provider key.
 DEEPSEEK_API_KEY=<your_key>
+
+# Web search key (SerpApi) — required only for the LLM product matcher endpoint.
+SERPAPI_API_KEY=<your_key>
 
 # Data endpoints.
 DATA_CLIENT_BASE_URL=https://bank-client-data.example.com
@@ -112,6 +116,7 @@ curl -f http://localhost:8000/openapi.json >/dev/null && echo "openapi ok"
 POST /api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings
 POST /api/v1/product-opportunity-proposal
 POST /api/v1/product-opportunity-proposal-automatch
+POST /api/v1/llm-product-matcher
 ```
 
 3. For each endpoint:

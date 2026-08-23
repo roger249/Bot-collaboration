@@ -41,9 +41,9 @@ esac
 # Publish switch
 # -----------------------------
 # Usage: ./release_ghcr.sh [amd64|arm64] [publish|local]
-# Defaults to "publish" (build and push to GHCR).  Pass "local" to build only
-# and load the image into the local Docker daemon (no push, no GHCR token).
-PUBLISH_MODE="${2:-publish}"
+# Defaults to "local" (build and load into the local Docker daemon, no push,
+# no GHCR token).  Pass "publish" to build and push to GHCR.
+PUBLISH_MODE="${2:-local}"
 case "${PUBLISH_MODE}" in
   publish)
     PUSH_FLAG="--push"

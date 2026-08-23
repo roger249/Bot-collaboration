@@ -5,8 +5,9 @@
 > new endpoint reuses the same contract with minimal friction.
 >
 > Source of truth: `src/integrations/proposal_server.py` (Pydantic models) and
-> `openapi_proposal.json` in this folder. See `align_proposal_endpoint.md` for the
-> full rationale, per-endpoint alignment matrix, and Sprint-2 deferred items.
+> `docs/specification/data_api/openapi_proposal.json` (proposal server OpenAPI).
+> See `align_proposal_endpoint.md` for the full rationale, per-endpoint alignment
+> matrix, and Sprint-2 deferred items.
 
 ## Endpoints covered
 
