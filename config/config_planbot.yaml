@@ -186,6 +186,12 @@ product_groups:
       - PROD020    # Balanced Growth & Income
       - ETF-VOO    # Vanguard S&P 500 ETF
       - ETF-HYG    # iShares High Yield Corp Bond ETF
+      - FX-TARF-USDHKD-6M-B
+      - FX-TARF-USDHKD-1Y-B
+      - FX-TARF-GBPUSD-4M-S
+      - FX-TARF-GBPUSD-6M-S
+      - FX-TARF-AUDUSD-4M-S
+      - FX-TARF-AUDUSD-6M-S
   ETF:
     description: "Exchange Traded Funds"
     product_ids:

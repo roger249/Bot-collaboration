@@ -1021,10 +1021,195 @@ def seed(use_yahoo: bool = True, *, allow_destructive: bool = False) -> None:
 
 
 # ---------------------------------------------------------------------------
+# FX structured products — incremental seed (localized, non-destructive)
+# ---------------------------------------------------------------------------
+#
+# Phase 1: FX TARF only (see docs/specification/schema_product/fx_structured_products.md).
+# This path INSERT OR REPLACE only the FX-TARF-* rows and never issues
+# DELETE FROM products, so manually-patched rows in the live DuckDB are preserved.
+
+_FX_TARF_VARIANTS = [
+    {
+        "product_id": "FX-TARF-USDHKD-6M-B",
+        "name": "6-Month USD/HKD Target Redemption Forward (Buying USD)",
+        "pair": "USD/HKD", "base": "USD", "quote": "HKD",
+        "direction": "buy_base",
+        "spot": 7.8420, "strike": 7.8340, "tenor": "6m",
+        "fixing_frequency": "daily", "notional": 100000,
+        "guaranteed": "First 1 month (20 fixings)",
+        "cap": 150000, "cap_unit": "currency_amount", "cap_currency": "HKD",
+        "cap_note": "HKD 150,000 (~1.0% total return cap)",
+        "provider": "UBS",
+        "payout": "Buy base currency at strike discount; auto-terminate once target profit is accrued; 2x notional when spot falls below strike.",
+        "remarks": "Buy USD/HKD at 0.10% strike discount; 2x gearing below strike; target HKD 150,000.",
+        "investment_note": "USD/HKD TARF (buy) gives investors who need USD over time the chance to accumulate USD daily at a strike lower than spot; it knocks out once the target profit is reached, but 2x notional applies if spot falls below the strike.",
+    },
+    {
+        "product_id": "FX-TARF-USDHKD-1Y-B",
+        "name": "1-Year USD/HKD Target Redemption Forward (Buying USD)",
+        "pair": "USD/HKD", "base": "USD", "quote": "HKD",
+        "direction": "buy_base",
+        "spot": 7.8420, "strike": 7.8290, "tenor": "1y",
+        "fixing_frequency": "daily", "notional": 100000,
+        "guaranteed": "First 2 months (40 fixings)",
+        "cap": 300000, "cap_unit": "currency_amount", "cap_currency": "HKD",
+        "cap_note": "HKD 300,000 (~2.0% total return cap)",
+        "provider": "HSBC",
+        "payout": "Buy base currency at strike discount; auto-terminate once target profit is accrued; 2x notional when spot falls below strike.",
+        "remarks": "Buy USD/HKD at 0.17% strike discount; 2x gearing below strike; target HKD 300,000.",
+        "investment_note": "USD/HKD TARF (buy, 1-year) suits investors with a longer USD funding horizon, accumulating USD at a deeper discount than the 6-month structure while a 2-month guaranteed period shields the early fixings.",
+    },
+    {
+        "product_id": "FX-TARF-GBPUSD-4M-S",
+        "name": "4-Month GBP/USD Target Redemption Forward (Selling GBP)",
+        "pair": "GBP/USD", "base": "GBP", "quote": "USD",
+        "direction": "sell_base",
+        "spot": 1.3493, "strike": 1.3590, "tenor": "4m",
+        "fixing_frequency": "monthly", "notional": 1000000,
+        "guaranteed": "First 1 month (1 fixing)",
+        "cap": 250, "cap_unit": "pips", "cap_currency": None,
+        "cap_note": "250 pips (USD 25,000 total gain)",
+        "provider": "BNP Paribas",
+        "payout": "Sell base currency at enhanced strike; auto-terminate once target profit is accrued; 2x notional when spot rises above strike.",
+        "remarks": "Sell GBP/USD at 1.3590 (97 pips above spot); 2x gearing above strike; target 250 pips.",
+        "investment_note": "GBP/USD TARF (sell) gives investors who hold GBP and need USD the chance to sell GBP at an enhanced strike above spot, accruing gain while spot stays below the strike; 2x notional applies if spot rises above the strike.",
+    },
+    {
+        "product_id": "FX-TARF-GBPUSD-6M-S",
+        "name": "6-Month GBP/USD Target Redemption Forward (Selling GBP)",
+        "pair": "GBP/USD", "base": "GBP", "quote": "USD",
+        "direction": "sell_base",
+        "spot": 1.3493, "strike": 1.3620, "tenor": "6m",
+        "fixing_frequency": "monthly", "notional": 1000000,
+        "guaranteed": "First 2 months (2 fixings)",
+        "cap": 400, "cap_unit": "pips", "cap_currency": None,
+        "cap_note": "400 pips (USD 40,000 total gain)",
+        "provider": "JPMorgan",
+        "payout": "Sell base currency at enhanced strike; auto-terminate once target profit is accrued; 2x notional when spot rises above strike.",
+        "remarks": "Sell GBP/USD at 1.3620 (127 pips above spot); 2x gearing above strike; target 400 pips.",
+        "investment_note": "GBP/USD TARF (sell, 6-month) offers a wider enhanced strike than the 4-month for investors selling GBP into USD, with a higher knockout target before the 2x obligation can trigger.",
+    },
+    {
+        "product_id": "FX-TARF-AUDUSD-4M-S",
+        "name": "4-Month AUD/USD Target Redemption Forward (Selling AUD)",
+        "pair": "AUD/USD", "base": "AUD", "quote": "USD",
+        "direction": "sell_base",
+        "spot": 0.7167, "strike": 0.7225, "tenor": "4m",
+        "fixing_frequency": "monthly", "notional": 1000000,
+        "guaranteed": "First 1 month (1 fixing)",
+        "cap": 150, "cap_unit": "pips", "cap_currency": None,
+        "cap_note": "150 pips (USD 15,000 total gain)",
+        "provider": "UBS",
+        "payout": "Sell base currency at enhanced strike; auto-terminate once target profit is accrued; 2x notional when spot rises above strike.",
+        "remarks": "Sell AUD/USD at 0.7225 (58 pips above spot); 2x gearing above strike; target 150 pips.",
+        "investment_note": "AUD/USD TARF (sell) gives investors who hold AUD and need USD the chance to sell AUD at an enhanced strike above spot, accruing gain while spot stays below the strike; 2x notional applies if spot rises above the strike.",
+    },
+    {
+        "product_id": "FX-TARF-AUDUSD-6M-S",
+        "name": "6-Month AUD/USD Target Redemption Forward (Selling AUD)",
+        "pair": "AUD/USD", "base": "AUD", "quote": "USD",
+        "direction": "sell_base",
+        "spot": 0.7167, "strike": 0.7250, "tenor": "6m",
+        "fixing_frequency": "monthly", "notional": 1000000,
+        "guaranteed": "First 2 months (2 fixings)",
+        "cap": 250, "cap_unit": "pips", "cap_currency": None,
+        "cap_note": "250 pips (USD 25,000 total gain)",
+        "provider": "HSBC",
+        "payout": "Sell base currency at enhanced strike; auto-terminate once target profit is accrued; 2x notional when spot rises above strike.",
+        "remarks": "Sell AUD/USD at 0.7250 (83 pips above spot); 2x gearing above strike; target 250 pips.",
+        "investment_note": "AUD/USD TARF (sell, 6-month) offers a wider enhanced strike than the 4-month for investors selling AUD into USD, with a higher knockout target before the 2x obligation can trigger.",
+    },
+]
+
+
+def _synthesize_fx_tarf(variant: dict) -> dict:
+    """Build the ``type_specific`` JSON dict for one FX TARF variant."""
+    return {
+        "sub_type": "FX TARF",
+        "provider": variant["provider"],
+        "underlying_asset_type": "fx",
+        "underlying_assets": [variant["pair"]],
+        "currency_pair": variant["pair"],
+        "base_currency": variant["base"],
+        "quote_currency": variant["quote"],
+        "direction": variant["direction"],
+        "spot_reference": variant["spot"],
+        "strike_level": variant["strike"],
+        "knock_out_level": None,
+        "knock_in_level": None,
+        "barrier_type": None,
+        "gearing": 2.0,
+        "guaranteed_period": variant["guaranteed"],
+        "fixing_frequency": variant["fixing_frequency"],
+        "notional_per_fixing": variant["notional"],
+        "notional_currency": variant["base"],
+        "tenor": variant["tenor"],
+        "target_redemption_cap": variant["cap"],
+        "target_redemption_cap_unit": variant["cap_unit"],
+        "target_redemption_cap_currency": variant["cap_currency"],
+        "target_redemption_cap_note": variant["cap_note"],
+        "principal_protection": "none",
+        "capital_at_risk": 1.0,
+        "early_redemption": True,
+        "payout_structure": variant["payout"],
+        "maturity": None,
+    }
+
+
+def _fx_tarf_row(variant: dict) -> dict:
+    """Build the full products-table row (DDL_COLUMNS order) for one variant."""
+    return {
+        "product_id": variant["product_id"],
+        "isin": None,
+        "name": variant["name"],
+        "ticker": None,
+        "trading_currency": variant["base"],
+        "risk_rating": 5,
+        "expected_return": None,
+        "region": None,
+        "country": None,
+        "sector": "FX",
+        "remarks": variant["remarks"],
+        "product_type": "structured_product",
+        "vehicle": "Structure",
+        "type_specific": json.dumps(_synthesize_fx_tarf(variant), ensure_ascii=False),
+        "performance_history": json.dumps({}),
+        "investment_note": variant["investment_note"],
+    }
+
+
+def seed_fx_tarf() -> int:
+    """Incremental, non-destructive: INSERT OR REPLACE the FX-TARF-* rows only.
+
+    Does **not** issue ``DELETE FROM products`` and does not touch any other
+    row, so manually-patched data in the live DuckDB is preserved.
+    """
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = get_conn(read_only=False)
+    init_db(conn)
+    try:
+        for variant in _FX_TARF_VARIANTS:
+            row = _fx_tarf_row(variant)
+            conn.execute(
+                "INSERT OR REPLACE INTO products VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                [row[k] for k in DDL_COLUMNS],
+            )
+    finally:
+        conn.close()
+    print(f"Seeded {len(_FX_TARF_VARIANTS)} FX TARF row(s) (incremental, non-destructive).")
+    return len(_FX_TARF_VARIANTS)
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    # Deliberately does NOT pass allow_destructive=True: running this module
-    # directly refuses unless PLANBOT_ALLOW_DESTRUCTIVE_SEED=1 is set.
-    seed(use_yahoo=True)
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] == "fx_tarf":
+        seed_fx_tarf()
+    else:
+        # Deliberately does NOT pass allow_destructive=True: running this module
+        # directly refuses unless PLANBOT_ALLOW_DESTRUCTIVE_SEED=1 is set.
+        seed(use_yahoo=True)

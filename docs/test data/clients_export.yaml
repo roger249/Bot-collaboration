@@ -160,7 +160,8 @@
   qualitative_profile: High-earning legal professional with high risk appetite. Comfortable with concentrated
     equity positions and alternative investments. Frequently travels to China for business — receptive
     to APAC equity themes. Recently expressed interest in ESG and sustainable investing trends. No immediate
-    liquidity needs.
+    liquidity needs. Has recurring USD/HKD settlement needs and is open to an FX TARF that accumulates
+    USD against HKD at a strike below spot, provided the 2x gearing risk is clearly explained.
   like_products:
   - ESG
   - sustainable investing
@@ -1292,7 +1293,9 @@
   investment_objective: Aggressive growth
   qualitative_profile: High-income surgeon with aggressive risk appetite. Young enough for a long investment
     horizon. Interested in healthcare and biotech sector plays. Comfortable with high equity allocation
-    and alternatives. No dependents — flexible on liquidity and time horizon.
+    and alternatives. No dependents — flexible on liquidity and time horizon. As a Europe-based high earner
+    holding GBP, she is open to selling GBP at an enhanced strike via an FX TARF to build USD exposure
+    while rates remain favourable.
   like_products:
   - healthcare
   - biotech
@@ -2551,7 +2554,9 @@
   investment_objective: Balanced growth and income
   qualitative_profile: High-income CFO with aggressive risk appetite. Active in portfolio decisions; enjoys
     discussing macro themes and sector rotation. Interested in tech, AI, and emerging-market growth stories.
-    Comfortable with currency exposure. Has enquired about private equity fund access.
+    Comfortable with currency exposure. Has enquired about private equity fund access. As a CFO with regular
+    USD-denominated obligations, she is open to FX structured products (accumulating USD against HKD at
+    a discount, or selling GBP/AUD at an enhanced strike) to reduce her effective USD funding cost.
   like_products:
   - technology
   - AI

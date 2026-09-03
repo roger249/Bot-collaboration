@@ -249,7 +249,7 @@ different values:
   "base_currency": "GBP",
   "quote_currency": "USD",
   "direction": "sell_base",
-  "spot_reference": 1.3590,
+  "spot_reference": 1.3493,
   "strike_level": 1.359,
   "knock_out_level": null,
   "knock_in_level": null,
@@ -341,6 +341,28 @@ Field-to-source map (per TARF variant):
 | `notional_per_fixing` / `notional_currency` | **Daily Base Notional** (buy-base) / **Notional per Fixing** (sell-base) |
 | `tenor` | 6-Month / 1-Year heading (buy-base) or 4-Month / 6-Month heading (sell-base) |
 | `direction` | Profile heading — "Buying … / Selling …" → `buy_base`; "Selling … / Buying …" → `sell_base` |
+
+### 6.4 `investment_note` (seed examples)
+
+Each FX TARF row carries a one-sentence house-view note describing who the
+structure suits and its core mechanism, in the style below (buy-base
+accumulates at a *discount*; sell-base sells at an *enhanced* strike; both knock
+out on target profit and lever to 2× against the client).
+
+| # | Variant | `investment_note` |
+| --- | --- | --- |
+| 9 | USD/HKD 6M (buy) | USD/HKD TARF (buy) gives investors who need USD over time the chance to accumulate USD daily at a strike lower than spot; it knocks out once the target profit is reached, but 2× notional applies if spot falls below the strike. |
+| 10 | USD/HKD 1Y (buy) | USD/HKD TARF (buy, 1-year) suits investors with a longer USD funding horizon, accumulating USD at a deeper discount than the 6-month structure while a 2-month guaranteed period shields the early fixings. |
+| 11 | GBP/USD 4M (sell) | GBP/USD TARF (sell) gives investors who hold GBP and need USD the chance to sell GBP at an enhanced strike above spot, accruing gain while spot stays below the strike; 2× notional applies if spot rises above the strike. |
+| 12 | GBP/USD 6M (sell) | GBP/USD TARF (sell, 6-month) offers a wider enhanced strike than the 4-month for investors selling GBP into USD, with a higher knockout target before the 2× obligation can trigger. |
+| 13 | AUD/USD 4M (sell) | AUD/USD TARF (sell) gives investors who hold AUD and need USD the chance to sell AUD at an enhanced strike above spot, accruing gain while spot stays below the strike; 2× notional applies if spot rises above the strike. |
+| 14 | AUD/USD 6M (sell) | AUD/USD TARF (sell, 6-month) offers a wider enhanced strike than the 4-month for investors selling AUD into USD, with a higher knockout target before the 2× obligation can trigger. |
+
+> These are illustrative seeds; the `_generate_investment_note()` function (or an
+> FX-structured branch of it) may refine wording, but the per-row `investment_note`
+> is populated directly at seed time rather than left to the generic fallback.
+> Accumulator `investment_note` examples are added when Phase 2 seeds the 8
+> accumulator rows.
 
 ## 7. Implementation changes required (three-layer sync)
 
