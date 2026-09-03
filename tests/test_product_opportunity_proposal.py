@@ -293,7 +293,7 @@ class TestAutomatchPromptAndFields(unittest.TestCase):
 
         # Verify every reference section is present in the markdown
         for sec in ["proposal_instructions", "section_guides",
-                     "general_guidelines", "financial_needs_guidelines",
+                     "financial_needs_guidelines",
                      "client_profile", "product_catalog", "market_outlook"]:
             self.assertIn(
                 f"### {sec}", snapshot,

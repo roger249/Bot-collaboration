@@ -119,12 +119,6 @@ pipeline:
           - data/planbot/shared/proposal_section_instructions/*.md
         prompt_section: references
         required: true
-      - id: general_guidelines
-        source: file
-        paths:
-          - data/planbot/shared/common/general_guideline.md
-        prompt_section: references
-        required: true
       - id: financial_needs_guidelines
         source: file
         paths:
@@ -159,6 +153,8 @@ pipeline:
 ```
 
 > `client_profile` keeps `investor_readiness_score: true` (the score is shown as reference context) but **no IRS gate** is applied — `client_id` is supplied directly. There is **no `product_catalog` input**: product discovery is done entirely by the LLM through `ProductSearch`, so no pre-rendered product universe (and hence no PFS table) is fed as a reference.
+
+> **General guidelines are delivered via a CrewAI skill** (`data/planbot/shared/common_skills/general-guideline/SKILL.md`), not a reference input — see `Migrate_to_shared_skills.md`. The `general_guidelines` input is therefore omitted above.
 
 > `filename_template` placeholders are resolved by `_resolve_output_filename()` (`src/planbot/workflow.py`): `{model}` → sanitized model name, and `{date}` → a `YYYYMMDD_HHMMSS` timestamp (e.g. `20260822_193859`). The default template above therefore yields `llm_product_matcher_20260822_193859.md`. (`{date}` support is a small code addition to `_resolve_output_filename()`.)
 

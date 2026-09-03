@@ -12,4 +12,6 @@ investment_advisor_agent:
     - product_fitness_score_tool
     - SerpApiGoogleSearchTool
     - ScrapeWebsiteTool
+  skills:
+    - data/planbot/shared/common_skills
   verbose: true

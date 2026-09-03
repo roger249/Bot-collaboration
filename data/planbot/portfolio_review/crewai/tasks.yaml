@@ -10,11 +10,8 @@ portfolio_review_task:
     - section_guides: Detail instructions for specific sections
     - client_profile: list of client profile and existing holdings
     - product_catalog: investable assets available for recommendation
-    - general_guidelines: strict guidelines on all tasks
     - financial_needs_guidelines: a list of the common needs.  Feel free to put up potential needs not in the list.
     - market_outlook: market outlook and sentiment analysis
-    - Observe the guideline ../shared/common/general_guideline.md
-
   expected_output: |
     A complete investment proposal in markdown format that:
     - The instruction and the sections in the proposal is in references/proposal_instructions/proposal_format.md.  Please strictly follow the format and the sections in the proposal instructions.

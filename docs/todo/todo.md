@@ -3,16 +3,17 @@ To Do
 
 # Below are to do for a POC grade proposal generator
 
+- Move llm_matcher proposal format to same as product_opportunity
+- Get irs include days to maturing
 - Refine the proposal-client matching UI
 - FX structured product
 - FX view
-- Move proposal generation to a server side API with JSON output
 - Fix the bug in incremental concentration
 - Portfolio review
-- Provide better diagnosis output for the proposal API
 
 ## Minor improvement
 
+- Move proposal generation to a server side API with JSON output
 - Including holding PnL in proposal consideration?
 - Let user refine the client, product after product matching and before product proposal generation
 All to-do below are too initial.  Need more investigation to confirm they are worth to do.
@@ -42,15 +43,12 @@ Below are some Epics to do in the future
   - Linear RankNet to train scorecard?
     - 1000 labeled training data
 
-
-
 # Efficient frontier?
 
 # Scenario analysis like Historical VaR?
 
 # Add psychology framework to the investment guide
 - May not have sufficient information due to long questionnaire that no investor would like to take.
-
 
 
 # Specialize agents
@@ -66,3 +64,4 @@ Below are some Epics to do in the future
 - Slide where AI is delivered
 - Multiple products switched out
 - Add description on IRS & PFS to LLM
+- Provide better diagnosis output for the proposal API

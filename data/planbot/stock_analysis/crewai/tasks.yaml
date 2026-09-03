@@ -12,7 +12,7 @@ stock_analysis_proposal_task:
       - Please limit your use of the tools to 15 invocations to minimize run-time.
     - Always use non-adjusted stock price for the analysis and proposal.
     - The reference materials are provided at the end of the user prompt as structured JSON that includes below:
-      - proposal_instruction_and_format: Instructions and format for generating the proposal
+      - proposal_instructions_and_format: Instructions and format for generating the proposal
       - news_and_data: A collection of news and data relevant to the analysis and proposal.  
     - Please ensure the stock name is same as the one in the stock_ticker.md
     - Some preferred websites are listed in news_and_data/preferred_websites.md. 

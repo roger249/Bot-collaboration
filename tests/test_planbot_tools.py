@@ -304,7 +304,8 @@ def test_generate_with_crew_attaches_resolved_tools(monkeypatch, tmp_path: Path)
         temperature=0.2,
     )
 
-    output = crew_workflow._generate_with_crew(app_config=object(), cfg=cfg, user_prompt="prompt")
+    app_config = types.SimpleNamespace(root_dir=tmp_path)
+    output = crew_workflow._generate_with_crew(app_config=app_config, cfg=cfg, user_prompt="prompt")
 
     assert output == "ok"
     agent_kwargs = captured["agent_kwargs"]

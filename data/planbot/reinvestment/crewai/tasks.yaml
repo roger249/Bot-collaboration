@@ -11,11 +11,10 @@ reinvestment_task:
     - The reference materials are provided at the end of the user prompt as a structured JSON:
       - client_profile: list of client profile and existing holdings
       - product_catalog: investable assets available for recommendation
-      - general_guidelines: strict guidelines on all tasks
       - financial_needs_guidelines: a list of the common needs.  Feel free to put up potential needs not in the list.
       - proposal_instructions: instructions and format for generating the proposal
       - section_guides: detail instructions for specific sections
-    - Observe the guideline shared/common/general_guideline.md when producing the proposal.
+      - market_outlook: market outlook and sentiment analysis
   
   expected_output: |
 

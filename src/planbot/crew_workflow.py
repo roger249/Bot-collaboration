@@ -337,11 +337,68 @@ def _resolve_agent_tools(agent_def: dict[str, Any]) -> list[Any]:
     return [_instrument_tool(_build_tool_instance(name), str(name)) for name in tool_names]
 
 
+def _resolve_agent_skills(agent_def: dict[str, Any], root_dir: Path) -> list[Path]:
+    """Resolve an agent's ``skills:`` entries to absolute directory paths.
+
+    Each entry is a root-relative directory (scanned by CrewAI's
+    ``discover_skills`` for ``SKILL.md`` files) or an already-absolute path.
+    """
+    skill_paths = agent_def.get("skills")
+    if not skill_paths:
+        return []
+
+    if not isinstance(skill_paths, list):
+        raise ValueError("Agent 'skills' field must be a list of directory paths.")
+
+    resolved: list[Path] = []
+    for raw in skill_paths:
+        path = Path(str(raw))
+        if not path.is_absolute():
+            path = root_dir / path
+        resolved.append(path)
+
+    LOGGER.info("Resolving skills: %s -> %s", skill_paths, resolved)
+    return resolved
+
+
+def _kickoff_with_sent_prompt_capture(
+    run_root: Path,
+    kickoff_fn: Callable[[], Any],
+) -> Any:
+    """Run ``kickoff_fn`` and capture the composed task prompt to disk.
+
+    CrewAI injects skill context into the task prompt *inside* ``kickoff()``,
+    so the final prompt is only observable via ``AgentExecutionStartedEvent``.
+    A handler writes the composed ``task_prompt`` to ``prompt_sent_to_llm.md``.
+
+    Only this handler is registered (unlike ``scoped_handlers()``, which would
+    temporarily remove CrewAI's own telemetry/tracing handlers); it is removed
+    again in ``finally``.
+    """
+    from crewai.events import AgentExecutionStartedEvent, crewai_event_bus
+
+    def _capture(_source: Any, event: Any) -> None:
+        task_prompt = str(getattr(event, "task_prompt", "") or "")
+        write_text(
+            run_root / "prompt_sent_to_llm.md",
+            f"# Prompt sent to LLM\n\n{task_prompt}",
+        )
+
+    crewai_event_bus.on(AgentExecutionStartedEvent)(_capture)
+    try:
+        result = kickoff_fn()
+        crewai_event_bus.flush()
+        return result
+    finally:
+        crewai_event_bus.off(AgentExecutionStartedEvent, _capture)
+
+
 def _generate_with_crew(
     app_config: AppConfig,
     cfg,
     user_prompt: str,
     crewai_verbose: bool = False,
+    run_root: Path | None = None,
 ) -> str:
     agents_cfg = _load_yaml(cfg.crewai_config_folder / "agents.yaml")
     tasks_cfg = _load_yaml(cfg.crewai_config_folder / "tasks.yaml")
@@ -367,12 +424,17 @@ def _generate_with_crew(
     if agent_tools:
         LOGGER.info("Resolved %s tool(s) for agent '%s'", len(agent_tools), agent_name or "<default>")
 
+    agent_skills = _resolve_agent_skills(agent_def, app_config.root_dir)
+    if agent_skills:
+        LOGGER.info("Resolved %s skill path(s) for agent '%s'", len(agent_skills), agent_name or "<default>")
+
     agent = Agent(
         role=agent_def["role"],
         goal=agent_def["goal"],
         backstory=agent_def["backstory"].strip(),
         llm=llm,
         tools=agent_tools,
+        skills=agent_skills or None,
         allow_delegation=False,
         verbose=crewai_verbose,
     )
@@ -411,12 +473,18 @@ def _generate_with_crew(
     )
 
     LOGGER.info("Sending request via CrewAI (model=%s, provider=%s)", cfg.model, cfg.provider)
-    try:
+
+    def _kickoff() -> Any:
         if crewai_verbose:
             with _tee_stdout_to_crewai_trace():
-                result = crew.kickoff()
+                return crew.kickoff()
+        return crew.kickoff()
+
+    try:
+        if run_root is not None:
+            result = _kickoff_with_sent_prompt_capture(run_root, _kickoff)
         else:
-            result = crew.kickoff()
+            result = _kickoff()
     except Exception as exc:
         CHAT_HISTORY_TRANSPORT_LOGGER.debug(
             "transport response\n=== status ===\nerror\n=== body ===\n%s",
@@ -572,7 +640,13 @@ def run_crew_planbot(
         )
         output = build_client(app_config, "planbot", bot_config).generate(request)
     else:
-        output = _generate_with_crew(app_config, cfg, user_prompt, crewai_verbose=app_config.logging_crewai_verbose)
+        output = _generate_with_crew(
+            app_config,
+            cfg,
+            user_prompt,
+            crewai_verbose=app_config.logging_crewai_verbose,
+            run_root=run_root,
+        )
 
     output_chars, output_bytes = _payload_sizes(output)
     LOGGER.info("LLM response: %s chars, %s bytes", output_chars, output_bytes)

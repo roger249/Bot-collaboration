@@ -1,3 +1,6 @@
+- Sequential Event Models
+- Random Convolutional Kernels
+
 Training data are historical client transaction.  To make those data be invariant of the market condition.  Those data need to clean up with factor like
 
 - VIX

@@ -1,5 +1,7 @@
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
+LABEL org.opencontainers.image.description="PlanBot proposal server: generates investment proposals (reinvestment, product opportunity, portfolio review, LLM product matcher) with an optional bundled data API simulator."
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     UV_LINK_MODE=copy \

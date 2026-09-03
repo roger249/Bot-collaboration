@@ -28,11 +28,8 @@ product_investor_matching_task:
       - section_guides: Detail instructions for specific sections
       - client_profile: list of client profile and existing holdings.  Each client profile includes their Investor Readiness Score with component breakdown — use this to prioritize clients most likely to transact.
       - product_catalog: investable assets available for recommendation.  Includes per-client Product Fitness Scores tables at the end — use these as quantitative input for product selection.
-      - general_guidelines: strict guidelines on all tasks
       - financial_needs_guidelines: a list of the common needs
       - market_outlook: market outlook  
-    - Observe the guideline ../shared/common/general_guideline.md
-
   expected_output: |
 
     A product investor matching report in markdown format that:

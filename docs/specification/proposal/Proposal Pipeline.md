@@ -272,13 +272,6 @@ pipeline:
            prompt_section: references
            required: true
 
-         - id: general_guidelines
-           source: file
-           paths:
-              - data/planbot/shared/common/general_guideline.md
-           prompt_section: references
-           required: true
-
          - id: financial_needs_guidelines
            source: file
            paths:
@@ -491,11 +484,6 @@ pipeline:
             required: true
             paths:
                - data/planbot/shared/proposal_section_instructions/*.md
-
-         - id: general_guidelines
-            required: true
-            paths:
-               - data/planbot/shared/common/general_guideline.md
 
          - id: financial_needs_guidelines
             required: true

@@ -212,8 +212,6 @@ input_defaults:
       description: Instructions and format for generating the proposal
     section_guides:
       description: Detail instructions for specific sections in the proposal
-    general_guidelines:
-      description: Strict guidelines on all tasks.  No exception allowed
     financial_needs_guidelines:
       description: Guidelines on financial needs analysis and common financial needs
     client_profile:
@@ -266,12 +264,6 @@ pipeline:
         source: file
         paths:
           - data/planbot/shared/proposal_section_instructions/*.md
-        prompt_section: references
-        required: true
-      - id: general_guidelines
-        source: file
-        paths:
-          - data/planbot/shared/common/general_guideline.md
         prompt_section: references
         required: true
       - id: financial_needs_guidelines
@@ -334,12 +326,6 @@ pipeline:
           - data/planbot/shared/proposal_section_instructions/*.md
         prompt_section: references
         required: true
-      - id: general_guidelines
-        source: file
-        paths:
-          - data/planbot/shared/common/general_guideline.md
-        prompt_section: references
-        required: true
       - id: financial_needs_guidelines
         source: file
         paths:
@@ -393,12 +379,6 @@ pipeline:
         source: file
         paths:
           - data/planbot/shared/proposal_section_instructions/suggested_portfolio_instruction.md
-        prompt_section: references
-        required: true
-      - id: general_guidelines
-        source: file
-        paths:
-          - data/planbot/shared/common/general_guideline.md
         prompt_section: references
         required: true
       - id: financial_needs_guidelines
@@ -458,12 +438,6 @@ pipeline:
         source: file
         paths:
           - data/planbot/shared/proposal_section_instructions/*.md
-        prompt_section: references
-        required: true
-      - id: general_guidelines
-        source: file
-        paths:
-          - data/planbot/shared/common/general_guideline.md
         prompt_section: references
         required: true
       - id: financial_needs_guidelines
@@ -527,12 +501,6 @@ pipeline:
         source: file
         paths:
           - data/planbot/shared/proposal_section_instructions/*.md
-        prompt_section: references
-        required: true
-      - id: general_guidelines
-        source: file
-        paths:
-          - data/planbot/shared/common/general_guideline.md
         prompt_section: references
         required: true
       - id: financial_needs_guidelines

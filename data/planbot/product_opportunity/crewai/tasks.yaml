@@ -13,9 +13,8 @@ product_opportunity_task:
       - client_profile: Client profile and existing holdings
       - suggested_products_and_rationale: Matcher analysis with fitness scores, funding source, client needs, and rationale for the recommended product
       - product_catalog: Investable assets available for recommendation (primary + alternative products)
-      - general_guidelines: Strict guidelines on all tasks
       - financial_needs_guidelines: Common financial needs.  You may surface additional needs not in the list.
-    - Observe the guideline ../shared/common/general_guideline.md
+      - market_outlook: market outlook and sentiment analysis
     - Output sections MUST follow the exact heading hierarchy defined in proposal_instructions/proposal_format.md: H1 title, H2 major sections, H3 sub-sections.
   
   expected_output: |

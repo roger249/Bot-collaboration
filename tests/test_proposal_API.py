@@ -321,6 +321,7 @@ def test_portfolio_review_mocked(proposal_server, monkeypatch):
         *,
         market_outlook: str | None = None,
         market_outlook_source: str | None = None,
+        output_prompt_to_llm: bool = False,
     ) -> dict:
         return {
             "client_id": client_id,
