@@ -1,3 +1,3 @@
-The website below contains addition references.
+The website below contains additional references.
 
-[Fund choices] (https://www.hsbc.com.hk/content/dam/hsbc/hk/docs/mpf/mpf_scheme_brochure.pdf)
+[BEA Best Selling Unit Trust] (https://www.hkbea.com/html/en/bea-wealth-management-unit-trusts-best-selling-funds.html)

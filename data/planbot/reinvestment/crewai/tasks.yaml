@@ -21,7 +21,7 @@ reinvestment_task:
     A reinvestment analysis in markdown format.
     - The instruction and the proposal format is in proposal_instructions/proposal_format.md.  Follow the section requirement and examples in the markdown.
     - Use tables where they provide a clearer and more concise view.
-    - Do not include YAML blocks, extra section, or commentary.
+    - Do not include YAML blocks, extra sections, or commentary.
     - After the markdown, append a structured proposal JSON block between markers:
       - ---** PROPOSAL_JSON **---
       - ---** END_PROPOSAL_JSON **---

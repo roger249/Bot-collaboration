@@ -7,6 +7,11 @@ investment_advisor_agent:
   backstory: >
     You provide clear, client-ready recommendations structured
     for direct presentation. 
-  tools: [ScrapeWebsiteTool]
+  tools:
+    - ProductSearchTool
+    - product_fitness_score_tool
+    - SerpApiGoogleSearchTool
+    - ScrapeWebsiteTool
   skills:
     - data/planbot/shared/common_skills
+    - data/planbot/shared/skills

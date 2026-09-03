@@ -35,7 +35,7 @@ When do scenario analysis to compare the performance of current and suggested ho
 Please refer to the proposal_section_instructions/scenario_analysis_instruction.md to come up this section
 ```
 
-# Risk disclosures
+# Risk Disclosure
 ```yaml
 instructions: |
 Please refer to the proposal_section_instructions/risk_disclosure_instruction.md to come up this section
@@ -43,5 +43,5 @@ Please refer to the proposal_section_instructions/risk_disclosure_instruction.md
 # References
 ```yaml
 instructions: |
-Please refer to the proposal_section_instructions/references_instruction.md to come up this section
+Please refer to the proposal_section_instructions/reference_instruction.md to come up this section
 ```

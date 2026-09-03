@@ -104,8 +104,8 @@ A skill is a **directory** containing a `SKILL.md` file. The file has YAML front
 
 ```markdown
 ---
-name: product-recommendation
-description: Rules for recommending an investment product to a client
+name: product-suggestion
+description: Rules for suggesting an investment product to a client
 allowed-tools: search_similar
 ---
 
@@ -163,14 +163,23 @@ Crew(skills=[Path("data/planbot/shared/common_skills")])
 - A folder containing **multiple** skill subdirectories therefore yields multiple skills
   from a single `skills:` entry.
 
+> **Important — discovery path vs. skill directory.** The `skills:` entry must point at
+> a **parent folder** whose *children* are skill directories (e.g.
+> `data/planbot/shared/common_skills`, whose child is `general-guideline/`). It must
+> **not** point at the skill directory itself (e.g.
+> `data/planbot/shared/common_skills/general-guideline`), because `discover_skills` only
+> looks one level deep for subdirectories containing `SKILL.md` — a `SKILL.md` sitting
+> directly at the given path is ignored, silently dropping the skill. This was the cause
+> of the `product-suggestion` skill being absent from `prompt_sent_to_llm.md` until fixed.
+
 ### 4.5 Injection
 
 At execution time, `append_skill_context` (in `crewai/agent/utils.py`) appends each
 activated skill to the task prompt as:
 
 ```text
-## Skill: product-recommendation
-Rules for recommending an investment product to a client
+## Skill: product-suggestion
+Rules for suggesting an investment product to a client
 
 <full SKILL.md body>
 ```
@@ -198,23 +207,28 @@ data/planbot/shared/common_skills/
 Each subdirectory name **must** equal the `name` in its `SKILL.md` frontmatter. Adding a
 new common skill later is just a new subdirectory — no agent config change.
 
-Proposal-specific skills (such as `product-recommendation`, whose rules differ per
-proposal) are **not** placed in `common_skills/`. They live in a per-proposal
-`skills/` folder under the proposal's own data directory, one subdirectory per skill:
+Proposal-specific skills (whose rules differ per proposal) are **not** placed in
+`common_skills/`. They live in a per-proposal `skills/` folder under the proposal's own
+data directory, one subdirectory per skill:
 
 ```
 data/planbot/<proposal>/skills/<skill-name>/SKILL.md
 ```
 
-For example `data/planbot/product_investor_matching/skills/product-recommendation/SKILL.md`.
-Such skills are attached to individual agents ad hoc (see §5.2).
+A skill shared by a **subset** of proposals (e.g. `product-suggestion`, used by the
+`product_investor_matching` and `llm_product_matcher` agents) lives in
+`data/planbot/shared/skills/` and is attached explicitly per agent — it is **not** placed
+in `common_skills/`, which would auto-discover it into every agent:
 
-> The `product-recommendation` skill captures the recommendation rules currently duplicated
-> across `tasks.yaml` `description:` blocks — the 1–5 buying score,
+```
+data/planbot/shared/skills/product-suggestion/SKILL.md
+```
+
+> The `product-suggestion` skill captures the recommendation rules currently duplicated
+> across the two matcher `tasks.yaml` `description:` blocks — the 1–5 buying score,
 > one-recommendation-per-client, funding source, diversification caps, return/liquidity
 > thresholds, and "Do not increase holding for any product other than the suggested
-> product." Because these rules vary slightly per proposal, the skill is attached ad hoc
-> (not via `common_skills/`) so each proposal can keep its own variant.
+> product." Proposal-specific rules (PFS guidance, single-vs-multi-client caps) stay inline.
 
 > Flat files (e.g. the old `general_guideline.md`) are ignored by `discover_skills`; only
 > subdirectories containing `SKILL.md` are discovered.
@@ -238,7 +252,7 @@ investment_advisor_agent:
     - ProductSearchTool
   skills:
     - data/planbot/shared/common_skills                                          # all common skills
-    - data/planbot/product_investor_matching/skills/product-recommendation   # ad hoc
+    - data/planbot/shared/skills                          # shared by matcher pair (parent folder)
   verbose: true
 ```
 
@@ -249,9 +263,10 @@ Semantics:
 - Paths are resolved against `app_config.root_dir` and passed to `Agent(skills=[...])`.
 - Referencing the common folder yields **all** common skills, so the common `skills:` line
   stays stable as new common skills are added.
-- Proposal-specific skills (e.g. `product-recommendation`) are listed ad hoc, per agent, in
-  that proposal's own `agents.yaml`, pointing at
-  `data/planbot/<proposal>/skills/<skill-name>`.
+- Subset-shared skills (e.g. `product-suggestion`) are listed explicitly per agent,
+  pointing at their **parent folder** `data/planbot/shared/skills`; proposal-specific
+  skills are listed pointing at `data/planbot/<proposal>/skills`. The folder reference
+  auto-discovers every skill subdirectory inside it.
 
 > Decision: skill paths are configured **agent-level** in `agents.yaml` (alongside
 > `tools:`). No top-level `skills:` map in `config_planbot.yaml` is introduced.
@@ -261,9 +276,13 @@ different rules, the agent simply **does not** reference `common_skills/` (and, 
 lists its own skill directory instead). The cost is that the agent becomes a special case;
 this is accepted and reversible — re-attach `common_skills/` to return to the shared rules.
 
-> Decision: ad hoc (proposal-specific) skills follow the location convention
-> `data/planbot/<proposal>/skills/<skill-name>/SKILL.md`. Common skills use
-> `data/planbot/shared/common_skills/<skill-name>/SKILL.md`.
+> Decision: the `skills:` entry points at a **parent folder**; the `SKILL.md` files live
+> one level deeper. File layout: common skills at
+> `data/planbot/shared/common_skills/<skill-name>/SKILL.md`; subset-shared skills at
+> `data/planbot/shared/skills/<skill-name>/SKILL.md`; proposal-specific skills at
+> `data/planbot/<proposal>/skills/<skill-name>/SKILL.md`. The matching `skills:` entries
+> are, respectively, `data/planbot/shared/common_skills`, `data/planbot/shared/skills`,
+> and `data/planbot/<proposal>/skills` (never the `<skill-name>` level).
 
 ### 5.3 Crew-level alternative (not currently wired)
 
@@ -304,7 +323,9 @@ unchanged.
    `src/planbot/crew_workflow.py` via `agents_cfg`).
 2. Resolve the `skills:` list to absolute paths (analogous to `_resolve_agent_tools`).
    Entries include the common folder `data/planbot/shared/common_skills` and, optionally,
-   proposal-specific skill directories (e.g. `product-recommendation`).
+   subset-shared or proposal-specific parent folders (e.g. `data/planbot/shared/skills`,
+   which contains the `product-suggestion` skill). Each entry is a folder whose children
+   are skill directories, not the skill directory itself.
 3. Pass them to `Agent(skills=[...])`.
 4. At kickoff, CrewAI `set_skills()` runs `discover_skills()` over each path (loading
    every skill subdirectory), activates each to `INSTRUCTIONS`, and
@@ -387,7 +408,8 @@ is a rule and is migrated to a skill (§5.4); all other current reference inputs
    instruction body.
 2. `agents.yaml` gains a `skills:` list on the relevant agents, pointing at the common
    folder `data/planbot/shared/common_skills`; paths are root-relative and externalized
-   (no hardcoded paths in Python). Proposal-specific skills may also be listed ad hoc.
+   (no hardcoded paths in Python). Subset-shared and proposal-specific skills may also be
+   listed.
 3. `crew_workflow.py` resolves `skills:` and passes them to `Agent(skills=[...])`.
 4. Running a proposal that references the common folder injects the `## Skill:` sections
    for every skill in the folder (observable in the CrewAI trace / verbose output).

@@ -3,7 +3,7 @@ stock_analysis_proposal_task:
   agent: professional_stock_investor_agent
 
   description: |
-    - The stock ticker to analysis is in proposal_instructions/stock_ticker.md
+    - The stock ticker to analyse is in proposal_instructions/stock_ticker.md
     - Follow the proposal_instructions/proposal_format.md under the reference section to come up the proposal.  This includes the following tasks
       - Gather the data required for the analysis including below preferably from YFinance, or websites and the news_and_data provided in the reference materials.  
         - the historical price ratio 
@@ -17,7 +17,7 @@ stock_analysis_proposal_task:
     - Please ensure the stock name is same as the one in the stock_ticker.md
     - Some preferred websites are listed in news_and_data/preferred_websites.md. 
     - The domain in the file news_and_data/blocked_domains.md should not be accessed.
-    - All analysis and figure presented in the reporting currency.  No FX conversion is needed.
+    - All analysis and figures presented in the reporting currency.  No FX conversion is needed.
   
   expected_output: |
 

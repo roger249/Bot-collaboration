@@ -144,7 +144,7 @@ instructions: |
 ```yaml
 instructions: |
   Follow the format and instructions in
-  `proposal_section_instructions/references_instruction.md`.
+  `proposal_section_instructions/reference_instruction.md`.
 
   Output this section as a level-2 heading (##).
 ```

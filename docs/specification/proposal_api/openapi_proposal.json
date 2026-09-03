@@ -1738,14 +1738,21 @@
           "market_outlook": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "enum": [
+                  "bea_wise",
+                  "bea_research_1",
+                  "bea_research_2",
+                  "bea_research_3"
+                ]
               },
               {
                 "type": "null"
               }
             ],
             "title": "Market Outlook",
-            "example": "Rates remain elevated; favor short-duration high-quality credit over long duration."
+            "description": "Named market outlook report to inject into the LLM context. Selects one of the static reports under `data/planbot/shared/market_outlook/`. Ignored when `market_outlook_source` is `static`.",
+            "example": "bea_wise"
           },
           "market_outlook_source": {
             "anyOf": [

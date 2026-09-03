@@ -21,10 +21,10 @@ Provide a description of what this report is.
 ## Top clients with detail analysis
 ```yaml
 instructions: |
-Show in the point form the followings
+Show the following in point form
 ```
 
-### PB-HK-000001-8 (David Kim)**
+### PB-HK-000001-8 (David Kim)
 ```yaml
 instructions: |
 - Provide details of the suggestion per each client as the sections below. 
@@ -33,7 +33,7 @@ instructions: |
 - Compare the recommended product's expected return against the existing return of the specific switched funds (e.g., $1.5M out of a $10M portfolio), rather than the entire portfolio.
 - No more than 4 clients shall be suggested for structure products.  
 - Expected return is from 5y CAGR from the product catalog.  For product with much higher 1y, 3y CAGR than 5y CAGR, please provide justification on the sustainability of the return on recommendation and show in the expected return column.
-- Provide justification for any increasing in concentration risk
+- Provide justification for any increase in concentration risk
 ```
 
 #### Alternative suggestion
@@ -45,5 +45,5 @@ instructions: |
 ## References
 ```yaml
 instructions: |
-Please refer to the proposal_section_instructions/reference_instruction to come up this section
+Please refer to the proposal_section_instructions/reference_instruction.md to come up this section
 ```

@@ -25,7 +25,7 @@ Summarize in 3-4 sentences:
         - Total Profit Margin (%) row = weighted average margin by revenue for each year
     - If segment definitions changed over time, keep the latest segment names and add footnotes describing mapping assumptions.
     - Number shall be right aligned in the table
-- Brief describe the changes in the earnings in each row.
+- Briefly describe the changes in the earnings in each row.
 ```
 
 
@@ -59,16 +59,16 @@ instructions: |
 # Scenario Analysis
 ```yaml
 instructions: |
-Please show the expected the company earning or market sentiment changes in 2 years time for the three scenarios as below.  
+Please show the expected change in company earnings or market sentiment over the next 2 years for the three scenarios below.  
 
 - Normal, or the most probable
-- Pemissitic
+- Pessimistic
 - Optimistic
 
 In each scenario, please include the minimal the following information
 - Scenario assumption
     - Please also make assumption of the evolution of the current looming concerns, if any.
-    - If its interest rate related, please state the interest coverage ratio or similar to access its risk.
+    - If its interest rate related, please state the interest coverage ratio or similar to assess its risk.
 - Target price, and its timeframe.
 - The rationale from target price, earning estimation, P/E, etc.
 - All figures please contrast in % of its current value.

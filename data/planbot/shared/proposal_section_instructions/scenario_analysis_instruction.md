@@ -9,7 +9,6 @@ instructions: |
   3. A return-assumption table showing projected returns per asset class.
   4. A P&L comparison table: suggested portfolio vs. current portfolio.
 
-  Important: the "." and the "|" are examples illustrating the format.
   Replace all numbers and product IDs with actual data from the input.
 ```
 
@@ -80,7 +79,7 @@ instructions: |
   - Annual return of suggested portfolio vs. current: X% vs. Y%
   - Incremental benefit (may be negative in this scenario): +USD Z
 
-  Important: keep the "−" as minus sign as LMM could interpret as bullet.
+  Important: keep the "−" as a minus sign, as the LLM could interpret it as a bullet.
 ```
 
 ## Scenario Summary

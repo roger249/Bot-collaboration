@@ -22,6 +22,8 @@ instructions: |
 - A list of needs could be found in shared/financial_needs/common_needs.md
 ```
 
+Example (do not copy):
+
 Name: Alex Chan
 
 | Potential Needs         | Investment Horizon | Remark                                                 |
@@ -52,5 +54,5 @@ Please refer to the proposal_section_instructions/risk_disclosure_instruction to
 # References
 ```yaml
 instructions: |
-Please refer to the proposal_section_instructions/reference_instruction to come up this section
+Please refer to the proposal_section_instructions/reference_instruction.md to come up this section
 ```
