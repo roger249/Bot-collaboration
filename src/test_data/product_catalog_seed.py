@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import re
 import time
 from pathlib import Path
@@ -856,9 +857,37 @@ DDL_COLUMNS = [
     "investment_note",
 ]
 
+# Environment variable that explicitly authorizes the destructive seed().
+_DESTRUCTIVE_SEED_ENV = "PLANBOT_ALLOW_DESTRUCTIVE_SEED"
 
-def seed(use_yahoo: bool = True) -> None:
-    """Main entry point: read CSV + OTC, enrich, insert single-table into DuckDB."""
+
+def seed(use_yahoo: bool = True, *, allow_destructive: bool = False) -> None:
+    """Rebuild the products table from CSV + OTC + Yahoo (DESTRUCTIVE).
+
+    ⚠️ DESTRUCTIVE — performs ``DELETE FROM products`` and re-fetches Yahoo
+    market data, overwriting manual edits to ``expected_return`` / ``risk_rating`` /
+    ``performance_history`` in the live DuckDB (which may contain manual patches
+    not reproducible from the seeders).
+
+    This function **refuses to run** unless the caller explicitly opts in:
+      - pass ``allow_destructive=True``, or
+      - set the ``PLANBOT_ALLOW_DESTRUCTIVE_SEED=1`` environment variable.
+
+    Prefer an incremental path instead (e.g. ``reseed(full=False)`` or the
+    localized FX structured-product seed). If a full re-seed is unavoidable,
+    snapshot the DB first (``git show HEAD:data/planbot/db/planbot.duckdb``) and
+    restore every column except the intended one afterward.
+    """
+    if not allow_destructive and os.environ.get(_DESTRUCTIVE_SEED_ENV) != "1":
+        raise RuntimeError(
+            "Refusing to run the destructive product-catalog seeder. "
+            "seed() issues DELETE FROM products and re-fetches Yahoo data, "
+            "overwriting manual edits in the live DuckDB. "
+            "Use an incremental path, or set "
+            f"{_DESTRUCTIVE_SEED_ENV}=1 (or pass allow_destructive=True) "
+            "only after snapshotting the database."
+        )
+
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     conn = get_conn(read_only=False)
@@ -996,4 +1025,6 @@ def seed(use_yahoo: bool = True) -> None:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    # Deliberately does NOT pass allow_destructive=True: running this module
+    # directly refuses unless PLANBOT_ALLOW_DESTRUCTIVE_SEED=1 is set.
     seed(use_yahoo=True)

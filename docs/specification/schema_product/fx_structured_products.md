@@ -1,14 +1,14 @@
 # FX Structured Products — Product Catalog Mapping Spec
 
-> Status: **Draft** (pending review of outstanding issues at the end)
+> Status: **Draft** (all open decisions resolved; see §8)
 > Scope: Map two FX structured products — **FX Accumulator** and **FX TARF** — into the existing single-table product catalog.
 
 ## 1. Source files
 
 | File | Product | Content state |
 | --- | --- | --- |
-| `docs/test data/fx_accumulator.md` | FX Accumulator | Populated — 4 currency directions × 3M/6M tenors (8 concrete variants) |
-| `docs/test data/fx_tarf.md` | FX TARF (Target Redemption Forward) | Populated — 3 buy-base pairs × 6M/1Y tenors (6 concrete variants) |
+| [`docs/test data/fx_accumulator.md`](../../test data/fx_accumulator.md) | FX Accumulator | Populated — 4 currency directions × 3M/6M tenors (8 concrete variants) |
+| [`docs/test data/fx_tarf.md`](../../test data/fx_tarf.md) | FX TARF (Target Redemption Forward) | Populated — 3 currency pairs (USD/HKD, GBP/USD, AUD/USD) × mixed tenors/directions (6 concrete variants) |
 
 > **Scope rule:** this spec is limited strictly to the **14 trades present in the
 > two sample files** (8 Accumulator + 6 TARF). No additional variants are
@@ -65,6 +65,20 @@ seeder (`src/test_data/product_catalog_seed.py`).
   axis. Merging them would explode the family vocabulary and lose the
   "has done structured products before" experience signal.
 
+### 3.2 Concentration-class precision (future enhancement)
+
+For now, `structured_product` is treated as its own concentration/asset class
+(the `_derive_asset_class` fall-through), separate from holdings' `Cash/Equities/
+Fixed Income/Alternatives`. This is a coarse approximation: two structures with
+very different risk drivers (e.g. an FX TARF vs. a rate range-accrual note)
+would be bucketed together for concentration scoring.
+
+**Future enhancement:** add a `risk_factor` (a concentration/risk-driver key)
+to the product so concentration scoring can group by the actual underlying risk
+driver — e.g. `fx`, `interest_rate`, `equity`, `index`, `commodity` — rather
+than by wrapper type. This is not implemented now; `structured_product` remains
+a single separate concentration class until then.
+
 ## 4. Product granularity (one row per variant)
 
 The accumulator source describes 8 distinct instruments (currency direction ×
@@ -84,17 +98,28 @@ as with all other existing products — with flat JSON scalars in `type_specific
 | 7 | USD/JPY | Buy JPY / Sell USD | 3M | BNP Paribas | `FX-ACC-USDJPY-3M-S` |
 | 8 | USD/JPY | Buy JPY / Sell USD | 6M | JPMorgan | `FX-ACC-USDJPY-6M-S` |
 
-The TARF source describes 6 distinct instruments (currency pair × tenor, all
-"Buy base / Sell quote"):
+> Source: [`docs/test data/fx_accumulator.md`](../../test data/fx_accumulator.md) —
+> §1 USD/HKD Accumulators, §2 EUR/USD Accumulators, §1 USD/JPY Accumulators,
+> §2 JPY/USD Accumulators.
+
+The TARF source describes 6 distinct instruments across two profiles:
+
+- **Buy base / Sell quote** (USD/HKD) — 2 instruments, 6M/1Y tenors, daily
+  fixings, strike *below* spot (a discount).
+- **Sell base / Buy quote** (GBP/USD, AUD/USD) — 4 instruments, 4M/6M tenors,
+  monthly fixings, *enhanced* strike *above* spot.
 
 | # | Currency pair | Direction | Tenor | Provider | Proposed `product_id` |
 | --- | --- | --- | --- | --- | --- |
 | 9 | USD/HKD | Buy USD / Sell HKD | 6M | UBS | `FX-TARF-USDHKD-6M-B` |
 | 10 | USD/HKD | Buy USD / Sell HKD | 1Y | HSBC | `FX-TARF-USDHKD-1Y-B` |
-| 11 | EUR/USD | Buy EUR / Sell USD | 6M | BNP Paribas | `FX-TARF-EURUSD-6M-B` |
-| 12 | EUR/USD | Buy EUR / Sell USD | 1Y | JPMorgan | `FX-TARF-EURUSD-1Y-B` |
-| 13 | USD/JPY | Buy USD / Sell JPY | 6M | UBS | `FX-TARF-USDJPY-6M-B` |
-| 14 | USD/JPY | Buy USD / Sell JPY | 1Y | HSBC | `FX-TARF-USDJPY-1Y-B` |
+| 11 | GBP/USD | Sell GBP / Buy USD | 4M | BNP Paribas | `FX-TARF-GBPUSD-4M-S` |
+| 12 | GBP/USD | Sell GBP / Buy USD | 6M | JPMorgan | `FX-TARF-GBPUSD-6M-S` |
+| 13 | AUD/USD | Sell AUD / Buy USD | 4M | UBS | `FX-TARF-AUDUSD-4M-S` |
+| 14 | AUD/USD | Sell AUD / Buy USD | 6M | HSBC | `FX-TARF-AUDUSD-6M-S` |
+
+> Source: [`docs/test data/fx_tarf.md`](../../test data/fx_tarf.md) — §1 USD/HKD
+> Target Redemption Forwards, §2 GBP/USD TARF, §3 AUD/USD TARF.
 
 ## 5. Common-field mapping
 
@@ -104,9 +129,9 @@ The TARF source describes 6 distinct instruments (currency pair × tenor, all
 | `isin` | `null` | OTC, no ISIN. |
 | `name` | e.g. `"3-Month USD/HKD FX Accumulator (Buying USD)"` | Human/LLM-readable. |
 | `ticker` | `null` | OTC. |
-| `trading_currency` | base currency (USD / EUR / JPY) | Settlement currency of the accumulated notional. |
-| `risk_rating` | `5` | Leveraged, capital-at-risk, KO exposure (confirm — issue 1). |
-| `expected_return` | `null` | No historical projection (issue 2). |
+| `trading_currency` | base currency (USD / EUR / JPY / GBP / AUD) | Settlement currency of the accumulated notional. |
+| `risk_rating` | `5` | Leveraged, capital-at-risk, KO/gearing exposure (agreed). |
+| `expected_return` | `null` | No reliable proxy — derivative structure with no historical return series (agreed). |
 | `region` | `null` | Not geography-specific. |
 | `country` | `null` | — |
 | `sector` | `FX` | — |
@@ -132,7 +157,14 @@ set of FX-specific keys. Proposed full key set (documented in
 
 **FX-specific additions:** `currency_pair`, `base_currency`, `quote_currency`,
 `direction`, `spot_reference`, `gearing`, `guaranteed_period`,
-`fixing_frequency`, `notional_per_day`, `notional_currency`, `tenor`.
+`fixing_frequency`, `notional_per_fixing`, `notional_currency`, `tenor`.
+
+- `direction` ∈ `buy_base` | `sell_base` (TARF has both profiles; the
+  Accumulator is buy-base only).
+- `fixing_frequency` ∈ `daily` (Accumulator + USD/HKD TARF) | `monthly`
+  (GBP/USD and AUD/USD TARF — 4/6 monthly fixings).
+- `strike_level` is *below* spot for buy-base profiles (a discount) and *above*
+  spot for sell-base profiles (an enhanced strike).
 
 > **Key shape (agreed):** FX keys are **flattened** into `type_specific` at the
 > top level (no nested `fx` sub-object), consistent with the existing flat
@@ -166,7 +198,7 @@ set of FX-specific keys. Proposed full key set (documented in
   "gearing": 2.0,
   "guaranteed_period": "First 1 month (20 fixings)",
   "fixing_frequency": "daily",
-  "notional_per_day": 50000,
+  "notional_per_fixing": 50000,
   "notional_currency": "USD",
   "tenor": "3m",
   "principal_protection": "none",
@@ -188,46 +220,92 @@ Field-to-source map (per variant):
 | `gearing` | **Gearing / Leverage** (`2×` → `2.0`) |
 | `guaranteed_period` | **Guaranteed Period** |
 | `fixing_frequency` | **Fixing Frequency** |
-| `notional_per_day` / `notional_currency` | **Notional per Day** |
+| `notional_per_fixing` / `notional_currency` | **Notional per Day** |
 | `tenor` | 3-Month / 6-Month heading |
 | `direction` | Section title (Buying USD vs. Buying JPY) |
 
-### 6.3 FX TARF mapping (example: 6M EUR/USD TRF, variant #11)
+### 6.3 FX TARF mapping (example: 4M GBP/USD TRF, variant #11)
 
 TARF reuses the accumulator key set but **differs in two ways**: (1) it has
 **no spot-level KO barrier** — termination is driven by an accumulated target
 profit, so `knock_out_level` and `knock_in_level` are `null`; and (2) it adds a
 `target_redemption_cap` group describing the redemption target.
 
+The source contains two TARF profiles that map onto the same key set with
+different values:
+
+| Profile | Pairs | `direction` | Strike vs. spot | `fixing_frequency` | Tenor |
+| --- | --- | --- | --- | --- | --- |
+| Buy base | USD/HKD | `buy_base` | discount (below) | `daily` | 6M / 1Y |
+| Sell base | GBP/USD, AUD/USD | `sell_base` | enhanced (above) | `monthly` | 4M / 6M |
+
 ```json
 {
   "sub_type": "FX TARF",
   "provider": "BNP Paribas",
   "underlying_asset_type": "fx",
-  "underlying_assets": ["EUR/USD"],
-  "currency_pair": "EUR/USD",
-  "base_currency": "EUR",
+  "underlying_assets": ["GBP/USD"],
+  "currency_pair": "GBP/USD",
+  "base_currency": "GBP",
   "quote_currency": "USD",
+  "direction": "sell_base",
+  "spot_reference": 1.3590,
+  "strike_level": 1.359,
+  "knock_out_level": null,
+  "knock_in_level": null,
+  "barrier_type": null,
+  "gearing": 2.0,
+  "guaranteed_period": "First 1 month (1 fixing)",
+  "fixing_frequency": "monthly",
+  "notional_per_fixing": 1000000,
+  "notional_currency": "GBP",
+  "tenor": "4m",
+  "target_redemption_cap": 250,
+  "target_redemption_cap_unit": "pips",
+  "target_redemption_cap_currency": null,
+  "target_redemption_cap_note": "250 pips (USD 25,000 total gain)",
+  "principal_protection": "none",
+  "capital_at_risk": 1.0,
+  "early_redemption": true,
+  "payout_structure": "Sell base currency at enhanced strike; auto-terminate once target profit is accrued; 2x notional when spot rises above strike.",
+  "maturity": null
+}
+```
+
+The buy-base profile differs in three fields: `direction`, `strike_level`
+(discount, below spot), and `fixing_frequency` (`daily`), and its
+`target_redemption_cap` is a **currency amount** rather than pips. Example
+(6M USD/HKD, variant #9):
+
+```json
+{
+  "sub_type": "FX TARF",
+  "provider": "UBS",
+  "underlying_asset_type": "fx",
+  "underlying_assets": ["USD/HKD"],
+  "currency_pair": "USD/HKD",
+  "base_currency": "USD",
+  "quote_currency": "HKD",
   "direction": "buy_base",
-  "spot_reference": 1.1598,
-  "strike_level": 1.134,
+  "spot_reference": 7.842,
+  "strike_level": 7.834,
   "knock_out_level": null,
   "knock_in_level": null,
   "barrier_type": null,
   "gearing": 2.0,
   "guaranteed_period": "First 1 month (20 fixings)",
   "fixing_frequency": "daily",
-  "notional_per_day": 50000,
-  "notional_currency": "EUR",
+  "notional_per_fixing": 100000,
+  "notional_currency": "USD",
   "tenor": "6m",
-  "target_redemption_cap": 250,
-  "target_redemption_cap_unit": "pips",
-  "target_redemption_cap_currency": null,
-  "target_redemption_cap_note": "250 pips (0.0250 per EUR accrued)",
+  "target_redemption_cap": 150000,
+  "target_redemption_cap_unit": "currency_amount",
+  "target_redemption_cap_currency": "HKD",
+  "target_redemption_cap_note": "HKD 150,000 (~1.0% total return cap)",
   "principal_protection": "none",
   "capital_at_risk": 1.0,
   "early_redemption": true,
-  "payout_structure": "Accumulate base currency at strike discount; auto-terminate once target profit is accrued; 2x notional when spot below strike.",
+  "payout_structure": "Buy base currency at strike discount; auto-terminate once target profit is accrued; 2x notional when spot falls below strike.",
   "maturity": null
 }
 ```
@@ -236,48 +314,53 @@ TARF-specific additions (not used by Accumulator):
 
 | `type_specific` key | Type | Meaning |
 | --- | --- | --- |
-| `target_redemption_cap` | number | Raw redemption-target value (e.g. `150000`, `250`, `15000000`). |
+| `target_redemption_cap` | number | Raw redemption-target value (e.g. `150000`, `250`). |
 | `target_redemption_cap_unit` | string | `currency_amount` \| `pips` — how the cap is expressed. |
-| `target_redemption_cap_currency` | string\|null | ISO code when `unit = currency_amount` (HKD, JPY); else `null`. |
+| `target_redemption_cap_currency` | string\|null | ISO code when `unit = currency_amount` (HKD); else `null`. |
 | `target_redemption_cap_note` | string | Free-text with the relative framing (e.g. `~1.0% total return cap`). |
 
 > The target cap is expressed two ways in the source: as an absolute
-> **currency amount** (USD/HKD → HKD, USD/JPY → JPY) or as **pips**
-> (EUR/USD). The parenthetical phrases like "0.0250 per EUR accrued" and
-> "~3.00 JPY per USD" are framing notes, not a distinct unit. The
-> `*_unit`/`*_currency`/`*_note` fields normalise this without losing the
-> original framing. **Agreed:** keep these unit-specific fields as the source
-> of truth; no additional `target_redemption_cap_pct` field is added.
+> **currency amount** (USD/HKD → HKD) or as **pips** (GBP/USD, AUD/USD). The
+> parenthetical phrases like "USD 25,000 total gain" are framing notes, not a
+> distinct unit. The `*_unit`/`*_currency`/`*_note` fields normalise this
+> without losing the original framing. **Agreed:** keep these unit-specific
+> fields as the source of truth; no additional `target_redemption_cap_pct` field
+> is added.
 
 Field-to-source map (per TARF variant):
 
 | `type_specific` key | Source in `fx_tarf.md` |
 | --- | --- |
-| `currency_pair` / `base_currency` / `quote_currency` | Currency pair column / direction heading |
-| `spot_reference` | **Spot Reference** |
-| `strike_level` | **Strike Rate (Discount)** (absolute rate; discount % → `remarks`) |
-| `target_redemption_cap*` | **Target Redemption Cap** |
+| `currency_pair` / `base_currency` / `quote_currency` | Currency pair column / profile heading |
+| `spot_reference` | **Spot Reference** (buy-base) / **Current Spot Reference** (sell-base) |
+| `strike_level` | **Strike Rate (Discount)** (buy-base) / **Enhanced Strike ($K$)** (sell-base, above spot) |
+| `target_redemption_cap*` | **Target Redemption Cap** (buy-base) / **Knock-Out Target ($T$)** (sell-base) |
 | `gearing` | **Gearing / Leverage** (`2×` → `2.0`) |
 | `guaranteed_period` | **Guaranteed Period** |
-| `fixing_frequency` | **Fixing Frequency** |
-| `notional_per_day` / `notional_currency` | **Daily Base Notional** |
-| `tenor` | 6-Month / 1-Year heading |
-| `direction` | Section title (always "Buying … / Selling …") |
+| `fixing_frequency` | **Fixing Frequency** (`daily` vs `monthly`) |
+| `notional_per_fixing` / `notional_currency` | **Daily Base Notional** (buy-base) / **Notional per Fixing** (sell-base) |
+| `tenor` | 6-Month / 1-Year heading (buy-base) or 4-Month / 6-Month heading (sell-base) |
+| `direction` | Profile heading — "Buying … / Selling …" → `buy_base`; "Selling … / Buying …" → `sell_base` |
 
 ## 7. Implementation changes required (three-layer sync)
 
 1. **DuckDB schema** — *no change*. `type_specific` is already JSON; `structured_product` requires no new columns.
 2. **Test data / seeder** (`src/test_data/product_catalog_seed.py`):
-   - Add `_synthesize_fx_accumulator(variant) -> dict` and `_synthesize_fx_tarf(variant) -> dict`.
-   - Add an FX structured-products source parser (or hardcode the 14 variants — 8 accumulator + 6 TARF — from the markdown).
-   - Add an insert block in `seed()` using the shared `DDL_COLUMNS` / `_otc_to_general()` pattern.
-   - ⚠️ The current seeder is **destructive** (`DELETE FROM products`). Per repo policy, prefer a targeted `INSERT OR REPLACE` of only these new `product_id`s (snapshot first) rather than a full re-seed.
+   - Add `_synthesize_fx_tarf(variant) -> dict` now (Accumulator `_synthesize_fx_accumulator` later).
+   - **Phase 1 (now): seed only the 6 FX TARF variants** (rows 9–14) from `fx_tarf.md`.
+   - **Incremental / localized**: use `INSERT OR REPLACE` targeting only the `FX-TARF-*` `product_id`s. Do **not** run the existing `seed()` flow's `DELETE FROM products`; all other rows in the DuckDB must remain intact (they contain manual patches).
+   - Add a standalone insert path (separate from the destructive `seed()` main flow) using the shared `DDL_COLUMNS` / `_otc_to_general()` pattern.
+   - No snapshot/restore is required for an insert-only operation, but re-running the destructive `seed()` is still forbidden until the other product types are migrated to the same incremental path.
 3. **API contract docs**:
    - `docs/specification/data_api/bank_data_contract.md` §3.3.1 — add a `structured_product` row documenting its `type_specific` keys; §4 — add `structured_product` (and `Structure` under `vehicle`).
    - `docs/specification/schema_product/product_catalog_schema.md` — add FX-specific keys to the `structured_product` block.
    - `openapi_data.json` — `product_type` is a free string (not a closed enum), so **no regeneration** is strictly required; regenerate only if the description is updated.
 
-## 8. Outstanding issues (for discussion)
+## 8. Resolved decisions (review 2026-09-03)
 
-1. **`risk_rating` = 5.** Leveraged, capital-at-risk, daily KO/gearing. Confirm the internal risk-tier value (schema uses 1–5).
-2. **`expected_return` = null.** Confirm no estimated/projected yield should be populated for these structures.
+| # | Decision |
+| --- | --- |
+| 1 | `risk_rating` = `5` for all FX structured products (leveraged, capital-at-risk, KO/gearing exposure). |
+| 2 | `expected_return` = `null` — no reliable proxy exists for these derivative structures. |
+| 3 | Concentration-class precision is deferred: `structured_product` is treated as a single separate concentration class for now; a future `risk_factor` field will let concentration scoring group by the actual risk driver (see §3.2). |
+| 4 | Seeding is **incremental / localized to FX TARF** first: `INSERT OR REPLACE` only the `FX-TARF-*` rows; never `DELETE FROM products`. Other DuckDB rows stay intact (manual patches preserved). |

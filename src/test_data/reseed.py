@@ -109,7 +109,9 @@ def reseed(
         print(f"─" * 50)
         print(f"Step 2/3: Seeding DuckDB from CSV + OTC markdown …")
         print(f"─" * 50)
-        seed_products(use_yahoo=use_yahoo)
+        # full=True is an explicit complete rebuild, so authorize the
+        # destructive seed().
+        seed_products(use_yahoo=use_yahoo, allow_destructive=True)
 
         step_label = "Step 3/3"
     else:
