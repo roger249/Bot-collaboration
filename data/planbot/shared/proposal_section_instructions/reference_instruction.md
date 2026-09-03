@@ -10,8 +10,8 @@ instructions: |
   - Product Catalog: product catalog / fund list documents.
   - Market Outlook: market outlook and sentiment documents.
   - Proposal Guidelines: the proposal and section instruction documents.
-  - Web References: external URLs from the "website references" document, or
-    "N/A" if none were used.
+  - Web References: external URLs from the shared `web_references` section
+    (`websites.md`), or "N/A" if none were used.
 
   Output the section under a "# References" heading (level-1, or level-2 to
   match the proposal's existing heading hierarchy).

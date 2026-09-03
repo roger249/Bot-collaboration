@@ -59,11 +59,14 @@ def _build_user_prompt(
 def _build_reference_payload(
     root_dir: Path,
     loaded_sections: dict[str, tuple[str, list[ReferenceDocument]]],
+    urls: list[str] | None = None,
 ) -> str:
     """Build the JSON reference payload from dynamically named sections.
 
     Args:
         loaded_sections: Mapping of section_name -> (purpose, documents).
+        urls: Optional deduplicated list of URLs the LLM may visit, injected as
+            a structured ``urls`` field so the model can scrape them directly.
     """
     def _doc_entry(index: int, doc: ReferenceDocument | None) -> dict:
         if doc is None:
@@ -89,6 +92,8 @@ def _build_reference_payload(
         "schema_version": "1.0",
         "sections": sections_payload,
     }
+    if urls:
+        payload["urls"] = urls
     return json.dumps(payload, indent=2, ensure_ascii=False)
 
 

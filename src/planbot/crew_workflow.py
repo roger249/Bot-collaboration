@@ -583,6 +583,7 @@ def run_crew_planbot(
     reference_payload_json = _build_reference_payload(
         root_dir=app_config.root_dir,
         loaded_sections=loaded_sections,
+        urls=urls,
     )
 
     tasks_cfg = _load_yaml(cfg.crewai_config_folder / "tasks.yaml")

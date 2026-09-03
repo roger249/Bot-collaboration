@@ -229,6 +229,8 @@ input_defaults:
       source: runtime_or_static
       prompt_section: references
       description: Suggested products, fitness scores, funding sources, and rationale for the recommended product
+    web_references:
+      description: Preferred websites and blocked domains for web retrieval
 
 pipeline:
 
@@ -332,6 +334,12 @@ pipeline:
           - data/planbot/shared/financial_needs/*.md
         prompt_section: references
         required: true
+      - id: web_references
+        source: file
+        paths:
+          - data/planbot/shared/web_references/*.md
+        prompt_section: references
+        required: false
       - id: client_profile
         required: true
         include:
@@ -509,6 +517,12 @@ pipeline:
           - data/planbot/shared/financial_needs/*.md
         prompt_section: references
         required: true
+      - id: web_references
+        source: file
+        paths:
+          - data/planbot/shared/web_references/*.md
+        prompt_section: references
+        required: false
       - id: client_profile
         required: true
       - id: product_catalog
