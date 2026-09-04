@@ -111,13 +111,21 @@ investor_readiness_score:
       1.0: 10
   score_concentration_risk:
     weight: 1
+    # Each pivot maps a concentration ratio (x) to a risk score (y) on a 0-10
+    # scale, linearly interpolated between the two keys.  The first key is the
+    # "safe" threshold (score 0), the second is the "fully concentrated" ceiling
+    # (score 10).  The final concentration risk = max() of the three sub-scores.
     s_single_holding:
+      # 0.2: 0  → a single holding ≤ 20% of AUM adds no concentration risk.
+      # 1.0: 10 → a single holding = 100% of AUM is max risk (score 10).
       0.2: 0
       1.0: 10
     s_region_exposure:
+      # 0.4: 0  → ≤ 40% in one region is safe; 1.0 (all in one region) = 10.
       0.4: 0
       1.0: 10
     s_asset_class_exposure:
+      # 0.6: 0  → ≤ 60% in one asset class is safe; 1.0 (all one class) = 10.
       0.6: 0
       1.0: 10
   score_active_manage:
@@ -156,13 +164,13 @@ product_fitness_score:
 # Weights for the 8 PFS dimensions (4 structured + 4 semantic similarity).
 # Renormalized when dimensions are excluded.
     risk_rating_match_score: 0.25
-    diversification_score: 0.25
-    has_similar_investment_experience_score: 0.15
+    diversification_score: 0.1
+    has_similar_investment_experience_score: 0 # The score now move to similarity_to_current_holdin
     better_product_score: 0.15
-    similarity_product_note_in_like_products: 0.05
-    similarity_product_note_in_dislike_products: 0.05  # inverted term — higher = not disliked
-    similarity_to_current_holding: 0.05
-    similarity_to_RM_note: 0.05
+    similarity_product_note_in_like_products: 0.1
+    similarity_product_note_in_dislike_products: 0.1  # inverted term — higher = not disliked
+    similarity_to_current_holding: 0.1
+    similarity_to_RM_note: 0.2
   product_fitness_params:
     better_product_score_scale: 10
     better_product_score_uplift_cap: 0.30
@@ -186,6 +194,15 @@ product_groups:
       - PROD020    # Balanced Growth & Income
       - ETF-VOO    # Vanguard S&P 500 ETF
       - ETF-HYG    # iShares High Yield Corp Bond ETF
+      - FX-TARF-USDHKD-6M-B
+      - FX-TARF-USDHKD-1Y-B
+      - FX-TARF-GBPUSD-4M-S
+      - FX-TARF-GBPUSD-6M-S
+      - FX-TARF-AUDUSD-4M-S
+      - FX-TARF-AUDUSD-6M-S
+  structures:
+    description: "Structured products recommended by the bank"
+    product_ids:
       - FX-TARF-USDHKD-6M-B
       - FX-TARF-USDHKD-1Y-B
       - FX-TARF-GBPUSD-4M-S

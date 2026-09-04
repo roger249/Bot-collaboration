@@ -14,8 +14,8 @@ Provide a description of what this report is.
 ```
 
 | Client ID (Name) | Buying Score | Suggested Product & Position | Funding Source | Fitness Score | Expected Return – Suggested | Expected Return – Source | Key Rationale |
-|---:|---:|---|---:|---:|---:|---|--|
-| PB-HK-000002-6 (Sarah Chen) | 4 | ETF-VOO Vanguard S&P 500 ETF – USD 250,000 (7.8%) | Sell STOCK-AMZN Amazon.com Inc. – USD 250,000 | 4.20 | 20.55% | 23.88% | Reduce AMZN single-stock concentration while retaining broad US equity upside; high fitness and high liquidity. |
+|---:|---:|---|---:|---:|---:|---|---|
+| PB-HK-000000-0 (Example Client) | 1 | ETF-EXAMPLE Example Product – USD 1,000 (0.0%) | Sell STOCK-EXAMPLE Example Co. – USD 1,000 | 0.00 | 0.00% | 0.00% | Example row only — replace every value with real data. |
 
 
 ## Top clients with detail analysis
@@ -24,7 +24,7 @@ instructions: |
 Show the following in point form
 ```
 
-### PB-HK-000001-8 (David Kim)
+### PB-HK-000000-0 (Example Client)
 ```yaml
 instructions: |
 - Provide details of the suggestion per each client as the sections below. 

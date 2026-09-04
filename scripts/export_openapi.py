@@ -28,19 +28,19 @@ if str(_ROOT) not in sys.path:
 from src.integrations.data_server import app as data_app
 from src.integrations.proposal_server import app as proposal_app
 
-_OUT_DIR = _ROOT / "docs" / "specification" / "data_api"
+_OUT_ROOT = _ROOT / "docs" / "specification"
 
 _TARGETS = {
-    "openapi_data.json": data_app,
-    "openapi_proposal.json": proposal_app,
+    "data_api/openapi_data.json": data_app,
+    "proposal_api/openapi_proposal.json": proposal_app,
 }
 
 
 def main() -> None:
-    _OUT_DIR.mkdir(parents=True, exist_ok=True)
-    for filename, app in _TARGETS.items():
+    for rel_path, app in _TARGETS.items():
         spec = app.openapi()
-        out_path = _OUT_DIR / filename
+        out_path = _OUT_ROOT / rel_path
+        out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(
             json.dumps(spec, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",

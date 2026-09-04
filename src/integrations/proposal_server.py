@@ -89,6 +89,53 @@ _COMMON_SCORING_PARAMS_DOC = (
 )
 
 
+# Shared documentation for "tricky" request parameters — enum values and
+# non-obvious behaviour — reused across endpoints so the Swagger docs stay
+# consistent.
+
+_PRODUCT_SOURCE_DOC = (
+    "Where the product universe is defined:\n"
+    "- `default_yaml` (default) — each `product_ids` entry may be a "
+    "`product_groups` profile name from `config_planbot.yaml` (expanded to its "
+    "member product IDs) or a literal product ID.\n"
+    "- `request_payload` — each `product_ids` entry is always a literal "
+    "product ID."
+)
+
+_PRODUCT_IDS_DOC = (
+    "One or more product group names / literal product IDs. Multiple entries "
+    "are **unioned** into a single product universe (deduplicated, "
+    "order-preserving) and scored together before being sent to the LLM."
+)
+
+_RUN_MATCHER_DOC = (
+    "When `true`, run `product_investor_matcher` first and use its output as "
+    "the rationale and fitness scores (ignoring `rationale` / "
+    "`suggested_products_and_rationale`). When `false` (default), the caller "
+    "must supply the rationale directly."
+)
+
+_DIVERSIFICATION_DOC = (
+    "When `true`, cap the number of returned candidates per product type "
+    "(diversify across types)."
+)
+
+_RISK_RATING_HARD_FILTER_DOC = (
+    "When `true`, only products with `risk_rating <= client.risk_rating` are "
+    "considered."
+)
+
+_EXCLUDE_PRODUCT_IDS_DOC = (
+    "Product IDs to exclude from the candidate set (e.g. the source product "
+    "being replaced)."
+)
+
+_EXCLUDE_DIMENSIONS_DOC = (
+    "Dimension names to exclude from the fitness score (e.g. "
+    "`diversification_score`). Omit to include all components."
+)
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Request models
 # ═══════════════════════════════════════════════════════════════════════════
@@ -355,6 +402,34 @@ class ProductInvestorMatcherResponse(BaseModel):
 @app.post(
     "/api/v1/product-investor-matcher",
     response_model=ProductInvestorMatcherResponse,
+    summary="Match clients to products and rank client×product proposals",
+    description=(
+        "Run the full product-investor matcher pipeline.\n\n"
+        "Matches clients (selected by `client_selection`) against a product "
+        "universe, ranks each client×product pair by buying score, and "
+        "returns the top-N proposals with buying scores, investment "
+        "rationale, and final proposal markdown.\n\n"
+        "### Product universe\n\n"
+        "`product_ids` accepts multiple entries and **unions** them into a "
+        "single product universe (deduplicated, order-preserving). "
+        "Interpretation depends on `product_source`:\n\n"
+        "- `default_yaml` (default) — each entry may be a `product_groups` "
+        "profile name from `config_planbot.yaml` (expanded to its member "
+        "product IDs) or a literal product ID.\n"
+        "- `request_payload` — each entry is always a literal product ID.\n\n"
+        "Multiple group names are merged: e.g. `[\"structures\", \"ETF\"]` "
+        "expands to the union of both groups, which is then scored and sent "
+        "to the LLM as a single product catalog.\n\n"
+        "### Example\n\n"
+        "```json\n"
+        "{\n"
+        "  \"product_source\": \"default_yaml\",\n"
+        "  \"product_ids\": [\"structures\", \"ETF\"],\n"
+        "  \"client_selection\": {\"risk_rating\": 5},\n"
+        "  \"top_n\": 3\n"
+        "}\n"
+        "```"
+    ),
 )
 def match_products_to_investors_endpoint(
     body: ProductInvestorMatcherRequest,
@@ -485,7 +560,7 @@ class OpportunityProposalRequest(BaseModel):
         description="Matcher per-client analysis in markdown (product recommendations, fitness scores, funding sources, client needs). Populated from product_investor_matcher output.",
         json_schema_extra={"default": ""},
     )
-    run_matcher: bool = Field(False, description="Run matcher to obtain rationale")
+    run_matcher: bool = Field(False, description=_RUN_MATCHER_DOC)
     market_outlook: str | None = Field(
         default=None, json_schema_extra={"example": "Rates remain elevated; favor short-duration high-quality credit over long duration."},
     )
@@ -544,10 +619,12 @@ class AutomatchRequest(BaseModel):
 
     product_source: ProductSource = Field(
         ProductSource.DEFAULT_YAML,
+        description=_PRODUCT_SOURCE_DOC,
         json_schema_extra={"example": "default_yaml"},
     )
     product_ids: list[str] = Field(
         default=["bank_recommended"],
+        description=_PRODUCT_IDS_DOC,
         json_schema_extra={"example": ["bank_recommended"]},
     )
     client_selection: dict | None = Field(
@@ -562,7 +639,7 @@ class AutomatchRequest(BaseModel):
         ),
         json_schema_extra={"example": {"client_id": ["PB-HK-000001-8", "PB-HK-000005-9"]}},
     )
-    run_matcher: bool = Field(False, json_schema_extra={"example": True})
+    run_matcher: bool = Field(False, description=_RUN_MATCHER_DOC, json_schema_extra={"example": True})
     market_outlook: str | None = Field(
         None, description=_MARKET_OUTLOOK_DOC,
     )
@@ -597,6 +674,21 @@ class AutomatchResponse(BaseModel):
 @app.post(
     "/api/v1/product-opportunity-proposal",
     response_model=OpportunityProposalResponse,
+    summary="Generate a single product-opportunity proposal for one client×product pair",
+    description=(
+        "Generate one product-opportunity proposal for a single "
+        "client×product pair.\n\n"
+        "### Rationale source\n\n"
+        "`run_matcher` controls where the rationale and fitness scores come "
+        "from:\n\n"
+        "- `true` — run `product_investor_matcher` and use its output as the "
+        "rationale (ignores `rationale` / `suggested_products_and_rationale`).\n"
+        "- `false` (default) — caller supplies the rationale directly via "
+        "`rationale` (freeform markdown) or `suggested_products_and_rationale` "
+        "(matcher per-client analysis markdown).\n\n"
+        "`alternative_count` (int ≥ 0) sets how many alternative products to "
+        "list alongside the primary `product_id`."
+    ),
 )
 def generate_opportunity_proposal(body: OpportunityProposalRequest) -> dict:
     """Generate a single product opportunity proposal for one client–product pair."""
@@ -626,6 +718,20 @@ def generate_opportunity_proposal(body: OpportunityProposalRequest) -> dict:
 @app.post(
     "/api/v1/product-opportunity-proposal-automatch",
     response_model=AutomatchResponse,
+    summary="Batch product-opportunity proposals via product-investor matching",
+    description=(
+        "Run product-investor matching, then generate one opportunity "
+        "proposal per matched client×product pair.\n\n"
+        "### Product universe\n\n"
+        + _PRODUCT_SOURCE_DOC
+        + "\n\n"
+        + _PRODUCT_IDS_DOC
+        + "\n\n"
+        "### Rationale source\n\n"
+        + _RUN_MATCHER_DOC
+        + "\n\n"
+        "`max_proposals` caps the number of proposals generated."
+    ),
 )
 def generate_opportunity_proposal_automatch(body: AutomatchRequest) -> dict:
     """Run product-investor matching, then generate one proposal per pair."""
@@ -764,15 +870,15 @@ class SimilarProductSearchRequest(BaseModel):
     """Proximity search returning products ranked by similarity."""
 
     query: dict = Field(
-        ..., description="Product attributes to match against",
+        ..., description="Product attributes to match against (e.g. `risk_rating`, `expected_return`, `product_type`).",
         json_schema_extra={"example": {"risk_rating": 1, "expected_return": 3.7, "product_type": "bond"}},
     )
     top_n: int = Field(3, ge=1, le=50)
-    risk_rating_hard_filter: bool = True
-    diversification: bool = True
+    risk_rating_hard_filter: bool = Field(True, description=_RISK_RATING_HARD_FILTER_DOC)
+    diversification: bool = Field(True, description=_DIVERSIFICATION_DOC)
     max_candidates_per_product_type: int = Field(2, ge=1, le=10)
     exclude_product_ids: list[str] | None = Field(
-        None, json_schema_extra={"example": ["PROD053"]},
+        None, description=_EXCLUDE_PRODUCT_IDS_DOC, json_schema_extra={"example": ["PROD053"]},
     )
 
 
@@ -788,8 +894,8 @@ class ReinvestmentCandidatesRequest(BaseModel):
     )
     max_candidates_per_product_type: int = Field(2, ge=1, le=10)
     max_candidates_per_client: int | None = Field(None, ge=1, le=50)
-    risk_rating_hard_filter: bool = True
-    exclude_product_ids: list[str] | None = None
+    risk_rating_hard_filter: bool = Field(True, description=_RISK_RATING_HARD_FILTER_DOC)
+    exclude_product_ids: list[str] | None = Field(None, description=_EXCLUDE_PRODUCT_IDS_DOC)
 
 
 class FitnessScoreRequest(BaseModel):
@@ -802,9 +908,10 @@ class FitnessScoreRequest(BaseModel):
         ..., min_length=1, json_schema_extra={"example": ["PROD054", "ETF-BIL", "ETF-SHV"]},
     )
     top_n: int = Field(10, ge=1, le=50)
-    risk_rating_hard_filter: bool = True
+    risk_rating_hard_filter: bool = Field(True, description=_RISK_RATING_HARD_FILTER_DOC)
     exclude_dimensions: list[str] | None = Field(
-        None, json_schema_extra={"example": ["diversification_score"]},
+        None, description=_EXCLUDE_DIMENSIONS_DOC,
+        json_schema_extra={"example": ["diversification_score"]},
     )
 
 
@@ -944,6 +1051,13 @@ _FITNESS_EXAMPLE = {
     "/api/v1/clients/holdings/maturing",
     response_model=list[MaturingHoldingItem],
     responses=_example_response([_MATURING_EXAMPLE]),
+    summary="Find clients with holdings maturing within a look-ahead window",
+    description=(
+        "Find clients with bonds / fixed-income holdings maturing within "
+        "`within_days`. `product_types` is a comma-separated list of product "
+        "types to include (defaults to `bond` only); `as_of_date` is an "
+        "optional ISO 8601 reference date."
+    ),
 )
 def get_holdings_maturing(
     product_types: str | None = Query(
@@ -1006,6 +1120,19 @@ def get_investor_readiness(
     "/api/v1/products/search-similar",
     response_model=SimilarProductSearchResult,
     responses=_example_response(_SEARCH_SIMILAR_EXAMPLE),
+    summary="Proximity search returning products ranked by similarity",
+    description=(
+        "Proximity search returning products ranked by similarity to the "
+        "given `query` attributes.\n\n"
+        "### Query and filtering\n\n"
+        "`query` is a dict of product attributes to match against (e.g. "
+        "`risk_rating`, `expected_return`, `product_type`).\n\n"
+        + _DIVERSIFICATION_DOC
+        + "\n\n"
+        + _RISK_RATING_HARD_FILTER_DOC
+        + "\n\n"
+        + _EXCLUDE_PRODUCT_IDS_DOC
+    ),
 )
 def search_similar_products(body: SimilarProductSearchRequest) -> dict:
     """Proximity search returning products ranked by similarity."""
@@ -1023,6 +1150,17 @@ def search_similar_products(body: SimilarProductSearchRequest) -> dict:
     "/api/v1/products/reinvestment-candidates",
     response_model=CandidatesResult,
     responses=_example_response(_CANDIDATES_EXAMPLE),
+    summary="Find reinvestment candidates for one or more clients",
+    description=(
+        "Find reinvestment candidate products to replace a maturing "
+        "`source_product_id` for the given `client_ids`.\n\n"
+        + _RISK_RATING_HARD_FILTER_DOC
+        + "\n\n"
+        + _EXCLUDE_PRODUCT_IDS_DOC
+        + "\n\n"
+        "`max_candidates_per_product_type` and `max_candidates_per_client` "
+        "cap how many candidates are returned."
+    ),
 )
 def get_reinvestment_candidates(body: ReinvestmentCandidatesRequest) -> dict:
     """Find reinvestment candidates per client."""
@@ -1040,6 +1178,14 @@ def get_reinvestment_candidates(body: ReinvestmentCandidatesRequest) -> dict:
     "/api/v1/products/fitness-score",
     response_model=FitnessScoreResult,
     responses=_example_response(_FITNESS_EXAMPLE),
+    summary="Compute product fitness scores for client×product pairs",
+    description=(
+        "Compute product fitness scores for each client×product pair in "
+        "`client_ids` × `product_ids`.\n\n"
+        + _RISK_RATING_HARD_FILTER_DOC
+        + "\n\n"
+        + _EXCLUDE_DIMENSIONS_DOC
+    ),
 )
 def get_product_fitness_score(body: FitnessScoreRequest) -> dict:
     """Compute product fitness scores for client×product pairs."""

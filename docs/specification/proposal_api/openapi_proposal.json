@@ -8,8 +8,8 @@
   "paths": {
     "/api/v1/product-investor-matcher": {
       "post": {
-        "summary": "Match Products To Investors Endpoint",
-        "description": "Run the full product-investor matcher pipeline.\n\nAccepts product IDs and client selection criteria, returns ranked\nclient×product proposals with buying scores, investment rationale,\nand final proposal markdown.",
+        "summary": "Match clients to products and rank client×product proposals",
+        "description": "Run the full product-investor matcher pipeline.\n\nMatches clients (selected by `client_selection`) against a product universe, ranks each client×product pair by buying score, and returns the top-N proposals with buying scores, investment rationale, and final proposal markdown.\n\n### Product universe\n\n`product_ids` accepts multiple entries and **unions** them into a single product universe (deduplicated, order-preserving). Interpretation depends on `product_source`:\n\n- `default_yaml` (default) — each entry may be a `product_groups` profile name from `config_planbot.yaml` (expanded to its member product IDs) or a literal product ID.\n- `request_payload` — each entry is always a literal product ID.\n\nMultiple group names are merged: e.g. `[\"structures\", \"ETF\"]` expands to the union of both groups, which is then scored and sent to the LLM as a single product catalog.\n\n### Example\n\n```json\n{\n  \"product_source\": \"default_yaml\",\n  \"product_ids\": [\"structures\", \"ETF\"],\n  \"client_selection\": {\"risk_rating\": 5},\n  \"top_n\": 3\n}\n```",
         "operationId": "match_products_to_investors_endpoint_api_v1_product_investor_matcher_post",
         "requestBody": {
           "content": {
@@ -125,8 +125,8 @@
     },
     "/api/v1/product-opportunity-proposal": {
       "post": {
-        "summary": "Generate Opportunity Proposal",
-        "description": "Generate a single product opportunity proposal for one client–product pair.",
+        "summary": "Generate a single product-opportunity proposal for one client×product pair",
+        "description": "Generate one product-opportunity proposal for a single client×product pair.\n\n### Rationale source\n\n`run_matcher` controls where the rationale and fitness scores come from:\n\n- `true` — run `product_investor_matcher` and use its output as the rationale (ignores `rationale` / `suggested_products_and_rationale`).\n- `false` (default) — caller supplies the rationale directly via `rationale` (freeform markdown) or `suggested_products_and_rationale` (matcher per-client analysis markdown).\n\n`alternative_count` (int ≥ 0) sets how many alternative products to list alongside the primary `product_id`.",
         "operationId": "generate_opportunity_proposal_api_v1_product_opportunity_proposal_post",
         "requestBody": {
           "content": {
@@ -164,8 +164,8 @@
     },
     "/api/v1/product-opportunity-proposal-automatch": {
       "post": {
-        "summary": "Generate Opportunity Proposal Automatch",
-        "description": "Run product-investor matching, then generate one proposal per pair.",
+        "summary": "Batch product-opportunity proposals via product-investor matching",
+        "description": "Run product-investor matching, then generate one opportunity proposal per matched client×product pair.\n\n### Product universe\n\nWhere the product universe is defined:\n- `default_yaml` (default) — each `product_ids` entry may be a `product_groups` profile name from `config_planbot.yaml` (expanded to its member product IDs) or a literal product ID.\n- `request_payload` — each `product_ids` entry is always a literal product ID.\n\nOne or more product group names / literal product IDs. Multiple entries are **unioned** into a single product universe (deduplicated, order-preserving) and scored together before being sent to the LLM.\n\n### Rationale source\n\nWhen `true`, run `product_investor_matcher` first and use its output as the rationale and fitness scores (ignoring `rationale` / `suggested_products_and_rationale`). When `false` (default), the caller must supply the rationale directly.\n\n`max_proposals` caps the number of proposals generated.",
         "operationId": "generate_opportunity_proposal_automatch_api_v1_product_opportunity_proposal_automatch_post",
         "requestBody": {
           "content": {
@@ -281,8 +281,8 @@
     },
     "/api/v1/clients/holdings/maturing": {
       "get": {
-        "summary": "Get Holdings Maturing",
-        "description": "Find clients with bonds or fixed-income products maturing.",
+        "summary": "Find clients with holdings maturing within a look-ahead window",
+        "description": "Find clients with bonds / fixed-income holdings maturing within `within_days`. `product_types` is a comma-separated list of product types to include (defaults to `bond` only); `as_of_date` is an optional ISO 8601 reference date.",
         "operationId": "get_holdings_maturing_api_v1_clients_holdings_maturing_get",
         "parameters": [
           {
@@ -451,8 +451,8 @@
     },
     "/api/v1/products/search-similar": {
       "post": {
-        "summary": "Search Similar Products",
-        "description": "Proximity search returning products ranked by similarity.",
+        "summary": "Proximity search returning products ranked by similarity",
+        "description": "Proximity search returning products ranked by similarity to the given `query` attributes.\n\n### Query and filtering\n\n`query` is a dict of product attributes to match against (e.g. `risk_rating`, `expected_return`, `product_type`).\n\nWhen `true`, cap the number of returned candidates per product type (diversify across types).\n\nWhen `true`, only products with `risk_rating <= client.risk_rating` are considered.\n\nProduct IDs to exclude from the candidate set (e.g. the source product being replaced).",
         "operationId": "search_similar_products_api_v1_products_search_similar_post",
         "requestBody": {
           "content": {
@@ -503,8 +503,8 @@
     },
     "/api/v1/products/reinvestment-candidates": {
       "post": {
-        "summary": "Get Reinvestment Candidates",
-        "description": "Find reinvestment candidates per client.",
+        "summary": "Find reinvestment candidates for one or more clients",
+        "description": "Find reinvestment candidate products to replace a maturing `source_product_id` for the given `client_ids`.\n\nWhen `true`, only products with `risk_rating <= client.risk_rating` are considered.\n\nProduct IDs to exclude from the candidate set (e.g. the source product being replaced).\n\n`max_candidates_per_product_type` and `max_candidates_per_client` cap how many candidates are returned.",
         "operationId": "get_reinvestment_candidates_api_v1_products_reinvestment_candidates_post",
         "requestBody": {
           "content": {
@@ -555,8 +555,8 @@
     },
     "/api/v1/products/fitness-score": {
       "post": {
-        "summary": "Get Product Fitness Score",
-        "description": "Compute product fitness scores for client×product pairs.",
+        "summary": "Compute product fitness scores for client×product pairs",
+        "description": "Compute product fitness scores for each client×product pair in `client_ids` × `product_ids`.\n\nWhen `true`, only products with `risk_rating <= client.risk_rating` are considered.\n\nDimension names to exclude from the fitness score (e.g. `diversification_score`). Omit to include all components.",
         "operationId": "get_product_fitness_score_api_v1_products_fitness_score_post",
         "requestBody": {
           "content": {
@@ -666,6 +666,7 @@
         "properties": {
           "product_source": {
             "$ref": "#/components/schemas/ProductSource",
+            "description": "Where the product universe is defined:\n- `default_yaml` (default) — each `product_ids` entry may be a `product_groups` profile name from `config_planbot.yaml` (expanded to its member product IDs) or a literal product ID.\n- `request_payload` — each `product_ids` entry is always a literal product ID.",
             "default": "default_yaml",
             "example": "default_yaml"
           },
@@ -675,6 +676,7 @@
             },
             "type": "array",
             "title": "Product Ids",
+            "description": "One or more product group names / literal product IDs. Multiple entries are **unioned** into a single product universe (deduplicated, order-preserving) and scored together before being sent to the LLM.",
             "default": [
               "bank_recommended"
             ],
@@ -704,6 +706,7 @@
           "run_matcher": {
             "type": "boolean",
             "title": "Run Matcher",
+            "description": "When `true`, run `product_investor_matcher` first and use its output as the rationale and fitness scores (ignoring `rationale` / `suggested_products_and_rationale`). When `false` (default), the caller must supply the rationale directly.",
             "default": false,
             "example": true
           },
@@ -1010,6 +1013,7 @@
           "risk_rating_hard_filter": {
             "type": "boolean",
             "title": "Risk Rating Hard Filter",
+            "description": "When `true`, only products with `risk_rating <= client.risk_rating` are considered.",
             "default": true
           },
           "exclude_dimensions": {
@@ -1025,6 +1029,7 @@
               }
             ],
             "title": "Exclude Dimensions",
+            "description": "Dimension names to exclude from the fitness score (e.g. `diversification_score`). Omit to include all components.",
             "example": [
               "diversification_score"
             ]
@@ -1419,7 +1424,7 @@
           "run_matcher": {
             "type": "boolean",
             "title": "Run Matcher",
-            "description": "Run matcher to obtain rationale",
+            "description": "When `true`, run `product_investor_matcher` first and use its output as the rationale and fitness scores (ignoring `rationale` / `suggested_products_and_rationale`). When `false` (default), the caller must supply the rationale directly.",
             "default": false
           },
           "market_outlook": {
@@ -1738,21 +1743,14 @@
           "market_outlook": {
             "anyOf": [
               {
-                "type": "string",
-                "enum": [
-                  "bea_wise",
-                  "bea_research_1",
-                  "bea_research_2",
-                  "bea_research_3"
-                ]
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Market Outlook",
-            "description": "Named market outlook report to inject into the LLM context. Selects one of the static reports under `data/planbot/shared/market_outlook/`. Ignored when `market_outlook_source` is `static`.",
-            "example": "bea_wise"
+            "example": "Rates remain elevated; favor short-duration high-quality credit over long duration."
           },
           "market_outlook_source": {
             "anyOf": [
@@ -2054,6 +2052,7 @@
           "risk_rating_hard_filter": {
             "type": "boolean",
             "title": "Risk Rating Hard Filter",
+            "description": "When `true`, only products with `risk_rating <= client.risk_rating` are considered.",
             "default": true
           },
           "exclude_product_ids": {
@@ -2068,7 +2067,8 @@
                 "type": "null"
               }
             ],
-            "title": "Exclude Product Ids"
+            "title": "Exclude Product Ids",
+            "description": "Product IDs to exclude from the candidate set (e.g. the source product being replaced)."
           }
         },
         "type": "object",
@@ -2108,7 +2108,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Query",
-            "description": "Product attributes to match against",
+            "description": "Product attributes to match against (e.g. `risk_rating`, `expected_return`, `product_type`).",
             "example": {
               "expected_return": 3.7,
               "product_type": "bond",
@@ -2125,11 +2125,13 @@
           "risk_rating_hard_filter": {
             "type": "boolean",
             "title": "Risk Rating Hard Filter",
+            "description": "When `true`, only products with `risk_rating <= client.risk_rating` are considered.",
             "default": true
           },
           "diversification": {
             "type": "boolean",
             "title": "Diversification",
+            "description": "When `true`, cap the number of returned candidates per product type (diversify across types).",
             "default": true
           },
           "max_candidates_per_product_type": {
@@ -2152,6 +2154,7 @@
               }
             ],
             "title": "Exclude Product Ids",
+            "description": "Product IDs to exclude from the candidate set (e.g. the source product being replaced).",
             "example": [
               "PROD053"
             ]
