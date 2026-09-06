@@ -79,7 +79,7 @@ docker run -d \
   -v "$(pwd)/log:/app/log" \
   -v "$(pwd)/runs:/app/runs" \
   -v hf-cache:/app/hf-cache \
-  ghcr.io/roger249/planbot-proposal-server:vYYYYMMDD-<gitsha>-arm64
+  ghcr.io/roger249/planbot-proposal-server:v20260904-8fb8a01-arm64
 ```
 
 Substitute the actual tag printed by the build script (or from `docker images`).

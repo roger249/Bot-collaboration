@@ -98,13 +98,29 @@ def _build_reference_payload(
 
 
 def _normalize_planbot_output(output: str) -> str:
+    if not output:
+        return output
+
+    # 1. Primary: locate the start marker anywhere in the raw output.  It is
+    #    normally on its own line, but reasoning-capable models may emit it
+    #    inline after chain-of-thought text (e.g. "Let's write now.---** ... **---").
+    marker_pos = output.find(OUTPUT_START_MARKER)
+    if marker_pos != -1:
+        trimmed = output[marker_pos + len(OUTPUT_START_MARKER) :].lstrip()
+        if not trimmed.strip():
+            return ""
+        return trimmed.rstrip() + "\n"
+
+    # 2. Fallback: no marker present — drop any leading prose / fenced
+    #    thinking block up to the first top-level markdown heading.
     lines = output.splitlines()
     for index, line in enumerate(lines):
-        if line.strip() == OUTPUT_START_MARKER:
-            trimmed = "\n".join(lines[index + 1 :]).lstrip("\n")
+        if line.lstrip().startswith("# "):
+            trimmed = "\n".join(lines[index:]).lstrip("\n")
             if not trimmed.strip():
                 return ""
             return trimmed.rstrip() + "\n"
+
     return output
 
 

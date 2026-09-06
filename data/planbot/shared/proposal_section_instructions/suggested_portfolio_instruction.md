@@ -1,4 +1,4 @@
-# Suggested Portfolio
+# Suggested Portfolio Allocation
 ```yaml
 instructions: |
   This section shows the impact of the single recommended trade on the
@@ -81,19 +81,19 @@ pie title "Suggested Allocation"
     "S&P 500 ETF (VOO)" : 25
 ```
 
-## Pros and Cons of the Suggested Trade
+## Advantages and Risks of the Suggested Investment
 ```yaml
 instructions: |
   Present two subsections at H3 level:
 
-  ### Pros
+  ### Advantages
   List 3–5 specific advantages.  Address at minimum:
   - Alignment with the client's stated financial goals.
   - Impact on concentration risk (name the specific concentration being
     reduced or added — e.g., "reduced single-stock TSLA exposure").
   - Diversification benefit vs. the current portfolio.
 
-  ### Cons
+  ### Risk
   List 2–3 specific disadvantages or trade-offs.  Address at minimum:
   - What the client gives up (e.g., lower expected return, loss of
     dividend income).
@@ -110,10 +110,8 @@ instructions: |
   could consider instead of the primary recommendation.  For each:
 
   - Product ID and name.
-  - One sentence explaining when this alternative would be preferred over
-    the primary recommendation.
+  - One sentence explaining when this alternative would be preferred over the primary recommendation.
+  - Product summary and risk characteristics in a format similar to the suggested product.
+  - Bullet list of the talking points to facilitate the relationship manager discuss with client.  This shall also in a format similar to the main suggested product.
   - One sentence stating the trade-off (what is sacrificed vs. the primary).
-
-  Format as a bullet list.  Do NOT include full product specifications —
-  those are already in the product catalog reference document.
 ```

@@ -8,6 +8,12 @@ Training data are historical client transaction.  To make those data be invarian
 - Risk free rates
 - Yield spread against risk free rate
 
+
+## Feature normalization
+marginal log-odds transformations, independent Gaussian scaling, or kernel density transformations.
+
+Change score card to GAM?
+
 For those need more information about the machine learning, I prefer to use learn to rank https://en.wikipedia.org/wiki/Learning_to_rank.   Score card (weighted sum) is same as the linear learning to rank algorithm.
 
 https://en.wikipedia.org/wiki/Logistic_regression

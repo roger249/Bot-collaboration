@@ -32,10 +32,10 @@ in as a single `market_outlook` string:
 
 | File | Title | What it provides | Typical use |
 | --- | --- | --- | --- |
-| `bea_wise.md` | BEA Wise Q3 2026 Market Outlook Summary | Macro theme, regional macro analysis, asset-class strategies & targets | Broad top-down context |
-| `bea_research_1.md` | BEA FundWatch 投資卓見 (Issue 3) | Fund performance tables across bonds, multi-asset, equity, sector | Fund selection context |
-| `bea_research_2.md` | BEA 投資產品及顧問部 — HALO strategy | HALO (Heavy Assets, Low Obsolescence) infra strategy | Defensive / infra tilts |
-| `bea_research_3.md` | BEA Economic Indicators Analysis | HK external-trade / export momentum | Macro data point |
+| `bea_wise.md` | BANK Wise Q3 2026 Market Outlook Summary | Macro theme, regional macro analysis, asset-class strategies & targets | Broad top-down context |
+| `bea_research_1.md` | BANK FundWatch 投資卓見 (Issue 3) | Fund performance tables across bonds, multi-asset, equity, sector | Fund selection context |
+| `bea_research_2.md` | BANK 投資產品及顧問部 — HALO strategy | HALO (Heavy Assets, Low Obsolescence) infra strategy | Defensive / infra tilts |
+| `bea_research_3.md` | BANK Economic Indicators Analysis | HK external-trade / export momentum | Macro data point |
 
 ---
 
@@ -88,7 +88,7 @@ curl -X POST http://localhost:8000/api/v1/product-investor-matcher \
     "product_source": "default_yaml",
     "product_ids": ["bank_recommended"],
     "client_selection": {"client_id": ["PB-HK-000001-8"]},
-    "market_outlook": "# BEA Wise Q3 2026 Market Outlook Summary\n\n## Executive Overview & Macro Theme\n\n…(full file content here)…\n\n# BEA 東亞銀行 — FundWatch 投資卓見\n\n…(full file content here)…"
+    "market_outlook": "# BANK Wise Q3 2026 Market Outlook Summary\n\n## Executive Overview & Macro Theme\n\n…(full file content here)…\n\n# BANK 東亞銀行 — FundWatch 投資卓見\n\n…(full file content here)…"
   }'
 ```
 

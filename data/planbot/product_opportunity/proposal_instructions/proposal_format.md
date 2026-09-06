@@ -1,10 +1,13 @@
-# Client Product-Fit Analysis: {client_name} ({client_id})
+# Investment Advisory Proposal for:
+{client_name} ({client_id})
+Prepared by: Louis Ng
+Date: {date}
+
 ```yaml
 instructions: |
   Replace {client_name} and {client_id} with values from the client profile.
   The title is a level-1 heading (#).
 ```
-
 ---
 
 ## Executive Summary
@@ -32,7 +35,7 @@ instructions: |
   This is a level-2 heading (##).
 ```
 
-### Product Specifications
+### Product Summary
 ```yaml
 instructions: |
   Present the product's key terms as a table with two columns: **Attribute** and **Value**.
@@ -54,7 +57,7 @@ instructions: |
   | Investment Note | {investment_note} |
 ```
 
-### Performance Metrics
+### Performance Metrics Comparison
 ```yaml
 instructions: |
   Compare the historical performance of the suggested product against the
@@ -84,7 +87,7 @@ instructions: |
   Do not use a table for this section.  Prose only.
 ```
 
-### Detailed Justification
+### Detailed Justification (For Bank Internal)
 ```yaml
 instructions: |
   Write 2–3 paragraphs that tie together all of the following:
@@ -107,7 +110,7 @@ instructions: |
 
 ---
 
-## Suggested Portfolio
+## Suggested Portfolio Allocation
 ```yaml
 instructions: |
   Follow the format and instructions in

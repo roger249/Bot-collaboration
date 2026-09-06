@@ -1,8 +1,4 @@
-Here is a structured, LLM-optimized summary of the **Bank of East Asia (BEA) Wise 2026 Q3 Market Outlook report ("變局啟新")**.
-
----
-
-# BEA Wise Q3 2026 Market Outlook Summary
+# BANK Wise Q3 2026 Market Outlook Summary
 
 ## Executive Overview & Macro Theme
 

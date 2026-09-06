@@ -1,4 +1,4 @@
-# BEA 東亞銀行 — Economic Indicators Analysis
+# BANK 東亞銀行 — Economic Indicators Analysis
 **Hong Kong Exports Maintain Rapid Expansion**  
 *26 August 2026*
 
@@ -64,5 +64,5 @@ Recently, the SAR Government revised its GDP growth forecast for 2026 upward to 
 ---
 
 ## Disclaimer
-*This material is prepared by The Bank of East Asia, Limited ("BEA") for customers' reference only. The content is based on information available to the public and reasonably believed to be reliable... Investment involves risks. Past performance is not indicative of future performance.*  
+*This material is prepared by The Bank of East Asia, Limited ("BANK") for customers' reference only. The content is based on information available to the public and reasonably believed to be reliable... Investment involves risks. Past performance is not indicative of future performance.*  
 *(c) 2026 The Bank of East Asia, Limited*

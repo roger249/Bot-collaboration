@@ -52,7 +52,7 @@ populates the `urls` list for free.
 Prefer these sources when researching market/product context. Prefer them over
 unknown search results of similar relevance.
 
-- https://www.hkbea.com/...    # BEA best-selling unit trusts
+- https://www.hkbea.com/...    # BANK best-selling unit trusts
 - https://www.hsbc.com.hk/...  # HSBC MPF scheme brochure
 - ...
 ```
@@ -122,7 +122,7 @@ blocked domains) for now.
    `blocked_domains.md`.
 2. **Fold in** the single link from
    `data/planbot/portfolio_review/proposal_instructions/website references.md`
-   (BEA best-selling unit trusts) into `websites.md`, then **delete**
+   (BANK best-selling unit trusts) into `websites.md`, then **delete**
    `website references.md`.
 3. Add the `web_references` input to the two in-scope proposals (§4) and the
    dedicated `urls` injection (§4.1).

@@ -5,6 +5,7 @@ product_opportunity_task:
   description: |
 
     - Given a client profile and one suggested product, generate a client product-fit analysis that includes a product-fit score and justification for the recommendation.
+    - Use the **product_fitness_score_tool** tool to compute a quantitative product fitness score for the client against your shortlisted candidate products. Use the fitness scores and component scores as a quantitative starting point for ranking the candidates.
     - Do not increase holding for any product other than the suggested product.
     - The YAML blocks under each heading in the reference materials are INSTRUCTIONS to you.  The markdown text outside YAML blocks is EXAMPLE OUTPUT showing the expected format.  Follow the instructions, not the example values.
     - The reference materials are provided at the end of the user prompt as structured JSON:
@@ -20,6 +21,7 @@ product_opportunity_task:
   expected_output: |
 
     A client product-fit analysis in markdown format that:
+    - All output begins exactly with the line: "---** Output of suggestion as below **---"
     - Follows the section structure and heading hierarchy in proposal_instructions/proposal_format.md.
     - Uses tables where they provide a clearer and more concise view.
     - Does NOT include raw YAML instruction blocks in the output — those are for your guidance only.

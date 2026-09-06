@@ -19,6 +19,7 @@ reinvestment_task:
   expected_output: |
 
     A reinvestment analysis in markdown format.
+    - All output begins exactly with the line: "---** Output of suggestion as below **---"
     - The instruction and the proposal format is in proposal_instructions/proposal_format.md.  Follow the section requirement and examples in the markdown.
     - Use tables where they provide a clearer and more concise view.
     - Do not include YAML blocks, extra sections, or commentary.

@@ -18,6 +18,7 @@ llm_product_matcher_task:
   expected_output: |
 
     A product investor matching report in markdown format that:
+    - All output begins exactly with the line: "---** Output of suggestion as below **---"
     - The instruction and the sections in the proposal is in references/proposal_instructions/proposal_format.md.  Please strictly follow the format and the sections in the proposal instructions.
     - Includes one recommendation for the client with a 1-5 suitability score and justification.
     - Keep all references material at the reference section.

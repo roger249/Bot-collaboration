@@ -14,6 +14,7 @@ portfolio_review_task:
     - market_outlook: market outlook and sentiment analysis
   expected_output: |
     A complete investment proposal in markdown format that:
+    - All output begins exactly with the line: "---** Output of suggestion as below **---"
     - The instruction and the sections in the proposal is in references/proposal_instructions/proposal_format.md.  Please strictly follow the format and the sections in the proposal instructions.
     - Use tables where they provide a clearer and more concise view.
     - Do not include the YAML instruction blocks from proposal_format.md — those are guidance, not output.
