@@ -55,6 +55,10 @@ stock_analysis_proposal:
   # deepseek_tool (deepseek-v4-flash) ignores CrewAI ReAct stop-sequences and returns Final Answer immediately
 
 llm_models:
+  bacherlier_deepseek:
+    provider: bacherlier
+    model: deepseek-v4-flash-0731
+    temperature: 0.1
   deepseek_tool:
     provider: deepseek
     model: deepseek-v4-flash
@@ -271,7 +275,7 @@ pipeline:
         alternative_product_re: "-\\s+([A-Za-z]+[-.]?[\\w.-]+)\\s"
 
     execution:
-      model: deepseek_tool
+      model: bacherlier_deepseek
       output:
         folder: runs/product_investor_matching
         filename_template: product_investor_matching_{date}.md
@@ -288,7 +292,9 @@ pipeline:
       - id: section_guides
         source: file
         paths:
-          - data/planbot/shared/proposal_section_instructions/*.md
+          - data/planbot/shared/proposal_section_instructions/prod*.md
+          - data/planbot/shared/proposal_section_instructions/sugg*.md
+          - data/planbot/shared/proposal_section_instructions/ref*.md
         prompt_section: references
         required: true
       - id: financial_needs_guidelines
@@ -331,7 +337,7 @@ pipeline:
   # ── LLM Product Matcher (POC) ─────────────────────────────────────
   llm_product_matcher:
     execution:
-      model: deepseek_tool
+      model: bacherlier_deepseek
       output:
         folder: runs/llm_product_matcher
         filename_template: llm_product_matcher_{date}.md
@@ -348,7 +354,9 @@ pipeline:
       - id: section_guides
         source: file
         paths:
-          - data/planbot/shared/proposal_section_instructions/*.md
+          - data/planbot/shared/proposal_section_instructions/sugg*.md
+          - data/planbot/shared/proposal_section_instructions/prod*.md
+          - data/planbot/shared/proposal_section_instructions/ref*.md
         prompt_section: references
         required: true
       - id: financial_needs_guidelines
@@ -392,7 +400,7 @@ pipeline:
   # ── Reinvestment Proposal ──────────────────────────────────────────
   reinvestment:
     execution:
-      model: deepseek_tool
+      model: bacherlier_deepseek
       output:
         folder: runs/reinvestment_proposal
         filename_template: reinvestment_{client_id}_{date}.md
@@ -450,7 +458,7 @@ pipeline:
   # ── Product Opportunity Proposal ──────────────────────────────────
   product_opportunity:
     execution:
-      model: deepseek_tool
+      model: bacherlier_deepseek
       output:
         folder: runs/product_opportunity_proposal
         filename_template: product_opportunity_{client_id}_{date}.md
@@ -468,7 +476,9 @@ pipeline:
       - id: section_guides
         source: file
         paths:
-          - data/planbot/shared/proposal_section_instructions/*.md
+          - data/planbot/shared/proposal_section_instructions/p*.md
+          - data/planbot/shared/proposal_section_instructions/ref*.md
+          - data/planbot/shared/proposal_section_instructions/s*.md
         prompt_section: references
         required: true
       - id: financial_needs_guidelines
@@ -514,7 +524,7 @@ pipeline:
   # ── Portfolio Review ──────────────────────────────────────────────
   portfolio_review:
     execution:
-      model: deepseek_tool
+      model: bacherlier_deepseek
       output:
         folder: runs/portfolio_review
         filename_template: portfolio_review_{client_id}_{date}.md

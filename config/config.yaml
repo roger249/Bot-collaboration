@@ -55,6 +55,10 @@ providers:
     api_key_env: POE_API_KEY
     base_url: https://api.poe.com/v1
     timeout_seconds: 300
+  bacherlier:
+    api_key_env: BACHERLIER_API_KEY
+    base_url: https://llm-cbp7685oqkf0bd0p.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+    timeout_seconds: 300
 
 # Below are configuration specific to the author-reviewer workflow. 
 

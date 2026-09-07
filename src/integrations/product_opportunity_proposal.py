@@ -466,7 +466,7 @@ def _process_one_pair(
         "output_filename": str(fit_result.output_path),
         "proposal_markdown": proposal_markdown,
         "metadata": {
-            "model": app_config.model if hasattr(app_config, "model") else "deepseek_tool",
+            "model": app_config.model if hasattr(app_config, "model") else "bacherlier_deepseek",
             "alternative_products": matcher_alternatives or [],
             "product_fitness_scores": product_fitness_scores,
         },

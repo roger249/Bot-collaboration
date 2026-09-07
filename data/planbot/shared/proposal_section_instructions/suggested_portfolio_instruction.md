@@ -107,11 +107,10 @@ instructions: |
 ```yaml
 instructions: |
   Suggest 2 alternative products from the product catalog that the client
-  could consider instead of the primary recommendation.  For each:
+  could consider instead of the primary recommendation.  For each alternative product please put up below.
 
-  - Product ID and name.
+  - Product Summary include product id.  Please refer product_summary_instruction.md for the format to present the product.  
   - One sentence explaining when this alternative would be preferred over the primary recommendation.
-  - Product summary and risk characteristics in a format similar to the suggested product.
   - Bullet list of the talking points to facilitate the relationship manager discuss with client.  This shall also in a format similar to the main suggested product.
-  - One sentence stating the trade-off (what is sacrificed vs. the primary).
+  - One sentence stating the trade-off (what is sacrificed vs. the primary).  
 ```

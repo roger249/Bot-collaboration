@@ -8,7 +8,10 @@ services:
       # Data API simulator (used by the proposal server's REST adapter).
       - "8001:8001"
     environment:
-      # LLM provider key required by the proposal endpoints (deepseek_tool).
+      # LLM provider keys (named by providers.<name>.api_key_env in config.yaml).
+      # bacherlier backs bacherlier_deepseek (all proposal pipelines).
+      # deepseek backs deepseek_tool, kept available but currently unused.
+      - BACHERLIER_API_KEY=${BACHERLIER_API_KEY:-}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       # Web search key (SerpApi) — required only by /api/v1/llm-product-matcher.
       - SERPAPI_API_KEY=${SERPAPI_API_KEY:-}

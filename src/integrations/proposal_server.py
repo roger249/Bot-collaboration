@@ -592,6 +592,7 @@ class AutomatchRequest(BaseModel):
           "product_ids": ["bank_recommended"],
           "client_selection": {"client_id": ["PB-HK-000001-8", "PB-HK-000005-9"]},
           "run_matcher": true,
+          "market_outlook_source": "static",
           "max_proposals": 3
         }
 
@@ -612,6 +613,7 @@ class AutomatchRequest(BaseModel):
                 "product_ids": ["bank_recommended"],
                 "client_selection": {"client_id": ["PB-HK-000001-8", "PB-HK-000005-9"]},
                 "run_matcher": True,
+                "market_outlook_source": "static",
                 "max_proposals": 3,
             }
         },

@@ -24,8 +24,11 @@ instructions: |
   match the proposal's existing heading hierarchy).
 ```
 
+Example (ILLUSTRATIVE ONLY — the file names below are fake placeholders; list
+only the materials actually provided in your reference JSON, never these):
+
 - Client Profile: api://client_profile (Planbot Internal Data)
 - Product Catalog: api://product_catalog (Planbot Internal Data)
-- Market Outlook: bank_research_1.md, bank_research_2.md, bank_research_3.md, bank_wise.md (Planbot Internal Data)
-- Proposal Guidelines: proposal_format.md, suggested_portfolio_instruction.md, scenario_analysis_instruction.md, risk_disclosure_instruction.md, reference_instruction.md (Planbot Internal Data)
+- Market Outlook: <example_market_outlook_1.md>, <example_market_outlook_2.md> (Planbot Internal Data)
+- Proposal Guidelines: <example_proposal_format.md>, <example_section_instruction.md> (Planbot Internal Data)
 - Web References: N/A (data sourced from internal repositories)

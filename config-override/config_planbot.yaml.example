@@ -1,15 +1,5 @@
 # Sample override file — DO NOT use directly.
 #
-# NOTE: For most deployments you do NOT need this file.  The data endpoint URLs
-# can be set with environment variables instead (see README section 2.1):
-#
-#     DATA_CLIENT_BASE_URL=https://bank-client-data.example.com
-#     DATA_PRODUCT_BASE_URL=https://bank-client-data.example.com
-#     BANK_API_KEY=your_bank_token
-#
-# Use this override file only when you need to change deeper/structural config
-# (paths, timeouts, cache, matcher, scorecard weights, etc.).
-#
 # To activate, copy this file to the same directory WITHOUT the `.example`
 # suffix and edit it:
 #
@@ -20,7 +10,17 @@
 # sample is inert as-is.  A real `config_planbot.yaml` is deep-merged onto the
 # image default: you only need to specify the keys you want to change, and
 # every unspecified key is inherited from `config/config_planbot.yaml` in the
-# image.
+# image.  Dicts are merged recursively; lists are replaced in full.
+#
+# Two common overrides are shown below — the data source and the LLM model each
+# pipeline selects.  Delete or comment out the section(s) you don't need.
+#
+# NOTE: for most deployments the data-endpoint URLs can be set with environment
+# variables instead (see README section 2), which is simpler:
+#
+#     DATA_CLIENT_BASE_URL=https://bank-client-data.example.com
+#     DATA_PRODUCT_BASE_URL=https://bank-client-data.example.com
+#     BANK_API_KEY=your_bank_token
 
 # ── Choose your data source ─────────────────────────────────────────────
 common:
@@ -42,3 +42,33 @@ data_source:
     timeout_seconds: 10
     cache_ttl_seconds: 300
     cache_maxsize: 512
+
+# ── Select which LLM model each pipeline uses ───────────────────────────
+# Each `pipeline.<id>.execution.model` names an entry in `llm_models`.
+# Override it to switch the model for that pipeline without a rebuild;
+# `execution.output`, `execution.logging` and every other sibling key are
+# inherited unchanged by the deep merge.
+#
+# Here we point two pipelines at `bacherlier_deepseek` (provider `bacherlier`).
+llm_models:
+  bacherlier_deepseek:
+    provider: bacherlier
+    model: deepseek-v4-flash-0731   # swap the model id / temperature as needed
+    temperature: 0.1
+
+pipeline:
+  product_opportunity:
+    execution:
+      model: bacherlier_deepseek
+  reinvestment:
+    execution:
+      model: bacherlier_deepseek
+
+# `bacherlier_deepseek` uses the `bacherlier` provider, whose API key is read
+# from the `BACHERLIER_API_KEY` env var — forward it in compose.yaml (see README
+# section 5.2).  To repoint a provider's URL, see config-override/config.yaml.example.
+#
+# The `provider` under each `llm_models` entry must match a key in
+# `config/config.yaml`'s `providers` section (bacherlier | deepseek | poe |
+# openrouter | mock).  You can override an existing entry (change
+# `model`/`temperature`) or add a new one, as shown above.

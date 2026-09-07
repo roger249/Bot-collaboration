@@ -1,0 +1,66 @@
+# Sample override file for config/config.yaml — DO NOT use directly.
+#
+# To activate, copy WITHOUT the `.example` suffix and edit:
+#
+#     cp config-override/config.yaml.example \
+#        config-override/config.yaml
+#
+# Files ending in `.example` are ignored by the container's merge step, so this
+# sample is inert as-is.  A real `config.yaml` is deep-merged onto the image
+# default config/config.yaml: specify only the keys you want to change.
+#
+# This file holds the LLM **provider** definitions — base URL, API-key env var,
+# and timeout — that models reference by name.  Model selection itself lives in
+# config-override/config_planbot.yaml.  The full chain is:
+#
+#   pipeline.<id>.execution.model   (config_planbot.yaml — which model a pipeline uses)
+#     └─ llm_models.<key>            (config_planbot.yaml — provider + model + temperature)
+#          └─ providers.<provider>    (THIS file — api_key_env + base_url + timeout_seconds)
+
+# ── Provider definitions (base_url + auth + timeout) ───────────────────
+# Override `base_url` to point a provider at a self-hosted gateway / proxy /
+# another region; `api_key_env` names the environment variable the API key is
+# read from at runtime; `timeout_seconds` is the per-request timeout.
+#
+# The four entries below restate the image defaults — edit the value(s) you
+# want to change and delete the entries you leave unchanged.
+providers:
+  bacherlier:
+    api_key_env: BACHERLIER_API_KEY
+    base_url: https://llm-cbp7685oqkf0bd0p.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+    timeout_seconds: 300
+  deepseek:
+    api_key_env: DEEPSEEK_API_KEY
+    base_url: https://api.deepseek.com          # e.g. https://gateway.example.com/v1
+    timeout_seconds: 1800
+  poe:
+    api_key_env: POE_API_KEY
+    base_url: https://api.poe.com/v1
+    timeout_seconds: 300
+  openrouter:
+    api_key_env: OPENROUTER_API_KEY
+    base_url: https://openrouter.ai/api/v1
+    timeout_seconds: 240
+
+# ── Add a new provider (optional) ──────────────────────────────────────
+# Register a new provider here, then reference it from a model in
+# config-override/config_planbot.yaml.  Example: a self-hosted bacherlier
+# gateway/proxy:
+#
+#   # config-override/config.yaml
+#   providers:
+#     bacherlier_gateway:
+#       api_key_env: BACHERLIER_API_KEY
+#       base_url: https://bacherlier-gateway.example.com/v1
+#       timeout_seconds: 300
+#
+#   # config-override/config_planbot.yaml
+#   llm_models:
+#     bacherlier_via_gateway:
+#       provider: bacherlier_gateway
+#       model: deepseek-v4-flash-0731
+#       temperature: 0.1
+#   pipeline:
+#     product_opportunity:
+#       execution:
+#         model: bacherlier_via_gateway

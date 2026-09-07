@@ -21,7 +21,7 @@ Provide a description of what this report is.
 ## Top clients with detail analysis
 ```yaml
 instructions: |
-Show the following in point form
+Show the following per each client in point form.
 ```
 
 ### PB-HK-000000-0 (Example Client)
