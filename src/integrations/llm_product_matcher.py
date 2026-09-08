@@ -13,7 +13,6 @@ format.
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from pathlib import Path
 
 from src.integrations.client_api import search_by_id
@@ -136,19 +135,12 @@ def propose_llm_product_matcher(
     if effective_market_outlook is not None:
         runtime_reference_overrides["market_outlook"] = [API_MARKET_OUTLOOK]
 
-    # ── Invoke CrewAI ───────────────────────────────────────────────
-    date_tag = datetime.now().strftime("%Y%m%d-%H%M%S")
-    output_file_override = (
-        _ROOT_DIR / "runs" / "llm_product_matcher"
-        / f"llm_product_matcher_{client_id}_{date_tag}.md"
-    )
-
+    # ── Invoke CrewAI (filename derived from pipeline config template) ──
     result = run_crew_planbot(
         app_config=app_config,
         config_path=str(_CONFIG_PATH),
         proposal_name="llm_product_matcher",
         runtime_reference_overrides=runtime_reference_overrides,
-        output_file_override=output_file_override,
         api_resolver=api_resolver,
     )
 

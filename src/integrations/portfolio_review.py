@@ -8,7 +8,6 @@ The endpoint composes reference files, invokes CrewAI, and returns proposal mark
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from pathlib import Path
 
 from src.integrations.client_api import search_by_id
@@ -99,21 +98,15 @@ def propose_portfolio_review(
     if effective_market_outlook is not None:
         runtime_reference_overrides["market_outlook"] = [API_MARKET_OUTLOOK]
 
-    # ── Invoke CrewAI ───────────────────────────────────────────────
-    date_tag = datetime.now().strftime("%Y%m%d-%H%M%S")
-    output_file_override = (
-        _ROOT_DIR / "runs" / "portfolio_review"
-        / f"portfolio_review_{client_id}_{date_tag}.md"
-    )
-
+    # ── Invoke CrewAI (filename derived from pipeline config template) ──
     app_config = load_config(str(_ROOT_DIR / "config" / "config.yaml"))
     result = run_crew_planbot(
         app_config=app_config,
         config_path=str(_CONFIG_PATH),
         proposal_name="portfolio_review",
         runtime_reference_overrides=runtime_reference_overrides,
-        output_file_override=output_file_override,
         api_resolver=api_resolver,
+        client_id=client_id,
     )
 
     output_path = result.output_path

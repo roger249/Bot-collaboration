@@ -154,8 +154,9 @@ class TestAutomatchPromptAndFields(unittest.TestCase):
         # ── 1. Mock run_crew_planbot to capture kwargs ──────────────────
         def _capture_and_return(
             app_config, config_path, proposal_name,
-            runtime_reference_overrides, output_file_override, api_resolver,
+            runtime_reference_overrides, api_resolver, client_id,
             runtime_section_purposes=None,
+            output_file_override=None,
         ):
             self.captured_kwargs = {
                 "app_config": app_config,
@@ -165,6 +166,7 @@ class TestAutomatchPromptAndFields(unittest.TestCase):
                 "runtime_section_purposes": runtime_section_purposes,
                 "output_file_override": output_file_override,
                 "api_resolver": api_resolver,
+                "client_id": client_id,
             }
             test_path = f"runs/product_opportunity_proposal/test_automatch_output.md"
             return _make_crew_result(FIT_MARKDOWN, test_path)

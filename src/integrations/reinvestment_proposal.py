@@ -366,17 +366,15 @@ def _process_one_target(
     if effective_market_outlook is not None:
         runtime_overrides["market_outlook"] = [API_MARKET_OUTLOOK]
 
-    # ── Build client-scoped output filename ────────────────────────────
-    output_override = f"runs/reinvestment_proposal/reinvestment_proposal_{client_id}.md"
-
     # ── Invoke CrewAI with api:// patterns (no temp files on disk) ─────
+    # Output filename is derived from pipeline.reinvestment.execution.output.filename_template.
     crew_result = run_crew_planbot(
         app_config=app_config,
         config_path=str(_CONFIG_PATH),
         proposal_name="reinvestment",
         runtime_reference_overrides=runtime_overrides,
-        output_file_override=output_override,
         api_resolver=api_resolver,
+        client_id=client_id,
     )
     output_filename = str(crew_result.output_path)
     proposal_markdown = crew_result.output_path.read_text()

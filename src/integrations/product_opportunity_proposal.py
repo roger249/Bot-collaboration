@@ -14,7 +14,6 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import Callable
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -445,18 +444,13 @@ def _process_one_pair(
             API_SUGGESTED_PRODUCTS_AND_RATIONALE
         ]
 
-    output_path = (
-        f"runs/product_opportunity_proposal/"
-        f"product_opportunity_{datetime.now().strftime('%H%M%S')}_{client_id}.md"
-    )
-
     fit_result = run_crew_planbot(
         app_config=app_config,
         config_path=str(_CONFIG_PATH),
         proposal_name="product_opportunity",
         runtime_reference_overrides=runtime_overrides,
-        output_file_override=output_path,
         api_resolver=api_resolver,
+        client_id=client_id,
     )
     proposal_markdown = fit_result.output_path.read_text()
 

@@ -336,9 +336,8 @@ def product_investor_matcher(
     )
 
     # ── 7. Run product_investor_matching via CrewAI ─────────────────────
+    # Output filename is derived from pipeline.product_investor_matching.execution.output.filename_template.
     try:
-        matching_output_path = f"runs/product_investor_matching/product_investor_matching_{run_id}.md"
-
         # ── Build runtime reference overrides for api-backed sections ──
         # File/static sections are loaded by load_planbot_config from pipeline config.
         reference_overrides: dict[str, list[str]] = {
@@ -353,10 +352,10 @@ def product_investor_matcher(
             config_path=str(_CONFIG_PATH),
             proposal_name="product_investor_matching",
             runtime_reference_overrides=reference_overrides,
-            output_file_override=matching_output_path,
             api_resolver=api_resolver,
         )
-        matching_markdown = crew_result.output_path.read_text()
+        matching_output_path = crew_result.output_path
+        matching_markdown = matching_output_path.read_text()
         matching_prompt = read_prompt_snapshot(crew_result.prompt_path)
     except Exception as exc:
         LOGGER.error("product_investor_matching CrewAI failed: %s", exc)
@@ -375,7 +374,7 @@ def product_investor_matcher(
     top_pairs = _extract_top_pairs(matching_markdown, top_n)
 
     # ── 8a. Write JSON sidecar for downstream consumers ────────────────
-    sidecar_path = Path(str(Path(matching_output_path).with_suffix("")) + "_pairs.json")
+    sidecar_path = matching_output_path.with_suffix("_pairs.json")
     sidecar_path.parent.mkdir(parents=True, exist_ok=True)
     sidecar_path.write_text(json.dumps(top_pairs, indent=2, ensure_ascii=False))
     LOGGER.info("JSON sidecar written: %s (%d pairs)", sidecar_path, len(top_pairs))

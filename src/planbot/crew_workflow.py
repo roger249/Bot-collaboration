@@ -514,6 +514,7 @@ def run_crew_planbot(
     runtime_section_purposes: dict[str, str] | None = None,
     output_file_override: str | Path | None = None,
     api_resolver: Callable[[str], ReferenceDocument] | None = None,
+    client_id: str | None = None,
 ) -> PlanBotResult:
     """
     This function will build the prompt payload as follow.
@@ -669,7 +670,7 @@ def run_crew_planbot(
             else (app_config.root_dir / output_override_path)
         )
     else:
-        output_path = run_root / _resolve_output_filename(cfg.output_filename, cfg.model)
+        output_path = run_root / _resolve_output_filename(cfg.output_filename, cfg.model, client_id)
 
     write_text(output_path, output)
     LOGGER.info("Output written to %s", output_path)

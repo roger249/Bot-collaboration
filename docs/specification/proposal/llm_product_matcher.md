@@ -156,7 +156,7 @@ pipeline:
 
 > **General guidelines are delivered via a CrewAI skill** (`data/planbot/shared/common_skills/general-guideline/SKILL.md`), not a reference input — see `Migrate_to_shared_skills.md`. The `general_guidelines` input is therefore omitted above.
 
-> `filename_template` placeholders are resolved by `_resolve_output_filename()` (`src/planbot/workflow.py`): `{model}` → sanitized model name, and `{date}` → a `YYYYMMDD_HHMMSS` timestamp (e.g. `20260822_193859`). The default template above therefore yields `llm_product_matcher_20260822_193859.md`. (`{date}` support is a small code addition to `_resolve_output_filename()`.)
+> `filename_template` placeholders are resolved by `_resolve_output_filename()` (`src/planbot/workflow.py`): `{client_id}` → sanitized client id, `{model}` → sanitized model name, and `{date}` → a `YYYYMMDD_HHMMSS` timestamp (e.g. `20260822_193859`). The template is authoritative — no suffix is appended beyond its placeholders — so the default template above yields `llm_product_matcher_20260822_193859.md`.
 
 CrewAI config files (new folder, no shared-file edit to existing matcher):
 

@@ -463,9 +463,26 @@ def test_resolve_output_filename_date_substitution():
 
     resolved = _resolve_output_filename("llm_product_matcher_{date}.md", "deepseek")
     assert not resolved.endswith("_{date}.md")
-    # Date is substituted as YYYYMMDD_HHMMSS; model token is appended (no {model}).
-    assert resolved.endswith("-deepseek.md")
-    assert re.search(r"llm_product_matcher_\d{8}_\d{6}-deepseek\.md$", resolved)
+    # Date is substituted as YYYYMMDD_HHMMSS; the template is authoritative
+    # (no implicit model-token suffix is appended).
+    assert re.search(r"llm_product_matcher_\d{8}_\d{6}\.md$", resolved)
+
+
+def test_resolve_output_filename_client_id_substitution():
+    from src.planbot.workflow import _resolve_output_filename
+
+    resolved = _resolve_output_filename(
+        "reinvestment_{client_id}_{date}.md", "deepseek", client_id="PB-HK-000001-8"
+    )
+    assert "PB-HK-000001-8" in resolved
+    assert not resolved.endswith("_{client_id}.md")
+
+
+def test_resolve_output_filename_client_id_missing_falls_back_to_unknown():
+    from src.planbot.workflow import _resolve_output_filename
+
+    resolved = _resolve_output_filename("reinvestment_{client_id}.md", "deepseek")
+    assert "unknown" in resolved
 
 
 # ── ProductFitnessScoreTool ────────────────────────────────────────────────

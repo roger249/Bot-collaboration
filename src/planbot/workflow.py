@@ -204,7 +204,11 @@ def _sanitize_for_filename(value: str) -> str:
     return sanitized.strip(".-") or "model"
 
 
-def _resolve_output_filename(output_filename: str, model: str) -> str:
+def _resolve_output_filename(
+    output_filename: str,
+    model: str,
+    client_id: str | None = None,
+) -> str:
     if "{date}" in output_filename:
         from datetime import datetime
 
@@ -212,16 +216,16 @@ def _resolve_output_filename(output_filename: str, model: str) -> str:
             "{date}", datetime.now().strftime("%Y%m%d_%H%M%S")
         )
 
-    model_token = _sanitize_for_filename(model)
-    if "{model}" in output_filename:
-        return output_filename.replace("{model}", model_token)
+    if "{client_id}" in output_filename:
+        token = _sanitize_for_filename(client_id) if client_id else "unknown"
+        output_filename = output_filename.replace("{client_id}", token)
 
-    path = Path(output_filename)
-    stem = path.stem
-    suffix = path.suffix
-    if suffix:
-        return f"{stem}-{model_token}{suffix}"
-    return str(path)
+    if "{model}" in output_filename:
+        output_filename = output_filename.replace(
+            "{model}", _sanitize_for_filename(model)
+        )
+
+    return output_filename
 
 
 def read_prompt_snapshot(prompt_path: Path | None) -> str:

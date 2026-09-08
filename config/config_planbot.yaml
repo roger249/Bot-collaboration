@@ -474,7 +474,6 @@ pipeline:
       output:
         folder: runs/product_opportunity_proposal
         filename_template: product_opportunity_{client_id}_{date}.md
-        overwrite: true       # legacy overwrite_output_folder: true
       logging:
         level: INFO
 
