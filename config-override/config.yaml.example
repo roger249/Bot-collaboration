@@ -29,18 +29,22 @@ providers:
     api_key_env: BACHERLIER_API_KEY
     base_url: https://llm-cbp7685oqkf0bd0p.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
     timeout_seconds: 300
+    max_retries: 2
   deepseek:
     api_key_env: DEEPSEEK_API_KEY
     base_url: https://api.deepseek.com          # e.g. https://gateway.example.com/v1
     timeout_seconds: 1800
+    max_retries: 2
   poe:
     api_key_env: POE_API_KEY
     base_url: https://api.poe.com/v1
     timeout_seconds: 300
+    max_retries: 2
   openrouter:
     api_key_env: OPENROUTER_API_KEY
     base_url: https://openrouter.ai/api/v1
     timeout_seconds: 240
+    max_retries: 2
 
 # ── Add a new provider (optional) ──────────────────────────────────────
 # Register a new provider here, then reference it from a model in
@@ -53,6 +57,7 @@ providers:
 #       api_key_env: BACHERLIER_API_KEY
 #       base_url: https://bacherlier-gateway.example.com/v1
 #       timeout_seconds: 300
+#       max_retries: 2
 #
 #   # config-override/config_planbot.yaml
 #   llm_models:

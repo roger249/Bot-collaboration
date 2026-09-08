@@ -16,6 +16,7 @@ import yaml
 from crewai import Agent, Crew, LLM, Process, Task
 
 from src.planbot.config import load_planbot_config
+from src.planbot.llm_cache import enable_llm_cache
 from src.planbot.input_loader import (
     ReferenceDocument,
     extract_urls_from_references,
@@ -66,6 +67,7 @@ def _build_crew_llm(app_config: AppConfig, cfg) -> LLM:
         api_key=api_key,
         temperature=cfg.temperature,
         timeout=provider.timeout_seconds,
+        additional_params={"max_retries": provider.max_retries},
     )
 
 
@@ -522,6 +524,10 @@ def run_crew_planbot(
             - the reference materials as a JSON payload that contains the content of the reference documents, client profiles, product catalogs, and URLs. 
     """
     cfg = load_planbot_config(config_path, app_config.root_dir, proposal_name)
+
+    # Enable LiteLLM's in-memory cache (idempotent) so the CrewAI LLM path
+    # caches successful completions for the configured TTL.
+    enable_llm_cache(config_path)
 
     preserve_existing_run_root = output_file_override is not None
     run_root = create_run_root(

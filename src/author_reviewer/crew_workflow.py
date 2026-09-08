@@ -66,6 +66,7 @@ def _build_crew_llm(app_config: AppConfig, provider_name: str, model: str, tempe
         api_key=api_key,
         temperature=temperature,
         timeout=provider.timeout_seconds,
+        additional_params={"max_retries": provider.max_retries},
     )
 
 

@@ -27,6 +27,13 @@ data_source:
     cache_ttl_seconds: 10    # per-entry cache expiry (0 = disable cache)
     cache_maxsize: 512        # max cached entries per adapter
 
+# LLM call cache — LiteLLM in-memory cache for the CrewAI proposal path.
+# Caches successful completions keyed by LiteLLM (model + messages + base_url).
+# Process-local: a restart yields an empty cache.
+llm_cache:
+  enabled: true             # master switch
+  ttl_seconds: 86400        # global TTL in seconds (0 = disable); 24h default
+
 # Server bind settings — consumed by data_server and proposal_server __main__ blocks.
 # Not used by the monolithic server.py (kept for backward compatibility).
 server:

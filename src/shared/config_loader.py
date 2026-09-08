@@ -15,6 +15,7 @@ class ProviderConfig(BaseModel):
     api_key_env: str
     base_url: HttpUrl
     timeout_seconds: int
+    max_retries: int = 2
 
 
 class BotConfig(BaseModel):
@@ -61,6 +62,7 @@ def load_config(config_path: str | Path) -> AppConfig:
             api_key_env: str
             base_url: HttpUrl
             timeout_seconds: int = 120
+            max_retries: int = 2
 
         class RawBot(BaseModel):
             provider: str
@@ -114,6 +116,7 @@ def load_config(config_path: str | Path) -> AppConfig:
             api_key_env=provider["api_key_env"],
             base_url=provider["base_url"],
             timeout_seconds=int(provider.get("timeout_seconds", default_timeout_seconds)),
+            max_retries=int(provider.get("max_retries", 2)),
         )
 
     # Build Pydantic AppConfig with resolved Paths
