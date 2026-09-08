@@ -27,9 +27,9 @@ Primary sources:
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Client | `get_holdings_maturing_api_v1_clients_holdings_maturing_get` | GET | `/api/v1/clients/holdings/maturing` | Find clients with maturing fixed-income holdings | optional `product_types`, `within_days`, `as_of_date` | `{client_id, product_id, market_value, days_to_mature}` | `422` validation |
 | Client | `get_investor_readiness_api_v1_clients_readiness_get` | GET | `/api/v1/clients/readiness` | Retrieve readiness-ranked clients | optional `top_n` | readiness rank and component scores | `422` validation |
-| Product | `search_similar_products_api_v1_products_search_similar_post` | POST | `/api/v1/products/search-similar` | Find similar products and diversification alternatives | query payload + optional ranking knobs | ranked product list + similarity_score | `422` validation |
-| Product | `get_reinvestment_candidates_api_v1_products_reinvestment_candidates_post` | POST | `/api/v1/products/reinvestment-candidates` | Get reinvestment candidates from a seed product | seed product + options | ranked candidates + similarity_score | `422` validation |
-| Product | `get_product_fitness_score_api_v1_products_fitness_score_post` | POST | `/api/v1/products/fitness-score` | Score client x product candidates | `client_ids`, `product_ids`, options | `(client_id, product_id, product_name, fitness_score, component_scores)` | `422` validation |
+| Product | `search_similar_products_api_v1_products_search_similar_post` | POST | `/api/v1/products/search-similar` | Find similar products and diversification alternatives | query payload + optional ranking knobs + `min_business_days_to_maturity`/`as_of_date` | ranked product list + similarity_score + `meta.near_maturity_excluded` | `422` validation |
+| Product | `get_reinvestment_candidates_api_v1_products_reinvestment_candidates_post` | POST | `/api/v1/products/reinvestment-candidates` | Get reinvestment candidates from a seed product | seed product + options + `min_business_days_to_maturity`/`as_of_date` | ranked candidates + similarity_score + `meta.near_maturity_excluded` | `422` validation |
+| Product | `get_product_fitness_score_api_v1_products_fitness_score_post` | POST | `/api/v1/products/fitness-score` | Score client x product candidates | `client_ids`, `product_ids`, options + `min_business_days_to_maturity`/`as_of_date` | `(client_id, product_id, product_name, fitness_score, component_scores)` + `meta.near_maturity_excluded` | `422` validation |
 
 ## Usage Notes for Coding Assistants
 

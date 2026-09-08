@@ -6,7 +6,7 @@ derived fields, scores, and filtered results.  No ``duckdb`` / ``httpx`` here.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from typing import Any
 
 from src.planbot.investor_readiness_score import (
@@ -129,6 +129,50 @@ def _parse_maturity(product: dict) -> date | None:
         return date.fromisoformat(str(raw).strip())
     except (ValueError, TypeError):
         return None
+
+
+def add_business_days(ref: date, n: int) -> date:
+    """Return the date ``n`` business days (Mon–Fri) after ``ref``.
+
+    Starts from ``ref`` and advances one day at a time, counting only
+    business days (weekdays) until ``n`` have elapsed.  Weekends are skipped.
+    """
+    d = ref
+    remaining = n
+    while remaining > 0:
+        d += timedelta(days=1)
+        if d.weekday() < 5:  # Monday–Friday are business days
+            remaining -= 1
+    return d
+
+
+def filter_near_maturity(
+    products: list[dict],
+    as_of_date: str | None = None,
+    min_business_days_to_maturity: int = 2,
+) -> tuple[list[dict], list[str]]:
+    """Split ``products`` into ``(kept, excluded_ids)`` by near-maturity.
+
+    A product is excluded when it carries a parseable ``type_specific.maturity``
+    that is **strictly before** ``add_business_days(as_of_date,
+    min_business_days_to_maturity)``.  Products without a parseable maturity
+    date are always kept.
+
+    ``as_of_date`` is an ISO 8601 string; when None it defaults to the system
+    date.  The returned ``excluded_ids`` preserves the order the products were
+    encountered in.
+    """
+    ref = date.fromisoformat(as_of_date) if as_of_date else date.today()
+    cutoff = add_business_days(ref, min_business_days_to_maturity)
+    kept: list[dict] = []
+    excluded: list[str] = []
+    for p in products:
+        maturity = _parse_maturity(p)
+        if maturity is not None and maturity < cutoff:
+            excluded.append(p["product_id"])
+        else:
+            kept.append(p)
+    return kept, excluded
 
 
 def search_holdings_maturing(

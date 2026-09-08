@@ -9,7 +9,7 @@
     "/api/v1/product-investor-matcher": {
       "post": {
         "summary": "Match clients to products and rank client×product proposals",
-        "description": "Run the full product-investor matcher pipeline.\n\nMatches clients (selected by `client_selection`) against a product universe, ranks each client×product pair by buying score, and returns the top-N proposals with buying scores, investment rationale, and final proposal markdown.\n\n### Product universe\n\n`product_ids` accepts multiple entries and **unions** them into a single product universe (deduplicated, order-preserving). Interpretation depends on `product_source`:\n\n- `default_yaml` (default) — each entry may be a `product_groups` profile name from `config_planbot.yaml` (expanded to its member product IDs) or a literal product ID.\n- `request_payload` — each entry is always a literal product ID.\n\nMultiple group names are merged: e.g. `[\"structures\", \"ETF\"]` expands to the union of both groups, which is then scored and sent to the LLM as a single product catalog.\n\n### Example\n\n```json\n{\n  \"product_source\": \"default_yaml\",\n  \"product_ids\": [\"structures\", \"ETF\"],\n  \"client_selection\": {\"risk_rating\": 5},\n  \"top_n\": 3\n}\n```",
+        "description": "Run the full product-investor matcher pipeline.\n\nMatches clients (selected by `client_selection`) against a product universe, ranks each client×product pair by buying score, and returns the top-N proposals with buying scores, investment rationale, and final proposal markdown.\n\n### Product universe\n\n`product_ids` accepts multiple entries and **unions** them into a single product universe (deduplicated, order-preserving). Interpretation depends on `product_source`:\n\n- `default_yaml` (default) — each entry may be a `product_groups` profile name from `config_planbot.yaml` (expanded to its member product IDs) or a literal product ID.\n- `request_payload` — each entry is always a literal product ID.\n\nMultiple group names are merged: e.g. `[\"structures\", \"ETF\"]` expands to the union of both groups, which is then scored and sent to the LLM as a single product catalog.\n\n### Ranking and result count\n\nThe matcher ranks every client×product pair by **buying score** and returns the top `top_n` proposals.  `top_n` (default `3`, range `1`–`20`) caps how many ranked proposals are returned in `final_proposals` and mirrored in `summary.top_n_returned`.  It does **not** limit the number of clients scored — the full product universe is still evaluated for the selected clients.\n\n### Example\n\n```json\n{\n  \"product_source\": \"default_yaml\",\n  \"product_ids\": [\"structures\", \"ETF\"],\n  \"client_selection\": {\"risk_rating\": 5},\n  \"top_n\": 3\n}\n```",
         "operationId": "match_products_to_investors_endpoint_api_v1_product_investor_matcher_post",
         "requestBody": {
           "content": {
@@ -753,7 +753,7 @@
         },
         "type": "object",
         "title": "AutomatchRequest",
-        "description": "Batch product opportunity proposal via product-investor matching.\n\nExample payload::\n\n    {\n      \"product_source\": \"default_yaml\",\n      \"product_ids\": [\"bank_recommended\"],\n      \"client_selection\": {\"client_id\": [\"PB-HK-000001-8\", \"PB-HK-000005-9\"]},\n      \"run_matcher\": true,\n      \"max_proposals\": 3\n    }\n\n``client_selection`` is passed to the client API ``search`` endpoint.\nSupported keys: ``client_id`` (str or list of str), ``risk_rating``,\n``age``, ``product_types_in_holdings``, ``concentration_score``,\n``cash_score``.\n\nWhen *product_source* is ``default_yaml``, *product_ids* may contain\ngroup names defined in ``config_planbot.yaml`` under ``product_groups``\n(expanded to their member product IDs).  When *product_source* is\n``request_payload``, *product_ids* are always literal product IDs.",
+        "description": "Batch product opportunity proposal via product-investor matching.\n\nExample payload::\n\n    {\n      \"product_source\": \"default_yaml\",\n      \"product_ids\": [\"bank_recommended\"],\n      \"client_selection\": {\"client_id\": [\"PB-HK-000001-8\", \"PB-HK-000005-9\"]},\n      \"run_matcher\": true,\n      \"market_outlook_source\": \"static\",\n      \"max_proposals\": 3\n    }\n\n``client_selection`` is passed to the client API ``search`` endpoint.\nSupported keys: ``client_id`` (str or list of str), ``risk_rating``,\n``age``, ``product_types_in_holdings``, ``concentration_score``,\n``cash_score``.\n\nWhen *product_source* is ``default_yaml``, *product_ids* may contain\ngroup names defined in ``config_planbot.yaml`` under ``product_groups``\n(expanded to their member product IDs).  When *product_source* is\n``request_payload``, *product_ids* are always literal product IDs.",
         "example": {
           "client_selection": {
             "client_id": [
@@ -761,6 +761,7 @@
               "PB-HK-000005-9"
             ]
           },
+          "market_outlook_source": "static",
           "max_proposals": 3,
           "product_ids": [
             "bank_recommended"
@@ -1033,6 +1034,25 @@
             "example": [
               "diversification_score"
             ]
+          },
+          "min_business_days_to_maturity": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Min Business Days To Maturity",
+            "description": "Minimum number of business days (Mon–Fri, weekends are holidays) a candidate must have remaining to maturity in order to be kept. Candidates maturing sooner are excluded.",
+            "default": 2
+          },
+          "as_of_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Date",
+            "description": "Reference date (ISO 8601, e.g. `2026-09-08`) for the near-maturity check. Defaults to the server system date."
           }
         },
         "type": "object",
@@ -1737,6 +1757,7 @@
             "maximum": 20.0,
             "minimum": 1.0,
             "title": "Top N",
+            "description": "Number of top-ranked client×product proposals to return in `final_proposals` (and `summary.top_n_returned`).  Proposals are ranked by buying score, highest first.",
             "default": 3,
             "example": 3
           },
@@ -2069,6 +2090,25 @@
             ],
             "title": "Exclude Product Ids",
             "description": "Product IDs to exclude from the candidate set (e.g. the source product being replaced)."
+          },
+          "min_business_days_to_maturity": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Min Business Days To Maturity",
+            "description": "Minimum number of business days (Mon–Fri, weekends are holidays) a candidate must have remaining to maturity in order to be kept. Candidates maturing sooner are excluded.",
+            "default": 2
+          },
+          "as_of_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Date",
+            "description": "Reference date (ISO 8601, e.g. `2026-09-08`) for the near-maturity check. Defaults to the server system date."
           }
         },
         "type": "object",
@@ -2158,6 +2198,25 @@
             "example": [
               "PROD053"
             ]
+          },
+          "min_business_days_to_maturity": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Min Business Days To Maturity",
+            "description": "Minimum number of business days (Mon–Fri, weekends are holidays) a candidate must have remaining to maturity in order to be kept. Candidates maturing sooner are excluded.",
+            "default": 2
+          },
+          "as_of_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Date",
+            "description": "Reference date (ISO 8601, e.g. `2026-09-08`) for the near-maturity check. Defaults to the server system date."
           }
         },
         "type": "object",

@@ -20,6 +20,7 @@ from typing import Any
 import yaml
 
 from src.shared.product_family import get_product_family
+from src.planbot.client_enrichment import filter_near_maturity
 from src.planbot.investor_readiness_score import score_concentration_risk
 from src.planbot.product_scoring import (
     _build_similarity_query_from_product,
@@ -133,6 +134,8 @@ def search_similar(
     diversification: bool = True,
     max_candidates_per_product_type: int = 2,
     exclude_product_ids: list[str] | None = None,
+    as_of_date: str | None = None,
+    min_business_days_to_maturity: int = 2,
 ) -> dict:
     """Proximity search returning products ranked by similarity.
 
@@ -151,6 +154,12 @@ def search_similar(
         Max candidates per product_type group when diversification=True.
     exclude_product_ids : list[str] | None
         Product IDs to exclude.
+    as_of_date : str | None
+        Reference date (ISO 8601) for the near-maturity check; defaults to the
+        system date.
+    min_business_days_to_maturity : int
+        Minimum business days to maturity a candidate must have to be kept
+        (default 2).
     """
     config = _product_scoring_config()
     weights = config.get("search_similar_weights", {})
@@ -173,6 +182,13 @@ def search_similar(
     if risk_rating_hard_filter and query.get("risk_rating") is not None:
         q_rr = query["risk_rating"]
         products = [p for p in products if (p["risk_rating"] or 999) <= q_rr]
+
+    # Near-maturity filter
+    products, near_maturity_excluded = filter_near_maturity(
+        products,
+        as_of_date=as_of_date,
+        min_business_days_to_maturity=min_business_days_to_maturity,
+    )
 
     # Compute sigmas — YAML first, fallback to population std dev
     sigmas: dict[str, float] = {}
@@ -238,6 +254,11 @@ def search_similar(
             }
             for p in result
         ],
+        "meta": {
+            "as_of_date": as_of_date or date.today().isoformat(),
+            "min_business_days_to_maturity": min_business_days_to_maturity,
+            "near_maturity_excluded": near_maturity_excluded,
+        },
     }
     LOGGER.debug("search_similar output: %s", response)
     return response
@@ -254,6 +275,8 @@ def search_similar_to_product(
     max_candidates_per_product_type: int = 2,
     risk_rating_hard_filter: bool = True,
     exclude_product_ids: list[str] | None = None,
+    as_of_date: str | None = None,
+    min_business_days_to_maturity: int = 2,
 ) -> dict:
     """Find products similar to *product*, automatically excluding the anchor.
 
@@ -269,6 +292,8 @@ def search_similar_to_product(
         max_candidates_per_product_type=max_candidates_per_product_type,
         risk_rating_hard_filter=risk_rating_hard_filter,
         exclude_product_ids=exclude,
+        as_of_date=as_of_date,
+        min_business_days_to_maturity=min_business_days_to_maturity,
     )
 
 
@@ -280,6 +305,8 @@ def search_reinvestment_candidates(
     max_candidates_per_client: int | None = None,
     risk_rating_hard_filter: bool = True,
     exclude_product_ids: list[str] | None = None,
+    as_of_date: str | None = None,
+    min_business_days_to_maturity: int = 2,
 ) -> dict:
     """Find reinvestment candidates per client using search_similar.
 
@@ -297,6 +324,12 @@ def search_reinvestment_candidates(
         Passed through to search_similar.
     exclude_product_ids : list[str] | None
         Passed through to search_similar.
+    as_of_date : str | None
+        Reference date (ISO 8601) for the near-maturity check; defaults to the
+        system date.
+    min_business_days_to_maturity : int
+        Minimum business days to maturity a candidate must have to be kept
+        (default 2).
     """
     LOGGER.debug("search_reinvestment_candidates input: client_ids=%s source_product_id=%s max_candidates_per_product_type=%s max_candidates_per_client=%s risk_rating_hard_filter=%s exclude=%s",
                  client_ids, source_product_id, max_candidates_per_product_type, max_candidates_per_client, risk_rating_hard_filter, exclude_product_ids)
@@ -305,6 +338,7 @@ def search_reinvestment_candidates(
         raise ValueError(f"Source product not found: {source_product_id}")
 
     results: dict[str, list] = {}
+    meta: dict = {}
     for cid in client_ids:
         sim_result = search_similar_to_product(
             source,
@@ -313,6 +347,8 @@ def search_reinvestment_candidates(
             diversification=True,
             max_candidates_per_product_type=max_candidates_per_product_type,
             exclude_product_ids=exclude_product_ids,
+            as_of_date=as_of_date,
+            min_business_days_to_maturity=min_business_days_to_maturity,
         )
         client_results = sim_result.get("results", [])
         if max_candidates_per_client:
@@ -327,8 +363,11 @@ def search_reinvestment_candidates(
             }
             for r in client_results
         ]
+        # The maturity filter operates on the whole product universe (not per
+        # client), so its meta is identical across clients — keep the last.
+        meta = sim_result.get("meta", {})
 
-    response = {"results_by_client": results}
+    response = {"results_by_client": results, "meta": meta}
     LOGGER.debug("search_reinvestment_candidates output: %s", response)
     return response
 
@@ -397,6 +436,8 @@ def search_product_by_fitness_score(
     top_n: int = 10,
     risk_rating_hard_filter: bool = True,
     exclude_dimensions: list[str] | None = None,
+    as_of_date: str | None = None,
+    min_business_days_to_maturity: int = 2,
 ) -> dict:
     """Compute product fitness score for client×product pairs.
 
@@ -409,6 +450,12 @@ def search_product_by_fitness_score(
         Default True — enforce product.risk_rating <= client.risk_rating.
     exclude_dimensions : list[str] | None
         Dimensions to exclude. None = all 4 included.
+    as_of_date : str | None
+        Reference date (ISO 8601) for the near-maturity check; defaults to the
+        system date.
+    min_business_days_to_maturity : int
+        Minimum business days to maturity a candidate must have to be kept
+        (default 2).
     """
     config = _product_scoring_config()
     weights = config.get("product_fitness_weights", {})
@@ -435,6 +482,17 @@ def search_product_by_fitness_score(
 
     clients_map: dict[str, dict] = {c["client_id"]: c for c in clients}
     products_map: dict[str, dict] = {p["product_id"]: p for p in products}
+
+    # Near-maturity filter — applies ONLY to the candidate `product_ids` being
+    # scored, never to the holdings used for enrichment.
+    candidate_products = [products_map[pid] for pid in product_ids if pid in products_map]
+    _, near_maturity_excluded = filter_near_maturity(
+        candidate_products,
+        as_of_date=as_of_date,
+        min_business_days_to_maturity=min_business_days_to_maturity,
+    )
+    excluded_set = set(near_maturity_excluded)
+    scorable_product_ids = [pid for pid in product_ids if pid not in excluded_set]
 
     # Group + normalize holdings by client, enriching with product_type
     holdings_by_client: dict[str, list[dict]] = {}
@@ -491,7 +549,7 @@ def search_product_by_fitness_score(
         held_product_types = {h["product_type"] for h in holdings_cid if h["product_type"]}
         held_product_families = {get_product_family(pt) for pt in held_product_types}
 
-        for pid in product_ids:
+        for pid in scorable_product_ids:
             product = products_map.get(pid)
             if product is None:
                 continue
@@ -657,6 +715,11 @@ def search_product_by_fitness_score(
 
     return {
         "results": results,
-        "meta": {"semantic_embedding_available": semantic_embedding_available},
+        "meta": {
+            "semantic_embedding_available": semantic_embedding_available,
+            "as_of_date": as_of_date or date.today().isoformat(),
+            "min_business_days_to_maturity": min_business_days_to_maturity,
+            "near_maturity_excluded": near_maturity_excluded,
+        },
         "warnings": warnings,
     }

@@ -44,6 +44,8 @@ API input parameters:
 | `top_n` | int | 10 | Max rows returned (1-50) |
 | `risk_rating_hard_filter` | bool | true | Enforce `product.risk_rating <= client.risk_rating` |
 | `exclude_dimensions` | list[str] | null | Dimensions to drop before renormalizing weights |
+| `min_business_days_to_maturity` | int | 2 | Minimum business days (Mon–Fri, weekends skipped) to maturity a candidate must have to be kept; candidates maturing sooner are excluded |
+| `as_of_date` | str (ISO 8601) | server date | Reference date for the near-maturity check |
 
 ### Scoring behavior
 

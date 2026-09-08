@@ -135,6 +135,17 @@ _EXCLUDE_DIMENSIONS_DOC = (
     "`diversification_score`). Omit to include all components."
 )
 
+_MIN_BUSINESS_DAYS_DOC = (
+    "Minimum number of business days (Mon–Fri, weekends are holidays) a "
+    "candidate must have remaining to maturity in order to be kept. "
+    "Candidates maturing sooner are excluded."
+)
+
+_AS_OF_DATE_DOC = (
+    "Reference date (ISO 8601, e.g. `2026-09-08`) for the near-maturity "
+    "check. Defaults to the server system date."
+)
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Request models
@@ -372,7 +383,17 @@ class ProductInvestorMatcherRequest(BaseModel):
         ),
         json_schema_extra={"example": {"client_id": ["PB-HK-000001-8", "PB-HK-000005-9"]}},
     )
-    top_n: int = Field(3, ge=1, le=20, json_schema_extra={"example": 3})
+    top_n: int = Field(
+        3,
+        ge=1,
+        le=20,
+        description=(
+            "Number of top-ranked client×product proposals to return in "
+            "`final_proposals` (and `summary.top_n_returned`).  Proposals are "
+            "ranked by buying score, highest first."
+        ),
+        json_schema_extra={"example": 3},
+    )
     market_outlook: str | None = Field(
         default=None, json_schema_extra={"example": "Rates remain elevated; favor short-duration high-quality credit over long duration."},
     )
@@ -420,6 +441,13 @@ class ProductInvestorMatcherResponse(BaseModel):
         "Multiple group names are merged: e.g. `[\"structures\", \"ETF\"]` "
         "expands to the union of both groups, which is then scored and sent "
         "to the LLM as a single product catalog.\n\n"
+        "### Ranking and result count\n\n"
+        "The matcher ranks every client×product pair by **buying score** and "
+        "returns the top `top_n` proposals.  `top_n` (default `3`, range "
+        "`1`–`20`) caps how many ranked proposals are returned in "
+        "`final_proposals` and mirrored in `summary.top_n_returned`.  It does "
+        "**not** limit the number of clients scored — the full product "
+        "universe is still evaluated for the selected clients.\n\n"
         "### Example\n\n"
         "```json\n"
         "{\n"
@@ -882,6 +910,12 @@ class SimilarProductSearchRequest(BaseModel):
     exclude_product_ids: list[str] | None = Field(
         None, description=_EXCLUDE_PRODUCT_IDS_DOC, json_schema_extra={"example": ["PROD053"]},
     )
+    min_business_days_to_maturity: int = Field(
+        2, ge=1, description=_MIN_BUSINESS_DAYS_DOC,
+    )
+    as_of_date: str | None = Field(
+        None, description=_AS_OF_DATE_DOC,
+    )
 
 
 class ReinvestmentCandidatesRequest(BaseModel):
@@ -898,6 +932,12 @@ class ReinvestmentCandidatesRequest(BaseModel):
     max_candidates_per_client: int | None = Field(None, ge=1, le=50)
     risk_rating_hard_filter: bool = Field(True, description=_RISK_RATING_HARD_FILTER_DOC)
     exclude_product_ids: list[str] | None = Field(None, description=_EXCLUDE_PRODUCT_IDS_DOC)
+    min_business_days_to_maturity: int = Field(
+        2, ge=1, description=_MIN_BUSINESS_DAYS_DOC,
+    )
+    as_of_date: str | None = Field(
+        None, description=_AS_OF_DATE_DOC,
+    )
 
 
 class FitnessScoreRequest(BaseModel):
@@ -914,6 +954,12 @@ class FitnessScoreRequest(BaseModel):
     exclude_dimensions: list[str] | None = Field(
         None, description=_EXCLUDE_DIMENSIONS_DOC,
         json_schema_extra={"example": ["diversification_score"]},
+    )
+    min_business_days_to_maturity: int = Field(
+        2, ge=1, description=_MIN_BUSINESS_DAYS_DOC,
+    )
+    as_of_date: str | None = Field(
+        None, description=_AS_OF_DATE_DOC,
     )
 
 
@@ -1145,6 +1191,8 @@ def search_similar_products(body: SimilarProductSearchRequest) -> dict:
         diversification=body.diversification,
         max_candidates_per_product_type=body.max_candidates_per_product_type,
         exclude_product_ids=body.exclude_product_ids,
+        as_of_date=body.as_of_date,
+        min_business_days_to_maturity=body.min_business_days_to_maturity,
     )
 
 
@@ -1173,6 +1221,8 @@ def get_reinvestment_candidates(body: ReinvestmentCandidatesRequest) -> dict:
         max_candidates_per_client=body.max_candidates_per_client,
         risk_rating_hard_filter=body.risk_rating_hard_filter,
         exclude_product_ids=body.exclude_product_ids,
+        as_of_date=body.as_of_date,
+        min_business_days_to_maturity=body.min_business_days_to_maturity,
     )
 
 
@@ -1197,6 +1247,8 @@ def get_product_fitness_score(body: FitnessScoreRequest) -> dict:
         top_n=body.top_n,
         risk_rating_hard_filter=body.risk_rating_hard_filter,
         exclude_dimensions=body.exclude_dimensions,
+        as_of_date=body.as_of_date,
+        min_business_days_to_maturity=body.min_business_days_to_maturity,
     )
 
 
