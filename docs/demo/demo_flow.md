@@ -162,10 +162,13 @@ POST /api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings
    (`results_by_client`), plus a generated proposal (`proposal_markdown`)
    recommending a replacement product with a funding source.
 
+> **Related clients.**  `PROD053` is held by three clients; with `max_clients: 1`
+> the discovery endpoint deterministically returns **`PB-HK-000007-5` (Akira
+> Tanaka)** — see `demo_test_data.md` §4.0 for the full holder list and ordering.
+>
 > **Determinism.**  `as_of_date` is pinned to `2026-08-01` so `PROD053` (matures
 > 2026-08-31) is reliably "30 days out" — the discovery result no longer drifts
-> with the system date.  Asserting ≥1 client (not a specific one) sidesteps the
-> endpoint's non-deterministic tie-break between holders.
+> with the system date.
 
 ## Test data
 
@@ -211,8 +214,3 @@ repeatable.
    `POST /api/v1/demo/reset` (restore baseline); see
    `docs/specification/demo/demo_tool_api.md`.
 
-## Open questions for discussion
-
-1. **Script vs Swagger.**  Should the deliverable be a single runnable script
-   (bash/curl or Python) that posts to all three demos and asserts results, or
-   Swagger-driven manual steps?

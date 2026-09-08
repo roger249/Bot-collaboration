@@ -1,11 +1,13 @@
 {
     "D2.previewLayout": "elk",
     "python.testing.pytestArgs": [
-        "tests"
+        "tests",
+        "--run-slow"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "python.terminal.useEnvFile": true,
+
     "python.envFile": "${workspaceFolder}/.env",
     "python.analysis.extraPaths": [
         "${workspaceFolder}"

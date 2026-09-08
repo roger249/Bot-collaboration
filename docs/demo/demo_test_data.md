@@ -73,6 +73,23 @@ Two bonds carry an explicit maturity in the current data:
 | `PROD053` | US Treasury 4.375% 31Aug26 | `2026-08-31` | `PB-HK-000007-5`, `PB-HK-000012-5`, `PB-HK-000018-2` |
 | `PROD054` | US Treasury 3.75% 30Jun27 | `2027-06-30` | `PB-HK-000009-1`, `PB-HK-000021-6` |
 
+### 4.0 Related clients — the `PROD053` holders
+
+The demo exercises `PROD053` (the bond that matures within the pinned window).
+Its three holders, in the order the discovery endpoint returns them:
+
+| Order | `client_id` | Name | `PROD053` market value |
+|---|---|---|---|
+| 1 | `PB-HK-000007-5` | Akira Tanaka | `3,360,000` |
+| 2 | `PB-HK-000012-5` | Harrison Holdings Ltd. | `1,750,000` |
+| 3 | `PB-HK-000018-2` | Emily Zhang | `924,000` |
+
+The discovery endpoint orders results by `(days_to_mature asc, market_value desc)`.
+Since all three holders hold the **same** `PROD053` bond, their `days_to_mature`
+is identical (`30` with the pinned `as_of_date`), so the tie-break is
+`market_value desc` — i.e. the ordering above is **deterministic**, and with
+`max_clients: 1` the returned client is always **`PB-HK-000007-5` (Akira Tanaka)**.
+
 ### 4.1 Determinism problem
 
 The discovery endpoint defaults `as_of_date` to `date.today()`, and its maturity
@@ -101,9 +118,9 @@ the demo is deterministic regardless of when it runs:
 
 With `as_of_date = 2026-08-01` and `within_days = 60`, `PROD053` (matures
 2026-08-31) is **30 days out** → reliably discovered.  This requires **no data
-change**.  The test asserts **≥1 client** with a maturing holding (not a
-specific client), since the exact holder returned by the discovery endpoint is
-non-deterministic (ordered by `days_to_mature`, then `market_value desc`).
+change**.  The test asserts **≥1 client** with a maturing holding; with
+`max_clients: 1` the returned client is deterministically
+**`PB-HK-000007-5` (Akira Tanaka)** — see §4.0.
 
 > **Alternative (if a "live" date is preferred):** add a dedicated demo bond
 > whose `type_specific.maturity` is always `CURRENT_DATE + 30 days` (a rolling
