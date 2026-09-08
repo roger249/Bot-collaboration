@@ -1,0 +1,45 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "pytest: demo flow (parallel)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": [
+        "-m",
+        "pytest",
+        "tests/test_demo_flow.py",
+        "--run-slow",
+        "-m",
+        "parallel",
+        "-n",
+        "3",
+        "-v"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "pytest: all tests (skip parallel)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": [
+        "-m",
+        "pytest",
+        "tests",
+        "--run-slow",
+        "-m",
+        "not parallel",
+        "-v"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    }
+  ]
+}

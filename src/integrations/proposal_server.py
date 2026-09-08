@@ -82,8 +82,6 @@ _COMMON_SCORING_PARAMS_DOC = (
     "| `risk_rating_hard_filter` | bool | When `true`, only products with "
     "`risk_rating <= client.risk_rating` are considered. Default `true`. |\n"
     "| `response_mode` | enum | " + _RESPONSE_MODE_DOC + " Default `path`. |\n"
-    "| `include_market_outlook` | bool | Include the market outlook section. "
-    "Default `true`. |\n"
     "| `output_prompt_to_llm` | bool | Include the exact prompt sent to the LLM "
     "(per result item, as `prompt_to_llm`). Default `false`. |"
 )
@@ -219,10 +217,6 @@ class ProposeReinvestmentRequest(BaseModel):
         "'path' = only the output file path. 'markdown' = only the markdown. "
         "'both' = path + markdown.",
     )
-    include_market_outlook: bool = Field(
-        True,
-        description="Include the market outlook section in the proposal.",
-    )
     output_prompt_to_llm: bool = Field(
         False,
         description="Include the exact prompt sent to the LLM (per result item, "
@@ -264,9 +258,6 @@ class MaturingHoldingsRequest(BaseModel):
         description="How the proposal is returned in the response. "
         "'path' = only the output file path. 'markdown' = only the markdown. "
         "'both' = path + markdown.",
-    )
-    include_market_outlook: bool = Field(
-        True, description="Include market outlook in the proposal",
     )
     output_prompt_to_llm: bool = Field(
         False, description="Include the exact prompt sent to the LLM (per result item, as prompt_to_llm) in the response",
@@ -522,7 +513,6 @@ def get_reinvestment_proposals(body: ProposeReinvestmentRequest) -> dict:
         max_candidates_per_client=body.max_candidates_per_client,
         risk_rating_hard_filter=body.risk_rating_hard_filter,
         response_mode=body.response_mode,
-        include_market_outlook=body.include_market_outlook,
         output_prompt_to_llm=body.output_prompt_to_llm,
         market_outlook=body.market_outlook,
         market_outlook_source=body.market_outlook_source,
@@ -558,7 +548,6 @@ def propose_for_maturing_holdings(body: MaturingHoldingsRequest) -> dict:
         max_candidates_per_client=body.max_candidates_per_client,
         risk_rating_hard_filter=body.risk_rating_hard_filter,
         response_mode=body.response_mode,
-        include_market_outlook=body.include_market_outlook,
         output_prompt_to_llm=body.output_prompt_to_llm,
         market_outlook=body.market_outlook,
         market_outlook_source=body.market_outlook_source,

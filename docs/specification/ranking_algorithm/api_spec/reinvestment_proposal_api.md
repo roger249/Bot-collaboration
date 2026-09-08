@@ -161,7 +161,6 @@ generate_reinvestment_proposal(
    max_candidates_per_client: int = 10,
    risk_rating_hard_filter: bool = True,
    response_mode: str = "path",  # one of: path, markdown, both
-   include_market_outlook: bool = True,
    output_prompt_to_llm: bool = False,
    market_outlook: str | None = None,
    market_outlook_source: str | None = None,  # "request" | "static"
@@ -177,7 +176,6 @@ generate_reinvestment_proposal(
 - `max_candidates_per_client`: maximum number of candidate products passed to the LLM.
 - `risk_rating_hard_filter`: boolean, whether to enforce the hard risk filter in the product API. Default is `True`.
 - `response_mode`: one of `path`, `markdown`, `both`. Default is `path`.
-- `include_market_outlook`: whether to render the market outlook section in the proposal.
 - `output_prompt_to_llm`: whether to return the exact prompt sent to the LLM (as `prompt_to_llm`, per result item). Default is `False`.
 - `market_outlook`: free-form market narrative (markdown) for the LLM context.
 - `market_outlook_source`: `"request"` (use `market_outlook`, else static default) or `"static"` (always use the static default). Defaults to the yaml `default_source` (currently `"request"`).
@@ -214,7 +212,6 @@ Proposed endpoint:
    "max_candidates_per_client": 10,
    "risk_rating_hard_filter": true,
    "response_mode": "path",
-   "include_market_outlook": true,
    "output_prompt_to_llm": false
 }
 ```

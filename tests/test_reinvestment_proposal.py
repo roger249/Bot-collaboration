@@ -385,7 +385,6 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
                 "max_candidates_per_client": 5,
                 "risk_rating_hard_filter": False,
                 "response_mode": "both",
-                "include_market_outlook": False,
                 "output_prompt_to_llm": True,
             },
         )
@@ -396,7 +395,6 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
             max_candidates_per_client=5,
             risk_rating_hard_filter=False,
             response_mode="both",
-            include_market_outlook=False,
             output_prompt_to_llm=True,
             market_outlook=None,
             market_outlook_source=None,
@@ -439,7 +437,6 @@ class TestFastAPIReinvestmentEndpoints(unittest.TestCase):
             max_candidates_per_client=10,
             risk_rating_hard_filter=True,
             response_mode="path",
-            include_market_outlook=True,
             output_prompt_to_llm=False,
             market_outlook=None,
             market_outlook_source=None,

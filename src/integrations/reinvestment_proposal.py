@@ -59,7 +59,6 @@ def propose_reinvestment(
     max_candidates_per_client: int = 10,
     risk_rating_hard_filter: bool = True,
     response_mode: str = "path",
-    include_market_outlook: bool = True,
     output_prompt_to_llm: bool = False,
     market_outlook: str | None = None,
     market_outlook_source: str | None = None,
@@ -78,8 +77,6 @@ def propose_reinvestment(
         Whether to enforce the hard risk filter in the product API.
     response_mode : str
         One of ``path``, ``markdown``, ``both``.
-    include_market_outlook : bool
-        Whether to render the market-outlook section in the proposal.
     output_prompt_to_llm : bool
         Whether to return the exact prompt sent to the LLM (per item, as
         ``prompt_to_llm``).  Independent of ``response_mode``.
@@ -132,7 +129,6 @@ def propose_reinvestment(
                 max_candidates_per_client=max_candidates_per_client,
                 risk_rating_hard_filter=risk_rating_hard_filter,
                 response_mode=response_mode,
-                include_market_outlook=include_market_outlook,
                 output_prompt_to_llm=output_prompt_to_llm,
                 market_outlook=market_outlook,
                 market_outlook_source=market_outlook_source,
@@ -168,7 +164,6 @@ def propose_reinvestment_for_maturing_holdings(
     max_candidates_per_client: int = 10,
     risk_rating_hard_filter: bool = True,
     response_mode: str = "path",
-    include_market_outlook: bool = True,
     output_prompt_to_llm: bool = False,
     market_outlook: str | None = None,
     market_outlook_source: str | None = None,
@@ -194,8 +189,6 @@ def propose_reinvestment_for_maturing_holdings(
     risk_rating_hard_filter : bool
         Passed to :func:`propose_reinvestment`.
     response_mode : str
-        Passed to :func:`propose_reinvestment`.
-    include_market_outlook : bool
         Passed to :func:`propose_reinvestment`.
     output_prompt_to_llm : bool
         Passed to :func:`propose_reinvestment`.
@@ -235,7 +228,6 @@ def propose_reinvestment_for_maturing_holdings(
         max_candidates_per_client=max_candidates_per_client,
         risk_rating_hard_filter=risk_rating_hard_filter,
         response_mode=response_mode,
-        include_market_outlook=include_market_outlook,
         output_prompt_to_llm=output_prompt_to_llm,
         market_outlook=market_outlook,
         market_outlook_source=market_outlook_source,
@@ -255,7 +247,6 @@ def _process_one_target(
     max_candidates_per_client: int,
     risk_rating_hard_filter: bool,
     response_mode: str,
-    include_market_outlook: bool,
     output_prompt_to_llm: bool,
     market_outlook: str | None = None,
     market_outlook_source: str | None = None,
@@ -363,7 +354,7 @@ def _process_one_target(
             pfs_scores=pfs_scores or None,
             semantic_embedding_available=semantic_available if pfs_scores else None,
         ),
-        market_outlook=effective_market_outlook if include_market_outlook else None,
+        market_outlook=effective_market_outlook,
     )
 
     # ── Build runtime reference overrides for the api-backed sections ──
@@ -372,7 +363,7 @@ def _process_one_target(
         "client_profile": [API_CLIENT_PROFILE],
         "product_catalog": [API_PRODUCT_CATALOG],
     }
-    if include_market_outlook and effective_market_outlook is not None:
+    if effective_market_outlook is not None:
         runtime_overrides["market_outlook"] = [API_MARKET_OUTLOOK]
 
     # ── Build client-scoped output filename ────────────────────────────

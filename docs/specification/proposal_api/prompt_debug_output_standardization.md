@@ -28,7 +28,7 @@ the overlapping flags so we can decide whether to merge them.
 | Proposal | Debug/prompt inputs | Debug/prompt outputs |
 |---|---|---|
 | `llm_product_matcher` | `output_prompt_to_llm` (bool) | `prompt_to_llm` (str — exact `prompt_snapshot.md`) |
-| `reinvestment` (both endpoints) | `include_llm_input`, `include_debug_scores`, `include_market_outlook`, `response_mode` | `llm_input` (structured summary), `debug_scores` (scorecard) |
+| `reinvestment` (both endpoints) | `include_llm_input`, `include_debug_scores`, `response_mode` | `llm_input` (structured summary), `debug_scores` (scorecard) |
 | `product_investor_matching` | — | — |
 | `product_opportunity` | — | `metadata` (dict — partial) |
 | `portfolio_review` | — | — |
@@ -73,15 +73,14 @@ Decisions folded in (from the earlier discussion):
   supersedes the curated summary; retire `build_llm_input()` in the same change.
 - **Drop `include_debug_scores` / `debug_scores`** — the prompt already carries
   the inputs the scorecard derives from.
-- **Keep `include_market_outlook`** — it is a *content* toggle (renders the
-  market-outlook section in the proposal), not a debug flag.
+- **Drop `include_market_outlook`** — the market-outlook section is no longer a
+  per-endpoint content toggle; `market_outlook` / `market_outlook_source` (the
+  common standard across all proposals) control the market narrative.
 - **Naming** — keep `output_prompt_to_llm`. Convention: `include_*` means
-  "include X **into the prompt**" (a content toggle, e.g. `include_market_outlook`,
-  `include_references`), whereas `output_*` means "emit X **in the API
-  response**". Since this flag controls the response payload (not the prompt
-  content), `output_prompt_to_llm` is the correct name — `include_prompt_to_llm`
-  would be misleading. The two API `include_*` debug flags are dropped in this
-  refactor anyway, so no renaming ambiguity remains.
+  "include X **into the prompt**" (a content toggle, e.g. `include_references`),
+  whereas `output_*` means "emit X **in the API response**". Since this flag
+  controls the response payload (not the prompt content), `output_prompt_to_llm`
+  is the correct name — `include_prompt_to_llm` would be misleading.
 
 Implementation is trivial and uniform: `run_crew_planbot` already returns
 `PlanBotResult.prompt_path`, so each integration just reads that file (or the
@@ -140,13 +139,14 @@ scorecard is derived from; the intermediate readiness/similarity numbers add
 little beyond what the prompt exposes. This leaves a single diagnostic flag —
 `output_prompt_to_llm` — with no grouping question to resolve.
 
-### 4.3 `include_market_outlook` (content toggle, NOT a debug flag)
+### 4.3 `include_market_outlook` (removed — aligned to common `market_outlook` standard)
 
-Unlike the two flags above, `include_market_outlook` controls the **content of
-the proposal itself** (whether the market-outlook section is rendered), not
-whether diagnostic data is returned. It is **kept as-is** and is the only
-surviving `include_*` request field after the two drops. Its `include_` prefix
-is therefore no longer part of a "debug family" — it's a content knob.
+The reinvestment endpoints previously had an `include_market_outlook` boolean
+that toggled whether the market-outlook section was rendered.  This was
+inconsistent with the other proposals, which carry only the common
+`market_outlook` + `market_outlook_source` pair.  It has been **removed** — the
+market narrative is now governed solely by `market_outlook` /
+`market_outlook_source` (the same standard every proposal uses).
 
 ### 4.4 `response_mode` (`path` / `markdown` / `both`)
 
@@ -170,7 +170,7 @@ This matches how the existing `include_*` flags already behave.
 |---|---|---|---|---|
 | `include_llm_input` | `false` | return `llm_input` (structured input summary) | debug | **drop** (§4.1) |
 | `include_debug_scores` | `false` | return `debug_scores` (scorecard) | debug | **drop** (§4.2) |
-| `include_market_outlook` | `true` | render market-outlook section in the *proposal* | content | keep |
+| `include_market_outlook` | `true` | render market-outlook section in the *proposal* | content | **drop** (§4.3) |
 
 **2. Prompt-packaging YAML** (`config_planbot.yaml` → `pipeline.<id>.prompt_packaging.llm_payload`):
 

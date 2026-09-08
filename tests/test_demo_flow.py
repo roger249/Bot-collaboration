@@ -16,7 +16,7 @@ import time
 import httpx
 import pytest
 
-pytestmark = [pytest.mark.demo, pytest.mark.slow]
+pytestmark = [pytest.mark.demo, pytest.mark.slow, pytest.mark.parallel]
 
 BASE = None  # set from the proposal_server fixture via fixture injection
 

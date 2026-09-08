@@ -90,9 +90,10 @@ instructions: |
 ### Detailed Justification (For Bank Internal)
 ```yaml
 instructions: |
-  Write 2–3 paragraphs that tie together all of the following:
+  Write in points form about the following:
 
-  1. **Client-need alignment** — Which specific financial needs from the client
+  1. Evaluated products and why this one are suggested, and not the others.
+  1. **Client-need alignment** (if relevant) — Which specific financial needs from the client
      profile does this product address?  Reference the stated needs explicitly
      (e.g., "long-term capital growth," "income generation," "capital preservation").
   2. **Fitness-score interpretation** — Reference the fitness score and its
@@ -102,7 +103,7 @@ instructions: |
      sell?  Address opportunity cost, concentration impact, and tax/liquidity
      implications where data supports it.
   4. **Market context** — How does the current market outlook support or caution
-     against this recommendation at this time?
+     against this recommendation at this time?  Good to refer to the market_outlook material for relevant excerpt.
 
   Do not repeat the product specifications table.  Assume the reader has already
   seen it.
@@ -150,41 +151,4 @@ instructions: |
   `proposal_section_instructions/reference_instruction.md`.
 
   Output this section as a level-2 heading (##).
-```
-
----
-
-## Machine-Readable Proposal Data
-```yaml
-instructions: |
-  After ALL sections above, output a JSON block enclosed between these exact
-  marker lines (each on its own line, no leading/trailing whitespace):
-
-  ---** PROPOSAL_JSON **---
-  { ... JSON content ... }
-  ---** END_PROPOSAL_JSON **---
-
-  The JSON block shall contain assumptions and structured data only — do NOT
-  include portfolio-level computed totals, markdown, or prose.  Use this
-  structure:
-  {
-    "client_id": "...",
-    "product_id": "...",
-    "recommended_action": "buy" | "sell",
-    "amount_usd": ...,
-    "pct_of_aum": ...,
-    "funding_source_product_id": "...",
-    "fitness_score": ...,
-    "fitness_components": {
-      "risk_match": ...,
-      "concentration": ...,
-      "experience": ...,
-      "better_product": ...
-    },
-    "scenario_returns": {
-      "upside": { "suggested_pct": ..., "current_pct": ..., "probability_pct": ... },
-      "normal":  { "suggested_pct": ..., "current_pct": ..., "probability_pct": ... },
-      "downside":{ "suggested_pct": ..., "current_pct": ..., "probability_pct": ... }
-    }
-  }
 ```
