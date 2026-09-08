@@ -608,6 +608,79 @@
           }
         }
       }
+    },
+    "/api/v1/demo/clients/{client_id}": {
+      "patch": {
+        "summary": "Set a client's RM note (demo only)",
+        "description": "Update a client's ``qualitative_profile`` (demo/test data mutation).",
+        "operationId": "demo_patch_client_api_v1_demo_clients__client_id__patch",
+        "parameters": [
+          {
+            "name": "client_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Client Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoPatchClientRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Demo Patch Client Api V1 Demo Clients  Client Id  Patch"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/reset": {
+      "post": {
+        "summary": "Reset demo test data to canonical baseline",
+        "description": "Restore all demo-mutated test data to the canonical baseline.",
+        "operationId": "demo_reset_api_v1_demo_reset_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Demo Reset Api V1 Demo Reset Post"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -927,6 +1000,19 @@
         "additionalProperties": true,
         "type": "object",
         "title": "ComponentScores"
+      },
+      "DemoPatchClientRequest": {
+        "properties": {
+          "qualitative_profile": {
+            "type": "string",
+            "title": "Qualitative Profile"
+          }
+        },
+        "type": "object",
+        "required": [
+          "qualitative_profile"
+        ],
+        "title": "DemoPatchClientRequest"
       },
       "FitnessScoreItem": {
         "properties": {

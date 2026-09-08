@@ -338,6 +338,38 @@ class TestProductInvestorMatcher(unittest.TestCase):
         self.assertEqual(result["summary"]["status"], "warning")
         self.assertIn("NO_ELIGIBLE_CLIENTS", result["warnings"])
 
+    def test_explicit_client_id_bypasses_readiness_intersection(self):
+        """An explicitly requested client is used even if outside the readiness pool."""
+        with patch(
+            "src.integrations.product_investor_matcher.search",
+            return_value=[
+                {"client_id": "PB-HK-000007-5", "name": "Akira Tanaka", "risk_rating": 4},
+            ],
+        ), patch(
+            "src.integrations.product_investor_matcher.search_by_investor_readiness_score",
+            # Readiness top-K does NOT include the explicitly requested client.
+            return_value=[
+                {"rank": 1, "client_id": "PB-HK-000001-8", "name": "David Kim", "total_score": 29.5},
+            ],
+        ), patch(
+            "src.integrations.product_investor_matcher.search_product_by_fitness_score",
+            return_value={"results": [], "meta": {"semantic_embedding_available": True}},
+        ):
+            self.mock_run_crew.side_effect = [
+                _make_crew_result(SAMPLE_MATCHING_MARKDOWN),
+            ]
+
+            result = product_investor_matcher(
+                product_ids=["ETF-HYG"],
+                client_selection={"client_id": ["PB-HK-000007-5"]},
+                top_n=1,
+            )
+
+        # The explicit client must NOT be dropped by the readiness intersection.
+        self.assertEqual(result["summary"]["status"], "success")
+        self.assertEqual(result["summary"]["clients_after_readiness"], 1)
+        self.assertNotIn("NO_ELIGIBLE_CLIENTS", result["warnings"])
+
     # ── error paths ─────────────────────────────────────────────────
 
     def test_client_api_error(self):

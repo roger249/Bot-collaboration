@@ -22,29 +22,6 @@ import uvicorn
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--run-slow", action="store_true", default=False,
-        help="run slow tests (real LLM/CrewAI invocations)",
-    )
-
-
-def pytest_configure(config):
-    config.addinivalue_line("markers", "slow: mark test as slow")
-
-
-def pytest_collection_modifyitems(config, items):
-    if config.getoption("--run-slow"):
-        return
-    skip_slow = pytest.mark.skip(reason="need --run-slow option to run")
-    for item in items:
-        if "slow" in item.keywords:
-            item.add_marker(skip_slow)
-
-
-# ── pytest marker registration ────────────────────────────────────────────
-
-
-def pytest_addoption(parser):
-    parser.addoption(
         "--run-slow",
         action="store_true",
         default=False,
@@ -54,6 +31,7 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "slow: mark test as slow (LLM-invoking, >20s)")
+    config.addinivalue_line("markers", "demo: demo-flow tests (real LLM, use --run-slow)")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -61,7 +39,7 @@ def pytest_collection_modifyitems(config, items):
         return
     skip_slow = pytest.mark.skip(reason="slow test — use --run-slow to execute")
     for item in items:
-        if item.get_closest_marker("slow"):
+        if item.get_closest_marker("slow") or item.get_closest_marker("demo"):
             item.add_marker(skip_slow)
 
 

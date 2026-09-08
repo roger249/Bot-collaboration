@@ -34,6 +34,11 @@ llm_cache:
   enabled: true             # master switch
   ttl_seconds: 86400        # global TTL in seconds (0 = disable); 24h default
 
+# Demo control endpoints (/api/v1/demo/*) — HTTP-only test-data mutation/reset
+# for demos and tests.  Disabled (404) when `enabled: false`.  DuckDB mode only.
+demo_tools:
+  enabled: true
+
 # Server bind settings — consumed by data_server and proposal_server __main__ blocks.
 # Not used by the monolithic server.py (kept for backward compatibility).
 server:

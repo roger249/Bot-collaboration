@@ -16,10 +16,10 @@ The eight sub-scores (each 0-10 before weighting):
 | **diversification** | Whether adding the product worsens portfolio concentration (higher = less added concentration risk). | An equity‑heavy client scores a precious‑metals or bond candidate highly, because adding it reduces concentration; an extra large‑cap equity position scores low. |
 | **has_similar_investment_experience** | Whether the client already holds the same `product_type` or `product_family`. | A client already holding `bond` funds is a natural fit for another bond candidate; a first‑time equity investor gets a lower score for a complex equity product. |
 | **better_product** | Whether the candidate has a higher `expected_return` than the client's existing holdings of the same `product_type`. | If the client holds a 3.0% bond and a candidate bond yields 4.5%, the candidate scores high as a superior replacement; a lower‑yield candidate scores 0. |
-| **similarity_product_name_in_like_products** | Semantic match between `product.name` and the client's `like_products` keywords. | A client who stated interest in "AI" scores an AI-themed fund highly. |
-| **similarity_product_name_in_dislike_products** | Inverted semantic match against the client's `dislike_products` (rendered as `Comfort`). | A client who dislikes "bonds" penalizes bond candidates. |
+| **similarity_product_note_in_like_products** | Semantic match between `product.investment_note` and the client's `like_products` keywords. | A client who stated interest in "AI" scores an AI-themed fund highly. |
+| **similarity_product_note_in_dislike_products** | Inverted semantic match between `product.investment_note` and the client's `dislike_products` (rendered as `Comfort`). | A client who dislikes "bonds" penalizes bond candidates. |
 | **similarity_to_current_holding** | Semantic similarity to the client's existing holdings (max). | A candidate resembling a well-performing holding scores as familiar territory. |
-| **similarity_to_RM_note** | Semantic match between `product.investment_note` and the RM's `qualitative_profile`. | A candidate aligned with the RM's stated guidance scores highly. |
+| **similarity_to_RM_note** | Semantic match between the RM's `qualitative_profile` and **both** `product.name` and `product.investment_note`, taking the **max**. | A candidate aligned with the RM's stated guidance scores highly. |
 
 The `diversification` score is computed as the concentration risk of a hypothetical portfolio that adds the product at `concentration_test_position_pct_aum * client.aum`.
 

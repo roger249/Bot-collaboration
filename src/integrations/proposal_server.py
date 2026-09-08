@@ -1253,6 +1253,55 @@ def get_product_fitness_score(body: FitnessScoreRequest) -> dict:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# Demo control endpoints (test-data mutation/reset — demo/dev only)
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class DemoPatchClientRequest(BaseModel):
+    qualitative_profile: str
+
+
+@app.patch(
+    "/api/v1/demo/clients/{client_id}",
+    summary="Set a client's RM note (demo only)",
+)
+def demo_patch_client(client_id: str, body: DemoPatchClientRequest) -> dict:
+    """Update a client's ``qualitative_profile`` (demo/test data mutation)."""
+    from src.integrations.demo_tools import (
+        is_enabled,
+        patch_client_note,
+    )
+
+    if not is_enabled():
+        raise HTTPException(status_code=404, detail="demo tools disabled")
+    try:
+        return patch_client_note(client_id, body.qualitative_profile)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Client not found: {client_id}") from None
+    except RuntimeError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@app.post(
+    "/api/v1/demo/reset",
+    summary="Reset demo test data to canonical baseline",
+)
+def demo_reset() -> dict:
+    """Restore all demo-mutated test data to the canonical baseline."""
+    from src.integrations.demo_tools import (
+        is_enabled,
+        reset_demo,
+    )
+
+    if not is_enabled():
+        raise HTTPException(status_code=404, detail="demo tools disabled")
+    try:
+        return reset_demo()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Startup (production)
 # ═══════════════════════════════════════════════════════════════════════════
 

@@ -175,19 +175,37 @@ def product_investor_matcher(
             "errors": [{"code": "READINESS_SCORE_ERROR", "message": str(exc)}],
         }
 
-    # Build readiness map: client_id → rank
+    # Build readiness map: client_id → rank (used for the IRS display section).
     readiness_map: dict[str, dict] = {r["client_id"]: r for r in readiness_scores}
-    # Filter to clients that exist in both readiness and search results
-    search_client_ids = {c.get("client_id") for c in all_clients if c.get("client_id")}
-    eligible_client_ids = [
-        r["client_id"]
-        for r in readiness_scores
-        if r["client_id"] in search_client_ids
-    ]
+    # Ordered client ids returned by search (already readiness-sorted).
+    search_client_ids = [c.get("client_id") for c in all_clients if c.get("client_id")]
+
+    # Explicit ``client_id`` selection is authoritative: use exactly those
+    # clients, with NO readiness intersection (a low-readiness client that was
+    # explicitly requested must still be processed).  Otherwise (no client_id),
+    # gate on the readiness top-K pool.
+    explicit_client_ids = (
+        client_criteria.get("client_id")
+        if isinstance(client_criteria, dict)
+        else None
+    )
+    if explicit_client_ids:
+        eligible_client_ids = list(search_client_ids)
+    else:
+        search_set = set(search_client_ids)
+        eligible_client_ids = [
+            r["client_id"]
+            for r in readiness_scores
+            if r["client_id"] in search_set
+        ]
 
     LOGGER.info(
-        "Readiness scorecard: %d clients scored, %d eligible (top-%d)",
-        len(readiness_scores), len(eligible_client_ids), readiness_pool_size,
+        "Readiness scorecard: %d clients scored, %d eligible "
+        "(explicit_client_ids=%s, readiness_pool_size=%d)",
+        len(readiness_scores),
+        len(eligible_client_ids),
+        bool(explicit_client_ids),
+        readiness_pool_size,
     )
     LOGGER.debug(
         "Readiness scorecard API response (first 5):\n%s",

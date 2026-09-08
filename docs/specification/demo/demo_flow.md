@@ -7,6 +7,10 @@ This document defines the end-to-end demo of the proposal server.  It walks
 through three scenarios, each demonstrating a distinct capability of the
 product–client matcher and the proposal pipeline.
 
+> Exact client/product IDs and the test-data baseline are pinned in
+> `docs/specification/demo/demo_test_data.md`.  The HTTP mutation/reset surface
+> is specified in `docs/specification/demo/demo_tool_api.md`.
+
 ## Demo cases
 
 | # | Story | What it proves |
@@ -30,6 +34,9 @@ a single observable assertion.
 3. The FX TARF products + tuned clients from
    `docs/how_to/how_to_add_fx_tarf.md` are present (6 `FX-TARF-*` products;
    clients `PB-HK-000002-6`, `PB-HK-000009-1`, `PB-HK-000017-4`).
+4. **Demo control endpoints enabled** — `config_planbot.yaml` → `demo_tools.enabled: true`
+   (see `docs/specification/demo/demo_tool_api.md`).  These provide the
+   mutation + reset steps below over HTTP (no direct SQL).
 
 ---
 
@@ -56,16 +63,17 @@ is edited — proving the note drives the recommendation, not just cosmetics.
 
 2. Note the `proposals[0].product_id` (the recommended product).
 
-### 1.2 Mutate the RM note (test-data step)
+### 1.2 Mutate the RM note (demo-control endpoint)
 
 Update the client's RM note to express a new preference (technology), then keep
 everything else identical.
 
-```sql
--- ⚠ test-data mutation — finalized during the "details" phase
-UPDATE clients
-   SET qualitative_profile = '<TECH-LEANING RM NOTE>'
- WHERE client_id = '<CLIENT_ID>';
+```text
+PATCH /api/v1/demo/clients/<CLIENT_ID>
+```
+
+```json
+{ "qualitative_profile": "<TECH-LEANING RM NOTE>" }
 ```
 
 ### 1.3 Re-run and compare
@@ -85,10 +93,8 @@ UPDATE clients
 
 ### 1.4 Reset (teardown)
 
-```sql
-UPDATE clients
-   SET qualitative_profile = '<ORIGINAL RM NOTE>'
- WHERE client_id = '<CLIENT_ID>';
+```text
+POST /api/v1/demo/reset
 ```
 
 ---
@@ -145,43 +151,46 @@ POST /api/v1/reinvestment-proposals/propose_reinvestment_for_maturing_holdings
 
 ```json
 {
-  "within_days": 365,
+  "as_of_date": "2026-08-01",
+  "within_days": 60,
   "max_clients": 1,
   "response_mode": "both"
 }
 ```
 
-1. Assert the response lists ≥1 client with a maturing holding
+1. Assert the response lists **≥1 client** with a maturing holding
    (`results_by_client`), plus a generated proposal (`proposal_markdown`)
    recommending a replacement product with a funding source.
 
-> **Watch-out.**  The discovery endpoint only finds clients who hold a **bond /
-> bond_fund maturing within `within_days`**.  If the seed data has no such
-> client, this demo needs a test-data fixture (a bond maturing soon) — a detail
-> for the next phase.
+> **Determinism.**  `as_of_date` is pinned to `2026-08-01` so `PROD053` (matures
+> 2026-08-31) is reliably "30 days out" — the discovery result no longer drifts
+> with the system date.  Asserting ≥1 client (not a specific one) sidesteps the
+> endpoint's non-deterministic tie-break between holders.
 
 ## Test data
 
 All three demos may require **test-data mutation** so each story is reproducible
-and self-contained:
+and self-contained.  Mutation and reset are done **over HTTP** via the demo
+control endpoints (see `docs/specification/demo/demo_tool_api.md`), never via
+direct SQL:
 
 - **Demo 1** — flip the client's `qualitative_profile` between an original and
-  a technology-leaning note (already scripted as a before/after `UPDATE`).
+  a technology-leaning note (`PATCH /api/v1/demo/clients/<id>`).
 - **Demo 2** — ensure the chosen `risk_rating = 5` client's holdings/attributes
   make the FX TARF rank above the alternatives (tune as needed; baseline clients
   already exist in `docs/how_to/how_to_add_fx_tarf.md`).
-- **Demo 3** — add a bond/bond_fund holding that matures within the discovery
-  window, if none already does.
+- **Demo 3** — no injection needed; pin `as_of_date: "2026-08-01"` so the
+  seeded maturing bond `PROD053` is discovered deterministically.
 
-All mutations must be **reversible** (see §Teardown).
+All mutations must be **reversible** via `POST /api/v1/demo/reset` (§Teardown).
 
 ---
 
 ## Teardown
 
-A single **reset** should restore all mutated test data (the RM note from
-Demo 1, any injected maturing bond from Demo 3) so the whole demo is repeatable.
-Ideally this is a small script (`<demo-reset>`), not hand-edited SQL.
+A single `POST /api/v1/demo/reset` restores all mutated test data (the RM note
+from Demo 1, any injected maturing bond from Demo 3) so the whole demo is
+repeatable.
 
 ---
 
@@ -196,8 +205,11 @@ Ideally this is a small script (`<demo-reset>`), not hand-edited SQL.
    as needed (see `docs/how_to/how_to_add_fx_tarf.md` for the 3 FX-TARF clients).
 4. **Demo 2 client** — use a `risk_rating = 5` tuned client so structures aren't
    hard-filtered.
-5. **Test data** — modify `test_data` for **all** demos (RM note, structured
-   product suitability, a maturing bond for Demo 3).
+5. **Test data** — modify `test_data` for **all** demos, done **over HTTP** via
+   the demo control endpoints (mutation + reset), not raw SQL.
+6. **Demo tool** — `PATCH /api/v1/demo/clients/{id}` (mutate RM note) +
+   `POST /api/v1/demo/reset` (restore baseline); see
+   `docs/specification/demo/demo_tool_api.md`.
 
 ## Open questions for discussion
 
