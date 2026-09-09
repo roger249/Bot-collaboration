@@ -374,7 +374,7 @@ def product_investor_matcher(
     top_pairs = _extract_top_pairs(matching_markdown, top_n)
 
     # ── 8a. Write JSON sidecar for downstream consumers ────────────────
-    sidecar_path = matching_output_path.with_suffix("_pairs.json")
+    sidecar_path = matching_output_path.with_name(matching_output_path.stem + "_pairs.json")
     sidecar_path.parent.mkdir(parents=True, exist_ok=True)
     sidecar_path.write_text(json.dumps(top_pairs, indent=2, ensure_ascii=False))
     LOGGER.info("JSON sidecar written: %s (%d pairs)", sidecar_path, len(top_pairs))
