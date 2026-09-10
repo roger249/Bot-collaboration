@@ -437,7 +437,8 @@ def _get_holdings_product_ids(client_ids: list[str]) -> list[str]:
             f"SELECT DISTINCT h.product_id "
             f"FROM holdings h "
             f"INNER JOIN products p ON h.product_id = p.product_id "
-            f"WHERE h.client_id IN ({placeholders})",
+            f"WHERE h.client_id IN ({placeholders}) "
+            f"ORDER BY h.product_id",
             client_ids,
         ).fetchall()
         return [r[0] for r in rows]
